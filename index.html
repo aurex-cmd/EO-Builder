@@ -149,11 +149,22 @@
     color:var(--folder); font-weight:700; transform:translateY(-2px);
     box-shadow:0 -3px 8px rgba(0,0,0,.18);
   }
-  #wardmap-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
-  #wardmap-view .btn:not(.primary){ background:var(--panel-folder-2); }
-  #wardmap-view .btn:not(.primary):hover{ border-color:var(--folder); }
+  #wardmap-view .btn.primary, #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
+  #wardmap-view .btn:not(.primary), #riepilogo-view .btn:not(.primary){ background:var(--panel-folder-2); }
+  #wardmap-view .btn:not(.primary):hover, #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   #wardmap-view input[type=text]{ background:var(--panel-folder-2); }
   #wardmap-view input:focus{ border-color:var(--folder) !important; }
+  .referto-block{ margin-bottom:14px; }
+  .referto-block:last-child{ margin-bottom:0; }
+  .referto-block .bed-title{
+    font-family:var(--font-mono); font-weight:700; font-size:13.5px;
+    color:var(--folder); margin-bottom:6px;
+  }
+  .referto-block .bed-text{
+    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+    background:var(--panel-folder-2); border:1px solid var(--line); border-radius:8px;
+    padding:11px 13px; white-space:pre-wrap;
+  }
   #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
   #elimina-paziente-btn:hover{ border-color:#d9695f; }
   .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
@@ -220,6 +231,7 @@
     <div class="header-nav">
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
       <button class="topnav-btn" onclick="toggleWardMap()">Pazienti</button>
+      <button class="topnav-btn" onclick="apriRiepilogo()">Riepilogo</button>
     </div>
   </div>
   <div class="ecg-wrap" aria-hidden="true">
@@ -258,6 +270,18 @@
     <div class="group-label">Altre schede salvate (non a letto fisso)</div>
     <div class="patient-tabs" id="altre-schede-lista"></div>
   </div>
+</div>
+
+<!-- RIEPILOGO REFERTI -->
+<div class="card" id="riepilogo-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
+  <h2><span class="eyebrow">•</span>Riepilogo referti</h2>
+  <div class="group">
+    <div class="inline-fields">
+      <button class="btn primary" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
+      <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
+    </div>
+  </div>
+  <div class="group" id="riepilogo-lista"></div>
 </div>
 
 <div id="clinical-view">
@@ -654,20 +678,21 @@ function schedaHaDati(patientState){
   return JSON.stringify(patientState) !== DEFAULT_SNAPSHOT_JSON;
 }
 
+// gestione delle 3 "pagine": clinica (form EO), mappa reparto, riepilogo referti
+function mostraVista(v){
+  wardMapOpen = (v === 'wardmap');
+  document.getElementById('clinical-view').style.display = (v === 'clinical') ? '' : 'none';
+  document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
+  document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
+  if(v === 'wardmap') renderWardMap();
+  if(v === 'riepilogo') renderRiepilogo();
+}
 function toggleWardMap(){
   wardMapOpen ? chiudiWardMap() : apriWardMap();
 }
-function apriWardMap(){
-  wardMapOpen = true;
-  document.getElementById('wardmap-view').style.display = '';
-  document.getElementById('clinical-view').style.display = 'none';
-  renderWardMap();
-}
-function chiudiWardMap(){
-  wardMapOpen = false;
-  document.getElementById('wardmap-view').style.display = 'none';
-  document.getElementById('clinical-view').style.display = '';
-}
+function apriWardMap(){ mostraVista('wardmap'); }
+function chiudiWardMap(){ mostraVista('clinical'); }
+function apriRiepilogo(){ mostraVista('riepilogo'); }
 
 function renderHeaderBadge(){
   const patients = loadPatients();
@@ -819,6 +844,90 @@ function eliminaPazienteAttivo(){
   savePatients(patients);
   chiudiPaziente();
   renderWardMap();
+}
+
+/* ============================================================
+   RIEPILOGO REFERTI (terza vista) + esportazione .txt
+   ============================================================ */
+
+// stesso ordine della mappa reparto (settore per settore); le schede che
+// non corrispondono a un letto fisso vanno in coda, in ordine alfabetico
+function ordinaPazientiPerLetto(entries){
+  const nomiOrdinati = [];
+  SETTORI.forEach(s => WARD_MAP[s].forEach(n => nomiOrdinati.push(bedName(n))));
+  return entries.slice().sort((a, b) => {
+    const ia = nomiOrdinati.indexOf(a[1].name);
+    const ib = nomiOrdinati.indexOf(b[1].name);
+    if(ia !== -1 && ib !== -1) return ia - ib;
+    if(ia !== -1) return -1;
+    if(ib !== -1) return 1;
+    return a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' });
+  });
+}
+
+// ricompone il testo dell'EO per uno stato salvato, senza toccare
+// la scheda attualmente aperta (scambia state, compone, ripristina)
+function getRefertoFor(patientState){
+  const backup = serializeState();
+  applyStateObject(patientState);
+  const testo = composeReferto();
+  applyStateObject(backup);
+  return testo;
+}
+
+function schedeConDati(){
+  const patients = loadPatients();
+  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state));
+  return ordinaPazientiPerLetto(entries);
+}
+
+function renderRiepilogo(){
+  const container = document.getElementById('riepilogo-lista');
+  container.innerHTML = '';
+  const entries = schedeConDati();
+
+  if(entries.length === 0){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.textContent = 'Nessuna scheda con dati salvati per ora.';
+    container.appendChild(vuoto);
+    return;
+  }
+
+  entries.forEach(([id, p]) => {
+    const block = document.createElement('div');
+    block.className = 'referto-block';
+    const title = document.createElement('div');
+    title.className = 'bed-title';
+    title.textContent = p.name;
+    const body = document.createElement('div');
+    body.className = 'bed-text';
+    body.textContent = getRefertoFor(p.state);
+    block.appendChild(title);
+    block.appendChild(body);
+    container.appendChild(block);
+  });
+}
+
+function esportaRiepilogoTxt(){
+  const entries = schedeConDati();
+  if(entries.length === 0){ showToast('Nessuna scheda da esportare'); return; }
+
+  const testo = entries
+    .map(([id, p]) => p.name + '\n' + getRefertoFor(p.state))
+    .join('\n\n');
+
+  const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const oggi = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'consegne_' + oggi + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('File esportato');
 }
 
 // risolve la forma maschile/femminile di un'opzione; se non ha varianti (opt.m/opt.f)
@@ -1200,10 +1309,10 @@ function composeCute(){
 /* ============================================================
    OUTPUT FINALE
    ============================================================ */
-function refreshUI(){
-  syncInputsToState();
-  renderAll();
-  const parts = [
+// frase completa dell'EO a partire dal contenuto corrente di `state`
+// (usata sia per il referto live sia per ricostruire i referti salvati nel riepilogo)
+function composeReferto(){
+  return [
     composeCoscienza(),
     composeRespiro(),
     composeCuore(),
@@ -1212,8 +1321,13 @@ function refreshUI(){
     composeEdemi(),
     composeDiuresi(),
     composeCute()
-  ].filter(Boolean);
-  document.getElementById('output').value = parts.join(' ');
+  ].filter(Boolean).join(' ');
+}
+
+function refreshUI(){
+  syncInputsToState();
+  renderAll();
+  document.getElementById('output').value = composeReferto();
 }
 function update(){
   refreshUI();
