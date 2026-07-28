@@ -434,9 +434,13 @@
     <div class="chips" id="diuresi-modalita"></div>
   </div>
   <div class="group">
+    <div class="group-label">Urine</div>
+    <div class="chips" id="diuresi-urine"></div>
+  </div>
+  <div class="group">
     <div class="inline-fields">
       <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0"></div>
-      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. urine normocromiche, BI negativo di 500 ml…)">
+      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
     </div>
   </div>
 </div>
@@ -498,7 +502,7 @@ const state = {
   torace: { mv:'presente', mvLoc:new Set(), reperti:'non_rumori', reperteLoc:new Set(), limitata:false },
   addome: { forma:'', consistenza:'trattabile', dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
   edemi: { scelta:'non_edemi', custom:'' },
-  diuresi: { modalita:'sacca', volume:'', note:'' },
+  diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { chips:new Set(), note:'' }
 };
 
@@ -605,6 +609,7 @@ function applyStateObject(o){
 
   state.diuresi.modalita = o.diuresi?.modalita ?? 'sacca';
   state.diuresi.volume = o.diuresi?.volume ?? '';
+  state.diuresi.urine = o.diuresi?.urine ?? '';
   state.diuresi.note = o.diuresi?.note ?? '';
 
   state.cute.chips = new Set(o.cute?.chips || []);
@@ -1004,8 +1009,8 @@ const OPT = {
   coscienzaDescrittori: [
     {value:'orientato', m:'orientato', f:'orientata'},
     {value:'disorientato', m:'disorientato', f:'disorientata'},
-    {value:'collaborante', label:'collaborante'},
     {value:'tranquillo', m:'tranquillo', f:'tranquilla'},
+    {value:'collaborante', label:'collaborante'},
     {value:'rallentato', m:'rallentato', f:'rallentata'},
     {value:'mutacico', m:'mutacico', f:'mutacica'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita'},
@@ -1132,6 +1137,13 @@ const OPT = {
     {value:'spontanea', label:'spontanea'},
     {value:'non_valutabile', label:'non valutabile'}
   ],
+  diuresiUrine: [
+    {value:'normocromiche', label:'Normocromiche', frag:'urine normocromiche'},
+    {value:'ipercromiche', label:'Ipercromiche', frag:'urine ipercromiche'},
+    {value:'chiare', label:'Chiare', frag:'urine chiare'},
+    {value:'lavatura_carne', label:'Lavatura di carne', frag:'urine a lavatura di carne'},
+    {value:'ematuria', label:'Ematuria', frag:'ematuria'}
+  ],
   cute: [
     {value:'cicatrice_xifopubica', label:'Cicatrice xifo-pubica'},
     {value:'colostomia_sx', label:'Colostomia fianco sx'},
@@ -1190,6 +1202,7 @@ function renderAll(){
   renderSingle('edemi-chips', OPT.edemi, ()=>state.edemi.scelta, v=>state.edemi.scelta=v);
 
   renderSingle('diuresi-modalita', OPT.diuresiModalita, ()=>state.diuresi.modalita, v=>state.diuresi.modalita=v);
+  renderSingle('diuresi-urine', OPT.diuresiUrine, ()=>state.diuresi.urine, v=>state.diuresi.urine=v);
 
   renderMulti('cute-chips', OPT.cute, ()=>state.cute.chips);
 }
@@ -1200,10 +1213,16 @@ function renderAll(){
 // descrittori che nei referti reali si legano a "tranquillo/a" con "ma"
 // (es. "rallentato ma tranquillo", "disorientata ma tranquilla")
 const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
+// questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
+// (es. "Nega dolore." invece di "..., nega dolore.")
+const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
 
 function composeCoscienza(){
   const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
-  const selected = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
+  const tuttiSelezionati = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
+  const frasiASe = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_A_SE.includes(o.value));
+  const selected = tuttiSelezionati.filter(o => !DESCRITTORI_FRASE_A_SE.includes(o.value));
+
   const hasTranquillo = selected.some(o => o.value === 'tranquillo');
   const partner = selected.find(o => TRANQUILLO_PARTNERS.includes(o.value));
 
@@ -1222,6 +1241,9 @@ function composeCoscienza(){
   const parts = [g(primaryOpt)];
   if(descLabels.length) parts.push(joinIt(descLabels));
   let s = parts.join(', ') + '.';
+
+  frasiASe.forEach(o => { s += ' ' + cap(g(o)) + '.'; });
+
   const extra = (state.coscienza.extra || '').trim();
   if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
   return s;
@@ -1245,7 +1267,8 @@ function composeCuore(){
   let s = 'Toni ' + parts.join(', ');
   if(c.soffio !== 'nessuno'){
     const foc = c.focolaio || 'non specificato';
-    s += `, soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine su focolaio ${foc}`;
+    const focText = foc === 'mesocardio' ? 'in mesocardio' : `su focolaio ${foc}`;
+    s += `, soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine ${focText}`;
   }
   return s + '.';
 }
@@ -1293,6 +1316,8 @@ function composeDiuresi(){
   const modLabel = OPT.diuresiModalita.find(o=>o.value===d.modalita).label;
   let s = `Diuresi ${modLabel}`;
   if(d.volume) s += `, ${d.volume} ml`;
+  const urineOpt = OPT.diuresiUrine.find(o => o.value === d.urine);
+  if(urineOpt) s += `, ${urineOpt.frag}`;
   if(d.note) s += `, ${d.note}`;
   return s + '.';
 }
