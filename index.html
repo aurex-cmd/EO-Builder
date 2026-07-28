@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>EO Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#eef1f3;
+    --page-line:#d7dde1;
+    --page-ink:#12181e;
+    --page-ink-dim:#57646e;
+
+    --panel:#12181f;
+    --panel-2:#1a222b;
+    --line:#242f3a;
+    --line-soft:#1c252e;
+    --ink:#eef2f5;
+    --ink-dim:#93a4b1;
+    --signal:#35d0ae;
+    --signal-dark:#0c8f74;
+    --signal-dim:#0f3832;
+    --signal-soft:rgba(53,208,174,.14);
+    --on-signal:#06231d;
+
+    --folder:#dba94a;
+    --folder-dim:#3c2f14;
+    --on-folder:#221a08;
+    --panel-folder:#241d10;
+    --panel-folder-2:#2f2716;
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page); color:var(--page-ink);
+    font-family:var(--font-body);
+    padding-bottom:32px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- HEADER + SIGNATURE ECG TRACE ---------- */
+  header{
+    padding:18px 18px 0; border-bottom:1px solid var(--page-line);
+    position:sticky; top:0; background:var(--page); z-index:5;
+  }
+  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  header h1{
+    font-family:var(--font-display); font-size:19px; margin:0;
+    font-weight:700; letter-spacing:.01em; color:var(--page-ink);
+  }
+  header .sub{ font-size:12px; color:var(--page-ink-dim); font-family:var(--font-mono); }
+  .header-nav{ display:flex; align-items:center; gap:8px; }
+  .topnav-btn{
+    font-family:var(--font-body); font-weight:600; font-size:13px;
+    padding:8px 15px; border-radius:8px; border:1px solid var(--folder);
+    background:var(--folder-dim); color:var(--folder); cursor:pointer;
+  }
+  .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
+  .active-bed-badge{
+    font-family:var(--font-mono); font-size:12px; font-weight:600;
+    padding:6px 11px; border-radius:7px;
+    background:var(--folder-dim); color:var(--folder); border:1px solid var(--folder);
+    cursor:pointer;
+  }
+  .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .bed-tile{
+    font-family:var(--font-mono); font-weight:600; font-size:13.5px;
+    padding:10px 6px; border-radius:8px; min-width:52px; text-align:center;
+    border:1px solid var(--line); background:var(--panel-folder-2); color:var(--ink);
+    cursor:pointer; user-select:none; transition:.12s;
+  }
+  .bed-tile:hover{ border-color:var(--folder); }
+  .bed-tile.active{ border-color:var(--folder); color:var(--folder); box-shadow:0 0 0 1px var(--folder); }
+  .bed-tile.occupied{
+    background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
+  }
+  .ecg-wrap{ height:34px; margin:8px 0 0; overflow:hidden; }
+  .ecg-wrap svg{ width:100%; height:100%; display:block; }
+  .ecg-line{
+    fill:none; stroke:var(--signal-dark); stroke-width:1.8;
+    stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:340; stroke-dashoffset:0;
+    animation:ecg-sweep 3.2s linear infinite;
+  }
+  @keyframes ecg-sweep{
+    0%{ stroke-dashoffset:340; }
+    100%{ stroke-dashoffset:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ecg-line{ animation:none; }
+  }
+
+  /* ---------- CARDS ---------- */
+  .card{
+    margin:14px 14px 0; background:var(--panel); color:var(--ink);
+    border:1px solid var(--line); border-radius:14px; padding:16px 17px 17px;
+  }
+  .card h2{
+    display:flex; align-items:baseline; gap:9px;
+    font-family:var(--font-display);
+    font-size:14.5px; letter-spacing:.02em;
+    color:var(--ink); margin:0 0 13px; font-weight:600;
+  }
+  .card h2 .eyebrow{
+    font-family:var(--font-mono); font-size:11px; font-weight:500;
+    color:var(--signal); background:var(--signal-dim);
+    padding:2px 6px; border-radius:5px; letter-spacing:.02em;
+  }
+  .group{ margin-bottom:15px; }
+  .group:last-child{ margin-bottom:0; }
+  .group-label{
+    font-size:12.5px; color:var(--ink-dim); margin-bottom:7px;
+    letter-spacing:.01em; font-weight:500;
+  }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-family:var(--font-body);
+    font-size:13px; line-height:1.3; padding:8px 14px; border-radius:8px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
+    cursor:pointer; user-select:none;
+    transition:border-color .12s, background .12s, color .12s, transform .08s;
+  }
+  .chip:hover{ border-color:var(--signal); color:var(--ink); }
+  .chip:active{ transform:scale(.97); }
+  .chip.active{
+    background:var(--signal-dim); border-color:var(--signal);
+    color:var(--signal); font-weight:600;
+  }
+  /* ---------- SCHEDE PAZIENTE (cartellina, colore/stile a parte) ---------- */
+  #wardmap-view h2 .eyebrow{ background:var(--folder); color:var(--on-folder); }
+  .patient-tabs{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; }
+  .patient-tab{
+    font-family:var(--font-body); font-size:14.5px; font-weight:500;
+    padding:11px 20px 10px; border-radius:10px 10px 0 0;
+    border:1px solid var(--line); border-bottom:2px solid var(--line);
+    background:var(--panel-folder-2); color:var(--ink);
+    cursor:pointer; user-select:none; transition:.12s;
+  }
+  .patient-tab:hover{ border-color:var(--folder); }
+  .patient-tab.active{
+    background:var(--folder-dim); border-color:var(--folder); border-bottom-color:var(--folder-dim);
+    color:var(--folder); font-weight:700; transform:translateY(-2px);
+    box-shadow:0 -3px 8px rgba(0,0,0,.18);
+  }
+  #wardmap-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
+  #wardmap-view .btn:not(.primary){ background:var(--panel-folder-2); }
+  #wardmap-view .btn:not(.primary):hover{ border-color:var(--folder); }
+  #wardmap-view input[type=text]{ background:var(--panel-folder-2); }
+  #wardmap-view input:focus{ border-color:var(--folder) !important; }
+  #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
+  #elimina-paziente-btn:hover{ border-color:#d9695f; }
+  .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--signal); outline-offset:2px;
+  }
+
+  .inline-fields{ display:flex; flex-wrap:wrap; gap:11px; align-items:center; }
+  .field{ display:flex; align-items:center; gap:7px; }
+  .field label{ font-size:12.5px; color:var(--ink-dim); }
+  input[type=number], input[type=text]{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:7px; padding:8px 10px; font-size:13px;
+    font-family:var(--font-mono);
+  }
+  input[type=text]{ font-family:var(--font-body); }
+  input[type=number]:focus, input[type=text]:focus{
+    outline:none; border-color:var(--signal);
+  }
+  input[type=number]{ width:70px; }
+  input[type=text].wide{ width:100%; }
+
+  /* ---------- OUTPUT ---------- */
+  #output-card{
+    margin-bottom:10px;
+    border-color:var(--signal-dim);
+    background:linear-gradient(180deg, rgba(53,208,174,.05), rgba(53,208,174,0) 40%), var(--panel);
+  }
+  #output-card h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
+  textarea#output{
+    width:100%; min-height:180px; resize:vertical;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:9px; padding:13px; font-family:var(--font-mono);
+    font-size:13px; line-height:1.65;
+  }
+  textarea#output:focus{ outline:none; border-color:var(--signal); }
+  .row{ display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
+  .btn{
+    font-family:var(--font-body);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; padding:9px 15px; font-size:13px; font-weight:500; cursor:pointer;
+    transition:border-color .12s, background .12s;
+  }
+  .btn:hover{ border-color:var(--signal); }
+  .btn.primary{ background:var(--signal); border-color:var(--signal); color:var(--on-signal); font-weight:600; }
+  .btn.primary:hover{ opacity:.92; border-color:var(--signal); }
+
+  #toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--signal); border:1px solid var(--signal); color:var(--on-signal);
+    padding:8px 16px; border-radius:999px; font-size:12.5px; font-weight:600;
+    opacity:0; pointer-events:none; transition:.2s;
+  }
+  #toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1>EO Builder</h1>
+      <span class="sub">esame obiettivo · click-to-compose</span>
+    </div>
+    <div class="header-nav">
+      <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
+      <button class="topnav-btn" onclick="toggleWardMap()">Pazienti</button>
+    </div>
+  </div>
+  <div class="ecg-wrap" aria-hidden="true">
+    <svg viewBox="0 0 400 34" preserveAspectRatio="none">
+      <path class="ecg-line" d="M0,17 L60,17 L72,17 L78,4 L84,30 L90,10 L96,17 L140,17 L400,17 M400,17 L460,17 L472,17 L478,4 L484,30 L490,10 L496,17 L540,17"/>
+    </svg>
+  </div>
+</header>
+
+<!-- MAPPA REPARTO (settori/letti) -->
+<div class="card" id="wardmap-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
+  <h2><span class="eyebrow">•</span>Pazienti per settore</h2>
+
+  <div class="group" id="scheda-attiva-info" style="display:none;">
+    <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
+    <button class="btn" id="elimina-paziente-btn" onclick="eliminaPazienteAttivo()">Elimina scheda attiva</button>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Settore</div>
+    <div class="patient-tabs" id="settore-tabs"></div>
+  </div>
+  <div class="group">
+    <div class="bed-grid" id="bed-grid"></div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
+    <div class="inline-fields">
+      <input type="text" id="letto-libero-nome" class="wide" style="max-width:220px;" placeholder="es. Appoggio 1">
+      <button class="btn primary" onclick="apriLettoLibero()">Apri/crea</button>
+    </div>
+  </div>
+
+  <div class="group" id="altre-schede-group" style="display:none;">
+    <div class="group-label">Altre schede salvate (non a letto fisso)</div>
+    <div class="patient-tabs" id="altre-schede-lista"></div>
+  </div>
+</div>
+
+<div id="clinical-view">
+
+<!-- 0. SESSO -->
+<div class="card" id="card-sesso">
+  <h2><span class="eyebrow">00</span>Paziente</h2>
+  <div class="group">
+    <div class="group-label">Sesso (adatta gli aggettivi nel referto)</div>
+    <div class="chips" id="sesso-chips"></div>
+  </div>
+</div>
+
+<!-- 1. COSCIENZA -->
+<div class="card" id="card-coscienza">
+  <h2><span class="eyebrow">01</span>Stato di coscienza</h2>
+  <div class="group">
+    <div class="group-label">Stato</div>
+    <div class="chips" id="coscienza-primary"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Descrittori (combinabili)</div>
+    <div class="chips" id="coscienza-descrittori"></div>
+  </div>
+  <div class="group">
+    <div class="inline-fields">
+      <input type="text" class="wide" id="coscienza-extra" placeholder="Nota libera (es. chiede di potersi rialimentare, umore deflesso…)">
+    </div>
+  </div>
+</div>
+
+<!-- 2. RESPIRO / PARAMETRI -->
+<div class="card" id="card-respiro">
+  <h2><span class="eyebrow">02</span>Respiro e parametri</h2>
+  <div class="group">
+    <div class="group-label">Tipo respiro</div>
+    <div class="chips" id="respiro-tipo"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Ossigenoterapia</div>
+    <div class="chips" id="respiro-o2"></div>
+    <div class="inline-fields" style="margin-top:6px;">
+      <div class="field"><label>L/min (NC)</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
+      <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
+    </div>
+  </div>
+  <div class="group">
+    <div class="inline-fields">
+      <div class="field"><label>SatO2 %</label><input type="number" id="v-sat" min="0" max="100"></div>
+      <div class="field"><label>PA sist.</label><input type="number" id="v-pas" min="0"></div>
+      <div class="field"><label>PA diast.</label><input type="number" id="v-pad" min="0"></div>
+      <div class="field"><label>FC</label><input type="number" id="v-fc" min="0"></div>
+    </div>
+  </div>
+  <div class="group">
+    <div class="group-label">Temperatura</div>
+    <div class="chips" id="temp-chips"></div>
+    <div class="inline-fields" style="margin-top:6px;">
+      <div class="field"><label>TC °C</label><input type="number" id="temp-valore" step="0.1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. CUORE -->
+<div class="card" id="card-cuore">
+  <h2><span class="eyebrow">03</span>Cuore</h2>
+  <div class="group">
+    <div class="group-label">Ritmo</div>
+    <div class="chips" id="cuore-ritmo"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Frequenza</div>
+    <div class="chips" id="cuore-freq"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Qualità</div>
+    <div class="chips" id="cuore-qualita"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Soffio</div>
+    <div class="chips" id="cuore-soffio"></div>
+    <div class="inline-fields" style="margin-top:6px;">
+      <div class="field"><label>grado /6</label><input type="number" id="cuore-grado" min="1" max="6" style="width:44px;"></div>
+    </div>
+    <div class="group-label" style="margin-top:7px;">Focolaio</div>
+    <div class="chips" id="cuore-focolaio"></div>
+  </div>
+</div>
+
+<!-- 4. TORACE -->
+<div class="card" id="card-torace">
+  <h2><span class="eyebrow">04</span>Torace</h2>
+  <div class="group">
+    <div class="group-label">Murmure vescicolare</div>
+    <div class="chips" id="torace-mv"></div>
+    <div class="chips" id="torace-mv-loc" style="margin-top:6px;"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Reperti aggiunti</div>
+    <div class="chips" id="torace-reperti"></div>
+    <div class="chips" id="torace-reperti-loc" style="margin-top:6px;"></div>
+  </div>
+  <div class="group">
+    <div class="chips" id="torace-limitata"></div>
+  </div>
+</div>
+
+<!-- 5. ADDOME -->
+<div class="card" id="card-addome">
+  <h2><span class="eyebrow">05</span>Addome</h2>
+  <div class="group">
+    <div class="group-label">Forma</div>
+    <div class="chips" id="addome-forma"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Consistenza</div>
+    <div class="chips" id="addome-consistenza"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Dolorabilità</div>
+    <div class="chips" id="addome-dolorabilita"></div>
+    <div class="chips" id="addome-dolore-loc" style="margin-top:6px;"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Peristalsi</div>
+    <div class="chips" id="addome-peristalsi"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Manovre</div>
+    <div class="chips" id="addome-manovre"></div>
+  </div>
+</div>
+
+<!-- 6. EDEMI -->
+<div class="card" id="card-edemi">
+  <h2><span class="eyebrow">06</span>Edemi</h2>
+  <div class="group">
+    <div class="chips" id="edemi-chips"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="edemi-custom" placeholder="Frase personalizzata (sovrascrive la scelta sopra)">
+  </div>
+</div>
+
+<!-- 7. DIURESI -->
+<div class="card" id="card-diuresi">
+  <h2><span class="eyebrow">07</span>Diuresi</h2>
+  <div class="group">
+    <div class="group-label">Modalità</div>
+    <div class="chips" id="diuresi-modalita"></div>
+  </div>
+  <div class="group">
+    <div class="inline-fields">
+      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0"></div>
+      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. urine normocromiche, BI negativo di 500 ml…)">
+    </div>
+  </div>
+</div>
+
+<!-- 8. CUTE / NOTE -->
+<div class="card" id="card-cute">
+  <h2><span class="eyebrow">08</span>Cute, cicatrici, note finali</h2>
+  <div class="group">
+    <div class="chips" id="cute-chips"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
+  </div>
+</div>
+
+<!-- OUTPUT -->
+<div class="card" id="output-card">
+  <h2><span class="eyebrow">→</span>Referto</h2>
+  <textarea id="output"></textarea>
+  <div class="row">
+    <button class="btn primary" onclick="copyOutput()">Copia referto</button>
+    <button class="btn" id="reset-btn" onclick="resetAll()">Azzera tutto</button>
+  </div>
+</div>
+
+</div> <!-- /clinical-view -->
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   RETE DI SICUREZZA: se qualcosa nello script va in errore,
+   mostralo a schermo invece di lasciare la pagina silenziosamente
+   "vuota" (solo titoli statici, senza chip/pulsanti).
+   ============================================================ */
+function mostraErroreFatale(msg){
+  let banner = document.getElementById('fatal-error-banner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'fatal-error-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b3261e;color:#fff;'
+      + 'padding:10px 14px;font-family:monospace;font-size:12px;z-index:99999;white-space:pre-wrap;';
+    document.body.prepend(banner);
+  }
+  banner.textContent = 'Errore nella pagina — copia questo testo e mandalo a Claude: ' + msg;
+}
+window.addEventListener('error', function(e){
+  mostraErroreFatale(e.message + ' (script riga ' + e.lineno + ')');
+});
+
+/* ============================================================
+   STATO
+   ============================================================ */
+const state = {
+  sesso: null,
+  coscienza: { primary:'vigile', descrittori:new Set(), extra:'' },
+  respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
+  cuore: { ritmo:'ritmici', freq:'normofrequenti', qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
+  torace: { mv:'presente', mvLoc:new Set(), reperti:'non_rumori', reperteLoc:new Set(), limitata:false },
+  addome: { forma:'', consistenza:'trattabile', dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
+  edemi: { scelta:'non_edemi', custom:'' },
+  diuresi: { modalita:'sacca', volume:'', note:'' },
+  cute: { chips:new Set(), note:'' }
+};
+
+/* ============================================================
+   HELPER GENERICI
+   ============================================================ */
+function joinIt(arr){
+  if(arr.length===0) return '';
+  if(arr.length===1) return arr[0];
+  return arr.slice(0,-1).join(', ') + ' e ' + arr[arr.length-1];
+}
+function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+
+// campi liberi (testo/numero) che non sono chip: li teniamo sincronizzati con `state`
+// così l'intera scheda (chip + testo) si può salvare/ricaricare per paziente.
+const TEXT_FIELD_MAP = [
+  ['coscienza-extra', ['coscienza','extra']],
+  ['respiro-litri',   ['respiro','litri']],
+  ['respiro-altro',   ['respiro','altro']],
+  ['v-sat',           ['respiro','sat']],
+  ['v-pas',           ['respiro','pas']],
+  ['v-pad',           ['respiro','pad']],
+  ['v-fc',            ['respiro','fc']],
+  ['temp-valore',     ['respiro','tempValore']],
+  ['cuore-grado',     ['cuore','grado']],
+  ['edemi-custom',    ['edemi','custom']],
+  ['diuresi-volume',  ['diuresi','volume']],
+  ['diuresi-note',    ['diuresi','note']],
+  ['cute-note',       ['cute','note']]
+];
+function syncInputsToState(){
+  TEXT_FIELD_MAP.forEach(([id, path]) => {
+    state[path[0]][path[1]] = document.getElementById(id).value;
+  });
+}
+function populateInputsFromState(){
+  TEXT_FIELD_MAP.forEach(([id, path]) => {
+    document.getElementById(id).value = state[path[0]][path[1]] || '';
+  });
+}
+
+/* ============================================================
+   SCHEDE PAZIENTE (salvataggio locale nel browser)
+   ------------------------------------------------------------
+   Tutto resta SOLO su questo dispositivo/browser (localStorage),
+   non viene inviato a nessun server. Se cancelli i dati di
+   navigazione del browser, le schede vengono perse: per note
+   cliniche importanti, il referto va comunque copiato nella
+   cartella clinica ufficiale.
+   ============================================================ */
+const PATIENTS_KEY = 'eo_builder_patients_v1';
+const LAST_PATIENT_KEY = 'eo_builder_last_patient_v1';
+let currentPatientId = null;
+let eliminaArmed = false;
+let eliminaTimer;
+
+function loadPatients(){
+  try{ return JSON.parse(localStorage.getItem(PATIENTS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function savePatients(patients){
+  try{ localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients)); }
+  catch(e){ showToast('Salvataggio locale non disponibile'); }
+}
+
+function serializeState(){
+  // i Set non sono serializzabili in JSON: li converto in array
+  return JSON.parse(JSON.stringify(state, (k,v) => (v instanceof Set ? [...v] : v)));
+}
+function applyStateObject(o){
+  o = o || {};
+  state.sesso = o.sesso ?? null;
+  state.coscienza.primary = o.coscienza?.primary ?? 'vigile';
+  state.coscienza.descrittori = new Set(o.coscienza?.descrittori || []);
+  state.coscienza.extra = o.coscienza?.extra ?? '';
+
+  state.respiro = Object.assign(
+    { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
+    o.respiro || {}
+  );
+
+  state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
+  state.cuore.freq = o.cuore?.freq ?? 'normofrequenti';
+  state.cuore.qualita = new Set(o.cuore?.qualita || []);
+  state.cuore.soffio = o.cuore?.soffio ?? 'nessuno';
+  state.cuore.grado = o.cuore?.grado ?? '';
+  state.cuore.focolaio = o.cuore?.focolaio ?? '';
+
+  state.torace.mv = o.torace?.mv ?? 'presente';
+  state.torace.mvLoc = new Set(o.torace?.mvLoc || []);
+  state.torace.reperti = o.torace?.reperti ?? 'non_rumori';
+  state.torace.reperteLoc = new Set(o.torace?.reperteLoc || []);
+  state.torace.limitata = o.torace?.limitata ?? false;
+
+  state.addome.forma = o.addome?.forma ?? '';
+  state.addome.consistenza = o.addome?.consistenza ?? 'trattabile';
+  state.addome.dolorabilita = new Set(o.addome?.dolorabilita || ['non_dolente']);
+  state.addome.doloreLoc = new Set(o.addome?.doloreLoc || []);
+  state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
+  state.addome.manovre = new Set(o.addome?.manovre || []);
+
+  state.edemi.scelta = o.edemi?.scelta ?? 'non_edemi';
+  state.edemi.custom = o.edemi?.custom ?? '';
+
+  state.diuresi.modalita = o.diuresi?.modalita ?? 'sacca';
+  state.diuresi.volume = o.diuresi?.volume ?? '';
+  state.diuresi.note = o.diuresi?.note ?? '';
+
+  state.cute.chips = new Set(o.cute?.chips || []);
+  state.cute.note = o.cute?.note ?? '';
+}
+// tiene allineato a mano con lo stato iniziale definito sopra
+function resetFormToDefaults(){
+  applyStateObject({});
+  populateInputsFromState();
+}
+
+// evita che il primo update() eseguito al caricamento pagina crei
+// automaticamente una scheda vuota prima ancora che l'utente faccia qualcosa
+let appInitialized = false;
+
+function autosaveCurrentPatient(){
+  if(!appInitialized) return;
+  if(!currentPatientId){
+    // rete di sicurezza: se l'utente inizia a compilare senza aver aperto
+    // prima un letto dalla mappa reparto, ne creiamo una scheda "libera"
+    // così il lavoro non va perso.
+    const patients = loadPatients();
+    const id = 'p_' + Date.now();
+    const name = 'Paziente ' + (Object.keys(patients).length + 1);
+    patients[id] = { name, savedAt: Date.now(), state: serializeState() };
+    savePatients(patients);
+    currentPatientId = id;
+    try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+    renderWardMap();
+    return;
+  }
+  const patients = loadPatients();
+  if(!patients[currentPatientId]) return;
+  patients[currentPatientId].state = serializeState();
+  patients[currentPatientId].savedAt = Date.now();
+  savePatients(patients);
+}
+
+/* ------------------------------------------------------------
+   MAPPA REPARTO: settori e letti fissi.
+   Per aggiornare la composizione del reparto, modifica solo
+   questo oggetto: ogni chiave è un settore, il valore è
+   l'elenco dei numeri di letto in quel settore.
+   ------------------------------------------------------------ */
+const WARD_MAP = {
+  'Settore A': ['4.1','4.2','5.1','5.2','6.1','6.2','7.1','7.2'],
+  'Settore B': ['8.1','9.1','9.2','10.1','10.2','11.1','11.2','12.1','12.2','13.1','13.2','14.1','14.2'],
+  'Settore C': ['15.1','15.2','16.1','16.2','17.1','17.2','18.1','18.2','19.1','19.2','20.1','21.1','22'],
+  'Settore D': ['23.1','23.2','24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29.1']
+};
+const SETTORI = Object.keys(WARD_MAP);
+function bedName(n){ return 'Letto ' + n; }
+
+let wardMapOpen = false;
+let settoreAttivo = SETTORI[0];
+
+// istantanea di uno stato completamente "vuoto" (di default), calcolata una
+// sola volta all'avvio, usata per capire se una scheda ha davvero dei dati
+// dentro (bed verde) o è ancora tutta di default (bed neutro)
+function computeDefaultSnapshot(){
+  const backup = serializeState();
+  applyStateObject({});
+  const snap = serializeState();
+  applyStateObject(backup);
+  return snap;
+}
+let DEFAULT_SNAPSHOT_JSON = null; // impostata nell'init, prima di caricare l'ultimo paziente
+
+function schedaHaDati(patientState){
+  if(!patientState) return false;
+  return JSON.stringify(patientState) !== DEFAULT_SNAPSHOT_JSON;
+}
+
+function toggleWardMap(){
+  wardMapOpen ? chiudiWardMap() : apriWardMap();
+}
+function apriWardMap(){
+  wardMapOpen = true;
+  document.getElementById('wardmap-view').style.display = '';
+  document.getElementById('clinical-view').style.display = 'none';
+  renderWardMap();
+}
+function chiudiWardMap(){
+  wardMapOpen = false;
+  document.getElementById('wardmap-view').style.display = 'none';
+  document.getElementById('clinical-view').style.display = '';
+}
+
+function renderHeaderBadge(){
+  const patients = loadPatients();
+  const active = patients[currentPatientId];
+  const badge = document.getElementById('active-bed-badge');
+  if(active){
+    badge.textContent = active.name;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderWardMap(){
+  const patients = loadPatients();
+
+  // tab dei settori
+  const tabsEl = document.getElementById('settore-tabs');
+  tabsEl.innerHTML = '';
+  SETTORI.forEach(s => {
+    const tab = document.createElement('div');
+    tab.className = 'patient-tab' + (s === settoreAttivo ? ' active' : '');
+    tab.textContent = s.replace('Settore ', '');
+    tab.title = s;
+    tab.onclick = () => { settoreAttivo = s; renderWardMap(); };
+    tabsEl.appendChild(tab);
+  });
+
+  // letti del settore attivo
+  const gridEl = document.getElementById('bed-grid');
+  gridEl.innerHTML = '';
+  WARD_MAP[settoreAttivo].forEach(n => {
+    const nome = bedName(n);
+    const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
+    const tile = document.createElement('div');
+    tile.className = 'bed-tile'
+      + (entry && schedaHaDati(entry[1].state) ? ' occupied' : '')
+      + (entry && entry[0] === currentPatientId ? ' active' : '');
+    tile.textContent = n;
+    tile.onclick = () => apriLetto(nome);
+    gridEl.appendChild(tile);
+  });
+
+  // scheda attiva + elimina
+  const info = document.getElementById('scheda-attiva-info');
+  const active = patients[currentPatientId];
+  if(active){
+    info.style.display = '';
+    document.getElementById('scheda-attiva-nome').textContent = active.name;
+  } else {
+    info.style.display = 'none';
+  }
+
+  // altre schede salvate che non corrispondono a un letto della mappa
+  // (es. cree con "Scheda libera", o dalla rete di sicurezza)
+  const nomiLetti = new Set(Object.values(WARD_MAP).flat().map(bedName));
+  const altre = Object.entries(patients).filter(([id,p]) => !nomiLetti.has(p.name));
+  const altreGroup = document.getElementById('altre-schede-group');
+  const altreList = document.getElementById('altre-schede-lista');
+  altreList.innerHTML = '';
+  if(altre.length){
+    altreGroup.style.display = '';
+    altre
+      .sort((a,b) => a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' }))
+      .forEach(([id,p]) => {
+        const tab = document.createElement('div');
+        tab.className = 'patient-tab' + (id === currentPatientId ? ' active' : '');
+        tab.textContent = p.name;
+        tab.onclick = () => selezionaPaziente(id);
+        altreList.appendChild(tab);
+      });
+  } else {
+    altreGroup.style.display = 'none';
+  }
+
+  renderHeaderBadge();
+}
+
+function selezionaPaziente(id){
+  const patients = loadPatients();
+  const p = patients[id];
+  if(!p) return;
+  currentPatientId = id;
+  try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+  applyStateObject(p.state);
+  populateInputsFromState();
+  update();
+  chiudiWardMap();
+  showToast('Scheda di ' + p.name + ' caricata');
+}
+
+// apre la scheda di un letto se esiste già, altrimenti la crea vuota con
+// il nome esatto del letto (nessuna digitazione manuale necessaria)
+function apriLetto(nome){
+  const patients = loadPatients();
+  const existing = Object.entries(patients).find(([id,p]) => p.name === nome);
+  if(existing){
+    selezionaPaziente(existing[0]);
+    return;
+  }
+  resetFormToDefaults();
+  const id = 'p_' + Date.now();
+  patients[id] = { name: nome, savedAt: Date.now(), state: serializeState() };
+  savePatients(patients);
+  currentPatientId = id;
+  try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+  update();
+  chiudiWardMap();
+  showToast('Scheda "' + nome + '" creata');
+}
+
+// per pazienti fuori dai settori fissi (appoggi, letti aggiuntivi...)
+function apriLettoLibero(){
+  const input = document.getElementById('letto-libero-nome');
+  const nome = input.value.trim();
+  if(!nome) return;
+  input.value = '';
+  apriLetto(nome);
+}
+
+function chiudiPaziente(){
+  currentPatientId = null;
+  try{ localStorage.removeItem(LAST_PATIENT_KEY); } catch(e){}
+  resetFormToDefaults();
+  refreshUI();
+  renderWardMap();
+}
+
+// elimina solo la scheda attiva (per eliminarne un'altra, aprila prima).
+// conferma a due click sul pulsante stesso, niente popup nativi.
+function eliminaPazienteAttivo(){
+  const btn = document.getElementById('elimina-paziente-btn');
+  if(!currentPatientId) return;
+  if(!eliminaArmed){
+    eliminaArmed = true;
+    btn.textContent = 'Confermi? Clicca di nuovo';
+    clearTimeout(eliminaTimer);
+    eliminaTimer = setTimeout(() => {
+      eliminaArmed = false;
+      btn.textContent = 'Elimina scheda attiva';
+    }, 3000);
+    return;
+  }
+  clearTimeout(eliminaTimer);
+  eliminaArmed = false;
+  btn.textContent = 'Elimina scheda attiva';
+  const patients = loadPatients();
+  delete patients[currentPatientId];
+  savePatients(patients);
+  chiudiPaziente();
+  renderWardMap();
+}
+
+// risolve la forma maschile/femminile di un'opzione; se non ha varianti (opt.m/opt.f)
+// usa semplicemente opt.label. Finché il sesso non è scelto, default al maschile.
+function g(opt){
+  if(!opt) return '';
+  if(opt.m !== undefined) return state.sesso === 'F' ? opt.f : opt.m;
+  return opt.label;
+}
+
+function renderSingle(containerId, options, getVal, setVal){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  options.forEach(opt => {
+    const b = document.createElement('div');
+    b.className = 'chip' + (getVal()===opt.value ? ' active' : '');
+    b.textContent = g(opt);
+    b.onclick = () => { setVal(getVal()===opt.value ? '' : opt.value); update(); };
+    el.appendChild(b);
+  });
+}
+function renderMulti(containerId, options, getSet){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  options.forEach(opt => {
+    const b = document.createElement('div');
+    const s = getSet();
+    b.className = 'chip' + (s.has(opt.value) ? ' active' : '');
+    b.textContent = g(opt);
+    b.onclick = () => { s.has(opt.value) ? s.delete(opt.value) : s.add(opt.value); update(); };
+    el.appendChild(b);
+  });
+}
+
+// "dolente" e "dolorabile" sono combinabili tra loro (es. "dolente e dolorabile in fianco dx"),
+// ma sono mutuamente esclusivi con "non dolente né dolorabile".
+function renderDolorabilita(){
+  const el = document.getElementById('addome-dolorabilita');
+  el.innerHTML = '';
+  const s = state.addome.dolorabilita;
+  OPT.addomeDolorabilita.forEach(opt => {
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = g(opt);
+    b.onclick = () => {
+      if(opt.value === 'non_dolente'){
+        s.clear();
+        if(!active) s.add('non_dolente');
+      } else {
+        s.delete('non_dolente');
+        active ? s.delete(opt.value) : s.add(opt.value);
+      }
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+
+/* ============================================================
+   DEFINIZIONE OPZIONI (modifica/estendi qui)
+   ============================================================ */
+const OPT = {
+  sesso: [
+    {value:'M', label:'Maschio'},
+    {value:'F', label:'Femmina'}
+  ],
+  coscienzaPrimary: [
+    {value:'vigile', m:'Vigile', f:'Vigile'},
+    {value:'assopito', m:'Assopito, risvegliabile', f:'Assopita, risvegliabile'},
+    {value:'soporoso', m:'Soporoso, risvegliabile', f:'Soporosa, risvegliabile'},
+    {value:'comatoso', m:'Comatoso', f:'Comatosa'}
+  ],
+  coscienzaDescrittori: [
+    {value:'orientato', m:'orientato', f:'orientata'},
+    {value:'disorientato', m:'disorientato', f:'disorientata'},
+    {value:'collaborante', label:'collaborante'},
+    {value:'tranquillo', m:'tranquillo', f:'tranquilla'},
+    {value:'rallentato', m:'rallentato', f:'rallentata'},
+    {value:'mutacico', m:'mutacico', f:'mutacica'},
+    {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita'},
+    {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita'},
+    {value:'nega_dolore', label:'nega dolore'},
+    {value:'risponde_domande', label:'risponde alle domande poste'}
+  ],
+  respiroTipo: [
+    {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
+    {value:'dispnoico', m:'Dispnoico', f:'Dispnoica'},
+    {value:'riferita_dispnea', label:'Riferita dispnea'}
+  ],
+  respiroO2: [
+    {value:'AA', label:'in AA'},
+    {value:'NC', label:'in NC'},
+    {value:'ALTRO', label:'altro'}
+  ],
+  temp: [
+    {value:'apiretico', m:'Apiretico', f:'Apiretica'},
+    {value:'febbrile', label:'Febbrile'}
+  ],
+  cuoreRitmo: [
+    {value:'ritmici', label:'Ritmici'},
+    {value:'aritmici', label:'Aritmici'}
+  ],
+  cuoreFreq: [
+    {value:'normofrequenti', label:'Normofrequenti'},
+    {value:'a target per FA', label:'a target per FA'},
+    {value:'tachicardici', label:'tachicardici'},
+    {value:'bradicardici', label:'bradicardici'}
+  ],
+  cuoreQualita: [
+    {value:'parafonici', label:'parafonici'}
+  ],
+  cuoreSoffio: [
+    {value:'nessuno', label:'Nessun soffio'},
+    {value:'sistolico', label:'Sistolico'},
+    {value:'diastolico', label:'Diastolico'}
+  ],
+  cuoreFocolaio: [
+    {value:'aortico', label:'aortico'},
+    {value:'mitralico', label:'mitralico'},
+    {value:'aorto-mitralico', label:'aorto-mitralico'},
+    {value:'mesocardio', label:'mesocardio'},
+    {value:'tricuspidale', label:'tricuspidale'}
+  ],
+  toraceMv: [
+    {value:'presente', label:'Presente su TAP'},
+    {value:'ridotto', label:'Ridotto'},
+    {value:'abolito', label:'Abolito'}
+  ],
+  toraceMvLoc: [
+    {value:'in base destra', label:'base dx'},
+    {value:'in base sinistra', label:'base sx'},
+    {value:'alle basi', label:'alle basi'},
+    {value:'in medio-basale destra', label:'medio-basale dx'},
+    {value:'in medio-basale sinistra', label:'medio-basale sx'},
+    {value:'su TAP', label:'su TAP'}
+  ],
+  toraceReperti: [
+    {value:'non_rumori', label:'Non rumori aggiunti'},
+    {value:'non_franchi', label:'Non franchi rumori patologici'},
+    {value:'crepitii', label:'Crepitii'},
+    {value:'ronchi', label:'Ronchi'},
+    {value:'sibili', label:'Sibili/fischi diffusi'}
+  ],
+  toraceReperteLoc: [
+    {value:'in base destra', label:'base dx'},
+    {value:'in base sinistra', label:'base sx'},
+    {value:'bibasali', label:'bibasali'},
+    {value:'in medio-basale destra', label:'medio-basale dx'},
+    {value:'in medio-basale sinistra', label:'medio-basale sx'},
+    {value:'in medio-basale bilaterale', label:'medio-basale bilat.'}
+  ],
+  addomeForma: [
+    {value:'globoso per adipe', label:'Globoso per adipe'},
+    {value:'cavo', label:'Cavo'}
+  ],
+  addomeConsistenza: [
+    {value:'trattabile', label:'Trattabile'},
+    {value:'pastoso', label:'Pastoso'},
+    {value:'teso', label:'Teso'}
+  ],
+  addomeDolorabilita: [
+    {value:'non_dolente', label:'Non dolente né dolorabile'},
+    {value:'dolente', label:'Dolente'},
+    {value:'dolorabile', label:'Dolorabile'}
+  ],
+  addomeDoloreLoc: [
+    {value:'al fianco destro', label:'fianco dx'},
+    {value:'al fianco sinistro', label:'fianco sx'},
+    {value:'in epigastrio', label:'epigastrio'},
+    {value:'in mesogastrio', label:'mesogastrio'},
+    {value:'in ipogastrio', label:'ipogastrio'},
+    {value:'diffusamente', label:'diffusamente'},
+    {value:'alla palpazione S/P', label:'S/P (superf. e prof.)'},
+    {value:'alla palpazione profonda', label:'palpazione profonda'}
+  ],
+  addomePeristalsi: [
+    {value:'presente', label:'Presente'},
+    {value:'assente', label:'Assente'},
+    {value:'vivace', label:'Vivace'},
+    {value:'torpida', label:'Torpida'}
+  ],
+  addomeManovre: [
+    {value:'non Blumberg', label:'Non Blumberg'},
+    {value:'Blumberg positivo', label:'Blumberg positivo'},
+    {value:'non Murphy', label:'Non Murphy'},
+    {value:'Murphy positivo', label:'Murphy positivo'}
+  ],
+  edemi: [
+    {value:'non_edemi', label:'Non edemi', text:'Non edemi.'},
+    {value:'non_declivi', label:'Non edemi declivi', text:'Non edemi declivi.'},
+    {value:'declivi', label:'Edemi declivi AAII', text:'Edemi improntabili agli arti inferiori.'},
+    {value:'riduzione_aaii', label:'In riduzione AAII', text:'In riduzione gli edemi agli AAII.'},
+    {value:'ripresentati_aaii', label:'Ripresentati AAII', text:'Ripresentatisi gli edemi agli AAII.'},
+    {value:'colonnari_diffusi', label:'Colonnari/discrasici diffusi', text:'Permangono edemi colonnari anche discrasici agli AAII, agli AASS e ai fianchi.'},
+    {value:'aass_scarico', label:'AASS da scarico', text:'Edemi agli AASS da porre in scarico, non edemi agli AAII.'}
+  ],
+  diuresiModalita: [
+    {value:'sacca', label:'in sacca di CV'},
+    {value:'pappagallo', label:'in pappagallo'},
+    {value:'panno', label:'in panno'},
+    {value:'spontanea', label:'spontanea'},
+    {value:'non_valutabile', label:'non valutabile'}
+  ],
+  cute: [
+    {value:'cicatrice_xifopubica', label:'Cicatrice xifo-pubica'},
+    {value:'colostomia_sx', label:'Colostomia fianco sx'},
+    {value:'colostomia_dx', label:'Colostomia fianco dx'},
+    {value:'ureterocutaneostomia_dx', label:'Ureterocutaneostomia fianco dx'},
+    {value:'ureterocutaneostomia_sx', label:'Ureterocutaneostomia fianco sx'},
+    {value:'discromie_venosa', label:'Discromie da insuff. venosa AAII'},
+    {value:'discromie_venosa_sx', label:'Discromie da insuff. venosa AI sx'},
+    {value:'discromie_venosa_dx', label:'Discromie da insuff. venosa AI dx'}
+  ]
+};
+const CUTE_LABELS = {
+  cicatrice_xifopubica: 'cicatrice xifo-pubica',
+  colostomia_sx: 'colostomia in fianco sinistro',
+  colostomia_dx: 'colostomia in fianco destro',
+  ureterocutaneostomia_dx: 'ureterocutaneostomia in fianco destro',
+  ureterocutaneostomia_sx: 'ureterocutaneostomia in fianco sinistro',
+  discromie_venosa: 'discromie cutanee agli AAII da insufficienza venosa cronica',
+  discromie_venosa_sx: "discromie cutanee all'arto inferiore sinistro da insufficienza venosa cronica",
+  discromie_venosa_dx: "discromie cutanee all'arto inferiore destro da insufficienza venosa cronica"
+};
+
+/* ============================================================
+   RENDER DI TUTTI I GRUPPI
+   ============================================================ */
+function renderAll(){
+  renderSingle('sesso-chips', OPT.sesso, ()=>state.sesso, v=>state.sesso=v);
+
+  renderSingle('coscienza-primary', OPT.coscienzaPrimary, ()=>state.coscienza.primary, v=>state.coscienza.primary=v);
+  renderMulti('coscienza-descrittori', OPT.coscienzaDescrittori, ()=>state.coscienza.descrittori);
+
+  renderSingle('respiro-tipo', OPT.respiroTipo, ()=>state.respiro.tipo, v=>state.respiro.tipo=v);
+  renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
+  renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
+
+  renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v=>state.cuore.ritmo=v);
+  renderSingle('cuore-freq', OPT.cuoreFreq, ()=>state.cuore.freq, v=>state.cuore.freq=v);
+  renderMulti('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
+  renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
+  renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
+
+  renderSingle('torace-mv', OPT.toraceMv, ()=>state.torace.mv, v=>state.torace.mv=v);
+  renderMulti('torace-mv-loc', OPT.toraceMvLoc, ()=>state.torace.mvLoc);
+  renderSingle('torace-reperti', OPT.toraceReperti, ()=>state.torace.reperti, v=>state.torace.reperti=v);
+  renderMulti('torace-reperti-loc', OPT.toraceReperteLoc, ()=>state.torace.reperteLoc);
+  renderSingle('torace-limitata', [{value:true,label:'Valutazione limitata da mancata collaborazione'}],
+    ()=>state.torace.limitata, ()=>{ state.torace.limitata = !state.torace.limitata; });
+
+  renderSingle('addome-forma', OPT.addomeForma, ()=>state.addome.forma, v=>state.addome.forma=v);
+  renderSingle('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza, v=>state.addome.consistenza=v);
+  renderDolorabilita();
+  renderMulti('addome-dolore-loc', OPT.addomeDoloreLoc, ()=>state.addome.doloreLoc);
+  renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
+  renderMulti('addome-manovre', OPT.addomeManovre, ()=>state.addome.manovre);
+
+  renderSingle('edemi-chips', OPT.edemi, ()=>state.edemi.scelta, v=>state.edemi.scelta=v);
+
+  renderSingle('diuresi-modalita', OPT.diuresiModalita, ()=>state.diuresi.modalita, v=>state.diuresi.modalita=v);
+
+  renderMulti('cute-chips', OPT.cute, ()=>state.cute.chips);
+}
+
+/* ============================================================
+   COMPOSIZIONE FRASI
+   ============================================================ */
+// descrittori che nei referti reali si legano a "tranquillo/a" con "ma"
+// (es. "rallentato ma tranquillo", "disorientata ma tranquilla")
+const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
+
+function composeCoscienza(){
+  const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
+  const selected = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
+  const hasTranquillo = selected.some(o => o.value === 'tranquillo');
+  const partner = selected.find(o => TRANQUILLO_PARTNERS.includes(o.value));
+
+  const descLabels = [];
+  selected.forEach(o => {
+    if(hasTranquillo && partner && o.value === partner.value){
+      const tranquilloOpt = OPT.coscienzaDescrittori.find(x => x.value === 'tranquillo');
+      descLabels.push(g(o) + ' ma ' + g(tranquilloOpt));
+    } else if(o.value === 'tranquillo' && hasTranquillo && partner){
+      // già incluso nella coppia "X ma tranquillo/a" sopra
+    } else {
+      descLabels.push(g(o));
+    }
+  });
+
+  const parts = [g(primaryOpt)];
+  if(descLabels.length) parts.push(joinIt(descLabels));
+  let s = parts.join(', ') + '.';
+  const extra = (state.coscienza.extra || '').trim();
+  if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
+  return s;
+}
+
+function composeRespiro(){
+  const r = state.respiro;
+  const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
+  const tempOpt = OPT.temp.find(o => o.value === r.temp);
+  let o2text = r.o2==='AA' ? 'in AA' : r.o2==='NC' ? `in NC ${r.litri || '_'}L/min` : (r.altro || 'in ossigenoterapia');
+  let s = `${g(tipoOpt)} ${o2text} con SatO2 ${r.sat || '_'}%, PA ${r.pas || '_'}/${r.pad || '_'} mmHg, FC ${r.fc || '_'} bpm.`;
+  let t = r.temp==='apiretico' ? `${g(tempOpt)}.` : `${g(tempOpt)}, TC ${r.tempValore || '_'}°C.`;
+  return s + ' ' + t;
+}
+
+function composeCuore(){
+  const c = state.cuore;
+  let parts = [c.ritmo];
+  if(c.freq) parts.push(c.freq);
+  [...c.qualita].forEach(q => parts.push(q));
+  let s = 'Toni ' + parts.join(', ');
+  if(c.soffio !== 'nessuno'){
+    const foc = c.focolaio || 'non specificato';
+    s += `, soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine su focolaio ${foc}`;
+  }
+  return s + '.';
+}
+
+function composeToraceClean(){
+  const t = state.torace;
+  const mvLabel = { presente:'MV presente su TAP', ridotto:'MV ridotto', abolito:'MV abolito' }[t.mv];
+  const mvText = t.mv==='presente' ? mvLabel : (mvLabel + ' ' + [...t.mvLoc].join(', ')).trim();
+  const repLabel = { non_rumori:'non rumori aggiunti', non_franchi:'non franchi rumori patologici',
+                      crepitii:'crepitii', ronchi:'ronchi', sibili:'sibili e fischi diffusi' }[t.reperti];
+  const loc = [...t.reperteLoc].join(', ');
+  const repText = repLabel + (loc ? ' ' + loc : '');
+  const body = `${mvText}, ${repText}.`;
+  return t.limitata
+    ? `Al torace, per quanto valutabile in mancata collaborazione: ${body}`
+    : `Al torace ${body}`;
+}
+
+function composeAddome(){
+  const a = state.addome;
+  const parts = [];
+  if(a.forma) parts.push(a.forma);
+  parts.push(a.consistenza);
+  const dolMap = { non_dolente:'non dolente né dolorabile', dolente:'dolente', dolorabile:'dolorabile' };
+  const dolSelected = [...a.dolorabilita].map(v => dolMap[v]);
+  const loc = [...a.doloreLoc].join(', ');
+  if(dolSelected.length){
+    parts.push(joinIt(dolSelected) + (loc ? ' ' + loc : ''));
+  }
+  let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
+  const man = [...a.manovre];
+  if(man.length) s += ' ' + cap(joinIt(man)) + '.';
+  return s;
+}
+
+function composeEdemi(){
+  const custom = (state.edemi.custom || '').trim();
+  if(custom) return custom.endsWith('.') ? custom : custom + '.';
+  const found = OPT.edemi.find(o => o.value === state.edemi.scelta);
+  return found ? found.text : '';
+}
+
+function composeDiuresi(){
+  const d = state.diuresi;
+  const modLabel = OPT.diuresiModalita.find(o=>o.value===d.modalita).label;
+  let s = `Diuresi ${modLabel}`;
+  if(d.volume) s += `, ${d.volume} ml`;
+  if(d.note) s += `, ${d.note}`;
+  return s + '.';
+}
+
+function composeCute(){
+  const chips = [...state.cute.chips].map(k => CUTE_LABELS[k]);
+  const note = (state.cute.note || '').trim();
+  const all = [];
+  if(chips.length) all.push(cap(joinIt(chips)));
+  if(note) all.push(cap(note));
+  return all.length ? all.join('. ') + '.' : '';
+}
+
+/* ============================================================
+   OUTPUT FINALE
+   ============================================================ */
+function refreshUI(){
+  syncInputsToState();
+  renderAll();
+  const parts = [
+    composeCoscienza(),
+    composeRespiro(),
+    composeCuore(),
+    composeToraceClean(),
+    composeAddome(),
+    composeEdemi(),
+    composeDiuresi(),
+    composeCute()
+  ].filter(Boolean);
+  document.getElementById('output').value = parts.join(' ');
+}
+function update(){
+  refreshUI();
+  autosaveCurrentPatient();
+}
+
+function copyOutput(){
+  const out = document.getElementById('output');
+  out.focus();
+  out.select();
+  out.setSelectionRange(0, out.value.length); // per mobile
+
+  // prova prima l'API moderna, altrimenti fallback al vecchio metodo:
+  // in alcuni contesti (preview sandbox, http non sicuro) navigator.clipboard
+  // può non esistere o rifiutare la richiesta.
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(out.value)
+      .then(()=>showToast('Copiato negli appunti'))
+      .catch(()=>fallbackCopy(out));
+  } else {
+    fallbackCopy(out);
+  }
+}
+function fallbackCopy(out){
+  try{
+    const ok = document.execCommand('copy');
+    showToast(ok ? 'Copiato negli appunti' : 'Copia manualmente (Ctrl/Cmd+C)');
+  } catch(e){
+    showToast('Copia manualmente (Ctrl/Cmd+C)');
+  }
+}
+
+// window.confirm() può essere bloccato in alcune anteprime sandbox: uso una
+// conferma a due click sul pulsante stesso, senza dialog nativo.
+let resetArmed = false;
+let resetTimer;
+function resetAll(){
+  const btn = document.getElementById('reset-btn');
+  if(!resetArmed){
+    resetArmed = true;
+    btn.textContent = 'Confermi? Clicca di nuovo';
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(()=>{
+      resetArmed = false;
+      btn.textContent = 'Azzera tutto';
+    }, 3000);
+    return;
+  }
+  clearTimeout(resetTimer);
+  location.reload();
+}
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+
+try{
+  DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
+  renderWardMap();
+  let lastId = null;
+  try{ lastId = localStorage.getItem(LAST_PATIENT_KEY); } catch(e){}
+  if(lastId && loadPatients()[lastId]){
+    selezionaPaziente(lastId);
+  } else {
+    renderAll();
+    update();
+  }
+  appInitialized = true;
+} catch(err){
+  mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
+}
+</script>
+</body>
+</html>
