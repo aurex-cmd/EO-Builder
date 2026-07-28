@@ -456,6 +456,35 @@
   </div>
 </div>
 
+<!-- 9. NEUROLOGICO -->
+<div class="card" id="card-neuro">
+  <h2><span class="eyebrow">09</span>Neurologico</h2>
+  <div class="group">
+    <div class="group-label">Linguaggio</div>
+    <div class="chips" id="neuro-linguaggio"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Mingazzini</div>
+    <div class="chips" id="neuro-mingazzini"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Emisindrome</div>
+    <div class="chips" id="neuro-emisindrome"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Emineglect</div>
+    <div class="chips" id="neuro-emineglect"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Occhi deviati</div>
+    <div class="chips" id="neuro-occhi"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Solco naso-labiale spianato + rima orale deviata</div>
+    <div class="chips" id="neuro-facciale"></div>
+  </div>
+</div>
+
 <!-- OUTPUT -->
 <div class="card" id="output-card">
   <h2><span class="eyebrow">→</span>Referto</h2>
@@ -499,11 +528,12 @@ const state = {
   coscienza: { primary:'vigile', descrittori:new Set(), extra:'' },
   respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
   cuore: { ritmo:'ritmici', freq:'normofrequenti', qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:new Set(), reperti:'non_rumori', reperteLoc:new Set(), limitata:false },
-  addome: { forma:'', consistenza:'trattabile', dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
+  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLoc:new Set(), limitata:false },
+  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
   edemi: { scelta:'non_edemi', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
-  cute: { chips:new Set(), note:'' }
+  cute: { chips:new Set(), note:'' },
+  neuro: { linguaggio:new Set(), mingazzini:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
 /* ============================================================
@@ -593,12 +623,12 @@ function applyStateObject(o){
 
   state.torace.mv = o.torace?.mv ?? 'presente';
   state.torace.mvLoc = new Set(o.torace?.mvLoc || []);
-  state.torace.reperti = o.torace?.reperti ?? 'non_rumori';
+  state.torace.reperti = new Set(o.torace?.reperti || ['non_rumori']);
   state.torace.reperteLoc = new Set(o.torace?.reperteLoc || []);
   state.torace.limitata = o.torace?.limitata ?? false;
 
   state.addome.forma = o.addome?.forma ?? '';
-  state.addome.consistenza = o.addome?.consistenza ?? 'trattabile';
+  state.addome.consistenza = new Set(o.addome?.consistenza || ['trattabile']);
   state.addome.dolorabilita = new Set(o.addome?.dolorabilita || ['non_dolente']);
   state.addome.doloreLoc = new Set(o.addome?.doloreLoc || []);
   state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
@@ -614,6 +644,13 @@ function applyStateObject(o){
 
   state.cute.chips = new Set(o.cute?.chips || []);
   state.cute.note = o.cute?.note ?? '';
+
+  state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
+  state.neuro.mingazzini = o.neuro?.mingazzini ?? '';
+  state.neuro.emisindrome = o.neuro?.emisindrome ?? '';
+  state.neuro.emineglect = o.neuro?.emineglect ?? '';
+  state.neuro.occhiDeviati = o.neuro?.occhiDeviati ?? '';
+  state.neuro.deviazioneFacciale = o.neuro?.deviazioneFacciale ?? '';
 }
 // tiene allineato a mano con lo stato iniziale definito sopra
 function resetFormToDefaults(){
@@ -992,6 +1029,58 @@ function renderDolorabilita(){
   });
 }
 
+// reperti aggiunti del torace: le voci "negative" (non rumori aggiunti...)
+// sono mutuamente esclusive tra loro; i reperti positivi (crepitii, ronchi,
+// sibili...) si possono invece combinare liberamente tra loro (es. "crepitii
+// alla base sinistra, qualche sibilo sparso").
+function renderToraceReperti(){
+  const el = document.getElementById('torace-reperti');
+  el.innerHTML = '';
+  const s = state.torace.reperti;
+  OPT.toraceReperti.forEach(opt => {
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      if(opt.negativo){
+        s.clear();
+        if(!active) s.add(opt.value);
+      } else {
+        OPT.toraceReperti.filter(o => o.negativo).forEach(o => s.delete(o.value));
+        active ? s.delete(opt.value) : s.add(opt.value);
+      }
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+
+// linguaggio: "non disartria" esclude gli altri; disartrico/afasico si
+// possono invece combinare tra loro (capita che coesistano)
+function renderNeuroLinguaggio(){
+  const el = document.getElementById('neuro-linguaggio');
+  el.innerHTML = '';
+  const s = state.neuro.linguaggio;
+  OPT.neuroLinguaggio.forEach(opt => {
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      if(opt.negativo){
+        s.clear();
+        if(!active) s.add(opt.value);
+      } else {
+        OPT.neuroLinguaggio.filter(o => o.negativo).forEach(o => s.delete(o.value));
+        active ? s.delete(opt.value) : s.add(opt.value);
+      }
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+
 /* ============================================================
    DEFINIZIONE OPZIONI (modifica/estendi qui)
    ============================================================ */
@@ -1009,14 +1098,21 @@ const OPT = {
   coscienzaDescrittori: [
     {value:'orientato', m:'orientato', f:'orientata'},
     {value:'disorientato', m:'disorientato', f:'disorientata'},
+    {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata'},
+    {value:'discretamente_orientato', m:'discretamente orientato', f:'discretamente orientata'},
     {value:'tranquillo', m:'tranquillo', f:'tranquilla'},
     {value:'collaborante', label:'collaborante'},
     {value:'rallentato', m:'rallentato', f:'rallentata'},
     {value:'mutacico', m:'mutacico', f:'mutacica'},
+    {value:'disartrico', m:'disartrico', f:'disartrica'},
+    {value:'ansioso', m:'ansioso', f:'ansiosa'},
+    {value:'non_contattabile', label:'non contattabile'},
+    {value:'occhi_aperti', label:'mantiene gli occhi aperti'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita'},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita'},
     {value:'nega_dolore', label:'nega dolore'},
-    {value:'risponde_domande', label:'risponde alle domande poste'}
+    {value:'risponde_domande', label:'risponde alle domande poste'},
+    {value:'non_segni_lato', label:'non segni di lato'}
   ],
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
@@ -1030,7 +1126,8 @@ const OPT = {
   ],
   temp: [
     {value:'apiretico', m:'Apiretico', f:'Apiretica'},
-    {value:'febbrile', label:'Febbrile'}
+    {value:'febbrile', label:'Febbrile'},
+    {value:'non_specificata', label:'Non specificata'}
   ],
   cuoreRitmo: [
     {value:'ritmici', label:'Ritmici'},
@@ -1058,9 +1155,11 @@ const OPT = {
     {value:'tricuspidale', label:'tricuspidale'}
   ],
   toraceMv: [
-    {value:'presente', label:'Presente su TAP'},
-    {value:'ridotto', label:'Ridotto'},
-    {value:'abolito', label:'Abolito'}
+    {value:'presente', label:'Presente su TAP', frag:'MV presente su TAP', noLoc:true},
+    {value:'ventila_bilateralmente', label:'Ventila bilateralmente', frag:'ventila bilateralmente', noLoc:true},
+    {value:'ridotto', label:'Ridotto', frag:'MV ridotto'},
+    {value:'abolito', label:'Abolito', frag:'MV abolito'},
+    {value:'aspro', label:'Aspro', frag:'MV aspro'}
   ],
   toraceMvLoc: [
     {value:'in base destra', label:'base dx'},
@@ -1071,11 +1170,14 @@ const OPT = {
     {value:'su TAP', label:'su TAP'}
   ],
   toraceReperti: [
-    {value:'non_rumori', label:'Non rumori aggiunti'},
-    {value:'non_franchi', label:'Non franchi rumori patologici'},
-    {value:'crepitii', label:'Crepitii'},
-    {value:'ronchi', label:'Ronchi'},
-    {value:'sibili', label:'Sibili/fischi diffusi'}
+    {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
+    {value:'non_franchi', label:'Non franchi rumori patologici', frag:'non franchi rumori patologici', negativo:true},
+    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true},
+    {value:'crepitii_fini', label:'Crepitii fini', frag:'fini crepitii', hasLoc:true},
+    {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true},
+    {value:'sibili', label:'Sibili/fischi diffusi', frag:'sibili e fischi diffusi'},
+    {value:'qualche_sibilo_tap', label:'Qualche sibilo diffuso (TAP)', frag:'qualche sibilo diffuso su TAP'},
+    {value:'qualche_sibilo_sparso', label:'Qualche sibilo sparso', frag:'qualche sibilo sparso'}
   ],
   toraceReperteLoc: [
     {value:'in base destra', label:'base dx'},
@@ -1083,7 +1185,8 @@ const OPT = {
     {value:'bibasali', label:'bibasali'},
     {value:'in medio-basale destra', label:'medio-basale dx'},
     {value:'in medio-basale sinistra', label:'medio-basale sx'},
-    {value:'in medio-basale bilaterale', label:'medio-basale bilat.'}
+    {value:'in medio-basale bilaterale', label:'medio-basale bilat.'},
+    {value:'delle alte vie', label:'alte vie'}
   ],
   addomeForma: [
     {value:'globoso per adipe', label:'Globoso per adipe'},
@@ -1117,6 +1220,7 @@ const OPT = {
   ],
   addomeManovre: [
     {value:'non Blumberg', label:'Non Blumberg'},
+    {value:'Blumberg negativo', label:'Blumberg negativo'},
     {value:'Blumberg positivo', label:'Blumberg positivo'},
     {value:'non Murphy', label:'Non Murphy'},
     {value:'Murphy positivo', label:'Murphy positivo'}
@@ -1124,10 +1228,14 @@ const OPT = {
   edemi: [
     {value:'non_edemi', label:'Non edemi', text:'Non edemi.'},
     {value:'non_declivi', label:'Non edemi declivi', text:'Non edemi declivi.'},
+    {value:'non_declivi_grinza', label:'Non declivi + cute a grinza', text:'Non edemi declivi, cute a grinza agli AAII.'},
     {value:'declivi', label:'Edemi declivi AAII', text:'Edemi improntabili agli arti inferiori.'},
+    {value:'duri_aaii', label:'Edemi duri AAII', text:'Edemi duri agli arti inferiori.'},
+    {value:'succulenza_pretibiale', label:'Succulenza pretibiale', text:'Succulenza pretibiale agli AAII.'},
     {value:'riduzione_aaii', label:'In riduzione AAII', text:'In riduzione gli edemi agli AAII.'},
     {value:'ripresentati_aaii', label:'Ripresentati AAII', text:'Ripresentatisi gli edemi agli AAII.'},
     {value:'colonnari_diffusi', label:'Colonnari/discrasici diffusi', text:'Permangono edemi colonnari anche discrasici agli AAII, agli AASS e ai fianchi.'},
+    {value:'aass_semplice', label:'Edemi AASS', text:'Edemi agli AASS.'},
     {value:'aass_scarico', label:'AASS da scarico', text:'Edemi agli AASS da porre in scarico, non edemi agli AAII.'}
   ],
   diuresiModalita: [
@@ -1147,17 +1255,33 @@ const OPT = {
   cute: [
     {value:'cicatrice_xifopubica', label:'Cicatrice xifo-pubica'},
     {value:'colostomia_sx', label:'Colostomia fianco sx'},
+    {value:'colostomia_sx_ordine', label:'Colostomia sx (in ordine)'},
     {value:'colostomia_dx', label:'Colostomia fianco dx'},
     {value:'ureterocutaneostomia_dx', label:'Ureterocutaneostomia fianco dx'},
     {value:'ureterocutaneostomia_sx', label:'Ureterocutaneostomia fianco sx'},
     {value:'discromie_venosa', label:'Discromie da insuff. venosa AAII'},
     {value:'discromie_venosa_sx', label:'Discromie da insuff. venosa AI sx'},
     {value:'discromie_venosa_dx', label:'Discromie da insuff. venosa AI dx'}
+  ],
+  neuroLinguaggio: [
+    {value:'non_disartria', label:'Non disartria', negativo:true},
+    {value:'disartrico', label:'Disartrico'},
+    {value:'afasico', label:'Afasico'}
+  ],
+  neuroMingazzini: [
+    {value:'i_ii', label:'I e II regolari'},
+    {value:'i', label:'Solo I regolare'},
+    {value:'non_eseguibile', label:'Non eseguibile'}
+  ],
+  neuroLato: [
+    {value:'dx', label:'Destra'},
+    {value:'sx', label:'Sinistra'}
   ]
 };
 const CUTE_LABELS = {
   cicatrice_xifopubica: 'cicatrice xifo-pubica',
   colostomia_sx: 'colostomia in fianco sinistro',
+  colostomia_sx_ordine: 'colostomia sinistra in ordine',
   colostomia_dx: 'colostomia in fianco destro',
   ureterocutaneostomia_dx: 'ureterocutaneostomia in fianco destro',
   ureterocutaneostomia_sx: 'ureterocutaneostomia in fianco sinistro',
@@ -1187,13 +1311,13 @@ function renderAll(){
 
   renderSingle('torace-mv', OPT.toraceMv, ()=>state.torace.mv, v=>state.torace.mv=v);
   renderMulti('torace-mv-loc', OPT.toraceMvLoc, ()=>state.torace.mvLoc);
-  renderSingle('torace-reperti', OPT.toraceReperti, ()=>state.torace.reperti, v=>state.torace.reperti=v);
+  renderToraceReperti();
   renderMulti('torace-reperti-loc', OPT.toraceReperteLoc, ()=>state.torace.reperteLoc);
   renderSingle('torace-limitata', [{value:true,label:'Valutazione limitata da mancata collaborazione'}],
     ()=>state.torace.limitata, ()=>{ state.torace.limitata = !state.torace.limitata; });
 
   renderSingle('addome-forma', OPT.addomeForma, ()=>state.addome.forma, v=>state.addome.forma=v);
-  renderSingle('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza, v=>state.addome.consistenza=v);
+  renderMulti('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza);
   renderDolorabilita();
   renderMulti('addome-dolore-loc', OPT.addomeDoloreLoc, ()=>state.addome.doloreLoc);
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
@@ -1205,6 +1329,13 @@ function renderAll(){
   renderSingle('diuresi-urine', OPT.diuresiUrine, ()=>state.diuresi.urine, v=>state.diuresi.urine=v);
 
   renderMulti('cute-chips', OPT.cute, ()=>state.cute.chips);
+
+  renderNeuroLinguaggio();
+  renderSingle('neuro-mingazzini', OPT.neuroMingazzini, ()=>state.neuro.mingazzini, v=>state.neuro.mingazzini=v);
+  renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>state.neuro.emisindrome=v);
+  renderSingle('neuro-emineglect', OPT.neuroLato, ()=>state.neuro.emineglect, v=>state.neuro.emineglect=v);
+  renderSingle('neuro-occhi', OPT.neuroLato, ()=>state.neuro.occhiDeviati, v=>state.neuro.occhiDeviati=v);
+  renderSingle('neuro-facciale', OPT.neuroLato, ()=>state.neuro.deviazioneFacciale, v=>state.neuro.deviazioneFacciale=v);
 }
 
 /* ============================================================
@@ -1215,7 +1346,7 @@ function renderAll(){
 const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
-const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
+const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande','non_segni_lato'];
 
 function composeCoscienza(){
   const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
@@ -1252,11 +1383,21 @@ function composeCoscienza(){
 function composeRespiro(){
   const r = state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
-  const tempOpt = OPT.temp.find(o => o.value === r.temp);
   let o2text = r.o2==='AA' ? 'in AA' : r.o2==='NC' ? `in NC ${r.litri || '_'}L/min` : (r.altro || 'in ossigenoterapia');
-  let s = `${g(tipoOpt)} ${o2text} con SatO2 ${r.sat || '_'}%, PA ${r.pas || '_'}/${r.pad || '_'} mmHg, FC ${r.fc || '_'} bpm.`;
-  let t = r.temp==='apiretico' ? `${g(tempOpt)}.` : `${g(tempOpt)}, TC ${r.tempValore || '_'}°C.`;
-  return s + ' ' + t;
+  let s = `${g(tipoOpt)} ${o2text}`;
+
+  const vitali = [];
+  if(r.sat) vitali.push(`SatO2 ${r.sat}%`);
+  if(r.pas || r.pad) vitali.push(`PA ${r.pas || '_'}/${r.pad || '_'} mmHg`);
+  if(r.fc) vitali.push(`FC ${r.fc} bpm`);
+  if(vitali.length) s += ' con ' + vitali.join(', ');
+  s += '.';
+
+  if(r.temp !== 'non_specificata'){
+    const tempOpt = OPT.temp.find(o => o.value === r.temp);
+    s += r.temp==='apiretico' ? ` ${g(tempOpt)}.` : ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.`;
+  }
+  return s;
 }
 
 function composeCuore(){
@@ -1275,13 +1416,16 @@ function composeCuore(){
 
 function composeToraceClean(){
   const t = state.torace;
-  const mvLabel = { presente:'MV presente su TAP', ridotto:'MV ridotto', abolito:'MV abolito' }[t.mv];
-  const mvText = t.mv==='presente' ? mvLabel : (mvLabel + ' ' + [...t.mvLoc].join(', ')).trim();
-  const repLabel = { non_rumori:'non rumori aggiunti', non_franchi:'non franchi rumori patologici',
-                      crepitii:'crepitii', ronchi:'ronchi', sibili:'sibili e fischi diffusi' }[t.reperti];
-  const loc = [...t.reperteLoc].join(', ');
-  const repText = repLabel + (loc ? ' ' + loc : '');
-  const body = `${mvText}, ${repText}.`;
+  const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
+  const mvLoc = joinIt([...t.mvLoc]);
+  const mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
+
+  const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
+  const loc = joinIt([...t.reperteLoc]);
+  const repParts = repertiSelezionati.map(o => (o.hasLoc && loc) ? `${o.frag} ${loc}` : o.frag);
+  const repText = repParts.join(', ');
+
+  const body = repText ? `${mvText}, ${repText}.` : `${mvText}.`;
   return t.limitata
     ? `Al torace, per quanto valutabile in mancata collaborazione: ${body}`
     : `Al torace ${body}`;
@@ -1291,7 +1435,17 @@ function composeAddome(){
   const a = state.addome;
   const parts = [];
   if(a.forma) parts.push(a.forma);
-  parts.push(a.consistenza);
+
+  const cons = [...a.consistenza];
+  if(cons.length){
+    if(cons.includes('pastoso') && cons.includes('trattabile')){
+      const resto = cons.filter(v => v !== 'pastoso' && v !== 'trattabile');
+      parts.push(['pastoso ma trattabile', ...resto].join(', '));
+    } else {
+      parts.push(cons.join(', '));
+    }
+  }
+
   const dolMap = { non_dolente:'non dolente né dolorabile', dolente:'dolente', dolorabile:'dolorabile' };
   const dolSelected = [...a.dolorabilita].map(v => dolMap[v]);
   const loc = [...a.doloreLoc].join(', ');
@@ -1331,6 +1485,32 @@ function composeCute(){
   return all.length ? all.join('. ') + '.' : '';
 }
 
+function composeNeuro(){
+  const n = state.neuro;
+  const parts = [];
+
+  const linguaggioLabel = { non_disartria:'non disartria', disartrico:'disartrico', afasico:'afasico' };
+  const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
+  if(ling.length) parts.push(joinIt(ling));
+
+  const mingLabel = {
+    i_ii:'mantiene correttamente la posizione in Mingazzini I e II',
+    i:'mantiene correttamente la posizione in Mingazzini I',
+    non_eseguibile:'Mingazzini non eseguibile'
+  };
+  if(n.mingazzini) parts.push(mingLabel[n.mingazzini]);
+
+  if(n.emisindrome) parts.push('emisindrome ' + n.emisindrome);
+  if(n.emineglect) parts.push('emineglect ' + n.emineglect);
+  if(n.occhiDeviati) parts.push('occhi deviati a ' + n.occhiDeviati);
+  if(n.deviazioneFacciale){
+    parts.push(`solco naso-labiale spianato a ${n.deviazioneFacciale} con rima orale deviata a ${n.deviazioneFacciale}`);
+  }
+
+  if(parts.length === 0) return '';
+  return 'EON: ' + parts.join(', ') + '.';
+}
+
 /* ============================================================
    OUTPUT FINALE
    ============================================================ */
@@ -1345,7 +1525,8 @@ function composeReferto(){
     composeAddome(),
     composeEdemi(),
     composeDiuresi(),
-    composeCute()
+    composeCute(),
+    composeNeuro()
   ].filter(Boolean).join(' ');
 }
 
