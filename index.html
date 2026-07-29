@@ -525,7 +525,7 @@ window.addEventListener('error', function(e){
    ============================================================ */
 const state = {
   sesso: null,
-  coscienza: { primary:'vigile', descrittori:new Set(), extra:'' },
+  coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
   respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
   cuore: { ritmo:'ritmici', freq:'normofrequenti', qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLoc:new Set(), limitata:false },
@@ -606,7 +606,7 @@ function applyStateObject(o){
   o = o || {};
   state.sesso = o.sesso ?? null;
   state.coscienza.primary = o.coscienza?.primary ?? 'vigile';
-  state.coscienza.descrittori = new Set(o.coscienza?.descrittori || []);
+  state.coscienza.descrittori = new Set(o.coscienza?.descrittori || ['orientato','collaborante']);
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
