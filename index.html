@@ -140,6 +140,27 @@
     background:var(--signal-dim); border-color:var(--signal);
     color:var(--signal); font-weight:600;
   }
+
+  /* ---------- LISTA CON "TENDINA" AGGANCIATA (sede subito sotto la voce) ---------- */
+  /* i chip stanno affiancati come una normale riga di pillole; ogni riga
+     "logica" (chip + tendina) usa display:contents così chip e tendina
+     diventano elementi diretti del flex-wrap del genitore: il chip resta
+     in linea con gli altri, la tendina - quando aperta - occupa da sola
+     tutta la larghezza (va a capo solo lì, senza spostare gli altri chip) */
+  .finding-list{ display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; }
+  .finding-row{ display:contents; }
+  .finding-drawer{
+    flex-basis:0; width:0; overflow:hidden; max-height:0; opacity:0;
+    transition:max-height .22s ease, opacity .18s ease, margin-top .22s ease;
+  }
+  .finding-drawer.open{ flex-basis:100%; width:auto; max-height:260px; opacity:1; margin-top:2px; }
+  .finding-drawer-inner{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:2px 0 2px 12px;
+    border-left:2px solid var(--signal);
+    margin-left:6px;
+  }
+
   /* ---------- SCHEDE PAZIENTE (cartellina, colore/stile a parte) ---------- */
   #wardmap-view h2 .eyebrow{ background:var(--folder); color:var(--on-folder); }
   .patient-tabs{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; }
@@ -388,13 +409,11 @@
   <h2><span class="eyebrow">04</span>Torace</h2>
   <div class="group">
     <div class="group-label">Murmure vescicolare</div>
-    <div class="chips" id="torace-mv"></div>
-    <div class="chips" id="torace-mv-loc" style="margin-top:6px;"></div>
+    <div class="finding-list" id="torace-mv"></div>
   </div>
   <div class="group">
     <div class="group-label">Reperti aggiunti</div>
-    <div class="chips" id="torace-reperti"></div>
-    <div id="torace-reperti-loc-wrapper"></div>
+    <div class="finding-list" id="torace-reperti"></div>
   </div>
   <div class="group">
     <div class="chips" id="torace-limitata"></div>
@@ -414,8 +433,7 @@
   </div>
   <div class="group">
     <div class="group-label">Dolorabilità</div>
-    <div class="chips" id="addome-dolorabilita"></div>
-    <div id="addome-dolore-loc-wrapper"></div>
+    <div class="finding-list" id="addome-dolorabilita"></div>
   </div>
   <div class="group">
     <div class="group-label">Peristalsi</div>
@@ -431,10 +449,27 @@
 <div class="card" id="card-edemi">
   <h2><span class="eyebrow">06</span>Edemi</h2>
   <div class="group">
-    <div class="chips" id="edemi-chips"></div>
+    <div class="group-label">Assenti (esclude il resto)</div>
+    <div class="chips" id="edemi-base"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="edemi-custom" placeholder="Frase personalizzata (sovrascrive la scelta sopra)">
+    <div class="group-label">Sede (combinabili)</div>
+    <div class="chips" id="edemi-sede"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Qualità</div>
+    <div class="chips" id="edemi-qualita"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Aggiunte</div>
+    <div class="chips" id="edemi-aggiunte"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Andamento</div>
+    <div class="chips" id="edemi-andamento"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="edemi-custom" placeholder="Frase personalizzata (sovrascrive tutto il resto)">
   </div>
 </div>
 
@@ -461,7 +496,10 @@
 <div class="card" id="card-cute">
   <h2><span class="eyebrow">08</span>Cute, cicatrici, note finali</h2>
   <div class="group">
-    <div class="chips" id="cute-chips"></div>
+    <div class="chips" id="cute-cicatrice"></div>
+  </div>
+  <div class="group">
+    <div class="finding-list" id="cute-reperti"></div>
   </div>
   <div class="group">
     <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
@@ -549,11 +587,11 @@ const state = {
   coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
   respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, limitata:false },
+  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovre:new Set() },
-  edemi: { scelta:'non_edemi', custom:'' },
+  edemi: { base:'non_edemi', sede:new Set(), qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:false, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
-  cute: { chips:new Set(), note:'' },
+  cute: { cicatrice:false, reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
@@ -646,19 +684,41 @@ function applyStateObject(o){
   state.cuore.focolaio = o.cuore?.focolaio ?? '';
 
   state.torace.mv = o.torace?.mv ?? 'presente';
-  state.torace.mvLoc = new Set(o.torace?.mvLoc || []);
+  state.torace.mvLoc = convertiSedeTorace(o.torace?.mvLoc || []);
   state.torace.reperti = new Set(o.torace?.reperti || ['non_rumori']);
+  // migrazione: le vecchie voci sibili separate confluiscono nell'unica
+  // "sibili/fischi/gemiti" con sede, riportando la sfumatura come atomo
+  const VECCHI_SIBILI = { sibili:null, qualche_sibilo_tap:'su_tap', qualche_sibilo_sparso:'sparsi' };
+  let sibiliMigrati = null;
+  Object.keys(VECCHI_SIBILI).forEach(vecchio => {
+    if(state.torace.reperti.has(vecchio)){
+      state.torace.reperti.delete(vecchio);
+      state.torace.reperti.add('sibili_fischi_gemiti');
+      if(!sibiliMigrati) sibiliMigrati = new Set();
+      if(VECCHI_SIBILI[vecchio]) sibiliMigrati.add(VECCHI_SIBILI[vecchio]);
+    }
+  });
   state.torace.reperteLocPerTipo = {};
   if(o.torace?.reperteLocPerTipo){
     Object.keys(o.torace.reperteLocPerTipo).forEach(k => {
-      state.torace.reperteLocPerTipo[k] = new Set(o.torace.reperteLocPerTipo[k] || []);
+      state.torace.reperteLocPerTipo[k] = convertiSedeTorace(o.torace.reperteLocPerTipo[k] || []);
     });
   } else if(o.torace?.reperteLoc && o.torace.reperteLoc.length){
     // migrazione dal vecchio modello (sede unica condivisa tra tutti i reperti):
     // applica la stessa sede salvata a ciascun reperto con sede che era attivo
     (o.torace?.reperti || []).forEach(rv => {
       const opt = OPT.toraceReperti.find(x => x.value === rv);
-      if(opt && opt.hasLoc) state.torace.reperteLocPerTipo[rv] = new Set(o.torace.reperteLoc);
+      if(opt && opt.hasLoc) state.torace.reperteLocPerTipo[rv] = convertiSedeTorace(o.torace.reperteLoc);
+    });
+  }
+  if(sibiliMigrati){
+    const set = getLocSet(state.torace.reperteLocPerTipo, 'sibili_fischi_gemiti');
+    sibiliMigrati.forEach(a => set.add(a));
+  }
+  state.torace.reperteSottotipi = {};
+  if(o.torace?.reperteSottotipi){
+    Object.keys(o.torace.reperteSottotipi).forEach(k => {
+      state.torace.reperteSottotipi[k] = new Set(o.torace.reperteSottotipi[k] || []);
     });
   }
   state.torace.limitata = o.torace?.limitata ?? false;
@@ -681,7 +741,41 @@ function applyStateObject(o){
   state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
   state.addome.manovre = new Set(o.addome?.manovre || []);
 
-  state.edemi.scelta = o.edemi?.scelta ?? 'non_edemi';
+  if(o.edemi && o.edemi.sede !== undefined){
+    // già nel nuovo formato
+    state.edemi.base = o.edemi.base ?? '';
+    state.edemi.sede = new Set(o.edemi.sede || []);
+    state.edemi.qualita = o.edemi.qualita ?? '';
+    state.edemi.discrasici = o.edemi.discrasici ?? false;
+    state.edemi.grinza = o.edemi.grinza ?? false;
+    state.edemi.scarico = o.edemi.scarico ?? false;
+    state.edemi.succulenza = o.edemi.succulenza ?? false;
+    state.edemi.andamento = o.edemi.andamento ?? '';
+  } else {
+    // migrazione dal vecchio preset unico "scelta"
+    const MIGRAZIONE_EDEMI = {
+      non_edemi: { base:'non_edemi' },
+      non_declivi: { base:'non_declivi' },
+      non_declivi_grinza: { base:'non_declivi', grinza:true },
+      declivi: { sede:['aaii'], qualita:'improntabili' },
+      duri_aaii: { sede:['aaii'], qualita:'duri' },
+      succulenza_pretibiale: { succulenza:true },
+      aass_semplice: { sede:['aass'] },
+      aass_scarico: { sede:['aass'], scarico:true },
+      riduzione_aaii: { sede:['aaii'], andamento:'riduzione' },
+      ripresentati_aaii: { sede:['aaii'], andamento:'ripresentati' },
+      colonnari_diffusi: { sede:['aaii','aass','fianchi'], qualita:'colonnari', discrasici:true, andamento:'permangono' }
+    };
+    const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || {};
+    state.edemi.base = m.base ?? '';
+    state.edemi.sede = new Set(m.sede || []);
+    state.edemi.qualita = m.qualita ?? '';
+    state.edemi.discrasici = m.discrasici ?? false;
+    state.edemi.grinza = m.grinza ?? false;
+    state.edemi.scarico = m.scarico ?? false;
+    state.edemi.succulenza = m.succulenza ?? false;
+    state.edemi.andamento = m.andamento ?? '';
+  }
   state.edemi.custom = o.edemi?.custom ?? '';
 
   state.diuresi.modalita = o.diuresi?.modalita ?? 'sacca';
@@ -689,7 +783,47 @@ function applyStateObject(o){
   state.diuresi.urine = o.diuresi?.urine ?? '';
   state.diuresi.note = o.diuresi?.note ?? '';
 
-  state.cute.chips = new Set(o.cute?.chips || []);
+  if(o.cute && o.cute.reperti !== undefined){
+    state.cute.cicatrice = o.cute.cicatrice ?? false;
+    state.cute.reperti = new Set(o.cute.reperti || []);
+    state.cute.sedePerTipo = {};
+    Object.keys(o.cute.sedePerTipo || {}).forEach(k => {
+      state.cute.sedePerTipo[k] = new Set(o.cute.sedePerTipo[k] || []);
+    });
+    state.cute.extraPerTipo = {};
+    Object.keys(o.cute.extraPerTipo || {}).forEach(k => {
+      state.cute.extraPerTipo[k] = new Set(o.cute.extraPerTipo[k] || []);
+    });
+  } else {
+    // migrazione dai vecchi chip fissi (colostomia_sx, discromie_venosa_dx...)
+    state.cute.cicatrice = false;
+    state.cute.reperti = new Set();
+    state.cute.sedePerTipo = {};
+    state.cute.extraPerTipo = {};
+    const vecchiChip = o.cute?.chips || [];
+    const MIGRAZIONE_CUTE = {
+      cicatrice_xifopubica: { cicatrice:true },
+      colostomia_sx: { reperto:'colostomia', lato:'sx' },
+      colostomia_dx: { reperto:'colostomia', lato:'dx' },
+      colostomia_sx_ordine: { reperto:'colostomia', lato:'sx', extra:'in_ordine' },
+      ureterocutaneostomia_dx: { reperto:'ureterocutaneostomia', lato:'dx' },
+      ureterocutaneostomia_sx: { reperto:'ureterocutaneostomia', lato:'sx' },
+      discromie_venosa: { reperto:'discromie_venosa', lato:['dx','sx'] },
+      discromie_venosa_dx: { reperto:'discromie_venosa', lato:'dx' },
+      discromie_venosa_sx: { reperto:'discromie_venosa', lato:'sx' }
+    };
+    vecchiChip.forEach(v => {
+      const m = MIGRAZIONE_CUTE[v];
+      if(!m) return;
+      if(m.cicatrice) state.cute.cicatrice = true;
+      if(m.reperto){
+        state.cute.reperti.add(m.reperto);
+        const sedeSet = getLocSet(state.cute.sedePerTipo, m.reperto);
+        (Array.isArray(m.lato) ? m.lato : [m.lato]).forEach(l => sedeSet.add(l));
+        if(m.extra) getLocSet(state.cute.extraPerTipo, m.reperto).add(m.extra);
+      }
+    });
+  }
   state.cute.note = o.cute?.note ?? '';
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
@@ -1075,16 +1209,178 @@ function renderMultiEsclusivo(containerId, options, getSet){
 
 // "dolente" e "dolorabile" sono combinabili tra loro (es. "dolente e dolorabile in fianco dx"),
 // ma sono mutuamente esclusivi con "non dolente né dolorabile".
+// crea una singola riga "chip + tendina agganciata": la tendina con le sedi
+// compare subito sotto quella specifica voce (non in un blocco separato più
+// in basso), collegata visivamente con un trattino laterale
+function creaRigaConTendina(chipLabel, isActive, onClickChip, locOptionsOrBuilder, locSet, onClickLoc){
+  const row = document.createElement('div');
+  row.className = 'finding-row';
+
+  const chip = document.createElement('div');
+  chip.className = 'chip' + (isActive ? ' active' : '');
+  chip.textContent = chipLabel;
+  chip.onclick = onClickChip;
+  row.appendChild(chip);
+
+  if(locOptionsOrBuilder){
+    const drawer = document.createElement('div');
+    drawer.className = 'finding-drawer' + (isActive ? ' open' : '');
+    const inner = document.createElement('div');
+    inner.className = 'finding-drawer-inner';
+
+    if(typeof locOptionsOrBuilder === 'function'){
+      // modalità "builder": il chiamante popola liberamente il contenuto
+      // della tendina (usata per la sede toracica a zone componibili)
+      locOptionsOrBuilder(inner);
+    } else {
+      // modalità semplice: una singola lista piatta di opzioni sede
+      locOptionsOrBuilder.forEach(locOpt => {
+        const b = document.createElement('div');
+        const locActive = locSet.has(locOpt.value);
+        b.className = 'chip' + (locActive ? ' active' : '');
+        b.textContent = locOpt.label;
+        b.onclick = (e) => { e.stopPropagation(); onClickLoc(locOpt, locActive); };
+        inner.appendChild(b);
+      });
+    }
+    drawer.appendChild(inner);
+    row.appendChild(drawer);
+  }
+  return row;
+}
+
+// piccolo gruppo di chip dentro una tendina (es. "Zona", "Lato"...)
+function renderGruppoChipInline(container, label, options, getActive, onToggle){
+  if(label){
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:10.5px; color:var(--ink-dim); width:100%; margin:3px 0 1px;';
+    lbl.textContent = label;
+    container.appendChild(lbl);
+  }
+  options.forEach(opt => {
+    const b = document.createElement('div');
+    const active = getActive(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.style.cssText = 'font-size:12px; padding:5px 10px;';
+    b.textContent = opt.label;
+    b.onclick = (e) => { e.stopPropagation(); onToggle(opt.value, active); };
+    container.appendChild(b);
+  });
+}
+
+// costruisce dentro una tendina: Emitorace (dx/sx) + Zona (apice/campo medio/base,
+// combinabili) + Lato (dx/sx) + eventuali opzioni extra invariabili (su TAP,
+// delle alte vie...). Selezionare emitorace azzera zona/lato e viceversa,
+// perché sono due modi alternativi di indicare la sede.
+function costruisciSedeToracica(inner, locSet, extraOptions){
+  const zonaLatoValori = ['apice','medio','base','dx','sx'];
+  const emitoraceValori = ['emitorace_dx','emitorace_sx'];
+  const opzioniZona = [...OPT.toraceZona, ...OPT.toraceEmitorace];
+
+  renderGruppoChipInline(inner, 'Zona', opzioniZona,
+    v => locSet.has(v),
+    (v, active) => {
+      const isEmitorace = emitoraceValori.includes(v);
+      if(!active){
+        if(isEmitorace) zonaLatoValori.forEach(z => locSet.delete(z));
+        else emitoraceValori.forEach(z => locSet.delete(z));
+      }
+      active ? locSet.delete(v) : locSet.add(v);
+      update();
+    });
+
+  renderGruppoChipInline(inner, 'Lato', OPT.toraceLato,
+    v => locSet.has(v),
+    (v, active) => {
+      if(!active) emitoraceValori.forEach(z => locSet.delete(z));
+      active ? locSet.delete(v) : locSet.add(v);
+      update();
+    });
+
+  if(extraOptions && extraOptions.length){
+    renderGruppoChipInline(inner, null, extraOptions,
+      v => locSet.has(v),
+      (v, active) => { active ? locSet.delete(v) : locSet.add(v); update(); });
+  }
+}
+
+// converte la frase composta a partire dagli "atomi" di sede selezionati
+// (zona, lato, emitorace...) rispettando il genere corretto in italiano
+// (es. "base destra" ma "apice destro", "campo medio destro")
+// combina le sotto-voci scelte (sibili/fischi/gemiti) in un'unica frase;
+// se non ne è stata scelta nessuna, usa la frase completa di default
+function fragSibiliFischiGemiti(sottotipi, fallback){
+  const mapLabel = { sibili:'sibili', fischi:'fischi', gemiti:'gemiti' };
+  const scelti = ['sibili','fischi','gemiti'].filter(v => sottotipi && sottotipi.has(v));
+  if(scelti.length === 0) return fallback;
+  return joinIt(scelti.map(v => mapLabel[v]));
+}
+
+function comporreSedeTorace(locSet){
+  if(!locSet) return '';
+  const parts = [];
+
+  const emiDx = locSet.has('emitorace_dx'), emiSx = locSet.has('emitorace_sx');
+  if(emiDx || emiSx){
+    parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'destro' : 'sinistro'));
+  }
+
+  const hasApice = locSet.has('apice'), hasMedio = locSet.has('medio'), hasBase = locSet.has('base');
+  let zoneText = '', genereMaschile = false;
+  if(hasApice && hasMedio && hasBase){ zoneText = 'diffusamente su tutto l\'ambito'; }
+  else if(hasMedio && hasBase){ zoneText = 'medio-basale'; }
+  else if(hasApice && hasBase){ zoneText = 'apico-basale'; }
+  else if(hasApice && hasMedio){ zoneText = 'apice e campo medio'; genereMaschile = true; }
+  else if(hasBase){ zoneText = 'base'; }
+  else if(hasMedio){ zoneText = 'campo medio'; genereMaschile = true; }
+  else if(hasApice){ zoneText = 'apice'; genereMaschile = true; }
+
+  if(zoneText){
+    const hasDx = locSet.has('dx'), hasSx = locSet.has('sx');
+    let lato = '';
+    if(hasDx && hasSx) lato = 'bilaterale';
+    else if(hasDx) lato = genereMaschile ? 'destro' : 'destra';
+    else if(hasSx) lato = genereMaschile ? 'sinistro' : 'sinistra';
+    const prefisso = zoneText.startsWith('diffusamente') ? '' : 'in ';
+    parts.push(prefisso + zoneText + (lato ? ' ' + lato : ''));
+  }
+
+  if(locSet.has('su_tap')) parts.push('su TAP');
+  if(locSet.has('sparsi')) parts.push('sparsi');
+  if(locSet.has('delle_alte_vie')) parts.push('delle alte vie');
+
+  return parts.join(', ');
+}
+
+// traduce le vecchie sedi (stringhe fisse tipo "in base destra") nei nuovi
+// atomi componibili, per non perdere le schede già salvate col vecchio sistema
+const MIGRAZIONE_SEDE_TORACE = {
+  'in base destra': ['base','dx'],
+  'in base sinistra': ['base','sx'],
+  'alle basi': ['base','dx','sx'],
+  'in medio-basale destra': ['medio','base','dx'],
+  'in medio-basale sinistra': ['medio','base','sx'],
+  'in medio-basale bilaterale': ['medio','base','dx','sx'],
+  'bibasali': ['base','dx','sx'],
+  'su TAP': ['su_tap'],
+  'delle alte vie': ['delle_alte_vie']
+};
+function convertiSedeTorace(rawArray){
+  const s = new Set();
+  (rawArray || []).forEach(v => {
+    if(MIGRAZIONE_SEDE_TORACE[v]) MIGRAZIONE_SEDE_TORACE[v].forEach(a => s.add(a));
+    else s.add(v);
+  });
+  return s;
+}
+
 function renderDolorabilita(){
   const el = document.getElementById('addome-dolorabilita');
   el.innerHTML = '';
   const s = state.addome.dolorabilita;
   OPT.addomeDolorabilita.forEach(opt => {
-    const b = document.createElement('div');
     const active = s.has(opt.value);
-    b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = g(opt);
-    b.onclick = () => {
+    const onClickChip = () => {
       if(opt.value === 'non_dolente'){
         s.clear();
         if(!active) s.add('non_dolente');
@@ -1094,7 +1390,12 @@ function renderDolorabilita(){
       }
       update();
     };
-    el.appendChild(b);
+    const locSet = getLocSet(state.addome.doloreLocPerTipo, opt.value);
+    const onClickLoc = (locOpt, locActive) => {
+      locActive ? locSet.delete(locOpt.value) : locSet.add(locOpt.value);
+      update();
+    };
+    el.appendChild(creaRigaConTendina(g(opt), active, onClickChip, OPT.addomeDoloreLoc, locSet, onClickLoc));
   });
 }
 
@@ -1109,65 +1410,14 @@ function getLocSet(mappa, chiave){
   return mappa[chiave];
 }
 
-// per ogni reperto del torace che prevede una sede ED è attualmente selezionato,
-// mostra un suo gruppo di chip "Sede — <nome reperto>" indipendente dagli altri
-// (es. crepitii in base sx e soffio bronchiale in base dx, senza confonderli)
-function renderReperteLocDinamiche(){
-  const wrapper = document.getElementById('torace-reperti-loc-wrapper');
-  wrapper.innerHTML = '';
-  const attivi = OPT.toraceReperti.filter(o => o.hasLoc && state.torace.reperti.has(o.value));
-  attivi.forEach(opt => {
-    const s = getLocSet(state.torace.reperteLocPerTipo, opt.value);
-    const label = document.createElement('div');
-    label.className = 'group-label';
-    label.style.marginTop = '8px';
-    label.textContent = 'Sede — ' + opt.label;
-    wrapper.appendChild(label);
-
-    const chipsEl = document.createElement('div');
-    chipsEl.className = 'chips';
-    OPT.toraceReperteLoc.forEach(locOpt => {
-      const b = document.createElement('div');
-      const active = s.has(locOpt.value);
-      b.className = 'chip' + (active ? ' active' : '');
-      b.textContent = locOpt.label;
-      b.onclick = () => {
-        if(!active && locOpt.excludes) locOpt.excludes.forEach(v => s.delete(v));
-        active ? s.delete(locOpt.value) : s.add(locOpt.value);
-        update();
-      };
-      chipsEl.appendChild(b);
-    });
-    wrapper.appendChild(chipsEl);
-  });
-}
-
-// stesso principio per "dolente"/"dolorabile" in addome: ognuno ha la propria
-// sede, così puoi dire ad es. "dolente diffusamente, dolorabile in fianco dx"
-function renderDoloreLocDinamiche(){
-  const wrapper = document.getElementById('addome-dolore-loc-wrapper');
-  wrapper.innerHTML = '';
-  const mappaLabel = { non_dolente:'Non dolente né dolorabile', dolente:'Dolente', dolorabile:'Dolorabile' };
-  const attivi = ['non_dolente','dolente','dolorabile'].filter(v => state.addome.dolorabilita.has(v));
-  attivi.forEach(chiave => {
-    const s = getLocSet(state.addome.doloreLocPerTipo, chiave);
-    const label = document.createElement('div');
-    label.className = 'group-label';
-    label.style.marginTop = '8px';
-    label.textContent = 'Sede — ' + mappaLabel[chiave];
-    wrapper.appendChild(label);
-
-    const chipsEl = document.createElement('div');
-    chipsEl.className = 'chips';
-    OPT.addomeDoloreLoc.forEach(locOpt => {
-      const b = document.createElement('div');
-      const active = s.has(locOpt.value);
-      b.className = 'chip' + (active ? ' active' : '');
-      b.textContent = locOpt.label;
-      b.onclick = () => { active ? s.delete(locOpt.value) : s.add(locOpt.value); update(); };
-      chipsEl.appendChild(b);
-    });
-    wrapper.appendChild(chipsEl);
+function renderToraceMv(){
+  const el = document.getElementById('torace-mv');
+  el.innerHTML = '';
+  OPT.toraceMv.forEach(opt => {
+    const active = state.torace.mv === opt.value;
+    const onClickChip = () => { state.torace.mv = active ? '' : opt.value; update(); };
+    const builder = opt.noLoc ? null : (inner) => costruisciSedeToracica(inner, state.torace.mvLoc, OPT.toraceMvExtra);
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
 }
 
@@ -1176,11 +1426,8 @@ function renderToraceReperti(){
   el.innerHTML = '';
   const s = state.torace.reperti;
   OPT.toraceReperti.forEach(opt => {
-    const b = document.createElement('div');
     const active = s.has(opt.value);
-    b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = opt.label;
-    b.onclick = () => {
+    const onClickChip = () => {
       if(opt.negativo){
         s.clear();
         if(!active) s.add(opt.value);
@@ -1191,7 +1438,22 @@ function renderToraceReperti(){
       }
       update();
     };
-    el.appendChild(b);
+    let builder = null;
+    if(opt.hasLoc){
+      const locSet = getLocSet(state.torace.reperteLocPerTipo, opt.value);
+      const sottotipiSet = opt.value === 'sibili_fischi_gemiti'
+        ? getLocSet(state.torace.reperteSottotipi, opt.value)
+        : null;
+      builder = (inner) => {
+        if(sottotipiSet){
+          renderGruppoChipInline(inner, 'Tipo', OPT.toraceSottotipoSuono,
+            v => sottotipiSet.has(v),
+            (v, sAttivo) => { sAttivo ? sottotipiSet.delete(v) : sottotipiSet.add(v); update(); });
+        }
+        costruisciSedeToracica(inner, locSet, OPT.toraceReperteExtra);
+      };
+    }
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
 }
 
@@ -1225,6 +1487,128 @@ function renderCuorePause(){
   b.textContent = 'Pause apparentemente libere';
   b.onclick = () => { state.cuore.pauseLibere = !active; update(); };
   el.appendChild(b);
+}
+
+// "Assenti" (Non edemi / Non edemi declivi) esclude tutti gli assi positivi
+// e viceversa: attivare sede/qualità/aggiunte/andamento azzera la base
+function renderEdemi(){
+  const e = state.edemi;
+
+  function clearPositivi(){
+    e.sede.clear(); e.qualita=''; e.discrasici=false; e.grinza=false;
+    e.scarico=false; e.succulenza=false; e.andamento='';
+  }
+
+  const elBase = document.getElementById('edemi-base');
+  elBase.innerHTML = '';
+  OPT.edemiBase.forEach(opt => {
+    const b = document.createElement('div');
+    const active = e.base === opt.value;
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      e.base = active ? '' : opt.value;
+      if(e.base) clearPositivi();
+      update();
+    };
+    elBase.appendChild(b);
+  });
+
+  const elSede = document.getElementById('edemi-sede');
+  elSede.innerHTML = '';
+  OPT.edemiSede.forEach(opt => {
+    const b = document.createElement('div');
+    const active = e.sede.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      active ? e.sede.delete(opt.value) : e.sede.add(opt.value);
+      e.base = '';
+      update();
+    };
+    elSede.appendChild(b);
+  });
+
+  const elQualita = document.getElementById('edemi-qualita');
+  elQualita.innerHTML = '';
+  OPT.edemiQualita.forEach(opt => {
+    const b = document.createElement('div');
+    const active = e.qualita === opt.value;
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      e.qualita = active ? '' : opt.value;
+      e.base = '';
+      update();
+    };
+    elQualita.appendChild(b);
+  });
+
+  const elAggiunte = document.getElementById('edemi-aggiunte');
+  elAggiunte.innerHTML = '';
+  [
+    {key:'discrasici', label:'Discrasici'},
+    {key:'grinza', label:'Cute a grinza'},
+    {key:'scarico', label:'Da porre in scarico'},
+    {key:'succulenza', label:'Succulenza pretibiale'}
+  ].forEach(a => {
+    const b = document.createElement('div');
+    const active = e[a.key];
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = a.label;
+    b.onclick = () => {
+      e[a.key] = !active;
+      if(e[a.key]) e.base = '';
+      update();
+    };
+    elAggiunte.appendChild(b);
+  });
+
+  const elAndamento = document.getElementById('edemi-andamento');
+  elAndamento.innerHTML = '';
+  OPT.edemiAndamento.forEach(opt => {
+    const b = document.createElement('div');
+    const active = e.andamento === opt.value;
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      e.andamento = active ? '' : opt.value;
+      e.base = '';
+      update();
+    };
+    elAndamento.appendChild(b);
+  });
+}
+
+function renderCute(){
+  const elCicatrice = document.getElementById('cute-cicatrice');
+  elCicatrice.innerHTML = '';
+  const bCic = document.createElement('div');
+  bCic.className = 'chip' + (state.cute.cicatrice ? ' active' : '');
+  bCic.textContent = 'Cicatrice xifo-pubica';
+  bCic.onclick = () => { state.cute.cicatrice = !state.cute.cicatrice; update(); };
+  elCicatrice.appendChild(bCic);
+
+  const el = document.getElementById('cute-reperti');
+  el.innerHTML = '';
+  OPT.cuteReperti.forEach(opt => {
+    const s = state.cute.reperti;
+    const active = s.has(opt.value);
+    const onClickChip = () => { active ? s.delete(opt.value) : s.add(opt.value); update(); };
+    const sedeSet = getLocSet(state.cute.sedePerTipo, opt.value);
+    const extraSet = opt.extra ? getLocSet(state.cute.extraPerTipo, opt.value) : null;
+    const builder = (inner) => {
+      renderGruppoChipInline(inner, null, OPT.cuteLato,
+        v => sedeSet.has(v),
+        (v, sAttivo) => { sAttivo ? sedeSet.delete(v) : sedeSet.add(v); update(); });
+      if(opt.extra){
+        renderGruppoChipInline(inner, null, opt.extra,
+          v => extraSet.has(v),
+          (v, sAttivo) => { sAttivo ? extraSet.delete(v) : extraSet.add(v); update(); });
+      }
+    };
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
 }
 
 function renderNeuroLinguaggio(){
@@ -1265,6 +1649,7 @@ const OPT = {
     {value:'comatoso', m:'Comatoso', f:'Comatosa'}
   ],
   coscienzaDescrittori: [
+    {value:'cachettico', m:'cachettico', f:'cachettica'},
     {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato']},
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato']},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato']},
@@ -1330,13 +1715,31 @@ const OPT = {
     {value:'abolito', label:'Abolito', frag:'MV abolito'},
     {value:'aspro', label:'Aspro', frag:'MV aspro'}
   ],
-  toraceMvLoc: [
-    {value:'in base destra', label:'base dx', excludes:['alle basi']},
-    {value:'in base sinistra', label:'base sx', excludes:['alle basi']},
-    {value:'alle basi', label:'alle basi', excludes:['in base destra','in base sinistra']},
-    {value:'in medio-basale destra', label:'medio-basale dx'},
-    {value:'in medio-basale sinistra', label:'medio-basale sx'},
-    {value:'su TAP', label:'su TAP'}
+  toraceZona: [
+    {value:'apice', label:'Apice'},
+    {value:'medio', label:'Campo medio'},
+    {value:'base', label:'Base'}
+  ],
+  toraceLato: [
+    {value:'dx', label:'Dx'},
+    {value:'sx', label:'Sx'}
+  ],
+  toraceEmitorace: [
+    {value:'emitorace_dx', label:'Emitorace dx'},
+    {value:'emitorace_sx', label:'Emitorace sx'}
+  ],
+  toraceMvExtra: [
+    {value:'su_tap', label:'su TAP'}
+  ],
+  toraceSottotipoSuono: [
+    {value:'sibili', label:'Sibili'},
+    {value:'fischi', label:'Fischi'},
+    {value:'gemiti', label:'Gemiti'}
+  ],
+  toraceReperteExtra: [
+    {value:'su_tap', label:'su TAP'},
+    {value:'sparsi', label:'Sparsi'},
+    {value:'delle_alte_vie', label:'delle alte vie'}
   ],
   toraceReperti: [
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
@@ -1345,21 +1748,11 @@ const OPT = {
     {value:'crepitii_fini', label:'Crepitii fini', frag:'fini crepitii', hasLoc:true, excludes:['crepitii']},
     {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true},
     {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true},
-    {value:'sibili', label:'Sibili/fischi diffusi', frag:'sibili e fischi diffusi', excludes:['qualche_sibilo_tap','qualche_sibilo_sparso']},
-    {value:'qualche_sibilo_tap', label:'Qualche sibilo diffuso (TAP)', frag:'qualche sibilo diffuso su TAP', excludes:['sibili','qualche_sibilo_sparso']},
-    {value:'qualche_sibilo_sparso', label:'Qualche sibilo sparso', frag:'qualche sibilo sparso', excludes:['sibili','qualche_sibilo_tap']}
-  ],
-  toraceReperteLoc: [
-    {value:'in base destra', label:'base dx', excludes:['bibasali']},
-    {value:'in base sinistra', label:'base sx', excludes:['bibasali']},
-    {value:'bibasali', label:'bibasali', excludes:['in base destra','in base sinistra']},
-    {value:'in medio-basale destra', label:'medio-basale dx', excludes:['in medio-basale bilaterale']},
-    {value:'in medio-basale sinistra', label:'medio-basale sx', excludes:['in medio-basale bilaterale']},
-    {value:'in medio-basale bilaterale', label:'medio-basale bilat.', excludes:['in medio-basale destra','in medio-basale sinistra']},
-    {value:'delle alte vie', label:'alte vie'}
+    {value:'sibili_fischi_gemiti', label:'Sibili/fischi/gemiti', frag:'sibili, fischi e gemiti', hasLoc:true}
   ],
   addomeForma: [
     {value:'globoso per adipe', label:'Globoso per adipe'},
+    {value:'piano', label:'Piano'},
     {value:'cavo', label:'Cavo'}
   ],
   addomeConsistenza: [
@@ -1399,18 +1792,24 @@ const OPT = {
     {value:'non Murphy', label:'Non Murphy', excludes:['Murphy positivo']},
     {value:'Murphy positivo', label:'Murphy positivo', excludes:['non Murphy']}
   ],
-  edemi: [
-    {value:'non_edemi', label:'Non edemi', text:'Non edemi.'},
-    {value:'non_declivi', label:'Non edemi declivi', text:'Non edemi declivi.'},
-    {value:'non_declivi_grinza', label:'Non declivi + cute a grinza', text:'Non edemi declivi, cute a grinza agli AAII.'},
-    {value:'declivi', label:'Edemi declivi AAII', text:'Edemi improntabili agli arti inferiori.'},
-    {value:'duri_aaii', label:'Edemi duri AAII', text:'Edemi duri agli arti inferiori.'},
-    {value:'succulenza_pretibiale', label:'Succulenza pretibiale', text:'Succulenza pretibiale agli AAII.'},
-    {value:'riduzione_aaii', label:'In riduzione AAII', text:'In riduzione gli edemi agli AAII.'},
-    {value:'ripresentati_aaii', label:'Ripresentati AAII', text:'Ripresentatisi gli edemi agli AAII.'},
-    {value:'colonnari_diffusi', label:'Colonnari/discrasici diffusi', text:'Permangono edemi colonnari anche discrasici agli AAII, agli AASS e ai fianchi.'},
-    {value:'aass_semplice', label:'Edemi AASS', text:'Edemi agli AASS.'},
-    {value:'aass_scarico', label:'AASS da scarico', text:'Edemi agli AASS da porre in scarico, non edemi agli AAII.'}
+  edemiBase: [
+    {value:'non_edemi', label:'Non edemi'},
+    {value:'non_declivi', label:'Non edemi declivi'}
+  ],
+  edemiSede: [
+    {value:'aaii', label:'AAII'},
+    {value:'aass', label:'AASS'},
+    {value:'fianchi', label:'Fianchi'}
+  ],
+  edemiQualita: [
+    {value:'improntabili', label:'Improntabili'},
+    {value:'duri', label:'Duri'},
+    {value:'colonnari', label:'Colonnari'}
+  ],
+  edemiAndamento: [
+    {value:'riduzione', label:'In riduzione'},
+    {value:'ripresentati', label:'Ripresentati'},
+    {value:'permangono', label:'Permangono'}
   ],
   diuresiModalita: [
     {value:'sacca', label:'in sacca di CV'},
@@ -1426,16 +1825,14 @@ const OPT = {
     {value:'lavatura_carne', label:'Lavatura di carne', frag:'urine a lavatura di carne'},
     {value:'ematuria', label:'Ematuria', frag:'ematuria'}
   ],
-  cute: [
-    {value:'cicatrice_xifopubica', label:'Cicatrice xifo-pubica'},
-    {value:'colostomia_sx', label:'Colostomia fianco sx', excludes:['colostomia_sx_ordine']},
-    {value:'colostomia_sx_ordine', label:'Colostomia sx (in ordine)', excludes:['colostomia_sx']},
-    {value:'colostomia_dx', label:'Colostomia fianco dx'},
-    {value:'ureterocutaneostomia_dx', label:'Ureterocutaneostomia fianco dx'},
-    {value:'ureterocutaneostomia_sx', label:'Ureterocutaneostomia fianco sx'},
-    {value:'discromie_venosa', label:'Discromie da insuff. venosa AAII', excludes:['discromie_venosa_sx','discromie_venosa_dx']},
-    {value:'discromie_venosa_sx', label:'Discromie da insuff. venosa AI sx', excludes:['discromie_venosa']},
-    {value:'discromie_venosa_dx', label:'Discromie da insuff. venosa AI dx', excludes:['discromie_venosa']}
+  cuteLato: [
+    {value:'dx', label:'Dx'},
+    {value:'sx', label:'Sx'}
+  ],
+  cuteReperti: [
+    {value:'colostomia', label:'Colostomia', extra:[{value:'in_ordine', label:'In ordine'}]},
+    {value:'ureterocutaneostomia', label:'Ureterocutaneostomia'},
+    {value:'discromie_venosa', label:'Discromie da insuff. venosa'}
   ],
   neuroGenerale: [
     {value:'muove_arti', label:'Muove i quattro arti', frag:'muove i quattro arti'},
@@ -1456,17 +1853,34 @@ const OPT = {
     {value:'sx', label:'Sinistra'}
   ]
 };
-const CUTE_LABELS = {
-  cicatrice_xifopubica: 'cicatrice xifo-pubica',
-  colostomia_sx: 'colostomia in fianco sinistro',
-  colostomia_sx_ordine: 'colostomia sinistra in ordine',
-  colostomia_dx: 'colostomia in fianco destro',
-  ureterocutaneostomia_dx: 'ureterocutaneostomia in fianco destro',
-  ureterocutaneostomia_sx: 'ureterocutaneostomia in fianco sinistro',
-  discromie_venosa: 'discromie cutanee agli AAII da insufficienza venosa cronica',
-  discromie_venosa_sx: "discromie cutanee all'arto inferiore sinistro da insufficienza venosa cronica",
-  discromie_venosa_dx: "discromie cutanee all'arto inferiore destro da insufficienza venosa cronica"
-};
+// costruisce la frase corretta per ciascun reperto cutaneo in base al lato scelto:
+// ognuno ha una grammatica diversa (colostomia/ureterocutaneostomia: "in fianco X"
+// oppure bilaterale; discromie: "agli AAII" se entrambi i lati, altrimenti "all'arto X")
+function fraseCute(valore, sedeSet, extraSet){
+  const hasDx = sedeSet && sedeSet.has('dx');
+  const hasSx = sedeSet && sedeSet.has('sx');
+  if(valore === 'colostomia'){
+    let s = hasDx && hasSx ? 'colostomia bilaterale'
+      : hasDx ? 'colostomia in fianco destro'
+      : hasSx ? 'colostomia in fianco sinistro'
+      : 'colostomia';
+    if(extraSet && extraSet.has('in_ordine')) s += ' in ordine';
+    return s;
+  }
+  if(valore === 'ureterocutaneostomia'){
+    return hasDx && hasSx ? 'ureterocutaneostomia bilaterale'
+      : hasDx ? 'ureterocutaneostomia in fianco destro'
+      : hasSx ? 'ureterocutaneostomia in fianco sinistro'
+      : 'ureterocutaneostomia';
+  }
+  if(valore === 'discromie_venosa'){
+    if(hasDx && hasSx) return 'discromie cutanee agli AAII da insufficienza venosa cronica';
+    if(hasDx) return "discromie cutanee all'arto inferiore destro da insufficienza venosa cronica";
+    if(hasSx) return "discromie cutanee all'arto inferiore sinistro da insufficienza venosa cronica";
+    return 'discromie cutanee da insufficienza venosa cronica';
+  }
+  return '';
+}
 
 /* ============================================================
    RENDER DI TUTTI I GRUPPI
@@ -1493,26 +1907,23 @@ function renderAll(){
   document.getElementById('cuore-soffio-dettagli').style.display = state.cuore.soffio !== 'nessuno' ? '' : 'none';
   renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
 
-  renderSingle('torace-mv', OPT.toraceMv, ()=>state.torace.mv, v=>state.torace.mv=v);
-  renderMultiEsclusivo('torace-mv-loc', OPT.toraceMvLoc, ()=>state.torace.mvLoc);
+  renderToraceMv();
   renderToraceReperti();
-  renderReperteLocDinamiche();
   renderSingle('torace-limitata', [{value:true,label:'Valutazione limitata da mancata collaborazione'}],
     ()=>state.torace.limitata, ()=>{ state.torace.limitata = !state.torace.limitata; });
 
   renderSingle('addome-forma', OPT.addomeForma, ()=>state.addome.forma, v=>state.addome.forma=v);
   renderMultiEsclusivo('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza);
   renderDolorabilita();
-  renderDoloreLocDinamiche();
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
   renderMultiEsclusivo('addome-manovre', OPT.addomeManovre, ()=>state.addome.manovre);
 
-  renderSingle('edemi-chips', OPT.edemi, ()=>state.edemi.scelta, v=>state.edemi.scelta=v);
+  renderEdemi();
 
   renderSingle('diuresi-modalita', OPT.diuresiModalita, ()=>state.diuresi.modalita, v=>state.diuresi.modalita=v);
   renderSingle('diuresi-urine', OPT.diuresiUrine, ()=>state.diuresi.urine, v=>state.diuresi.urine=v);
 
-  renderMultiEsclusivo('cute-chips', OPT.cute, ()=>state.cute.chips);
+  renderCute();
 
   renderMulti('neuro-generale', OPT.neuroGenerale, ()=>state.neuro.generale);
   renderNeuroLinguaggio();
@@ -1612,17 +2023,20 @@ function composeCuore(){
 function composeToraceClean(){
   const t = state.torace;
   const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
-  const mvLoc = joinIt([...t.mvLoc]);
+  const mvLoc = comporreSedeTorace(t.mvLoc);
   const mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
 
   const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
   const repParts = repertiSelezionati.map(o => {
-    if(o.hasLoc){
-      const locSet = t.reperteLocPerTipo[o.value];
-      const loc = locSet ? joinIt([...locSet]) : '';
-      return loc ? `${o.frag} ${loc}` : o.frag;
+    let frag = o.frag;
+    if(o.value === 'sibili_fischi_gemiti'){
+      frag = fragSibiliFischiGemiti(t.reperteSottotipi[o.value], o.frag);
     }
-    return o.frag;
+    if(o.hasLoc){
+      const loc = comporreSedeTorace(t.reperteLocPerTipo[o.value]);
+      return loc ? `${frag} ${loc}` : frag;
+    }
+    return frag;
   });
   const repText = repParts.join(', ');
 
@@ -1665,10 +2079,41 @@ function composeAddome(){
 }
 
 function composeEdemi(){
-  const custom = (state.edemi.custom || '').trim();
+  const e = state.edemi;
+  const custom = (e.custom || '').trim();
   if(custom) return custom.endsWith('.') ? custom : custom + '.';
-  const found = OPT.edemi.find(o => o.value === state.edemi.scelta);
-  return found ? found.text : '';
+
+  if(e.base === 'non_edemi') return 'Non edemi.';
+  if(e.base === 'non_declivi'){
+    let s = 'Non edemi declivi';
+    if(e.grinza) s += ', cute a grinza agli AAII';
+    return s + '.';
+  }
+
+  const frasi = [];
+  if(e.succulenza) frasi.push('Succulenza pretibiale agli AAII.');
+
+  const sediMap = { aaii:'agli AAII', aass:'agli AASS', fianchi:'ai fianchi' };
+  const sedi = ['aaii','aass','fianchi'].filter(v => e.sede.has(v)).map(v => sediMap[v]);
+  const sedeText = sedi.length ? joinIt(sedi) : '';
+
+  const qualitaMap = { improntabili:'improntabili', duri:'duri', colonnari:'colonnari' };
+  let qualitaText = e.qualita ? qualitaMap[e.qualita] : '';
+  if(e.discrasici) qualitaText = qualitaText ? qualitaText + ' anche discrasici' : 'discrasici';
+
+  if(sedeText || qualitaText || e.andamento || e.scarico){
+    const qs = qualitaText ? ' ' + qualitaText : '';
+    const ss = sedeText ? ' ' + sedeText : '';
+    let corpo;
+    if(e.andamento === 'riduzione') corpo = `In riduzione gli edemi${qs}${ss}`;
+    else if(e.andamento === 'ripresentati') corpo = `Ripresentatisi gli edemi${qs}${ss}`;
+    else if(e.andamento === 'permangono') corpo = `Permangono edemi${qs}${ss}`;
+    else corpo = `Edemi${qs}${ss}`;
+    if(e.scarico) corpo += ' da porre in scarico';
+    frasi.push(corpo.trim() + '.');
+  }
+
+  return frasi.join(' ');
 }
 
 function composeDiuresi(){
@@ -1689,10 +2134,19 @@ function composeDiuresi(){
 }
 
 function composeCute(){
-  const chips = [...state.cute.chips].map(k => CUTE_LABELS[k]);
-  const note = (state.cute.note || '').trim();
+  const c = state.cute;
+  const frasi = [];
+  if(c.cicatrice) frasi.push('cicatrice xifo-pubica');
+  OPT.cuteReperti.forEach(opt => {
+    if(!c.reperti.has(opt.value)) return;
+    const sede = c.sedePerTipo[opt.value];
+    const extra = c.extraPerTipo[opt.value];
+    const f = fraseCute(opt.value, sede, extra);
+    if(f) frasi.push(f);
+  });
+  const note = (c.note || '').trim();
   const all = [];
-  if(chips.length) all.push(cap(joinIt(chips)));
+  if(frasi.length) all.push(cap(joinIt(frasi)));
   if(note) all.push(cap(note));
   return all.length ? all.join('. ') + '.' : '';
 }
