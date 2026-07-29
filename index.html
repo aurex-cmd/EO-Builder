@@ -271,7 +271,7 @@
 
 <!-- MAPPA REPARTO (settori/letti) -->
 <div class="card" id="wardmap-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
-  <h2><span class="eyebrow">•</span>Reparto</h2>
+  <h2>🏥 Reparto</h2>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
@@ -302,7 +302,7 @@
 
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
-  <h2><span class="eyebrow">•</span>Riepilogo referti</h2>
+  <h2>📋 Riepilogo referti</h2>
   <div class="group">
     <div class="inline-fields">
       <button class="btn primary" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
@@ -316,7 +316,7 @@
 
 <!-- 0. SESSO -->
 <div class="card" id="card-sesso">
-  <h2><span class="eyebrow">00</span>Paziente</h2>
+  <h2>🧑 Paziente</h2>
   <div class="group">
     <div class="group-label">Sesso (adatta gli aggettivi nel referto)</div>
     <div class="chips" id="sesso-chips"></div>
@@ -325,7 +325,7 @@
 
 <!-- 1. COSCIENZA -->
 <div class="card" id="card-coscienza">
-  <h2><span class="eyebrow">01</span>Stato di coscienza</h2>
+  <h2>💭 Stato di coscienza</h2>
   <div class="group">
     <div class="group-label">Stato</div>
     <div class="chips" id="coscienza-primary"></div>
@@ -343,7 +343,7 @@
 
 <!-- 2. RESPIRO / PARAMETRI -->
 <div class="card" id="card-respiro">
-  <h2><span class="eyebrow">02</span>Respiro e parametri</h2>
+  <h2>💨 Respiro e parametri</h2>
   <div class="group">
     <div class="group-label">Tipo respiro</div>
     <div class="chips" id="respiro-tipo"></div>
@@ -353,6 +353,7 @@
     <div class="chips" id="respiro-o2"></div>
     <div class="inline-fields" style="margin-top:6px;">
       <div class="field"><label>L/min (NC)</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
+      <div class="field"><label>FiO2 % (MV)</label><input type="number" id="respiro-fio2" min="0" max="100"></div>
       <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
     </div>
   </div>
@@ -376,7 +377,7 @@
 
 <!-- 3. CUORE -->
 <div class="card" id="card-cuore">
-  <h2><span class="eyebrow">03</span>Cuore</h2>
+  <h2>❤️ Cuore</h2>
   <div class="group">
     <div class="group-label">Ritmo</div>
     <div class="chips" id="cuore-ritmo"></div>
@@ -406,7 +407,7 @@
 
 <!-- 4. TORACE -->
 <div class="card" id="card-torace">
-  <h2><span class="eyebrow">04</span>Torace</h2>
+  <h2>🫁 Torace</h2>
   <div class="group">
     <div class="group-label">Murmure vescicolare</div>
     <div class="finding-list" id="torace-mv"></div>
@@ -422,7 +423,7 @@
 
 <!-- 5. ADDOME -->
 <div class="card" id="card-addome">
-  <h2><span class="eyebrow">05</span>Addome</h2>
+  <h2>🫃 Addome</h2>
   <div class="group">
     <div class="group-label">Forma</div>
     <div class="chips" id="addome-forma"></div>
@@ -441,13 +442,13 @@
   </div>
   <div class="group">
     <div class="group-label">Manovre</div>
-    <div class="chips" id="addome-manovre"></div>
+    <div class="finding-list" id="addome-manovre"></div>
   </div>
 </div>
 
 <!-- 6. EDEMI -->
 <div class="card" id="card-edemi">
-  <h2><span class="eyebrow">06</span>Edemi</h2>
+  <h2>💧 Edemi</h2>
   <div class="group">
     <div class="group-label">Assenti (esclude il resto)</div>
     <div class="chips" id="edemi-base"></div>
@@ -475,7 +476,7 @@
 
 <!-- 7. DIURESI -->
 <div class="card" id="card-diuresi">
-  <h2><span class="eyebrow">07</span>Diuresi</h2>
+  <h2>🚰 Diuresi</h2>
   <div class="group">
     <div class="group-label">Modalità</div>
     <div class="chips" id="diuresi-modalita"></div>
@@ -494,7 +495,7 @@
 
 <!-- 8. CUTE / NOTE -->
 <div class="card" id="card-cute">
-  <h2><span class="eyebrow">08</span>Cute, cicatrici, note finali</h2>
+  <h2>🩹 Cute, cicatrici, note finali</h2>
   <div class="group">
     <div class="chips" id="cute-cicatrice"></div>
   </div>
@@ -508,7 +509,7 @@
 
 <!-- 9. NEUROLOGICO -->
 <div class="card" id="card-neuro">
-  <h2><span class="eyebrow">09</span>Neurologico</h2>
+  <h2>🧠 Neurologico</h2>
   <div class="group">
     <div class="group-label">Generale</div>
     <div class="chips" id="neuro-generale"></div>
@@ -519,7 +520,7 @@
   </div>
   <div class="group">
     <div class="group-label">Mingazzini</div>
-    <div class="chips" id="neuro-mingazzini"></div>
+    <div class="finding-list" id="neuro-mingazzini"></div>
   </div>
   <div class="group">
     <div class="group-label">Emisindrome</div>
@@ -541,7 +542,7 @@
 
 <!-- OUTPUT -->
 <div class="card" id="output-card">
-  <h2><span class="eyebrow">→</span>Referto</h2>
+  <h2>📄 Esame obiettivo</h2>
   <textarea id="output"></textarea>
   <div class="row">
     <button class="btn primary" onclick="copyOutput()">Copia referto</button>
@@ -585,14 +586,14 @@ window.addEventListener('error', function(e){
 const state = {
   sesso: null,
   coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
-  respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+  respiro: { tipo:'eupnoico', o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
-  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovre:new Set() },
+  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_edemi', sede:new Set(), qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:false, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrice:false, reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
-  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', mingazziniLato:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
 /* ============================================================
@@ -610,6 +611,7 @@ function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 const TEXT_FIELD_MAP = [
   ['coscienza-extra', ['coscienza','extra']],
   ['respiro-litri',   ['respiro','litri']],
+  ['respiro-fio2',    ['respiro','fio2']],
   ['respiro-altro',   ['respiro','altro']],
   ['v-sat',           ['respiro','sat']],
   ['v-pas',           ['respiro','pas']],
@@ -670,9 +672,10 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+    { tipo:'eupnoico', o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
     o.respiro || {}
   );
+  if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
 
   state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
   state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
@@ -698,6 +701,13 @@ function applyStateObject(o){
       if(VECCHI_SIBILI[vecchio]) sibiliMigrati.add(VECCHI_SIBILI[vecchio]);
     }
   });
+  // migrazione: "crepitii fini" (voce separata) diventa "crepitii" + sottotipo "fini"
+  let crepitiiFiniMigrato = false;
+  if(state.torace.reperti.has('crepitii_fini')){
+    state.torace.reperti.delete('crepitii_fini');
+    state.torace.reperti.add('crepitii');
+    crepitiiFiniMigrato = true;
+  }
   state.torace.reperteLocPerTipo = {};
   if(o.torace?.reperteLocPerTipo){
     Object.keys(o.torace.reperteLocPerTipo).forEach(k => {
@@ -715,11 +725,19 @@ function applyStateObject(o){
     const set = getLocSet(state.torace.reperteLocPerTipo, 'sibili_fischi_gemiti');
     sibiliMigrati.forEach(a => set.add(a));
   }
+  if(state.torace.reperteLocPerTipo['crepitii_fini']){
+    const destSet = getLocSet(state.torace.reperteLocPerTipo, 'crepitii');
+    state.torace.reperteLocPerTipo['crepitii_fini'].forEach(a => destSet.add(a));
+    delete state.torace.reperteLocPerTipo['crepitii_fini'];
+  }
   state.torace.reperteSottotipi = {};
   if(o.torace?.reperteSottotipi){
     Object.keys(o.torace.reperteSottotipi).forEach(k => {
       state.torace.reperteSottotipi[k] = new Set(o.torace.reperteSottotipi[k] || []);
     });
+  }
+  if(crepitiiFiniMigrato){
+    getLocSet(state.torace.reperteSottotipi, 'crepitii').add('fini');
   }
   state.torace.limitata = o.torace?.limitata ?? false;
 
@@ -738,8 +756,54 @@ function applyStateObject(o){
       }
     });
   }
+  // migrazione: "dolente" e "dolorabile" (voci separate) confluiscono nell'unico
+  // tag "dolente_dolorabile", unendo anche le rispettive sedi salvate
+  if(state.addome.dolorabilita.has('dolente') || state.addome.dolorabilita.has('dolorabile')){
+    state.addome.dolorabilita.delete('dolente');
+    state.addome.dolorabilita.delete('dolorabile');
+    state.addome.dolorabilita.add('dolente_dolorabile');
+    const merged = getLocSet(state.addome.doloreLocPerTipo, 'dolente_dolorabile');
+    ['dolente','dolorabile'].forEach(k => {
+      if(state.addome.doloreLocPerTipo[k]){
+        state.addome.doloreLocPerTipo[k].forEach(v => merged.add(v));
+        delete state.addome.doloreLocPerTipo[k];
+      }
+    });
+  }
+  // migrazione: i vecchi codici brevi 'profonda'/'sp' (usati solo per "non dolente
+  // ma dolorabile" in una versione precedente) diventano le frasi complete
+  const CODICI_PALPAZIONE = { profonda:'alla palpazione profonda', sp:'alla palpazione S/P' };
+  Object.keys(state.addome.doloreLocPerTipo).forEach(k => {
+    const set = state.addome.doloreLocPerTipo[k];
+    Object.keys(CODICI_PALPAZIONE).forEach(codice => {
+      if(set.has(codice)){
+        set.delete(codice);
+        set.add(CODICI_PALPAZIONE[codice]);
+      }
+    });
+  });
   state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
-  state.addome.manovre = new Set(o.addome?.manovre || []);
+  if(o.addome && o.addome.manovreAttive !== undefined){
+    state.addome.manovreAttive = new Set(o.addome.manovreAttive || []);
+    state.addome.manovreEsito = Object.assign({}, o.addome.manovreEsito || {});
+  } else {
+    // migrazione dal vecchio elenco piatto di frasi (es. "Blumberg positivo")
+    state.addome.manovreAttive = new Set();
+    state.addome.manovreEsito = {};
+    const VECCHIE_MANOVRE = {
+      'non Blumberg': ['blumberg','no'],
+      'Blumberg negativo': ['blumberg','negativo'],
+      'Blumberg positivo': ['blumberg','positivo'],
+      'non Murphy': ['murphy','no'],
+      'Murphy positivo': ['murphy','positivo']
+    };
+    (o.addome?.manovre || []).forEach(v => {
+      const m = VECCHIE_MANOVRE[v];
+      if(!m) return;
+      state.addome.manovreAttive.add(m[0]);
+      state.addome.manovreEsito[m[0]] = m[1];
+    });
+  }
 
   if(o.edemi && o.edemi.sede !== undefined){
     // già nel nuovo formato
@@ -829,6 +893,7 @@ function applyStateObject(o){
   state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
   state.neuro.mingazzini = o.neuro?.mingazzini ?? '';
+  state.neuro.mingazziniLato = o.neuro?.mingazziniLato ?? '';
   state.neuro.emisindrome = o.neuro?.emisindrome ?? '';
   state.neuro.emineglect = o.neuro?.emineglect ?? '';
   state.neuro.occhiDeviati = o.neuro?.occhiDeviati ?? '';
@@ -1273,26 +1338,39 @@ function renderGruppoChipInline(container, label, options, getActive, onToggle){
 // delle alte vie...). Selezionare emitorace azzera zona/lato e viceversa,
 // perché sono due modi alternativi di indicare la sede.
 function costruisciSedeToracica(inner, locSet, extraOptions){
-  const zonaLatoValori = ['apice','medio','base','dx','sx'];
-  const emitoraceValori = ['emitorace_dx','emitorace_sx'];
-  const opzioniZona = [...OPT.toraceZona, ...OPT.toraceEmitorace];
+  const zonaValori = ['apice','medio','base'];
+  const latoValori = ['dx','sx','bilaterale'];
+  const globaliValori = ['emitorace_dx','emitorace_sx','su_tap']; // sedi "globali", alternative alla zona+lato
 
-  renderGruppoChipInline(inner, 'Zona', opzioniZona,
+  renderGruppoChipInline(inner, 'Zona', OPT.toraceZona,
     v => locSet.has(v),
     (v, active) => {
-      const isEmitorace = emitoraceValori.includes(v);
-      if(!active){
-        if(isEmitorace) zonaLatoValori.forEach(z => locSet.delete(z));
-        else emitoraceValori.forEach(z => locSet.delete(z));
-      }
+      if(!active) globaliValori.forEach(z => locSet.delete(z));
       active ? locSet.delete(v) : locSet.add(v);
       update();
     });
 
-  renderGruppoChipInline(inner, 'Lato', OPT.toraceLato,
+  // emitorace e "su TAP" vanno sulla loro riga, sotto zona/lato ma sopra le extra
+  const spacer1 = document.createElement('div');
+  spacer1.style.cssText = 'flex-basis:100%; height:0;';
+  inner.appendChild(spacer1);
+  renderGruppoChipInline(inner, null, [...OPT.toraceEmitorace, {value:'su_tap', label:'su TAP'}],
     v => locSet.has(v),
     (v, active) => {
-      if(!active) emitoraceValori.forEach(z => locSet.delete(z));
+      if(!active) [...zonaValori, ...latoValori].forEach(z => locSet.delete(z));
+      active ? locSet.delete(v) : locSet.add(v);
+      update();
+    });
+
+  const spacer2 = document.createElement('div');
+  spacer2.style.cssText = 'flex-basis:100%; height:0;';
+  inner.appendChild(spacer2);
+  renderGruppoChipInline(inner, 'Lato', [...OPT.toraceLato, {value:'bilaterale', label:'Bilaterale'}],
+    v => locSet.has(v),
+    (v, active) => {
+      if(v === 'bilaterale' && !active){ locSet.delete('dx'); locSet.delete('sx'); }
+      if((v === 'dx' || v === 'sx') && !active){ locSet.delete('bilaterale'); }
+      if(!active) globaliValori.forEach(z => locSet.delete(z));
       active ? locSet.delete(v) : locSet.add(v);
       update();
     });
@@ -1321,31 +1399,37 @@ function comporreSedeTorace(locSet){
   const parts = [];
 
   const emiDx = locSet.has('emitorace_dx'), emiSx = locSet.has('emitorace_sx');
-  if(emiDx || emiSx){
-    parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'destro' : 'sinistro'));
+  const suTap = locSet.has('su_tap');
+  if(emiDx || emiSx || suTap){
+    if(suTap) parts.push('su TAP');
+    else parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'destro' : 'sinistro'));
   }
 
   const hasApice = locSet.has('apice'), hasMedio = locSet.has('medio'), hasBase = locSet.has('base');
-  let zoneText = '', genereMaschile = false;
+  let zoneText = '', genereMaschile = false, soloBase = false;
   if(hasApice && hasMedio && hasBase){ zoneText = 'diffusamente su tutto l\'ambito'; }
   else if(hasMedio && hasBase){ zoneText = 'medio-basale'; }
   else if(hasApice && hasBase){ zoneText = 'apico-basale'; }
   else if(hasApice && hasMedio){ zoneText = 'apice e campo medio'; genereMaschile = true; }
-  else if(hasBase){ zoneText = 'base'; }
+  else if(hasBase){ zoneText = 'base'; soloBase = true; }
   else if(hasMedio){ zoneText = 'campo medio'; genereMaschile = true; }
   else if(hasApice){ zoneText = 'apice'; genereMaschile = true; }
 
   if(zoneText){
     const hasDx = locSet.has('dx'), hasSx = locSet.has('sx');
-    let lato = '';
-    if(hasDx && hasSx) lato = 'bilaterale';
-    else if(hasDx) lato = genereMaschile ? 'destro' : 'destra';
-    else if(hasSx) lato = genereMaschile ? 'sinistro' : 'sinistra';
-    const prefisso = zoneText.startsWith('diffusamente') ? '' : 'in ';
-    parts.push(prefisso + zoneText + (lato ? ' ' + lato : ''));
+    const bilaterale = locSet.has('bilaterale') || (hasDx && hasSx);
+    if(soloBase && bilaterale){
+      parts.push('alle basi bilateralmente');
+    } else {
+      let lato = '';
+      if(bilaterale) lato = 'bilaterale';
+      else if(hasDx) lato = genereMaschile ? 'destro' : 'destra';
+      else if(hasSx) lato = genereMaschile ? 'sinistro' : 'sinistra';
+      const prefisso = zoneText.startsWith('diffusamente') ? '' : 'in ';
+      parts.push(prefisso + zoneText + (lato ? ' ' + lato : ''));
+    }
   }
 
-  if(locSet.has('su_tap')) parts.push('su TAP');
   if(locSet.has('sparsi')) parts.push('sparsi');
   if(locSet.has('delle_alte_vie')) parts.push('delle alte vie');
 
@@ -1374,18 +1458,43 @@ function convertiSedeTorace(rawArray){
   return s;
 }
 
+// Murphy e Blumberg: il chip attiva/disattiva la manovra nel referto, la
+// tendina sceglie l'esito (No/Negativo/Positivo/Debolmente positivo)
+function renderAddomeManovre(){
+  const el = document.getElementById('addome-manovre');
+  el.innerHTML = '';
+  OPT.addomeManovreTest.forEach(opt => {
+    const s = state.addome.manovreAttive;
+    const active = s.has(opt.value);
+    const onClickChip = () => {
+      active ? s.delete(opt.value) : s.add(opt.value);
+      update();
+    };
+    const builder = (inner) => {
+      renderGruppoChipInline(inner, null, OPT.addomeEsitoManovra,
+        v => state.addome.manovreEsito[opt.value] === v,
+        (v, vAttivo) => {
+          state.addome.manovreEsito[opt.value] = vAttivo ? '' : v;
+          update();
+        });
+    };
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
+}
+
 function renderDolorabilita(){
   const el = document.getElementById('addome-dolorabilita');
   el.innerHTML = '';
   const s = state.addome.dolorabilita;
+  const BASELINE = ['non_dolente', 'non_dolente_profonda']; // esclusive tra loro e col resto, niente tendina
   OPT.addomeDolorabilita.forEach(opt => {
     const active = s.has(opt.value);
     const onClickChip = () => {
-      if(opt.value === 'non_dolente'){
+      if(BASELINE.includes(opt.value)){
         s.clear();
-        if(!active) s.add('non_dolente');
+        if(!active) s.add(opt.value);
       } else {
-        s.delete('non_dolente');
+        BASELINE.forEach(b => s.delete(b));
         active ? s.delete(opt.value) : s.add(opt.value);
       }
       update();
@@ -1395,7 +1504,22 @@ function renderDolorabilita(){
       locActive ? locSet.delete(locOpt.value) : locSet.add(locOpt.value);
       update();
     };
-    el.appendChild(creaRigaConTendina(g(opt), active, onClickChip, OPT.addomeDoloreLoc, locSet, onClickLoc));
+    // tendina con sedi (quadranti, combinabili) + palpazione (S/P o profonda,
+    // una sola alla volta): usata sia per "dolente/dolorabile" sia per
+    // "non dolente ma dolorabile" (che ora richiede anch'essa tutte le sedi)
+    const locOptions = opt.value === 'non_dolente' ? null : (inner) => {
+      renderGruppoChipInline(inner, null, OPT.addomeDoloreLoc,
+        v => locSet.has(v),
+        (v, vAttivo) => { vAttivo ? locSet.delete(v) : locSet.add(v); update(); });
+      renderGruppoChipInline(inner, null, OPT.addomePalpazione,
+        v => locSet.has(v),
+        (v, vAttivo) => {
+          OPT.addomePalpazione.forEach(p => locSet.delete(p.value));
+          if(!vAttivo) locSet.add(v);
+          update();
+        });
+    };
+    el.appendChild(creaRigaConTendina(g(opt), active, onClickChip, locOptions, locSet, onClickLoc));
   });
 }
 
@@ -1441,14 +1565,22 @@ function renderToraceReperti(){
     let builder = null;
     if(opt.hasLoc){
       const locSet = getLocSet(state.torace.reperteLocPerTipo, opt.value);
-      const sottotipiSet = opt.value === 'sibili_fischi_gemiti'
+      const sottotipiSet = ['sibili_fischi_gemiti','crepitii','rantoli'].includes(opt.value)
         ? getLocSet(state.torace.reperteSottotipi, opt.value)
         : null;
       builder = (inner) => {
-        if(sottotipiSet){
+        if(opt.value === 'sibili_fischi_gemiti'){
           renderGruppoChipInline(inner, 'Tipo', OPT.toraceSottotipoSuono,
             v => sottotipiSet.has(v),
             (v, sAttivo) => { sAttivo ? sottotipiSet.delete(v) : sottotipiSet.add(v); update(); });
+        } else if(opt.value === 'crepitii'){
+          renderGruppoChipInline(inner, null, [{value:'fini', label:'Fini'}],
+            v => sottotipiSet.has(v),
+            (v, sAttivo) => { sAttivo ? sottotipiSet.delete(v) : sottotipiSet.add(v); update(); });
+        } else if(opt.value === 'rantoli'){
+          renderGruppoChipInline(inner, 'Bolle', OPT.toraceBolle,
+            v => sottotipiSet.has(v),
+            (v, sAttivo) => { sottotipiSet.clear(); if(!sAttivo) sottotipiSet.add(v); update(); });
         }
         costruisciSedeToracica(inner, locSet, OPT.toraceReperteExtra);
       };
@@ -1485,7 +1617,11 @@ function renderCuorePause(){
   const active = state.cuore.pauseLibere;
   b.className = 'chip' + (active ? ' active' : '');
   b.textContent = 'Pause apparentemente libere';
-  b.onclick = () => { state.cuore.pauseLibere = !active; update(); };
+  b.onclick = () => {
+    state.cuore.pauseLibere = !active;
+    if(state.cuore.pauseLibere) state.cuore.soffio = 'nessuno'; // incompatibile con un soffio
+    update();
+  };
   el.appendChild(b);
 }
 
@@ -1611,6 +1747,24 @@ function renderCute(){
   });
 }
 
+function renderNeuroMingazzini(){
+  const el = document.getElementById('neuro-mingazzini');
+  el.innerHTML = '';
+  OPT.neuroMingazzini.forEach(opt => {
+    const active = state.neuro.mingazzini === opt.value;
+    const onClickChip = () => {
+      state.neuro.mingazzini = active ? '' : opt.value;
+      update();
+    };
+    const builder = opt.hasLoc ? (inner) => {
+      renderGruppoChipInline(inner, null, OPT.neuroLato,
+        v => state.neuro.mingazziniLato === v,
+        (v, vAttivo) => { state.neuro.mingazziniLato = vAttivo ? '' : v; update(); });
+    } : null;
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
+}
+
 function renderNeuroLinguaggio(){
   const el = document.getElementById('neuro-linguaggio');
   el.innerHTML = '';
@@ -1675,12 +1829,14 @@ const OPT = {
   respiroO2: [
     {value:'AA', label:'in AA'},
     {value:'NC', label:'in NC'},
+    {value:'MS', label:'in MS'},
+    {value:'MR', label:'in MR'},
+    {value:'MV', label:'in MV'},
     {value:'ALTRO', label:'altro'}
   ],
   temp: [
     {value:'apiretico', m:'Apiretico', f:'Apiretica'},
-    {value:'febbrile', label:'Febbrile'},
-    {value:'non_specificata', label:'Non specificata'}
+    {value:'febbrile', label:'Febbrile'}
   ],
   cuoreRitmo: [
     {value:'ritmici', label:'Ritmici'},
@@ -1728,27 +1884,29 @@ const OPT = {
     {value:'emitorace_dx', label:'Emitorace dx'},
     {value:'emitorace_sx', label:'Emitorace sx'}
   ],
-  toraceMvExtra: [
-    {value:'su_tap', label:'su TAP'}
-  ],
+  toraceMvExtra: [],
   toraceSottotipoSuono: [
     {value:'sibili', label:'Sibili'},
     {value:'fischi', label:'Fischi'},
     {value:'gemiti', label:'Gemiti'}
   ],
   toraceReperteExtra: [
-    {value:'su_tap', label:'su TAP'},
     {value:'sparsi', label:'Sparsi'},
     {value:'delle_alte_vie', label:'delle alte vie'}
   ],
   toraceReperti: [
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
     {value:'non_franchi', label:'Non franchi rumori patologici', frag:'non franchi rumori patologici', negativo:true},
-    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, excludes:['crepitii_fini']},
-    {value:'crepitii_fini', label:'Crepitii fini', frag:'fini crepitii', hasLoc:true, excludes:['crepitii']},
+    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true},
     {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true},
+    {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true},
     {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true},
     {value:'sibili_fischi_gemiti', label:'Sibili/fischi/gemiti', frag:'sibili, fischi e gemiti', hasLoc:true}
+  ],
+  toraceBolle: [
+    {value:'piccole', label:'Piccole bolle'},
+    {value:'medie', label:'Medie bolle'},
+    {value:'grandi', label:'Grandi bolle'}
   ],
   addomeForma: [
     {value:'globoso per adipe', label:'Globoso per adipe'},
@@ -1762,8 +1920,8 @@ const OPT = {
   ],
   addomeDolorabilita: [
     {value:'non_dolente', label:'Non dolente né dolorabile'},
-    {value:'dolente', label:'Dolente'},
-    {value:'dolorabile', label:'Dolorabile'}
+    {value:'non_dolente_profonda', label:'Non dolente ma dolorabile'},
+    {value:'dolente_dolorabile', label:'Dolente/dolorabile'}
   ],
   addomeDoloreLoc: [
     {value:'in ipocondrio destro', label:'ipocondrio dx'},
@@ -1775,9 +1933,11 @@ const OPT = {
     {value:'in fossa iliaca destra', label:'fossa iliaca dx'},
     {value:'in ipogastrio', label:'ipogastrio'},
     {value:'in fossa iliaca sinistra', label:'fossa iliaca sx'},
-    {value:'diffusamente', label:'diffusamente'},
-    {value:'alla palpazione S/P', label:'S/P (superf. e prof.)'},
-    {value:'alla palpazione profonda', label:'palpazione profonda'}
+    {value:'diffusamente', label:'diffusamente'}
+  ],
+  addomePalpazione: [
+    {value:'alla palpazione S/P', label:'S/P'},
+    {value:'alla palpazione profonda', label:'Profonda'}
   ],
   addomePeristalsi: [
     {value:'presente', label:'Presente'},
@@ -1785,12 +1945,15 @@ const OPT = {
     {value:'vivace', label:'Vivace'},
     {value:'torpida', label:'Torpida'}
   ],
-  addomeManovre: [
-    {value:'non Blumberg', label:'Non Blumberg', excludes:['Blumberg negativo','Blumberg positivo']},
-    {value:'Blumberg negativo', label:'Blumberg negativo', excludes:['non Blumberg','Blumberg positivo']},
-    {value:'Blumberg positivo', label:'Blumberg positivo', excludes:['non Blumberg','Blumberg negativo']},
-    {value:'non Murphy', label:'Non Murphy', excludes:['Murphy positivo']},
-    {value:'Murphy positivo', label:'Murphy positivo', excludes:['non Murphy']}
+  addomeManovreTest: [
+    {value:'murphy', label:'Murphy'},
+    {value:'blumberg', label:'Blumberg'}
+  ],
+  addomeEsitoManovra: [
+    {value:'no', label:'No'},
+    {value:'negativo', label:'Negativo'},
+    {value:'positivo', label:'Positivo'},
+    {value:'debole', label:'Debolmente positivo'}
   ],
   edemiBase: [
     {value:'non_edemi', label:'Non edemi'},
@@ -1846,7 +2009,8 @@ const OPT = {
   neuroMingazzini: [
     {value:'i_ii', label:'I e II regolari'},
     {value:'i', label:'Solo I regolare'},
-    {value:'non_eseguibile', label:'Non eseguibile'}
+    {value:'non_eseguibile', label:'Non eseguibile'},
+    {value:'positivo', label:'Positivo', hasLoc:true}
   ],
   neuroLato: [
     {value:'dx', label:'Destra'},
@@ -1916,7 +2080,7 @@ function renderAll(){
   renderMultiEsclusivo('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza);
   renderDolorabilita();
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
-  renderMultiEsclusivo('addome-manovre', OPT.addomeManovre, ()=>state.addome.manovre);
+  renderAddomeManovre();
 
   renderEdemi();
 
@@ -1927,7 +2091,7 @@ function renderAll(){
 
   renderMulti('neuro-generale', OPT.neuroGenerale, ()=>state.neuro.generale);
   renderNeuroLinguaggio();
-  renderSingle('neuro-mingazzini', OPT.neuroMingazzini, ()=>state.neuro.mingazzini, v=>state.neuro.mingazzini=v);
+  renderNeuroMingazzini();
   renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>state.neuro.emisindrome=v);
   renderSingle('neuro-emineglect', OPT.neuroLato, ()=>state.neuro.emineglect, v=>state.neuro.emineglect=v);
   renderSingle('neuro-occhi', OPT.neuroLato, ()=>state.neuro.occhiDeviati, v=>state.neuro.occhiDeviati=v);
@@ -1979,7 +2143,13 @@ function composeCoscienza(){
 function composeRespiro(){
   const r = state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
-  let o2text = r.o2==='AA' ? 'in AA' : r.o2==='NC' ? `in NC ${r.litri || '_'}L/min` : (r.altro || 'in ossigenoterapia');
+  let o2text;
+  if(r.o2 === 'AA') o2text = 'in AA';
+  else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
+  else if(r.o2 === 'MS') o2text = 'in MS';
+  else if(r.o2 === 'MR') o2text = 'in MR';
+  else if(r.o2 === 'MV') o2text = `in MV FiO2 ${r.fio2 || '_'}%`;
+  else o2text = (r.altro || 'in ossigenoterapia');
   let s = `${g(tipoOpt)} ${o2text}`;
 
   const vitali = [];
@@ -1989,10 +2159,8 @@ function composeRespiro(){
   if(vitali.length) s += ' con ' + vitali.join(', ');
   s += '.';
 
-  if(r.temp !== 'non_specificata'){
-    const tempOpt = OPT.temp.find(o => o.value === r.temp);
-    s += r.temp==='apiretico' ? ` ${g(tempOpt)}.` : ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.`;
-  }
+  const tempOpt = OPT.temp.find(o => o.value === r.temp) || OPT.temp.find(o => o.value === 'apiretico');
+  s += r.temp === 'febbrile' ? ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.` : ` ${g(tempOpt)}.`;
   const storico = (r.tempStorico || '').trim();
   if(storico) s += ' ' + cap(storico) + (storico.endsWith('.') ? '' : '.');
   return s;
@@ -2031,6 +2199,13 @@ function composeToraceClean(){
     let frag = o.frag;
     if(o.value === 'sibili_fischi_gemiti'){
       frag = fragSibiliFischiGemiti(t.reperteSottotipi[o.value], o.frag);
+    } else if(o.value === 'crepitii'){
+      const sotto = t.reperteSottotipi[o.value];
+      if(sotto && sotto.has('fini')) frag = 'fini crepitii';
+    } else if(o.value === 'rantoli'){
+      const sotto = t.reperteSottotipi[o.value];
+      const scelta = sotto && ['piccole','medie','grandi'].find(v => sotto.has(v));
+      if(scelta) frag = `rantoli a ${scelta} bolle`;
     }
     if(o.hasLoc){
       const loc = comporreSedeTorace(t.reperteLocPerTipo[o.value]);
@@ -2061,20 +2236,50 @@ function composeAddome(){
     }
   }
 
-  const dolMap = { non_dolente:'non dolente né dolorabile', dolente:'dolente', dolorabile:'dolorabile' };
-  const ordineDol = ['non_dolente','dolente','dolorabile'];
+  // unisce sede (quadranti, con "e" se più di una) e palpazione (S/P/profonda)
+  // SENZA congiunzione tra le due parti: "in ipocondrio destro alla palpazione profonda"
+  function comporreDoloreLoc(locSet){
+    if(!locSet) return '';
+    const quadranti = OPT.addomeDoloreLoc.filter(o => locSet.has(o.value)).map(o => o.value);
+    const palpOpt = OPT.addomePalpazione.find(o => locSet.has(o.value));
+    const sedeText = quadranti.length ? joinIt(quadranti) : '';
+    const palpText = palpOpt ? palpOpt.value : '';
+    return [sedeText, palpText].filter(Boolean).join(' ');
+  }
+
+  const dolMap = {
+    non_dolente: 'non dolente né dolorabile',
+    non_dolente_profonda: 'non dolente ma dolorabile',
+    dolente_dolorabile: 'dolente e dolorabile'
+  };
+  const ordineDol = ['non_dolente','non_dolente_profonda','dolente_dolorabile'];
   const dolSelezionati = ordineDol.filter(v => a.dolorabilita.has(v));
   const frasiDol = dolSelezionati.map(v => {
+    if(v === 'non_dolente') return dolMap[v] + ' alla palpazione S/P';
+    if(v === 'non_dolente_profonda'){
+      const locSet = a.doloreLocPerTipo[v];
+      const loc = comporreDoloreLoc(locSet);
+      // di default, se non è stata scelta una palpazione, resta "profonda"
+      const hasPalp = locSet && OPT.addomePalpazione.some(o => locSet.has(o.value));
+      const finale = hasPalp ? loc : [loc, 'alla palpazione profonda'].filter(Boolean).join(' ');
+      return dolMap[v] + ' ' + finale;
+    }
     const locSet = a.doloreLocPerTipo[v];
-    const loc = locSet ? joinIt([...locSet]) : '';
+    const loc = comporreDoloreLoc(locSet);
     return dolMap[v] + (loc ? ' ' + loc : '');
   });
   if(frasiDol.length){
     parts.push(joinIt(frasiDol));
   }
   let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
-  const man = [...a.manovre];
-  if(man.length) s += ' ' + cap(joinIt(man)) + '.';
+  const esitoFrase = { no:'no', negativo:'negativo', positivo:'positivo', debole:'debolmente positivo' };
+  const manovreFrasi = OPT.addomeManovreTest
+    .filter(opt => a.manovreAttive.has(opt.value))
+    .map(opt => {
+      const esito = a.manovreEsito[opt.value] || 'no';
+      return esito === 'no' ? `Non ${opt.label}` : `${opt.label} ${esitoFrase[esito]}`;
+    });
+  if(manovreFrasi.length) s += ' ' + cap(joinIt(manovreFrasi)) + '.';
   return s;
 }
 
@@ -2166,7 +2371,11 @@ function composeNeuro(){
     i:'mantiene correttamente la posizione in Mingazzini I',
     non_eseguibile:'Mingazzini non eseguibile'
   };
-  if(n.mingazzini) parts.push(mingLabel[n.mingazzini]);
+  if(n.mingazzini === 'positivo'){
+    parts.push('Mingazzini positivo' + (n.mingazziniLato ? ' a ' + n.mingazziniLato : ''));
+  } else if(n.mingazzini){
+    parts.push(mingLabel[n.mingazzini]);
+  }
 
   if(n.emisindrome) parts.push('emisindrome ' + n.emisindrome);
   if(n.emineglect) parts.push('emineglect ' + n.emineglect);
