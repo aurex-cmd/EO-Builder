@@ -373,11 +373,13 @@
   <div class="group">
     <div class="group-label">Soffio</div>
     <div class="chips" id="cuore-soffio"></div>
-    <div class="inline-fields" style="margin-top:6px;">
-      <div class="field"><label>grado /6</label><input type="number" id="cuore-grado" min="1" max="6" style="width:44px;"></div>
+    <div id="cuore-soffio-dettagli" style="display:none;">
+      <div class="inline-fields" style="margin-top:6px;">
+        <div class="field"><label>grado /6</label><input type="number" id="cuore-grado" min="1" max="6" style="width:44px;"></div>
+      </div>
+      <div class="group-label" style="margin-top:7px;">Focolaio</div>
+      <div class="chips" id="cuore-focolaio"></div>
     </div>
-    <div class="group-label" style="margin-top:7px;">Focolaio</div>
-    <div class="chips" id="cuore-focolaio"></div>
   </div>
 </div>
 
@@ -392,7 +394,7 @@
   <div class="group">
     <div class="group-label">Reperti aggiunti</div>
     <div class="chips" id="torace-reperti"></div>
-    <div class="chips" id="torace-reperti-loc" style="margin-top:6px;"></div>
+    <div id="torace-reperti-loc-wrapper"></div>
   </div>
   <div class="group">
     <div class="chips" id="torace-limitata"></div>
@@ -413,7 +415,7 @@
   <div class="group">
     <div class="group-label">Dolorabilità</div>
     <div class="chips" id="addome-dolorabilita"></div>
-    <div class="chips" id="addome-dolore-loc" style="margin-top:6px;"></div>
+    <div id="addome-dolore-loc-wrapper"></div>
   </div>
   <div class="group">
     <div class="group-label">Peristalsi</div>
@@ -547,8 +549,8 @@ const state = {
   coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
   respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLoc:new Set(), limitata:false },
-  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
+  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, limitata:false },
+  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovre:new Set() },
   edemi: { scelta:'non_edemi', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { chips:new Set(), note:'' },
@@ -646,13 +648,36 @@ function applyStateObject(o){
   state.torace.mv = o.torace?.mv ?? 'presente';
   state.torace.mvLoc = new Set(o.torace?.mvLoc || []);
   state.torace.reperti = new Set(o.torace?.reperti || ['non_rumori']);
-  state.torace.reperteLoc = new Set(o.torace?.reperteLoc || []);
+  state.torace.reperteLocPerTipo = {};
+  if(o.torace?.reperteLocPerTipo){
+    Object.keys(o.torace.reperteLocPerTipo).forEach(k => {
+      state.torace.reperteLocPerTipo[k] = new Set(o.torace.reperteLocPerTipo[k] || []);
+    });
+  } else if(o.torace?.reperteLoc && o.torace.reperteLoc.length){
+    // migrazione dal vecchio modello (sede unica condivisa tra tutti i reperti):
+    // applica la stessa sede salvata a ciascun reperto con sede che era attivo
+    (o.torace?.reperti || []).forEach(rv => {
+      const opt = OPT.toraceReperti.find(x => x.value === rv);
+      if(opt && opt.hasLoc) state.torace.reperteLocPerTipo[rv] = new Set(o.torace.reperteLoc);
+    });
+  }
   state.torace.limitata = o.torace?.limitata ?? false;
 
   state.addome.forma = o.addome?.forma ?? '';
   state.addome.consistenza = new Set(o.addome?.consistenza || ['trattabile']);
   state.addome.dolorabilita = new Set(o.addome?.dolorabilita || ['non_dolente']);
-  state.addome.doloreLoc = new Set(o.addome?.doloreLoc || []);
+  state.addome.doloreLocPerTipo = {};
+  if(o.addome?.doloreLocPerTipo){
+    Object.keys(o.addome.doloreLocPerTipo).forEach(k => {
+      state.addome.doloreLocPerTipo[k] = new Set(o.addome.doloreLocPerTipo[k] || []);
+    });
+  } else if(o.addome?.doloreLoc && o.addome.doloreLoc.length){
+    (o.addome?.dolorabilita || []).forEach(dv => {
+      if(dv === 'dolente' || dv === 'dolorabile' || dv === 'non_dolente'){
+        state.addome.doloreLocPerTipo[dv] = new Set(o.addome.doloreLoc);
+      }
+    });
+  }
   state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
   state.addome.manovre = new Set(o.addome?.manovre || []);
 
@@ -1077,6 +1102,75 @@ function renderDolorabilita(){
 // sono mutuamente esclusive tra loro; i reperti positivi (crepitii, ronchi,
 // sibili...) si possono invece combinare liberamente tra loro (es. "crepitii
 // alla base sinistra, qualche sibilo sparso").
+// crea (se non esiste già) l'insieme di sedi dedicato a un singolo reperto/tipo,
+// così ognuno tiene la propria sede senza mescolarsi con gli altri
+function getLocSet(mappa, chiave){
+  if(!mappa[chiave]) mappa[chiave] = new Set();
+  return mappa[chiave];
+}
+
+// per ogni reperto del torace che prevede una sede ED è attualmente selezionato,
+// mostra un suo gruppo di chip "Sede — <nome reperto>" indipendente dagli altri
+// (es. crepitii in base sx e soffio bronchiale in base dx, senza confonderli)
+function renderReperteLocDinamiche(){
+  const wrapper = document.getElementById('torace-reperti-loc-wrapper');
+  wrapper.innerHTML = '';
+  const attivi = OPT.toraceReperti.filter(o => o.hasLoc && state.torace.reperti.has(o.value));
+  attivi.forEach(opt => {
+    const s = getLocSet(state.torace.reperteLocPerTipo, opt.value);
+    const label = document.createElement('div');
+    label.className = 'group-label';
+    label.style.marginTop = '8px';
+    label.textContent = 'Sede — ' + opt.label;
+    wrapper.appendChild(label);
+
+    const chipsEl = document.createElement('div');
+    chipsEl.className = 'chips';
+    OPT.toraceReperteLoc.forEach(locOpt => {
+      const b = document.createElement('div');
+      const active = s.has(locOpt.value);
+      b.className = 'chip' + (active ? ' active' : '');
+      b.textContent = locOpt.label;
+      b.onclick = () => {
+        if(!active && locOpt.excludes) locOpt.excludes.forEach(v => s.delete(v));
+        active ? s.delete(locOpt.value) : s.add(locOpt.value);
+        update();
+      };
+      chipsEl.appendChild(b);
+    });
+    wrapper.appendChild(chipsEl);
+  });
+}
+
+// stesso principio per "dolente"/"dolorabile" in addome: ognuno ha la propria
+// sede, così puoi dire ad es. "dolente diffusamente, dolorabile in fianco dx"
+function renderDoloreLocDinamiche(){
+  const wrapper = document.getElementById('addome-dolore-loc-wrapper');
+  wrapper.innerHTML = '';
+  const mappaLabel = { non_dolente:'Non dolente né dolorabile', dolente:'Dolente', dolorabile:'Dolorabile' };
+  const attivi = ['non_dolente','dolente','dolorabile'].filter(v => state.addome.dolorabilita.has(v));
+  attivi.forEach(chiave => {
+    const s = getLocSet(state.addome.doloreLocPerTipo, chiave);
+    const label = document.createElement('div');
+    label.className = 'group-label';
+    label.style.marginTop = '8px';
+    label.textContent = 'Sede — ' + mappaLabel[chiave];
+    wrapper.appendChild(label);
+
+    const chipsEl = document.createElement('div');
+    chipsEl.className = 'chips';
+    OPT.addomeDoloreLoc.forEach(locOpt => {
+      const b = document.createElement('div');
+      const active = s.has(locOpt.value);
+      b.className = 'chip' + (active ? ' active' : '');
+      b.textContent = locOpt.label;
+      b.onclick = () => { active ? s.delete(locOpt.value) : s.add(locOpt.value); update(); };
+      chipsEl.appendChild(b);
+    });
+    wrapper.appendChild(chipsEl);
+  });
+}
+
 function renderToraceReperti(){
   const el = document.getElementById('torace-reperti');
   el.innerHTML = '';
@@ -1396,19 +1490,20 @@ function renderAll(){
   renderSingle('cuore-freq', OPT.cuoreFreq, ()=>state.cuore.freq, v=>state.cuore.freq=v);
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
+  document.getElementById('cuore-soffio-dettagli').style.display = state.cuore.soffio !== 'nessuno' ? '' : 'none';
   renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
 
   renderSingle('torace-mv', OPT.toraceMv, ()=>state.torace.mv, v=>state.torace.mv=v);
   renderMultiEsclusivo('torace-mv-loc', OPT.toraceMvLoc, ()=>state.torace.mvLoc);
   renderToraceReperti();
-  renderMultiEsclusivo('torace-reperti-loc', OPT.toraceReperteLoc, ()=>state.torace.reperteLoc);
+  renderReperteLocDinamiche();
   renderSingle('torace-limitata', [{value:true,label:'Valutazione limitata da mancata collaborazione'}],
     ()=>state.torace.limitata, ()=>{ state.torace.limitata = !state.torace.limitata; });
 
   renderSingle('addome-forma', OPT.addomeForma, ()=>state.addome.forma, v=>state.addome.forma=v);
   renderMultiEsclusivo('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza);
   renderDolorabilita();
-  renderMulti('addome-dolore-loc', OPT.addomeDoloreLoc, ()=>state.addome.doloreLoc);
+  renderDoloreLocDinamiche();
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
   renderMultiEsclusivo('addome-manovre', OPT.addomeManovre, ()=>state.addome.manovre);
 
@@ -1521,8 +1616,14 @@ function composeToraceClean(){
   const mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
 
   const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
-  const loc = joinIt([...t.reperteLoc]);
-  const repParts = repertiSelezionati.map(o => (o.hasLoc && loc) ? `${o.frag} ${loc}` : o.frag);
+  const repParts = repertiSelezionati.map(o => {
+    if(o.hasLoc){
+      const locSet = t.reperteLocPerTipo[o.value];
+      const loc = locSet ? joinIt([...locSet]) : '';
+      return loc ? `${o.frag} ${loc}` : o.frag;
+    }
+    return o.frag;
+  });
   const repText = repParts.join(', ');
 
   const body = repText ? `${mvText}, ${repText}.` : `${mvText}.`;
@@ -1547,10 +1648,15 @@ function composeAddome(){
   }
 
   const dolMap = { non_dolente:'non dolente né dolorabile', dolente:'dolente', dolorabile:'dolorabile' };
-  const dolSelected = [...a.dolorabilita].map(v => dolMap[v]);
-  const loc = [...a.doloreLoc].join(', ');
-  if(dolSelected.length){
-    parts.push(joinIt(dolSelected) + (loc ? ' ' + loc : ''));
+  const ordineDol = ['non_dolente','dolente','dolorabile'];
+  const dolSelezionati = ordineDol.filter(v => a.dolorabilita.has(v));
+  const frasiDol = dolSelezionati.map(v => {
+    const locSet = a.doloreLocPerTipo[v];
+    const loc = locSet ? joinIt([...locSet]) : '';
+    return dolMap[v] + (loc ? ' ' + loc : '');
+  });
+  if(frasiDol.length){
+    parts.push(joinIt(frasiDol));
   }
   let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
   const man = [...a.manovre];
