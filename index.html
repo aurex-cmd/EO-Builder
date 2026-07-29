@@ -112,7 +112,7 @@
   .card h2{
     display:flex; align-items:baseline; gap:9px;
     font-family:var(--font-display);
-    font-size:14.5px; letter-spacing:.02em;
+    font-size:18px; letter-spacing:.02em;
     color:var(--ink); margin:0 0 13px; font-weight:600;
   }
   .card h2 .eyebrow{
@@ -237,7 +237,7 @@
     </div>
     <div class="header-nav">
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
-      <button class="topnav-btn" onclick="toggleWardMap()">Pazienti</button>
+      <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
       <button class="topnav-btn" onclick="apriRiepilogo()">Riepilogo</button>
     </div>
   </div>
@@ -250,7 +250,7 @@
 
 <!-- MAPPA REPARTO (settori/letti) -->
 <div class="card" id="wardmap-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
-  <h2><span class="eyebrow">•</span>Pazienti per settore</h2>
+  <h2><span class="eyebrow">•</span>Reparto</h2>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
@@ -348,6 +348,7 @@
     <div class="chips" id="temp-chips"></div>
     <div class="inline-fields" style="margin-top:6px;">
       <div class="field"><label>TC °C</label><input type="number" id="temp-valore" step="0.1"></div>
+      <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
   </div>
 </div>
@@ -358,10 +359,12 @@
   <div class="group">
     <div class="group-label">Ritmo</div>
     <div class="chips" id="cuore-ritmo"></div>
+    <div class="chips" id="cuore-extrasistoli" style="margin-top:6px;"></div>
   </div>
   <div class="group">
     <div class="group-label">Frequenza</div>
     <div class="chips" id="cuore-freq"></div>
+    <div class="chips" id="cuore-pause" style="margin-top:6px;"></div>
   </div>
   <div class="group">
     <div class="group-label">Qualità</div>
@@ -467,6 +470,10 @@
 <div class="card" id="card-neuro">
   <h2><span class="eyebrow">09</span>Neurologico</h2>
   <div class="group">
+    <div class="group-label">Generale</div>
+    <div class="chips" id="neuro-generale"></div>
+  </div>
+  <div class="group">
     <div class="group-label">Linguaggio</div>
     <div class="chips" id="neuro-linguaggio"></div>
   </div>
@@ -538,14 +545,14 @@ window.addEventListener('error', function(e){
 const state = {
   sesso: null,
   coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
-  respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
-  cuore: { ritmo:'ritmici', freq:'normofrequenti', qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
+  respiro: { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLoc:new Set(), limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLoc:new Set(), peristalsi:'presente', manovre:new Set() },
   edemi: { scelta:'non_edemi', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { chips:new Set(), note:'' },
-  neuro: { linguaggio:new Set(), mingazzini:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
 /* ============================================================
@@ -569,6 +576,7 @@ const TEXT_FIELD_MAP = [
   ['v-pad',           ['respiro','pad']],
   ['v-fc',            ['respiro','fc']],
   ['temp-valore',     ['respiro','tempValore']],
+  ['temp-storico',    ['respiro','tempStorico']],
   ['cuore-grado',     ['cuore','grado']],
   ['edemi-custom',    ['edemi','custom']],
   ['diuresi-volume',  ['diuresi','volume']],
@@ -622,11 +630,13 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' },
+    { tipo:'eupnoico', o2:'AA', litri:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
     o.respiro || {}
   );
 
   state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
+  state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
+  state.cuore.pauseLibere = o.cuore?.pauseLibere ?? false;
   state.cuore.freq = o.cuore?.freq ?? 'normofrequenti';
   state.cuore.qualita = new Set(o.cuore?.qualita || []);
   state.cuore.soffio = o.cuore?.soffio ?? 'nessuno';
@@ -657,6 +667,7 @@ function applyStateObject(o){
   state.cute.chips = new Set(o.cute?.chips || []);
   state.cute.note = o.cute?.note ?? '';
 
+  state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
   state.neuro.mingazzini = o.neuro?.mingazzini ?? '';
   state.neuro.emisindrome = o.neuro?.emisindrome ?? '';
@@ -1092,6 +1103,36 @@ function renderToraceReperti(){
 
 // linguaggio: "non disartria" esclude gli altri; disartrico/afasico si
 // possono invece combinare tra loro (capita che coesistano)
+// "extrasistoli" ha senso solo con toni ritmici (mai "aritmici con extrasistoli"):
+// selezionandolo si forza automaticamente il ritmo su "ritmici".
+function renderCuoreExtrasistoli(){
+  const el = document.getElementById('cuore-extrasistoli');
+  el.innerHTML = '';
+  const b = document.createElement('div');
+  const active = state.cuore.extrasistoli;
+  b.className = 'chip' + (active ? ' active' : '');
+  b.textContent = 'Extrasistoli';
+  b.onclick = () => {
+    state.cuore.extrasistoli = !active;
+    if(state.cuore.extrasistoli) state.cuore.ritmo = 'ritmici';
+    update();
+  };
+  el.appendChild(b);
+}
+
+// "pause apparentemente libere" è un tag indipendente, sempre in coda
+// alla frase dei toni: non ha logica incrociata con altri campi
+function renderCuorePause(){
+  const el = document.getElementById('cuore-pause');
+  el.innerHTML = '';
+  const b = document.createElement('div');
+  const active = state.cuore.pauseLibere;
+  b.className = 'chip' + (active ? ' active' : '');
+  b.textContent = 'Pause apparentemente libere';
+  b.onclick = () => { state.cuore.pauseLibere = !active; update(); };
+  el.appendChild(b);
+}
+
 function renderNeuroLinguaggio(){
   const el = document.getElementById('neuro-linguaggio');
   el.innerHTML = '';
@@ -1145,8 +1186,7 @@ const OPT = {
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo']},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo']},
     {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile']},
-    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile']},
-    {value:'non_segni_lato', label:'non segni di lato'}
+    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile']}
   ],
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
@@ -1174,7 +1214,8 @@ const OPT = {
     {value:'bradicardici', label:'bradicardici'}
   ],
   cuoreQualita: [
-    {value:'parafonici', label:'parafonici'}
+    {value:'validi', label:'validi', excludes:['parafonici']},
+    {value:'parafonici', label:'parafonici', excludes:['validi']}
   ],
   cuoreSoffio: [
     {value:'nessuno', label:'Nessun soffio'},
@@ -1209,6 +1250,7 @@ const OPT = {
     {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, excludes:['crepitii_fini']},
     {value:'crepitii_fini', label:'Crepitii fini', frag:'fini crepitii', hasLoc:true, excludes:['crepitii']},
     {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true},
+    {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true},
     {value:'sibili', label:'Sibili/fischi diffusi', frag:'sibili e fischi diffusi', excludes:['qualche_sibilo_tap','qualche_sibilo_sparso']},
     {value:'qualche_sibilo_tap', label:'Qualche sibilo diffuso (TAP)', frag:'qualche sibilo diffuso su TAP', excludes:['sibili','qualche_sibilo_sparso']},
     {value:'qualche_sibilo_sparso', label:'Qualche sibilo sparso', frag:'qualche sibilo sparso', excludes:['sibili','qualche_sibilo_tap']}
@@ -1301,6 +1343,10 @@ const OPT = {
     {value:'discromie_venosa_sx', label:'Discromie da insuff. venosa AI sx', excludes:['discromie_venosa']},
     {value:'discromie_venosa_dx', label:'Discromie da insuff. venosa AI dx', excludes:['discromie_venosa']}
   ],
+  neuroGenerale: [
+    {value:'muove_arti', label:'Muove i quattro arti', frag:'muove i quattro arti'},
+    {value:'non_segni_lato', label:'Non segni di lato', frag:'non segni di lato'}
+  ],
   neuroLinguaggio: [
     {value:'non_disartria', label:'Non disartria', negativo:true},
     {value:'disartrico', label:'Disartrico'},
@@ -1341,9 +1387,14 @@ function renderAll(){
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
   renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
 
-  renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v=>state.cuore.ritmo=v);
+  renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
+    state.cuore.ritmo = v;
+    if(v === 'aritmici') state.cuore.extrasistoli = false; // impossibile "aritmici con extrasistoli"
+  });
+  renderCuoreExtrasistoli();
+  renderCuorePause();
   renderSingle('cuore-freq', OPT.cuoreFreq, ()=>state.cuore.freq, v=>state.cuore.freq=v);
-  renderMulti('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
+  renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
   renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
 
@@ -1368,6 +1419,7 @@ function renderAll(){
 
   renderMultiEsclusivo('cute-chips', OPT.cute, ()=>state.cute.chips);
 
+  renderMulti('neuro-generale', OPT.neuroGenerale, ()=>state.neuro.generale);
   renderNeuroLinguaggio();
   renderSingle('neuro-mingazzini', OPT.neuroMingazzini, ()=>state.neuro.mingazzini, v=>state.neuro.mingazzini=v);
   renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>state.neuro.emisindrome=v);
@@ -1384,7 +1436,7 @@ function renderAll(){
 const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
-const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande','non_segni_lato'];
+const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
 
 function composeCoscienza(){
   const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
@@ -1435,14 +1487,24 @@ function composeRespiro(){
     const tempOpt = OPT.temp.find(o => o.value === r.temp);
     s += r.temp==='apiretico' ? ` ${g(tempOpt)}.` : ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.`;
   }
+  const storico = (r.tempStorico || '').trim();
+  if(storico) s += ' ' + cap(storico) + (storico.endsWith('.') ? '' : '.');
   return s;
 }
 
 function composeCuore(){
   const c = state.cuore;
-  let parts = [c.ritmo];
-  if(c.freq) parts.push(c.freq);
+  const parts = [];
+
   [...c.qualita].forEach(q => parts.push(q));
+
+  let ritmoText = c.ritmo;
+  if(c.ritmo === 'ritmici' && c.extrasistoli) ritmoText = 'ritmici con extrasistoli';
+  if(ritmoText) parts.push(ritmoText);
+
+  if(c.freq) parts.push(c.freq);
+  if(c.pauseLibere) parts.push('pause apparentemente libere');
+
   let s = 'Toni ' + parts.join(', ');
   if(c.soffio !== 'nessuno'){
     const foc = c.focolaio || 'non specificato';
@@ -1505,13 +1567,19 @@ function composeEdemi(){
 
 function composeDiuresi(){
   const d = state.diuresi;
-  const modLabel = OPT.diuresiModalita.find(o=>o.value===d.modalita).label;
-  let s = `Diuresi ${modLabel}`;
-  if(d.volume) s += `, ${d.volume} ml`;
+  const modOpt = OPT.diuresiModalita.find(o => o.value === d.modalita);
   const urineOpt = OPT.diuresiUrine.find(o => o.value === d.urine);
-  if(urineOpt) s += `, ${urineOpt.frag}`;
-  if(d.note) s += `, ${d.note}`;
-  return s + '.';
+  const note = (d.note || '').trim();
+
+  const parts = [];
+  if(modOpt) parts.push(modOpt.label);
+  if(d.volume) parts.push(`${d.volume} ml`);
+  if(urineOpt) parts.push(urineOpt.frag);
+  if(note) parts.push(note);
+
+  // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
+  if(parts.length === 0) return '';
+  return 'Diuresi ' + parts.join(', ') + '.';
 }
 
 function composeCute(){
@@ -1526,6 +1594,8 @@ function composeCute(){
 function composeNeuro(){
   const n = state.neuro;
   const parts = [];
+
+  OPT.neuroGenerale.filter(o => n.generale.has(o.value)).forEach(o => parts.push(o.frag));
 
   const linguaggioLabel = { non_disartria:'non disartria', disartrico:'disartrico', afasico:'afasico' };
   const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
