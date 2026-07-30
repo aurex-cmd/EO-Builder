@@ -497,9 +497,6 @@
 <div class="card" id="card-cute">
   <h2>🩹 Cute, cicatrici, note finali</h2>
   <div class="group">
-    <div class="chips" id="cute-cicatrice"></div>
-  </div>
-  <div class="group">
     <div class="finding-list" id="cute-reperti"></div>
   </div>
   <div class="group">
@@ -521,6 +518,10 @@
   <div class="group">
     <div class="group-label">Mingazzini</div>
     <div class="finding-list" id="neuro-mingazzini"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Paresi / Plegia</div>
+    <div class="finding-list" id="neuro-motorio"></div>
   </div>
   <div class="group">
     <div class="group-label">Emisindrome</div>
@@ -590,10 +591,10 @@ const state = {
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
-  edemi: { base:'non_edemi', sede:new Set(), qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:false, andamento:'', custom:'' },
+  edemi: { base:'non_declivi', sede:new Set(), qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:false, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
-  cute: { cicatrice:false, reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
-  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', mingazziniLato:'', emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
+  cute: { cicatrici:new Set(), ernie:new Set(), reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
 /* ============================================================
@@ -830,7 +831,7 @@ function applyStateObject(o){
       ripresentati_aaii: { sede:['aaii'], andamento:'ripresentati' },
       colonnari_diffusi: { sede:['aaii','aass','fianchi'], qualita:'colonnari', discrasici:true, andamento:'permangono' }
     };
-    const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || {};
+    const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || (o.edemi ? {} : { base:'non_declivi' });
     state.edemi.base = m.base ?? '';
     state.edemi.sede = new Set(m.sede || []);
     state.edemi.qualita = m.qualita ?? '';
@@ -848,7 +849,13 @@ function applyStateObject(o){
   state.diuresi.note = o.diuresi?.note ?? '';
 
   if(o.cute && o.cute.reperti !== undefined){
-    state.cute.cicatrice = o.cute.cicatrice ?? false;
+    if(o.cute.cicatrici !== undefined){
+      state.cute.cicatrici = new Set(o.cute.cicatrici || []);
+    } else {
+      // schede salvate nella breve finestra in cui c'era solo il booleano 'cicatrice'
+      state.cute.cicatrici = new Set(o.cute.cicatrice ? ['xifopubica'] : []);
+    }
+    state.cute.ernie = new Set(o.cute.ernie || []);
     state.cute.reperti = new Set(o.cute.reperti || []);
     state.cute.sedePerTipo = {};
     Object.keys(o.cute.sedePerTipo || {}).forEach(k => {
@@ -860,7 +867,8 @@ function applyStateObject(o){
     });
   } else {
     // migrazione dai vecchi chip fissi (colostomia_sx, discromie_venosa_dx...)
-    state.cute.cicatrice = false;
+    state.cute.cicatrici = new Set();
+    state.cute.ernie = new Set();
     state.cute.reperti = new Set();
     state.cute.sedePerTipo = {};
     state.cute.extraPerTipo = {};
@@ -879,7 +887,7 @@ function applyStateObject(o){
     vecchiChip.forEach(v => {
       const m = MIGRAZIONE_CUTE[v];
       if(!m) return;
-      if(m.cicatrice) state.cute.cicatrice = true;
+      if(m.cicatrice) state.cute.cicatrici.add('xifopubica');
       if(m.reperto){
         state.cute.reperti.add(m.reperto);
         const sedeSet = getLocSet(state.cute.sedePerTipo, m.reperto);
@@ -888,12 +896,22 @@ function applyStateObject(o){
       }
     });
   }
+  // se ci sono cicatrici/ernie scelte da una versione precedente, riattiva
+  // il tag corrispondente così non spariscono dal referto
+  if(state.cute.cicatrici.size > 0) state.cute.reperti.add('cicatrice');
+  if(state.cute.ernie.size > 0) state.cute.reperti.add('ernia');
   state.cute.note = o.cute?.note ?? '';
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
   state.neuro.mingazzini = o.neuro?.mingazzini ?? '';
   state.neuro.mingazziniLato = o.neuro?.mingazziniLato ?? '';
+  state.neuro.motorio = new Set(o.neuro?.motorio || []);
+  state.neuro.motorioDistribuzione = {};
+  Object.keys(o.neuro?.motorioDistribuzione || {}).forEach(k => {
+    state.neuro.motorioDistribuzione[k] = new Set(o.neuro.motorioDistribuzione[k] || []);
+  });
+  state.neuro.motorioLato = Object.assign({}, o.neuro?.motorioLato || {});
   state.neuro.emisindrome = o.neuro?.emisindrome ?? '';
   state.neuro.emineglect = o.neuro?.emineglect ?? '';
   state.neuro.occhiDeviati = o.neuro?.occhiDeviati ?? '';
@@ -1717,31 +1735,84 @@ function renderEdemi(){
 }
 
 function renderCute(){
-  const elCicatrice = document.getElementById('cute-cicatrice');
-  elCicatrice.innerHTML = '';
-  const bCic = document.createElement('div');
-  bCic.className = 'chip' + (state.cute.cicatrice ? ' active' : '');
-  bCic.textContent = 'Cicatrice xifo-pubica';
-  bCic.onclick = () => { state.cute.cicatrice = !state.cute.cicatrice; update(); };
-  elCicatrice.appendChild(bCic);
-
   const el = document.getElementById('cute-reperti');
   el.innerHTML = '';
   OPT.cuteReperti.forEach(opt => {
     const s = state.cute.reperti;
     const active = s.has(opt.value);
     const onClickChip = () => { active ? s.delete(opt.value) : s.add(opt.value); update(); };
-    const sedeSet = getLocSet(state.cute.sedePerTipo, opt.value);
-    const extraSet = opt.extra ? getLocSet(state.cute.extraPerTipo, opt.value) : null;
+
+    let builder;
+    if(opt.tipoDrawer && CUTE_TIPO_DRAWER[opt.tipoDrawer]){
+      const optList = CUTE_TIPO_DRAWER[opt.tipoDrawer];
+      const tipoSet = state.cute[opt.tipoDrawer];
+      builder = (inner) => {
+        renderGruppoChipInline(inner, null, optList,
+          v => tipoSet.has(v),
+          (v, vAttivo) => {
+            if(!vAttivo){
+              const optDef = optList.find(o => o.value === v);
+              if(optDef && optDef.excludes) optDef.excludes.forEach(ex => tipoSet.delete(ex));
+            }
+            vAttivo ? tipoSet.delete(v) : tipoSet.add(v);
+            update();
+          });
+      };
+    } else {
+      const sedeSet = getLocSet(state.cute.sedePerTipo, opt.value);
+      const extraSet = opt.extra ? getLocSet(state.cute.extraPerTipo, opt.value) : null;
+      builder = (inner) => {
+        renderGruppoChipInline(inner, null, OPT.cuteLato,
+          v => sedeSet.has(v),
+          (v, sAttivo) => { sAttivo ? sedeSet.delete(v) : sedeSet.add(v); update(); });
+        if(opt.extra){
+          renderGruppoChipInline(inner, null, opt.extra,
+            v => extraSet.has(v),
+            (v, sAttivo) => { sAttivo ? extraSet.delete(v) : extraSet.add(v); update(); });
+        }
+      };
+    }
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
+}
+
+// Paresi/Plegia: distribuzione combinabile (arto superiore/inferiore/faciale
+// si combinano in "brachiale", "crurale", "brachio-crurale", "facio-brachio-
+// crurale"...) + lato, come le sedi toraciche
+// Coerenza clinica tra i reperti lateralizzati: emisindrome, emineglect e
+// deviazione facciale sono sempre dallo stesso lato (il lato "debole",
+// controlaterale alla lesione), mentre gli occhi deviano verso la lesione,
+// cioè dal lato OPPOSTO. Cambiando uno di questi campi, se gli altri sono
+// già stati impostati vengono corretti in automatico per restare coerenti.
+function sincronizzaLateralitaNeuro(fonte){
+  const n = state.neuro;
+  const latoDebole = fonte === 'occhiDeviati'
+    ? (n.occhiDeviati === 'dx' ? 'sx' : 'dx')
+    : n[fonte];
+  if(!latoDebole) return;
+  const latoOcchi = latoDebole === 'dx' ? 'sx' : 'dx';
+
+  ['emisindrome', 'emineglect', 'deviazioneFacciale'].forEach(campo => {
+    if(campo !== fonte && n[campo]) n[campo] = latoDebole;
+  });
+  if(fonte !== 'occhiDeviati' && n.occhiDeviati) n.occhiDeviati = latoOcchi;
+}
+
+function renderNeuroMotorio(){
+  const el = document.getElementById('neuro-motorio');
+  el.innerHTML = '';
+  OPT.neuroMotorio.forEach(opt => {
+    const s = state.neuro.motorio;
+    const active = s.has(opt.value);
+    const onClickChip = () => { active ? s.delete(opt.value) : s.add(opt.value); update(); };
+    const distribSet = getLocSet(state.neuro.motorioDistribuzione, opt.value);
     const builder = (inner) => {
-      renderGruppoChipInline(inner, null, OPT.cuteLato,
-        v => sedeSet.has(v),
-        (v, sAttivo) => { sAttivo ? sedeSet.delete(v) : sedeSet.add(v); update(); });
-      if(opt.extra){
-        renderGruppoChipInline(inner, null, opt.extra,
-          v => extraSet.has(v),
-          (v, sAttivo) => { sAttivo ? extraSet.delete(v) : extraSet.add(v); update(); });
-      }
+      renderGruppoChipInline(inner, 'Distribuzione', OPT.neuroDistribuzione,
+        v => distribSet.has(v),
+        (v, vAttivo) => { vAttivo ? distribSet.delete(v) : distribSet.add(v); update(); });
+      renderGruppoChipInline(inner, 'Lato', OPT.neuroLato,
+        v => state.neuro.motorioLato[opt.value] === v,
+        (v, vAttivo) => { state.neuro.motorioLato[opt.value] = vAttivo ? '' : v; update(); });
     };
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
@@ -1992,7 +2063,36 @@ const OPT = {
     {value:'dx', label:'Dx'},
     {value:'sx', label:'Sx'}
   ],
+  cuteCicatrici: [
+    {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
+    {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
+    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca destra'},
+    {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale destra'},
+    {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sinistra'},
+    {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia destra'},
+    {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sinistra'},
+    {value:'laparoscopica', label:'Laparoscopica/ombelicale', frag:'cicatrici laparoscopiche periombelicali'},
+    {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
+    {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale destra'},
+    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sinistra'}
+  ],
+  cuteErnie: [
+    {value:'ombelicale_riducibile', label:'Ombelicale riducibile', frag:'ernia ombelicale riducibile', excludes:['ombelicale_non_riducibile']},
+    {value:'ombelicale_non_riducibile', label:'Ombelicale non riducibile', frag:'ernia ombelicale non riducibile', excludes:['ombelicale_riducibile']},
+    {value:'epigastrica', label:'Epigastrica', frag:'ernia epigastrica'},
+    {value:'inguinale_dx_riducibile', label:'Inguinale dx riducibile', frag:'ernia inguinale destra riducibile', excludes:['inguinale_dx_non_riducibile']},
+    {value:'inguinale_sx_riducibile', label:'Inguinale sx riducibile', frag:'ernia inguinale sinistra riducibile', excludes:['inguinale_sx_non_riducibile']},
+    {value:'inguinale_dx_non_riducibile', label:'Inguinale dx non riducibile', frag:'ernia inguinale destra non riducibile', excludes:['inguinale_dx_riducibile']},
+    {value:'inguinale_sx_non_riducibile', label:'Inguinale sx non riducibile', frag:'ernia inguinale sinistra non riducibile', excludes:['inguinale_sx_riducibile']},
+    {value:'crurale_dx', label:'Crurale dx', frag:'ernia crurale destra'},
+    {value:'crurale_sx', label:'Crurale sx', frag:'ernia crurale sinistra'},
+    {value:'laparocele_mediano', label:'Laparocele mediano', frag:'laparocele mediano'},
+    {value:'laparocele_laterale_dx', label:'Laparocele laterale dx', frag:'laparocele laterale destro'},
+    {value:'laparocele_laterale_sx', label:'Laparocele laterale sx', frag:'laparocele laterale sinistro'}
+  ],
   cuteReperti: [
+    {value:'cicatrice', label:'Cicatrice', tipoDrawer:'cicatrici'},
+    {value:'ernia', label:'Ernia', tipoDrawer:'ernie'},
     {value:'colostomia', label:'Colostomia', extra:[{value:'in_ordine', label:'In ordine'}]},
     {value:'ureterocutaneostomia', label:'Ureterocutaneostomia'},
     {value:'discromie_venosa', label:'Discromie da insuff. venosa'}
@@ -2006,6 +2106,15 @@ const OPT = {
     {value:'disartrico', label:'Disartrico'},
     {value:'afasico', label:'Afasico'}
   ],
+  neuroMotorio: [
+    {value:'paresi', label:'Paresi'},
+    {value:'plegia', label:'Plegia'}
+  ],
+  neuroDistribuzione: [
+    {value:'arto_superiore', label:'Arto superiore'},
+    {value:'arto_inferiore', label:'Arto inferiore'},
+    {value:'faciale', label:'Faciale'}
+  ],
   neuroMingazzini: [
     {value:'i_ii', label:'I e II regolari'},
     {value:'i', label:'Solo I regolare'},
@@ -2016,6 +2125,13 @@ const OPT = {
     {value:'dx', label:'Destra'},
     {value:'sx', label:'Sinistra'}
   ]
+};
+// collega ogni opt.tipoDrawer (es. 'cicatrici', 'ernie') alla sua lista di
+// opzioni: per aggiungerne uno nuovo in futuro basta una lista OPT.cuteXxx,
+// una riga qui, e state.cute.xxx = new Set() nello stato iniziale
+const CUTE_TIPO_DRAWER = {
+  cicatrici: OPT.cuteCicatrici,
+  ernie: OPT.cuteErnie
 };
 // costruisce la frase corretta per ciascun reperto cutaneo in base al lato scelto:
 // ognuno ha una grammatica diversa (colostomia/ureterocutaneostomia: "in fianco X"
@@ -2092,10 +2208,23 @@ function renderAll(){
   renderMulti('neuro-generale', OPT.neuroGenerale, ()=>state.neuro.generale);
   renderNeuroLinguaggio();
   renderNeuroMingazzini();
-  renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>state.neuro.emisindrome=v);
-  renderSingle('neuro-emineglect', OPT.neuroLato, ()=>state.neuro.emineglect, v=>state.neuro.emineglect=v);
-  renderSingle('neuro-occhi', OPT.neuroLato, ()=>state.neuro.occhiDeviati, v=>state.neuro.occhiDeviati=v);
-  renderSingle('neuro-facciale', OPT.neuroLato, ()=>state.neuro.deviazioneFacciale, v=>state.neuro.deviazioneFacciale=v);
+  renderNeuroMotorio();
+  renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>{
+    state.neuro.emisindrome = v;
+    if(v) sincronizzaLateralitaNeuro('emisindrome');
+  });
+  renderSingle('neuro-emineglect', OPT.neuroLato, ()=>state.neuro.emineglect, v=>{
+    state.neuro.emineglect = v;
+    if(v) sincronizzaLateralitaNeuro('emineglect');
+  });
+  renderSingle('neuro-occhi', OPT.neuroLato, ()=>state.neuro.occhiDeviati, v=>{
+    state.neuro.occhiDeviati = v;
+    if(v) sincronizzaLateralitaNeuro('occhiDeviati');
+  });
+  renderSingle('neuro-facciale', OPT.neuroLato, ()=>state.neuro.deviazioneFacciale, v=>{
+    state.neuro.deviazioneFacciale = v;
+    if(v) sincronizzaLateralitaNeuro('deviazioneFacciale');
+  });
 }
 
 /* ============================================================
@@ -2107,12 +2236,17 @@ const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo'
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
 const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
+// questi vanno PRIMA, come frase a sé, invece che nell'elenco con "e"
+const DESCRITTORI_FRASE_INIZIALE = ['occhi_aperti'];
 
 function composeCoscienza(){
   const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
   const tuttiSelezionati = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
+  const frasiInizio = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_INIZIALE.includes(o.value));
   const frasiASe = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_A_SE.includes(o.value));
-  const selected = tuttiSelezionati.filter(o => !DESCRITTORI_FRASE_A_SE.includes(o.value));
+  const selected = tuttiSelezionati.filter(o =>
+    !DESCRITTORI_FRASE_A_SE.includes(o.value) && !DESCRITTORI_FRASE_INIZIALE.includes(o.value)
+  );
 
   const hasTranquillo = selected.some(o => o.value === 'tranquillo');
   const partner = selected.find(o => TRANQUILLO_PARTNERS.includes(o.value));
@@ -2137,7 +2271,9 @@ function composeCoscienza(){
 
   const extra = (state.coscienza.extra || '').trim();
   if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
-  return s;
+
+  const prefisso = frasiInizio.map(o => cap(g(o)) + '.').join(' ');
+  return prefisso ? prefisso + ' ' + s : s;
 }
 
 function composeRespiro(){
@@ -2341,8 +2477,16 @@ function composeDiuresi(){
 function composeCute(){
   const c = state.cute;
   const frasi = [];
-  if(c.cicatrice) frasi.push('cicatrice xifo-pubica');
   OPT.cuteReperti.forEach(opt => {
+    if(opt.tipoDrawer){
+      if(c.reperti.has(opt.value) && CUTE_TIPO_DRAWER[opt.tipoDrawer]){
+        const tipoSet = c[opt.tipoDrawer];
+        CUTE_TIPO_DRAWER[opt.tipoDrawer].forEach(o => {
+          if(tipoSet.has(o.value)) frasi.push(o.frag);
+        });
+      }
+      return;
+    }
     if(!c.reperti.has(opt.value)) return;
     const sede = c.sedePerTipo[opt.value];
     const extra = c.extraPerTipo[opt.value];
@@ -2354,6 +2498,23 @@ function composeCute(){
   if(frasi.length) all.push(cap(joinIt(frasi)));
   if(note) all.push(cap(note));
   return all.length ? all.join('. ') + '.' : '';
+}
+
+// combina arto superiore/inferiore/faciale nei termini clinici standard
+// (brachiale, crurale, brachio-crurale, facio-brachio-crurale...)
+function fraseDistribuzioneMotoria(distribSet){
+  if(!distribSet) return '';
+  const hasAS = distribSet.has('arto_superiore');
+  const hasAI = distribSet.has('arto_inferiore');
+  const hasF = distribSet.has('faciale');
+  if(hasAS && hasAI && hasF) return 'facio-brachio-crurale';
+  if(hasAS && hasF) return 'facio-brachiale';
+  if(hasAI && hasF) return 'facio-crurale';
+  if(hasAS && hasAI) return 'brachio-crurale';
+  if(hasAS) return 'brachiale';
+  if(hasAI) return 'crurale';
+  if(hasF) return 'faciale';
+  return '';
 }
 
 function composeNeuro(){
@@ -2376,6 +2537,17 @@ function composeNeuro(){
   } else if(n.mingazzini){
     parts.push(mingLabel[n.mingazzini]);
   }
+
+  OPT.neuroMotorio.forEach(opt => {
+    if(!n.motorio.has(opt.value)) return;
+    const distrib = n.motorioDistribuzione[opt.value];
+    const lato = n.motorioLato[opt.value];
+    const distribText = fraseDistribuzioneMotoria(distrib);
+    let frase = opt.label.toLowerCase();
+    if(distribText) frase += ' ' + distribText;
+    if(lato) frase += ' ' + lato;
+    parts.push(frase);
+  });
 
   if(n.emisindrome) parts.push('emisindrome ' + n.emisindrome);
   if(n.emineglect) parts.push('emineglect ' + n.emineglect);
@@ -2461,7 +2633,11 @@ function resetAll(){
     return;
   }
   clearTimeout(resetTimer);
-  location.reload();
+  resetArmed = false;
+  btn.textContent = 'Azzera tutto';
+  resetFormToDefaults();
+  update(); // salva subito i default nella scheda attiva, se ce n'è una
+  showToast('Scheda azzerata');
 }
 
 let toastTimer;
