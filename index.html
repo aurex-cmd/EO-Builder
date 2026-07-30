@@ -1649,8 +1649,10 @@ function renderEdemi(){
   const e = state.edemi;
 
   function clearPositivi(){
-    e.sede.clear(); e.qualita=''; e.discrasici=false; e.grinza=false;
+    e.sede.clear(); e.qualita=''; e.discrasici=false;
     e.scarico=false; e.succulenza=false; e.andamento='';
+    // 'grinza' NON viene azzerata qui: si combina sia con "non edemi declivi"
+    // sia con un edema descritto (vedi composeEdemi)
   }
 
   const elBase = document.getElementById('edemi-base');
@@ -1712,7 +1714,9 @@ function renderEdemi(){
     b.textContent = a.label;
     b.onclick = () => {
       e[a.key] = !active;
-      if(e[a.key]) e.base = '';
+      // "cute a grinza" si aggiunge e basta, non implica di per sé un edema:
+      // non deve cancellare "non edemi declivi" già selezionato
+      if(e[a.key] && a.key !== 'grinza') e.base = '';
       update();
     };
     elAggiunte.appendChild(b);
@@ -2451,7 +2455,11 @@ function composeEdemi(){
     else if(e.andamento === 'permangono') corpo = `Permangono edemi${qs}${ss}`;
     else corpo = `Edemi${qs}${ss}`;
     if(e.scarico) corpo += ' da porre in scarico';
+    if(e.grinza) corpo += e.sede.has('aaii') ? ', cute a grinza' : ', cute a grinza agli AAII';
     frasi.push(corpo.trim() + '.');
+  } else if(e.grinza){
+    // solo la cute a grinza, senza nessun edema descritto
+    frasi.push('Cute a grinza agli AAII.');
   }
 
   return frasi.join(' ');
