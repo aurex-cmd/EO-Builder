@@ -328,11 +328,27 @@
   <h2>💭 Stato di coscienza</h2>
   <div class="group">
     <div class="group-label">Stato</div>
-    <div class="chips" id="coscienza-primary"></div>
+    <div class="finding-list" id="coscienza-primary"></div>
   </div>
   <div class="group">
-    <div class="group-label">Descrittori (combinabili)</div>
-    <div class="chips" id="coscienza-descrittori"></div>
+    <div class="group-label">Orientamento</div>
+    <div class="chips" id="coscienza-orientamento"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Atteggiamento</div>
+    <div class="chips" id="coscienza-atteggiamento"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Linguaggio</div>
+    <div class="chips" id="coscienza-linguaggio"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Aspetto generale</div>
+    <div class="chips" id="coscienza-aspetto"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Contattabilità</div>
+    <div class="chips" id="coscienza-contattabilita"></div>
   </div>
   <div class="group">
     <div class="inline-fields">
@@ -586,7 +602,10 @@ window.addEventListener('error', function(e){
    ============================================================ */
 const state = {
   sesso: null,
-  coscienza: { primary:'vigile', descrittori:new Set(['orientato','collaborante']), extra:'' },
+  outputManuale: '',
+  outputManualeBase: '',
+  usaOutputManuale: false,
+  coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), extra:'' },
   respiro: { tipo:'eupnoico', o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
@@ -668,7 +687,12 @@ function serializeState(){
 function applyStateObject(o){
   o = o || {};
   state.sesso = o.sesso ?? null;
+  state.outputManuale = o.outputManuale ?? '';
+  state.outputManualeBase = o.outputManualeBase ?? '';
+  state.usaOutputManuale = o.usaOutputManuale ?? false;
   state.coscienza.primary = o.coscienza?.primary ?? 'vigile';
+  state.coscienza.soporosoRisvegliabile = o.coscienza?.soporosoRisvegliabile ?? '';
+  state.coscienza.soporosoStimolo = o.coscienza?.soporosoStimolo ?? '';
   state.coscienza.descrittori = new Set(o.coscienza?.descrittori || ['orientato','collaborante']);
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
@@ -1177,9 +1201,12 @@ function ordinaPazientiPerLetto(entries){
 function getRefertoFor(patientState){
   const backup = serializeState();
   applyStateObject(patientState);
-  const testo = composeReferto();
+  const autoText = composeReferto();
   applyStateObject(backup);
-  return testo;
+  if(patientState.usaOutputManuale && autoText === patientState.outputManualeBase){
+    return patientState.outputManuale;
+  }
+  return autoText;
 }
 
 function schedeConDati(){
@@ -1497,6 +1524,121 @@ function renderAddomeManovre(){
         });
     };
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
+}
+
+// "Soporoso" apre una tendina annidata: prima risvegliabile sì/no, e se sì
+// compaiono anche le opzioni sullo stimolo (senza specificarlo, resta solo
+// "risvegliabile")
+const INCOMPATIBILI_CON_NON_CONTATTO = ['orientato', 'collaborante', 'discretamente_orientato'];
+
+// riga 1: le varianti di orientato (incluse le nuove S/T/P e S/P); a capo,
+// riga 2: disorientato/a tratti disorientato. Tutte condividono lo stesso
+// Set e le stesse esclusioni reciproche, cambia solo la disposizione
+function renderOrientamento(){
+  const el = document.getElementById('coscienza-orientamento');
+  el.innerHTML = '';
+  const s = state.coscienza.descrittori;
+  const tutti = OPT.coscienzaDescrittori.filter(o => o.gruppo === 'orientamento');
+
+  function creaChip(valore){
+    const opt = tutti.find(o => o.value === valore);
+    if(!opt) return null;
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.style.cssText = 'font-size:12px; padding:5px 10px;';
+    b.textContent = g(opt);
+    b.onclick = () => {
+      if(!active && opt.excludes) opt.excludes.forEach(v => s.delete(v));
+      active ? s.delete(opt.value) : s.add(opt.value);
+      update();
+    };
+    return b;
+  }
+
+  ['orientato', 'discretamente_orientato', 'orientato_stp', 'orientato_sp'].forEach(v => {
+    const chip = creaChip(v);
+    if(chip) el.appendChild(chip);
+  });
+
+  const spacer = document.createElement('div');
+  spacer.style.cssText = 'flex-basis:100%; height:0;';
+  el.appendChild(spacer);
+
+  ['disorientato', 'a_tratti_disorientato'].forEach(v => {
+    const chip = creaChip(v);
+    if(chip) el.appendChild(chip);
+  });
+}
+
+function renderCoscienzaPrimary(){
+  const el = document.getElementById('coscienza-primary');
+  el.innerHTML = '';
+  OPT.coscienzaPrimary.forEach(opt => {
+    const active = state.coscienza.primary === opt.value;
+    const onClickChip = () => {
+      state.coscienza.primary = active ? '' : opt.value;
+      if(!active && opt.value === 'comatoso'){
+        INCOMPATIBILI_CON_NON_CONTATTO.forEach(v => state.coscienza.descrittori.delete(v));
+      }
+      update();
+    };
+    const builder = opt.hasLoc ? (inner) => {
+      // riga 1: "Risvegliabile" e, se attivo, gli stimoli affiancati sulla stessa riga
+      const chipRisv = document.createElement('div');
+      const risvAttivo = state.coscienza.soporosoRisvegliabile === 'si';
+      chipRisv.className = 'chip' + (risvAttivo ? ' active' : '');
+      chipRisv.style.cssText = 'font-size:12px; padding:5px 10px;';
+      chipRisv.textContent = 'Risvegliabile';
+      chipRisv.onclick = (e) => {
+        e.stopPropagation();
+        state.coscienza.soporosoRisvegliabile = risvAttivo ? '' : 'si';
+        if(risvAttivo) state.coscienza.soporosoStimolo = '';
+        update();
+      };
+      inner.appendChild(chipRisv);
+
+      if(risvAttivo){
+        OPT.coscienzaStimolo.forEach(sOpt => {
+          const b = document.createElement('div');
+          const sAttivo = state.coscienza.soporosoStimolo === sOpt.value;
+          b.className = 'chip' + (sAttivo ? ' active' : '');
+          b.style.cssText = 'font-size:12px; padding:5px 10px;';
+          b.textContent = sOpt.label;
+          b.onclick = (e) => { e.stopPropagation(); state.coscienza.soporosoStimolo = sAttivo ? '' : sOpt.value; update(); };
+          inner.appendChild(b);
+        });
+      }
+
+      // a capo: "Non risvegliabile" da solo sulla riga sotto
+      const spacer = document.createElement('div');
+      spacer.style.cssText = 'flex-basis:100%; height:0;';
+      inner.appendChild(spacer);
+
+      const chipNonRisv = document.createElement('div');
+      const nonRisvAttivo = state.coscienza.soporosoRisvegliabile === 'no';
+      chipNonRisv.className = 'chip' + (nonRisvAttivo ? ' active' : '');
+      chipNonRisv.style.cssText = 'font-size:12px; padding:5px 10px;';
+      chipNonRisv.textContent = 'Non risvegliabile';
+      chipNonRisv.onclick = (e) => {
+        e.stopPropagation();
+        state.coscienza.soporosoRisvegliabile = nonRisvAttivo ? '' : 'no';
+        state.coscienza.soporosoStimolo = '';
+        if(!nonRisvAttivo){
+          INCOMPATIBILI_CON_NON_CONTATTO.forEach(v => state.coscienza.descrittori.delete(v));
+        }
+        update();
+      };
+      inner.appendChild(chipNonRisv);
+    } : null;
+    el.appendChild(creaRigaConTendina(g(opt), active, onClickChip, builder));
+
+    if(opt.value === 'soporoso'){
+      const spacerRiga = document.createElement('div');
+      spacerRiga.style.cssText = 'flex-basis:100%; height:0;';
+      el.appendChild(spacerRiga);
+    }
   });
 }
 
@@ -1873,28 +2015,35 @@ const OPT = {
   ],
   coscienzaPrimary: [
     {value:'vigile', m:'Vigile', f:'Vigile'},
+    {value:'soporoso', m:'Soporoso', f:'Soporosa', hasLoc:true},
     {value:'assopito', m:'Assopito, risvegliabile', f:'Assopita, risvegliabile'},
-    {value:'soporoso', m:'Soporoso, risvegliabile', f:'Soporosa, risvegliabile'},
     {value:'comatoso', m:'Comatoso', f:'Comatosa'}
   ],
+  coscienzaStimolo: [
+    {value:'chiamata', label:'Alla chiamata', frag:'alla chiamata'},
+    {value:'tattile', label:'Stimolo tattile', frag:'allo stimolo tattile'},
+    {value:'tattile_vigoroso', label:'Stimolo tattile vigoroso', frag:'allo stimolo tattile vigoroso'}
+  ],
   coscienzaDescrittori: [
-    {value:'cachettico', m:'cachettico', f:'cachettica'},
-    {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato']},
-    {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato']},
-    {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato']},
-    {value:'discretamente_orientato', m:'discretamente orientato', f:'discretamente orientata', excludes:['orientato','disorientato','a_tratti_disorientato']},
-    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso']},
-    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo']},
-    {value:'rallentato', m:'rallentato', f:'rallentata'},
-    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico']},
-    {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico']},
-    {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo']},
-    {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore']},
-    {value:'occhi_aperti', label:'mantiene gli occhi aperti'},
-    {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo']},
-    {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo']},
-    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile']},
-    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile']}
+    {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp'], gruppo:'orientamento'},
+    {value:'discretamente_orientato', m:'discretamente orientato', f:'discretamente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','orientato_stp','orientato_sp'], gruppo:'orientamento'},
+    {value:'orientato_stp', label:'S/T/P', fragM:'orientato in S/T/P', fragF:'orientata in S/T/P', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_sp'], gruppo:'orientamento'},
+    {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp'], gruppo:'orientamento'},
+    {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp'], gruppo:'orientamento'},
+    {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp'], gruppo:'orientamento'},
+    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo'], gruppo:'atteggiamento'},
+    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso'], gruppo:'atteggiamento'},
+    {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
+    {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo'], gruppo:'atteggiamento'},
+    {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
+    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico'], gruppo:'linguaggio'},
+    {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
+    {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
+    {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
+    {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','orientato','collaborante'], gruppo:'contattabilita'},
+    {value:'occhi_aperti', label:'mantiene gli occhi aperti', gruppo:'contattabilita'},
+    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'},
+    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile'], gruppo:'contattabilita'}
   ],
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
@@ -2172,8 +2321,13 @@ function fraseCute(valore, sedeSet, extraSet){
 function renderAll(){
   renderSingle('sesso-chips', OPT.sesso, ()=>state.sesso, v=>state.sesso=v);
 
-  renderSingle('coscienza-primary', OPT.coscienzaPrimary, ()=>state.coscienza.primary, v=>state.coscienza.primary=v);
-  renderMultiEsclusivo('coscienza-descrittori', OPT.coscienzaDescrittori, ()=>state.coscienza.descrittori);
+  renderCoscienzaPrimary();
+  const descGruppo = g => renderMultiEsclusivo('coscienza-'+g, OPT.coscienzaDescrittori.filter(o=>o.gruppo===g), ()=>state.coscienza.descrittori);
+  renderOrientamento();
+  descGruppo('atteggiamento');
+  descGruppo('linguaggio');
+  descGruppo('aspetto');
+  descGruppo('contattabilita');
 
   renderSingle('respiro-tipo', OPT.respiroTipo, ()=>state.respiro.tipo, v=>state.respiro.tipo=v);
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
@@ -2236,7 +2390,7 @@ function renderAll(){
    ============================================================ */
 // descrittori che nei referti reali si legano a "tranquillo/a" con "ma"
 // (es. "rallentato ma tranquillo", "disorientata ma tranquilla")
-const TRANQUILLO_PARTNERS = ['disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
+const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
 const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
@@ -2251,6 +2405,15 @@ function composeCoscienza(){
   const selected = tuttiSelezionati.filter(o =>
     !DESCRITTORI_FRASE_A_SE.includes(o.value) && !DESCRITTORI_FRASE_INIZIALE.includes(o.value)
   );
+  // "tranquillo" deve sempre venire prima di "collaborante" nella frase, anche
+  // se in UI "collaborante" è il primo chip del gruppo Atteggiamento
+  const idxTranquillo = selected.findIndex(o => o.value === 'tranquillo');
+  const idxCollaborante = selected.findIndex(o => o.value === 'collaborante');
+  if(idxTranquillo > -1 && idxCollaborante > -1 && idxTranquillo > idxCollaborante){
+    const tmp = selected[idxTranquillo];
+    selected.splice(idxTranquillo, 1);
+    selected.splice(idxCollaborante, 0, tmp);
+  }
 
   const hasTranquillo = selected.some(o => o.value === 'tranquillo');
   const partner = selected.find(o => TRANQUILLO_PARTNERS.includes(o.value));
@@ -2263,11 +2426,21 @@ function composeCoscienza(){
     } else if(o.value === 'tranquillo' && hasTranquillo && partner){
       // già incluso nella coppia "X ma tranquillo/a" sopra
     } else {
-      descLabels.push(g(o));
+      const fragGiusto = o.fragM !== undefined ? (state.sesso === 'F' ? o.fragF : o.fragM) : o.frag;
+      descLabels.push(fragGiusto || g(o));
     }
   });
 
-  const parts = [g(primaryOpt)];
+  let primaryText = g(primaryOpt);
+  if(state.coscienza.primary === 'soporoso'){
+    if(state.coscienza.soporosoRisvegliabile === 'si'){
+      const stimoloOpt = OPT.coscienzaStimolo.find(o => o.value === state.coscienza.soporosoStimolo);
+      primaryText += ', risvegliabile' + (stimoloOpt ? ' ' + stimoloOpt.frag : '');
+    } else if(state.coscienza.soporosoRisvegliabile === 'no'){
+      primaryText += ', non risvegliabile';
+    }
+  }
+  const parts = [primaryText];
   if(descLabels.length) parts.push(joinIt(descLabels));
   let s = parts.join(', ') + '.';
 
@@ -2591,12 +2764,29 @@ function composeReferto(){
 function refreshUI(){
   syncInputsToState();
   renderAll();
-  document.getElementById('output').value = composeReferto();
+  const autoText = composeReferto();
+  let testoFinale;
+  if(state.usaOutputManuale && autoText === state.outputManualeBase){
+    testoFinale = state.outputManuale;
+  } else {
+    testoFinale = autoText;
+    state.usaOutputManuale = false; // qualcosa è cambiato: la modifica manuale non è più valida
+  }
+  document.getElementById('output').value = testoFinale;
 }
 function update(){
   refreshUI();
   autosaveCurrentPatient();
 }
+// modifica manuale del referto: la salviamo com'è (senza toccare refreshUI,
+// altrimenti sovrascriveremmo quello che si sta scrivendo). Resta valida
+// finché non cambia qualcosa nelle scelte sopra (vedi refreshUI).
+document.getElementById('output').addEventListener('input', (e) => {
+  state.outputManuale = e.target.value;
+  state.outputManualeBase = composeReferto();
+  state.usaOutputManuale = true;
+  autosaveCurrentPatient();
+});
 
 function copyOutput(){
   const out = document.getElementById('output');
