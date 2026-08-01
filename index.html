@@ -182,12 +182,24 @@
   #wardmap-view .btn:not(.primary):hover, #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   #wardmap-view input[type=text]{ background:var(--panel-folder-2); }
   #wardmap-view input:focus{ border-color:var(--folder) !important; }
-  .referto-block{ margin-bottom:14px; }
+  .referto-block{
+    margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:10px;
+    background:var(--panel-folder);
+  }
   .referto-block:last-child{ margin-bottom:0; }
+  .referto-block .bed-title-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;
+  }
   .referto-block .bed-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px;
-    color:var(--folder); margin-bottom:6px;
+    color:var(--folder);
   }
+  .referto-block .copia-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:5px 12px; border-radius:7px; border:1px solid var(--folder-dim);
+    background:var(--panel-folder-2); color:var(--folder); cursor:pointer; white-space:nowrap;
+  }
+  .referto-block .copia-btn:hover{ border-color:var(--folder); }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-folder-2); border:1px solid var(--line); border-radius:8px;
@@ -259,7 +271,7 @@
     <div class="header-nav">
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
       <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
-      <button class="topnav-btn" onclick="apriRiepilogo()">Riepilogo</button>
+      <button class="topnav-btn" onclick="apriRiepilogo()">Diari</button>
     </div>
   </div>
   <div class="ecg-wrap" aria-hidden="true">
@@ -302,7 +314,7 @@
 
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
-  <h2>📋 Riepilogo referti</h2>
+  <h2>📋 Diari</h2>
   <div class="group">
     <div class="inline-fields">
       <button class="btn primary" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
@@ -1277,15 +1289,31 @@ function renderRiepilogo(){
   }
 
   entries.forEach(([id, p]) => {
+    const testo = getRefertoFor(p.state);
+
     const block = document.createElement('div');
     block.className = 'referto-block';
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'bed-title-row';
+
     const title = document.createElement('div');
     title.className = 'bed-title';
     title.textContent = p.name;
+
+    const copiaBtn = document.createElement('button');
+    copiaBtn.className = 'copia-btn';
+    copiaBtn.textContent = 'Copia';
+    copiaBtn.onclick = () => copiaTesto(testo);
+
+    titleRow.appendChild(title);
+    titleRow.appendChild(copiaBtn);
+
     const body = document.createElement('div');
     body.className = 'bed-text';
-    body.textContent = getRefertoFor(p.state);
-    block.appendChild(title);
+    body.textContent = testo;
+
+    block.appendChild(titleRow);
     block.appendChild(body);
     container.appendChild(block);
   });
@@ -2996,6 +3024,32 @@ document.getElementById('output').addEventListener('input', (e) => {
   state.usaOutputManuale = true;
   autosaveCurrentPatient();
 });
+
+function copiaTesto(testo){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(testo)
+      .then(()=>showToast('Copiato negli appunti'))
+      .catch(()=>fallbackCopiaTesto(testo));
+  } else {
+    fallbackCopiaTesto(testo);
+  }
+}
+function fallbackCopiaTesto(testo){
+  const ta = document.createElement('textarea');
+  ta.value = testo;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try{
+    const ok = document.execCommand('copy');
+    showToast(ok ? 'Copiato negli appunti' : 'Copia manualmente (Ctrl/Cmd+C)');
+  } catch(e){
+    showToast('Copia manualmente (Ctrl/Cmd+C)');
+  }
+  document.body.removeChild(ta);
+}
 
 function copyOutput(){
   const out = document.getElementById('output');
