@@ -39,6 +39,12 @@
     --panel-folder:#241d10;
     --panel-folder-2:#2f2716;
 
+    --admit:#7c93f0;
+    --admit-dim:#1c2140;
+    --on-admit:#0b0e22;
+    --panel-admit:#161a33;
+    --panel-admit-2:#1d2242;
+
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
@@ -70,6 +76,8 @@
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
   }
   .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
+  .topnav-btn.admit{ border-color:var(--admit); background:var(--admit-dim); color:var(--admit); }
+  .topnav-btn.admit:hover{ background:var(--admit); color:var(--on-admit); }
   .active-bed-badge{
     font-family:var(--font-mono); font-size:12px; font-weight:600;
     padding:6px 11px; border-radius:7px;
@@ -205,6 +213,71 @@
     background:var(--panel-folder-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap;
   }
+  /* ---------- RICOVERI ---------- */
+  #ricoveri-view h2 .eyebrow{ background:var(--admit); color:var(--on-admit); }
+  #ricoveri-view .btn.primary{ background:var(--admit); border-color:var(--admit); color:var(--on-admit); }
+  #ricoveri-view .btn:not(.primary){ background:var(--panel-admit-2); }
+  #ricoveri-view .btn:not(.primary):hover{ border-color:var(--admit); }
+  #ricoveri-view input[type=text], #ricoveri-view input[type=number], #ricoveri-view textarea{
+    background:var(--panel-admit-2);
+  }
+  #ricoveri-view input:focus, #ricoveri-view textarea:focus{ border-color:var(--admit) !important; }
+  #ricoveri-view .patient-tab{ background:var(--panel-admit-2); }
+  #ricoveri-view .patient-tab:hover{ border-color:var(--admit); }
+  #ricoveri-view .patient-tab.active{
+    background:var(--admit-dim); border-color:var(--admit); border-bottom-color:var(--admit-dim); color:var(--admit);
+  }
+  #ricoveri-view textarea{
+    width:100%; min-height:64px; resize:vertical;
+    border:1px solid var(--line); color:var(--ink);
+    border-radius:9px; padding:10px 12px; font-family:var(--font-body);
+    font-size:13px; line-height:1.55;
+  }
+  .admit-form-card{ border-color:var(--admit-dim); background:var(--panel-admit); }
+  .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
+  .admit-sesso-chips .chip.active{
+    background:var(--admit-dim); border-color:var(--admit); color:var(--admit);
+  }
+  .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
+  .admit-field{ margin-bottom:12px; }
+  .admit-field:last-child{ margin-bottom:0; }
+  .admit-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
+  .admit-block{
+    margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:12px;
+    background:var(--panel-admit); overflow:hidden;
+  }
+  .admit-block:last-child{ margin-bottom:0; }
+  .admit-block-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:11px 13px; background:var(--panel-admit-2); border-bottom:1px solid var(--line);
+  }
+  .admit-block-title{
+    font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--admit);
+  }
+  .admit-block-actions{ display:flex; gap:6px; }
+  .admit-del-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:5px 12px; border-radius:7px; border:1px solid #7a3b33; color:#e2867e;
+    background:var(--panel-admit-2); cursor:pointer; white-space:nowrap;
+  }
+  .admit-del-btn:hover{ border-color:#d9695f; }
+  .admit-sub{ padding:12px 13px; }
+  .admit-sub + .admit-sub{ border-top:1px solid var(--line-soft); }
+  .admit-sub-title-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .admit-sub-title{ font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--ink-dim); }
+  .admit-copy-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:5px 12px; border-radius:7px; border:1px solid var(--admit-dim);
+    background:var(--panel-admit-2); color:var(--admit); cursor:pointer; white-space:nowrap;
+  }
+  .admit-copy-btn:hover{ border-color:var(--admit); }
+  .admit-editable{
+    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+    background:var(--panel-admit-2); border:1px solid var(--line); border-radius:8px;
+    padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
+  }
+  .admit-editable:focus{ border-color:var(--admit); }
   #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
   #elimina-paziente-btn:hover{ border-color:#d9695f; }
   .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
@@ -272,6 +345,7 @@
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
       <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
       <button class="topnav-btn" onclick="apriRiepilogo()">Diari</button>
+      <button class="topnav-btn admit" onclick="apriRicoveri()">Ricoveri</button>
     </div>
   </div>
   <div class="ecg-wrap" aria-hidden="true">
@@ -322,6 +396,115 @@
     </div>
   </div>
   <div class="group" id="riepilogo-lista"></div>
+</div>
+
+<!-- RICOVERI -->
+<div class="card" id="ricoveri-view" style="display:none; border-color:var(--admit-dim); background:var(--panel-admit);">
+  <h2>🏨 Ricoveri</h2>
+
+  <div class="group">
+    <div class="inline-fields">
+      <button class="btn primary" onclick="esportaRicoveriTxt()">Esporta (.txt)</button>
+      <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
+    </div>
+  </div>
+
+  <div class="group" id="ricoveri-tabs-group" style="display:none;">
+    <div class="group-label">I tuoi ricoveri (clicca per richiamarlo e modificarlo)</div>
+    <div class="patient-tabs" id="ricoveri-tabs"></div>
+  </div>
+
+  <div class="card admit-form-card" style="margin:0 0 14px;">
+    <h2 style="font-size:15px;" id="admit-form-title">Nuovo ricovero</h2>
+
+    <div class="group admit-field">
+      <div class="field-label">Sesso</div>
+      <div class="chips admit-sesso-chips" id="admit-sesso-chips">
+        <div class="chip active" data-val="F">F</div>
+        <div class="chip" data-val="M">M</div>
+      </div>
+    </div>
+
+    <div class="admit-grid">
+      <div class="admit-field">
+        <div class="field-label">Cognome</div>
+        <input type="text" class="wide" id="admit-cognome" placeholder="es. Rossi">
+      </div>
+      <div class="admit-field">
+        <div class="field-label">Nome</div>
+        <input type="text" class="wide" id="admit-nome" placeholder="es. Maria">
+      </div>
+    </div>
+
+    <div class="admit-grid">
+      <div class="admit-field">
+        <div class="field-label">Età (anni)</div>
+        <input type="number" id="admit-eta" placeholder="es. 84">
+      </div>
+      <div class="admit-field">
+        <div class="field-label">Diagnosi d'ingresso</div>
+        <input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale destra">
+      </div>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Anamnesi patologica prossima (testo libero)</div>
+      <textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Esami ematochimici (elenco separato da virgole, es. Hb 90, Gb 8.4, N 7.08, Na 127, K 4.4, creatinina 1.28, PCR 38…)</div>
+      <textarea id="admit-ematochimici" placeholder="Hb 90, Gb 8.4, N 7.08, Na 127, K 4.4, creatinina 1.28, PCR 38, TnI 8, procalcitonina 2, bil tot 2, bil diretta 0.5, AST 12, ALT 3, GGT 25"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Esami strumentali (lascia vuoto quello che non è stato eseguito)</div>
+      <div class="admit-grid">
+        <div>
+          <div class="field-label">Rx torace</div>
+          <textarea id="admit-rxtorace" placeholder="Referto…"></textarea>
+        </div>
+        <div>
+          <div class="field-label">Rx addome</div>
+          <textarea id="admit-rxaddome" placeholder="Referto…"></textarea>
+        </div>
+        <div>
+          <div class="field-label">TC addome</div>
+          <textarea id="admit-tcaddome" placeholder="Referto…"></textarea>
+        </div>
+        <div>
+          <div class="field-label">TC torace</div>
+          <textarea id="admit-tctorace" placeholder="Referto…"></textarea>
+        </div>
+        <div>
+          <div class="field-label">TC cerebrale</div>
+          <textarea id="admit-tccerebrale" placeholder="Referto…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Anamnesi patologica remota (separa le patologie con "-" o vai a capo)</div>
+      <textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Anamnesi farmacologica</div>
+      <textarea id="admit-farmacologica" placeholder="Terapia domiciliare…"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Anamnesi familiare e fisiologica</div>
+      <textarea id="admit-familiare" placeholder="…"></textarea>
+    </div>
+
+    <div class="row">
+      <button class="btn primary" id="admit-genera-btn" onclick="generaRicovero()">Genera ricovero</button>
+      <button class="btn" id="admit-nuovo-btn" onclick="nuovoRicovero()" style="display:none;">+ Nuovo ricovero</button>
+    </div>
+  </div>
+
+  <div class="group" id="ricoveri-lista"></div>
 </div>
 
 <div id="clinical-view">
@@ -485,7 +668,7 @@
   </div>
   <div class="group">
     <div class="group-label">Sede (combinabili)</div>
-    <div class="chips" id="edemi-sede"></div>
+    <div class="finding-list" id="edemi-sede"></div>
   </div>
   <div class="group">
     <div class="group-label">Qualità</div>
@@ -493,7 +676,7 @@
   </div>
   <div class="group">
     <div class="group-label">Aggiunte</div>
-    <div class="chips" id="edemi-aggiunte"></div>
+    <div class="finding-list" id="edemi-aggiunte"></div>
   </div>
   <div class="group">
     <div class="group-label">Andamento</div>
@@ -517,7 +700,7 @@
   </div>
   <div class="group">
     <div class="inline-fields">
-      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0"></div>
+      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
       <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
     </div>
   </div>
@@ -624,7 +807,7 @@ const state = {
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
-  edemi: { base:'non_declivi', sede:new Set(), qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:false, andamento:'', custom:'' },
+  edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
@@ -692,6 +875,435 @@ function loadPatients(){
 function savePatients(patients){
   try{ localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients)); }
   catch(e){ showToast('Salvataggio locale non disponibile'); }
+}
+
+/* ============================================================
+   RICOVERI (composizione diario di ingresso + anamnesi)
+   salvataggio locale nel browser, come le schede paziente
+   ============================================================ */
+const RICOVERI_KEY = 'eo_builder_ricoveri_v1';
+const RICOVERI_SEQ_KEY = 'eo_builder_ricoveri_seq_v1';
+let currentRicoveroId = null;
+
+function nextRicoveroSeq(){
+  let n = 0;
+  try{ n = parseInt(localStorage.getItem(RICOVERI_SEQ_KEY) || '0', 10) || 0; } catch(e){}
+  n += 1;
+  try{ localStorage.setItem(RICOVERI_SEQ_KEY, String(n)); } catch(e){}
+  return n;
+}
+
+function loadRicoveri(){
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(RICOVERI_KEY) || '[]'); }
+  catch(e){ list = []; }
+  let migrato = false;
+  list.forEach(r => {
+    if(!r.seq){ r.seq = nextRicoveroSeq(); migrato = true; }
+    if(!r.campi){ r.campi = {}; migrato = true; }
+  });
+  if(migrato) saveRicoveri(list);
+  return list;
+}
+function saveRicoveri(list){
+  try{ localStorage.setItem(RICOVERI_KEY, JSON.stringify(list)); }
+  catch(e){ showToast('Salvataggio locale non disponibile'); }
+}
+
+// dizionario esami ematochimici: nome normalizzato -> etichetta + unità di misura.
+// tutto ciò che non è in elenco viene lasciato così come scritto (nessun errore).
+const DIZ_EMATOCHIMICI = {
+  'hb':{label:'Hb', unit:'g/L'},
+  'emoglobina':{label:'Hb', unit:'g/L'},
+  'gb':{label:'Gb', unit:'x 10^9/L'},
+  'globuli bianchi':{label:'Gb', unit:'x 10^9/L'},
+  'wbc':{label:'Gb', unit:'x 10^9/L'},
+  'n':{label:'N', unit:'x 10^9/L'},
+  'neutrofili':{label:'N', unit:'x 10^9/L'},
+  'na':{label:'Na', unit:'mmol/L'},
+  'sodio':{label:'Na', unit:'mmol/L'},
+  'k':{label:'K', unit:'mmol/L'},
+  'potassio':{label:'K', unit:'mmol/L'},
+  'cl':{label:'Cl', unit:'mmol/L'},
+  'cloro':{label:'Cl', unit:'mmol/L'},
+  'creatinina':{label:'creatinina', unit:'mg/dL'},
+  'crea':{label:'creatinina', unit:'mg/dL'},
+  'urea':{label:'urea', unit:'mg/dL'},
+  'azotemia':{label:'urea', unit:'mg/dL'},
+  'glicemia':{label:'glicemia', unit:'mg/dL'},
+  'pcr':{label:'PCR', unit:'mg/L'},
+  'proteina c reattiva':{label:'PCR', unit:'mg/L'},
+  'tni':{label:'TnI', unit:'ng/L'},
+  'troponina':{label:'TnI', unit:'ng/L'},
+  'procalcitonina':{label:'procalcitonina', unit:'ug/L'},
+  'pct':{label:'procalcitonina', unit:'ug/L'},
+  'bil tot':{label:'bil. tot.', unit:'mg/dL'},
+  'bil totale':{label:'bil. tot.', unit:'mg/dL'},
+  'bilirubina totale':{label:'bil. tot.', unit:'mg/dL'},
+  'bil diretta':{label:'bil. diretta', unit:'mg/dL'},
+  'bilirubina diretta':{label:'bil. diretta', unit:'mg/dL'},
+  'ast':{label:'AST', unit:'U/L'},
+  'got':{label:'AST', unit:'U/L'},
+  'alt':{label:'ALT', unit:'U/L'},
+  'gpt':{label:'ALT', unit:'U/L'},
+  'ggt':{label:'GGT', unit:'U/L'},
+  'plt':{label:'PLT', unit:'x 10^9/L'},
+  'piastrine':{label:'PLT', unit:'x 10^9/L'},
+  'inr':{label:'INR', unit:''},
+  'ck':{label:'CK', unit:'U/L'},
+  'ldh':{label:'LDH', unit:'U/L'},
+  'amilasi':{label:'amilasi', unit:'U/L'},
+  'lipasi':{label:'lipasi', unit:'U/L'},
+  'mg':{label:'Mg', unit:'mmol/L'},
+  'magnesio':{label:'Mg', unit:'mmol/L'},
+  'ca':{label:'Ca', unit:'mmol/L'},
+  'calcio':{label:'Ca', unit:'mmol/L'},
+  'd dimero':{label:'D-dimero', unit:'ng/mL'},
+  'ddimero':{label:'D-dimero', unit:'ng/mL'},
+  'ferritina':{label:'ferritina', unit:'ng/mL'},
+  'tsh':{label:'TSH', unit:'mUI/L'},
+  'albumina':{label:'albumina', unit:'g/dL'},
+  'proteine totali':{label:'proteine totali', unit:'g/dL'},
+  'acido urico':{label:'acido urico', unit:'mg/dL'},
+  'colesterolo':{label:'colesterolo tot.', unit:'mg/dL'},
+  'trigliceridi':{label:'trigliceridi', unit:'mg/dL'},
+  'vitamina d':{label:'vitamina D', unit:'ng/mL'},
+  'pth':{label:'PTH', unit:'pg/mL'},
+  'nt probnp':{label:'NT-proBNP', unit:'ng/L'},
+  'probnp':{label:'NT-proBNP', unit:'ng/L'}
+};
+
+// converte l'elenco grezzo di esami (es. "Hb 90, Na 127, creatinina 1.28")
+// aggiungendo l'unità di misura corretta a ogni esame riconosciuto
+function formattaEsamiEmatochimici(raw){
+  if(!raw || !raw.trim()) return '';
+  return raw.split(',')
+    .map(seg => seg.trim())
+    .filter(Boolean)
+    .map(seg => {
+      const m = seg.match(/^(.*?)\s*([<>]?\s*\d+(?:[.,]\d+)?)\s*$/);
+      if(!m) return seg;
+      const nomeGrezzo = m[1].trim();
+      const valore = m[2].trim().replace(',', '.');
+      const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+      const voce = DIZ_EMATOCHIMICI[chiave];
+      if(!voce) return seg;
+      return voce.unit ? `${voce.label} ${valore} ${voce.unit}` : `${voce.label} ${valore}`;
+    })
+    .join(', ');
+}
+
+// appiattisce un referto strumentale (eventualmente su più righe) su un'unica riga
+function formattaStrumentale(testo){
+  if(!testo) return '';
+  return testo.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// elenco patologie (separate da "-" e/o a capo) -> unica riga separata da virgole
+function formattaAnamnesiRemota(testo){
+  if(!testo) return '';
+  return testo.split(/[-\n]/)
+    .map(v => v.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
+function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
+  const cognomeUp = (cognome || '').trim().toUpperCase();
+  const nomeUp = (nome || '').trim().toUpperCase();
+  const articolo = sesso === 'M' ? 'il Sig.' : 'la Sig.ra';
+  const ricoverataForm = sesso === 'M' ? 'ricoverato' : 'ricoverata';
+  const etaTxt = eta ? `${eta} anni` : '';
+  const diagnosiTxt = (diagnosi || '').trim();
+  return `Si accoglie in reparto ${articolo} ${cognomeUp} ${nomeUp}${etaTxt ? ', ' + etaTxt : ''}, ${ricoverataForm} dal PS con diagnosi di "${diagnosiTxt}".\nSi visita e si imposta terapia come da grafica.`;
+}
+
+function costruisciAnamnesi(f){
+  const righe = [];
+  const esamiTxt = formattaEsamiEmatochimici(f.ematochimici);
+  if(esamiTxt) righe.push(`- Esami ematochimici: ${esamiTxt}`);
+  const strumentali = [
+    ['Rx torace', f.rxtorace],
+    ['Rx addome', f.rxaddome],
+    ['TC addome', f.tcaddome],
+    ['TC torace', f.tctorace],
+    ['TC cerebrale', f.tccerebrale]
+  ];
+  strumentali.forEach(([label, testo]) => {
+    const t = formattaStrumentale(testo);
+    if(t) righe.push(`- ${label}: "${t}"`);
+  });
+
+  const blocchi = [];
+  if((f.prossima || '').trim()) blocchi.push(f.prossima.trim());
+  if(righe.length) blocchi.push(`In PS ha eseguito:\n${righe.join('\n')}`);
+  const remotaTxt = formattaAnamnesiRemota(f.remota);
+  if(remotaTxt) blocchi.push(`Anamnesi patologica remota: ${remotaTxt}`);
+  if((f.farmacologica || '').trim()) blocchi.push(`Anamnesi farmacologica: ${f.farmacologica.trim()}`);
+  if((f.familiare || '').trim()) blocchi.push(`Anamnesi familiare e fisiologica: ${f.familiare.trim()}`);
+  return blocchi.join('\n\n');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const chipsEl = document.getElementById('admit-sesso-chips');
+  if(chipsEl){
+    chipsEl.querySelectorAll('.chip').forEach(chip => {
+      chip.onclick = () => {
+        chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      };
+    });
+  }
+});
+
+function raccogliCampiForm(){
+  return {
+    sesso: document.querySelector('#admit-sesso-chips .chip.active')?.dataset.val || 'F',
+    cognome: document.getElementById('admit-cognome').value,
+    nome: document.getElementById('admit-nome').value,
+    eta: document.getElementById('admit-eta').value,
+    diagnosi: document.getElementById('admit-diagnosi').value,
+    prossima: document.getElementById('admit-prossima').value,
+    ematochimici: document.getElementById('admit-ematochimici').value,
+    rxtorace: document.getElementById('admit-rxtorace').value,
+    rxaddome: document.getElementById('admit-rxaddome').value,
+    tcaddome: document.getElementById('admit-tcaddome').value,
+    tctorace: document.getElementById('admit-tctorace').value,
+    tccerebrale: document.getElementById('admit-tccerebrale').value,
+    remota: document.getElementById('admit-remota').value,
+    farmacologica: document.getElementById('admit-farmacologica').value,
+    familiare: document.getElementById('admit-familiare').value
+  };
+}
+
+function svuotaFormRicovero(){
+  ['admit-cognome','admit-nome','admit-eta','admit-diagnosi','admit-prossima',
+   'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
+   'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const chipsEl = document.getElementById('admit-sesso-chips');
+  if(chipsEl){
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chipsEl.querySelector('.chip[data-val="F"]')?.classList.add('active');
+  }
+}
+
+function nuovoRicovero(){
+  currentRicoveroId = null;
+  svuotaFormRicovero();
+  document.getElementById('admit-form-title').textContent = 'Nuovo ricovero';
+  document.getElementById('admit-genera-btn').textContent = 'Genera ricovero';
+  document.getElementById('admit-nuovo-btn').style.display = 'none';
+  renderRicoveriTabs();
+}
+
+function generaRicovero(){
+  const campi = raccogliCampiForm();
+
+  if(!campi.cognome.trim() && !campi.nome.trim()){
+    showToast('Inserisci almeno il nome del paziente');
+    return;
+  }
+
+  const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || 'Ricovero';
+  const diario = costruisciDiario(campi);
+  const anamnesi = costruisciAnamnesi(campi);
+
+  const list = loadRicoveri();
+
+  if(currentRicoveroId){
+    const idx = list.findIndex(r => r.id === currentRicoveroId);
+    if(idx !== -1){
+      list[idx] = { ...list[idx], campi, label, diario, anamnesi };
+      saveRicoveri(list);
+      renderRicoveri();
+      renderRicoveriTabs();
+      showToast('Ricovero aggiornato');
+      return;
+    }
+  }
+
+  const record = {
+    id: 'ric_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    seq: nextRicoveroSeq(),
+    label,
+    campi,
+    diario,
+    anamnesi
+  };
+  list.push(record);
+  saveRicoveri(list);
+  currentRicoveroId = record.id;
+  renderRicoveri();
+  renderRicoveriTabs();
+  showToast('Ricovero generato');
+  document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
+  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
+  document.getElementById('admit-nuovo-btn').style.display = '';
+}
+
+function caricaRicovero(id){
+  const rec = loadRicoveri().find(r => r.id === id);
+  if(!rec) return;
+  currentRicoveroId = id;
+  const c = rec.campi || {};
+
+  document.getElementById('admit-cognome').value = c.cognome || '';
+  document.getElementById('admit-nome').value = c.nome || '';
+  document.getElementById('admit-eta').value = c.eta || '';
+  document.getElementById('admit-diagnosi').value = c.diagnosi || '';
+  document.getElementById('admit-prossima').value = c.prossima || '';
+  document.getElementById('admit-ematochimici').value = c.ematochimici || '';
+  document.getElementById('admit-rxtorace').value = c.rxtorace || '';
+  document.getElementById('admit-rxaddome').value = c.rxaddome || '';
+  document.getElementById('admit-tcaddome').value = c.tcaddome || '';
+  document.getElementById('admit-tctorace').value = c.tctorace || '';
+  document.getElementById('admit-tccerebrale').value = c.tccerebrale || '';
+  document.getElementById('admit-remota').value = c.remota || '';
+  document.getElementById('admit-farmacologica').value = c.farmacologica || '';
+  document.getElementById('admit-familiare').value = c.familiare || '';
+
+  const chipsEl = document.getElementById('admit-sesso-chips');
+  if(chipsEl){
+    chipsEl.querySelectorAll('.chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.val === (c.sesso || 'F'));
+    });
+  }
+
+  document.getElementById('admit-form-title').textContent = `Ricovero ${rec.seq}`;
+  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
+  document.getElementById('admit-nuovo-btn').style.display = '';
+  renderRicoveriTabs();
+  document.getElementById('admit-form-title').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderRicoveriTabs(){
+  const group = document.getElementById('ricoveri-tabs-group');
+  const tabsEl = document.getElementById('ricoveri-tabs');
+  const list = loadRicoveri();
+
+  if(list.length === 0){
+    group.style.display = 'none';
+    tabsEl.innerHTML = '';
+    return;
+  }
+  group.style.display = '';
+  tabsEl.innerHTML = '';
+
+  list.forEach(rec => {
+    const tab = document.createElement('div');
+    tab.className = 'patient-tab' + (rec.id === currentRicoveroId ? ' active' : '');
+    tab.textContent = `Ricovero ${rec.seq}` + (rec.label && rec.label !== 'Ricovero' ? ` · ${rec.label}` : '');
+    tab.title = rec.label || '';
+    tab.onclick = () => caricaRicovero(rec.id);
+    tabsEl.appendChild(tab);
+  });
+}
+
+function renderRicoveri(){
+  const container = document.getElementById('ricoveri-lista');
+  container.innerHTML = '';
+  const list = loadRicoveri();
+
+  if(list.length === 0){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.textContent = 'Nessun ricovero composto per ora.';
+    container.appendChild(vuoto);
+    renderRicoveriTabs();
+    return;
+  }
+
+  list.forEach(rec => {
+    const block = document.createElement('div');
+    block.className = 'admit-block';
+
+    const head = document.createElement('div');
+    head.className = 'admit-block-head';
+    const title = document.createElement('div');
+    title.className = 'admit-block-title';
+    title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
+    const actions = document.createElement('div');
+    actions.className = 'admit-block-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'admit-copy-btn';
+    editBtn.textContent = 'Richiama nel form';
+    editBtn.onclick = () => caricaRicovero(rec.id);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'admit-del-btn';
+    delBtn.textContent = 'Elimina';
+    delBtn.onclick = () => eliminaRicovero(rec.id);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    head.appendChild(title);
+    head.appendChild(actions);
+    block.appendChild(head);
+
+    [['diario','Diario'], ['anamnesi','Anamnesi patologica prossima']].forEach(([campo, etichetta]) => {
+      const sub = document.createElement('div');
+      sub.className = 'admit-sub';
+
+      const row = document.createElement('div');
+      row.className = 'admit-sub-title-row';
+      const subTitle = document.createElement('div');
+      subTitle.className = 'admit-sub-title';
+      subTitle.textContent = etichetta;
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'admit-copy-btn';
+      copyBtn.textContent = 'Copia';
+      copyBtn.onclick = () => copiaTesto(rec[campo] || '');
+      row.appendChild(subTitle);
+      row.appendChild(copyBtn);
+
+      const editable = document.createElement('div');
+      editable.className = 'admit-editable';
+      editable.contentEditable = 'true';
+      editable.textContent = rec[campo] || '';
+      editable.addEventListener('input', () => {
+        const list2 = loadRicoveri();
+        const idx = list2.findIndex(r => r.id === rec.id);
+        if(idx !== -1){ list2[idx][campo] = editable.textContent; saveRicoveri(list2); }
+      });
+
+      sub.appendChild(row);
+      sub.appendChild(editable);
+      block.appendChild(sub);
+    });
+
+    container.appendChild(block);
+  });
+
+  renderRicoveriTabs();
+}
+
+function eliminaRicovero(id){
+  const list = loadRicoveri().filter(r => r.id !== id);
+  saveRicoveri(list);
+  if(currentRicoveroId === id) nuovoRicovero();
+  renderRicoveri();
+  showToast('Ricovero eliminato');
+}
+
+function esportaRicoveriTxt(){
+  const list = loadRicoveri();
+  if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
+
+  const testo = list
+    .map(rec => `Ricovero ${rec.seq} · ${rec.label}\n\n${rec.diario}\n\n${rec.anamnesi}`)
+    .join('\n\n' + '─'.repeat(40) + '\n\n');
+
+  const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const oggi = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'ricoveri_' + oggi + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('File esportato');
 }
 
 function serializeState(){
@@ -849,15 +1461,24 @@ function applyStateObject(o){
     });
   }
 
+  // la succulenza era un semplice booleano; ora è {attiva, sede, lato}.
+  // questo helper accetta sia il vecchio booleano sia il nuovo oggetto,
+  // così le schede salvate prima di questa modifica continuano a funzionare
+  function normalizzaSucculenza(val){
+    if(val && typeof val === 'object') return { attiva: !!val.attiva, sede: val.sede || '', lato: val.lato || '' };
+    return { attiva: !!val, sede:'', lato:'' };
+  }
+
   if(o.edemi && o.edemi.sede !== undefined){
     // già nel nuovo formato
     state.edemi.base = o.edemi.base ?? '';
     state.edemi.sede = new Set(o.edemi.sede || []);
+    state.edemi.sedeLato = Object.assign({}, o.edemi.sedeLato || {});
     state.edemi.qualita = o.edemi.qualita ?? '';
     state.edemi.discrasici = o.edemi.discrasici ?? false;
     state.edemi.grinza = o.edemi.grinza ?? false;
     state.edemi.scarico = o.edemi.scarico ?? false;
-    state.edemi.succulenza = o.edemi.succulenza ?? false;
+    state.edemi.succulenza = normalizzaSucculenza(o.edemi.succulenza);
     state.edemi.andamento = o.edemi.andamento ?? '';
   } else {
     // migrazione dal vecchio preset unico "scelta"
@@ -877,11 +1498,12 @@ function applyStateObject(o){
     const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || (o.edemi ? {} : { base:'non_declivi' });
     state.edemi.base = m.base ?? '';
     state.edemi.sede = new Set(m.sede || []);
+    state.edemi.sedeLato = {};
     state.edemi.qualita = m.qualita ?? '';
     state.edemi.discrasici = m.discrasici ?? false;
     state.edemi.grinza = m.grinza ?? false;
     state.edemi.scarico = m.scarico ?? false;
-    state.edemi.succulenza = m.succulenza ?? false;
+    state.edemi.succulenza = normalizzaSucculenza(m.succulenza);
     state.edemi.andamento = m.andamento ?? '';
   }
   state.edemi.custom = o.edemi?.custom ?? '';
@@ -1080,8 +1702,10 @@ function mostraVista(v){
   document.getElementById('clinical-view').style.display = (v === 'clinical') ? '' : 'none';
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
+  document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   if(v === 'wardmap') renderWardMap();
   if(v === 'riepilogo') renderRiepilogo();
+  if(v === 'ricoveri') renderRicoveri();
 }
 function toggleWardMap(){
   wardMapOpen ? chiudiWardMap() : apriWardMap();
@@ -1089,6 +1713,7 @@ function toggleWardMap(){
 function apriWardMap(){ mostraVista('wardmap'); }
 function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
+function apriRicoveri(){ mostraVista('ricoveri'); }
 
 function renderHeaderBadge(){
   const patients = loadPatients();
@@ -1534,8 +2159,8 @@ function comporreSedeTorace(locSet){
   const hasApice = locSet.has('apice'), hasMedio = locSet.has('medio'), hasBase = locSet.has('base');
   let zoneText = '', genereMaschile = false, soloBase = false;
   if(hasApice && hasMedio && hasBase){ zoneText = 'diffusamente su tutto l\'ambito'; }
-  else if(hasMedio && hasBase){ zoneText = 'medio-basale'; }
-  else if(hasApice && hasBase){ zoneText = 'apico-basale'; }
+  else if(hasMedio && hasBase){ zoneText = 'medio-basale'; genereMaschile = true; }
+  else if(hasApice && hasBase){ zoneText = 'apico-basale'; genereMaschile = true; }
   else if(hasApice && hasMedio){ zoneText = 'apice e campo medio'; genereMaschile = true; }
   else if(hasBase){ zoneText = 'base'; soloBase = true; }
   else if(hasMedio){ zoneText = 'campo medio'; genereMaschile = true; }
@@ -1893,8 +2518,8 @@ function renderEdemi(){
   const e = state.edemi;
 
   function clearPositivi(){
-    e.sede.clear(); e.qualita=''; e.discrasici=false;
-    e.scarico=false; e.succulenza=false; e.andamento='';
+    e.sede.clear(); e.sedeLato = {}; e.qualita=''; e.discrasici=false;
+    e.scarico=false; e.succulenza = { attiva:false, sede:'', lato:'' }; e.andamento='';
     // 'grinza' NON viene azzerata qui: si combina sia con "non edemi declivi"
     // sia con un edema descritto (vedi composeEdemi)
   }
@@ -1914,19 +2539,28 @@ function renderEdemi(){
     elBase.appendChild(b);
   });
 
+  // Sede: AAII e AASS aprono una tendina con il Lato (dx/sx); se non si
+  // sceglie un lato si intende bilaterale. "Fianchi" resta senza lato.
   const elSede = document.getElementById('edemi-sede');
   elSede.innerHTML = '';
   OPT.edemiSede.forEach(opt => {
-    const b = document.createElement('div');
     const active = e.sede.has(opt.value);
-    b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = opt.label;
-    b.onclick = () => {
-      active ? e.sede.delete(opt.value) : e.sede.add(opt.value);
+    const onClickChip = () => {
+      if(active){ e.sede.delete(opt.value); delete e.sedeLato[opt.value]; }
+      else{ e.sede.add(opt.value); }
       e.base = '';
       update();
     };
-    elSede.appendChild(b);
+    const haLato = (opt.value === 'aaii' || opt.value === 'aass');
+    const builder = haLato ? (inner) => {
+      renderGruppoChipInline(inner, 'Lato (vuoto = bilaterale)', OPT.toraceLato,
+        v => e.sedeLato[opt.value] === v,
+        (v, vAttivo) => {
+          e.sedeLato[opt.value] = vAttivo ? '' : v;
+          update();
+        });
+    } : null;
+    elSede.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
 
   const elQualita = document.getElementById('edemi-qualita');
@@ -1948,9 +2582,8 @@ function renderEdemi(){
   elAggiunte.innerHTML = '';
   [
     {key:'discrasici', label:'Discrasici'},
-    {key:'grinza', label:'Cute a grinza'},
-    {key:'scarico', label:'Da porre in scarico'},
-    {key:'succulenza', label:'Succulenza pretibiale'}
+    {key:'grinza', label:'Cute grinza'},
+    {key:'scarico', label:'Da porre in scarico'}
   ].forEach(a => {
     const b = document.createElement('div');
     const active = e[a.key];
@@ -1958,13 +2591,38 @@ function renderEdemi(){
     b.textContent = a.label;
     b.onclick = () => {
       e[a.key] = !active;
-      // "cute a grinza" si aggiunge e basta, non implica di per sé un edema:
+      // "cute grinza" si aggiunge e basta, non implica di per sé un edema:
       // non deve cancellare "non edemi declivi" già selezionato
       if(e[a.key] && a.key !== 'grinza') e.base = '';
       update();
     };
     elAggiunte.appendChild(b);
   });
+
+  // Succulenza: tendina con Sede (Pretibiale/Perimalleolare, facoltativa) e
+  // Lato (dx/sx, vuoto = bilaterale). Attivandola si deseleziona "AAII" dalla
+  // sede degli edemi veri, per non ripetere due volte "AAII" nel referto.
+  const succAttiva = e.succulenza.attiva;
+  const succBuilder = (inner) => {
+    renderGruppoChipInline(inner, 'Sede (vuoto = AAII)', OPT.succulenzaSede,
+      v => e.succulenza.sede === v,
+      (v, vAttivo) => { e.succulenza.sede = vAttivo ? '' : v; update(); });
+    renderGruppoChipInline(inner, 'Lato (vuoto = bilaterale)', OPT.toraceLato,
+      v => e.succulenza.lato === v,
+      (v, vAttivo) => { e.succulenza.lato = vAttivo ? '' : v; update(); });
+  };
+  const succOnClick = () => {
+    if(succAttiva){
+      e.succulenza = { attiva:false, sede:'', lato:'' };
+    } else {
+      e.succulenza.attiva = true;
+      e.sede.delete('aaii');
+      delete e.sedeLato.aaii;
+      e.base = '';
+    }
+    update();
+  };
+  elAggiunte.appendChild(creaRigaConTendina('Succulenza', succAttiva, succOnClick, succAttiva ? succBuilder : null));
 
   const elAndamento = document.getElementById('edemi-andamento');
   elAndamento.innerHTML = '';
@@ -2402,6 +3060,10 @@ const OPT = {
     {value:'ripresentati', label:'Ripresentati'},
     {value:'permangono', label:'Permangono'}
   ],
+  succulenzaSede: [
+    {value:'pretibiale', label:'Pretibiale'},
+    {value:'perimalleolare', label:'Perimalleolare'}
+  ],
   diuresiModalita: [
     {value:'sacca', label:'in sacca di CV'},
     {value:'pappagallo', label:'in pappagallo'},
@@ -2814,22 +3476,73 @@ function composeEdemi(){
   if(e.base === 'non_edemi') return 'Non edemi.';
   if(e.base === 'non_declivi'){
     let s = 'Non edemi declivi';
-    if(e.grinza) s += ', cute a grinza agli AAII';
+    if(e.grinza) s += ', cute grinza agli AAII';
     return s + '.';
   }
 
   const frasi = [];
-  if(e.succulenza) frasi.push('Succulenza pretibiale agli AAII.');
 
-  const sediMap = { aaii:'agli AAII', aass:'agli AASS', fianchi:'ai fianchi' };
-  const sedi = ['aaii','aass','fianchi'].filter(v => e.sede.has(v)).map(v => sediMap[v]);
-  const sedeText = sedi.length ? joinIt(sedi) : '';
+  // succulenza: sede (pretibiale/perimalleolare, opzionale, default "agli AAII")
+  // + lato (dx/sx, opzionale, default bilaterale)
+  if(e.succulenza && e.succulenza.attiva){
+    const lato = e.succulenza.lato === 'dx' ? 'dx' : (e.succulenza.lato === 'sx' ? 'sx' : 'bilaterale');
+    if(e.succulenza.sede === 'pretibiale') frasi.push(`Succulenza pretibiale ${lato}.`);
+    else if(e.succulenza.sede === 'perimalleolare') frasi.push(`Succulenza perimalleolare ${lato}.`);
+    else frasi.push(`Succulenza agli AAII ${lato}.`);
+  }
+
+  // per ogni sede: dx/sx -> singolare ("arto inf./sup. dx/sx"), altrimenti
+  // plurale bilaterale ("agli AAII"/"agli AASS")
+  function fraseSedeLato(tipo){
+    const lato = e.sedeLato[tipo] || '';
+    if(tipo === 'aaii'){
+      if(lato === 'dx') return { tipo, singolare:true, testo:'arto inf. dx' };
+      if(lato === 'sx') return { tipo, singolare:true, testo:'arto inf. sx' };
+      return { tipo, singolare:false, testo:'agli AAII', bilaterale:true };
+    }
+    if(tipo === 'aass'){
+      if(lato === 'dx') return { tipo, singolare:true, testo:'arto sup. dx' };
+      if(lato === 'sx') return { tipo, singolare:true, testo:'arto sup. sx' };
+      return { tipo, singolare:false, testo:'agli AASS', bilaterale:false };
+    }
+    return { tipo, singolare:false, testo:'ai fianchi' };
+  }
+
+  const sediSelezionate = ['aaii','aass','fianchi'].filter(v => e.sede.has(v));
+  const sediInfo = sediSelezionate.map(fraseSedeLato);
 
   const qualitaMap = { improntabili:'improntabili', duri:'duri', colonnari:'colonnari' };
+  const qualitaMapSing = { improntabili:'improntabile', duri:'duro', colonnari:'colonnare' };
   let qualitaText = e.qualita ? qualitaMap[e.qualita] : '';
   if(e.discrasici) qualitaText = qualitaText ? qualitaText + ' anche discrasici' : 'discrasici';
 
-  if(sedeText || qualitaText || e.andamento || e.scarico){
+  const hasQualifiche = !!(qualitaText || e.andamento || e.scarico);
+  const unSoloArto = sediInfo.length === 1 && (sediInfo[0].tipo === 'aaii' || sediInfo[0].tipo === 'aass');
+
+  if(unSoloArto && sediInfo[0].singolare){
+    // un solo arto, lateralizzato (dx/sx): resta sempre singolare ("Edema..."),
+    // con o senza qualità/andamento/scarico, accordando gli aggettivi al singolare
+    const info = sediInfo[0];
+    let qualitaTextSing = e.qualita ? qualitaMapSing[e.qualita] : '';
+    if(e.discrasici) qualitaTextSing = qualitaTextSing ? qualitaTextSing + ' anche discrasico' : 'discrasico';
+    const qs = qualitaTextSing ? ' ' + qualitaTextSing : '';
+    const ss = ' ' + info.testo;
+    let corpo;
+    if(e.andamento === 'riduzione') corpo = `In riduzione l'edema${qs}${ss}`;
+    else if(e.andamento === 'ripresentati') corpo = `Ripresentatosi l'edema${qs}${ss}`;
+    else if(e.andamento === 'permangono') corpo = `Permane l'edema${qs}${ss}`;
+    else corpo = `Edema${qs}${ss}`;
+    if(e.scarico) corpo += ' da porre in scarico';
+    if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
+    frasi.push(corpo.trim() + '.');
+  } else if(unSoloArto && !hasQualifiche){
+    // caso semplice: un solo arto (AAII o AASS) bilaterale, senza qualità/andamento/scarico
+    const info = sediInfo[0];
+    let corpo = info.bilaterale ? `Edemi ${info.testo} bilateralmente` : `Edemi ${info.testo}`;
+    if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
+    frasi.push(corpo.trim() + '.');
+  } else if(sediInfo.length || hasQualifiche){
+    const sedeText = sediInfo.length ? joinIt(sediInfo.map(i => i.testo)) : '';
     const qs = qualitaText ? ' ' + qualitaText : '';
     const ss = sedeText ? ' ' + sedeText : '';
     let corpo;
@@ -2838,11 +3551,11 @@ function composeEdemi(){
     else if(e.andamento === 'permangono') corpo = `Permangono edemi${qs}${ss}`;
     else corpo = `Edemi${qs}${ss}`;
     if(e.scarico) corpo += ' da porre in scarico';
-    if(e.grinza) corpo += e.sede.has('aaii') ? ', cute a grinza' : ', cute a grinza agli AAII';
+    if(e.grinza) corpo += sediSelezionate.includes('aaii') ? ', cute grinza' : ', cute grinza agli AAII';
     frasi.push(corpo.trim() + '.');
   } else if(e.grinza){
-    // solo la cute a grinza, senza nessun edema descritto
-    frasi.push('Cute a grinza agli AAII.');
+    // solo la cute grinza, senza nessun edema descritto
+    frasi.push('Cute grinza agli AAII.');
   }
 
   return frasi.join(' ');
