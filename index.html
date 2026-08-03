@@ -810,7 +810,7 @@ const state = {
   usaOutputManuale: false,
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
-  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
+  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
@@ -1389,7 +1389,16 @@ function applyStateObject(o){
   state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
   state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
   state.cuore.pauseLibere = o.cuore?.pauseLibere ?? false;
-  state.cuore.freq = o.cuore?.freq ?? 'normofrequenti';
+  // "a target per FA" era un valore dentro freq (esclusivo con tachi/bradicardici);
+  // ora è un tag indipendente, combinabile: le schede vecchie vengono migrate
+  const freqSalvato = o.cuore?.freq ?? 'normofrequenti';
+  if(freqSalvato === 'a target per FA'){
+    state.cuore.freq = '';
+    state.cuore.targetFA = true;
+  } else {
+    state.cuore.freq = freqSalvato;
+    state.cuore.targetFA = o.cuore?.targetFA ?? false;
+  }
   state.cuore.qualita = new Set(o.cuore?.qualita || []);
   state.cuore.soffio = o.cuore?.soffio ?? 'nessuno';
   state.cuore.grado = o.cuore?.grado ?? '';
@@ -2581,6 +2590,42 @@ function renderToraceReperti(){
 // possono invece combinare tra loro (capita che coesistano)
 // "extrasistoli" ha senso solo con toni ritmici (mai "aritmici con extrasistoli"):
 // selezionandolo si forza automaticamente il ritmo su "ritmici".
+// Riga 1: Normofrequenti + "a target per FA" (indipendente, combinabile
+// anche con tachicardici/bradicardici: un ritmo può essere numericamente
+// tachicardico ma comunque "a target" per il controllo della frequenza in FA).
+// Riga 2 (a capo): tachicardici, bradicardici (esclusivi tra loro e con
+// normofrequenti, sono la stessa categoria di frequenza)
+function renderCuoreFreq(){
+  const el = document.getElementById('cuore-freq');
+  el.innerHTML = '';
+  const c = state.cuore;
+
+  function creaChipFreq(valore){
+    const opt = OPT.cuoreFreq.find(o => o.value === valore);
+    const b = document.createElement('div');
+    const active = c.freq === valore;
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => { c.freq = active ? '' : valore; update(); };
+    return b;
+  }
+
+  el.appendChild(creaChipFreq('normofrequenti'));
+
+  const targetBtn = document.createElement('div');
+  targetBtn.className = 'chip' + (c.targetFA ? ' active' : '');
+  targetBtn.textContent = 'a target per FA';
+  targetBtn.onclick = () => { c.targetFA = !c.targetFA; update(); };
+  el.appendChild(targetBtn);
+
+  const spacer = document.createElement('div');
+  spacer.style.cssText = 'flex-basis:100%; height:0;';
+  el.appendChild(spacer);
+
+  el.appendChild(creaChipFreq('tachicardici'));
+  el.appendChild(creaChipFreq('bradicardici'));
+}
+
 function renderCuoreExtrasistoli(){
   const el = document.getElementById('cuore-extrasistoli');
   el.innerHTML = '';
@@ -3036,7 +3081,6 @@ const OPT = {
   ],
   cuoreFreq: [
     {value:'normofrequenti', label:'Normofrequenti'},
-    {value:'a target per FA', label:'a target per FA'},
     {value:'tachicardici', label:'tachicardici'},
     {value:'bradicardici', label:'bradicardici'}
   ],
@@ -3304,7 +3348,7 @@ function renderAll(){
   });
   renderCuoreExtrasistoli();
   renderCuorePause();
-  renderSingle('cuore-freq', OPT.cuoreFreq, ()=>state.cuore.freq, v=>state.cuore.freq=v);
+  renderCuoreFreq();
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
   document.getElementById('cuore-soffio-dettagli').style.display = state.cuore.soffio !== 'nessuno' ? '' : 'none';
@@ -3459,6 +3503,7 @@ function composeCuore(){
   if(ritmoText) parts.push(ritmoText);
 
   if(c.freq) parts.push(c.freq);
+  if(c.targetFA) parts.push('a target per FA');
   if(c.pauseLibere) parts.push('pause apparentemente libere');
 
   let s = 'Toni ' + parts.join(', ');
