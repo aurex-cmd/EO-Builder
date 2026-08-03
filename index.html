@@ -605,7 +605,6 @@
   <div class="group">
     <div class="group-label">Frequenza</div>
     <div class="chips" id="cuore-freq"></div>
-    <div class="chips" id="cuore-pause" style="margin-top:6px;"></div>
   </div>
   <div class="group">
     <div class="group-label">Qualità</div>
@@ -614,6 +613,7 @@
   <div class="group">
     <div class="group-label">Soffio</div>
     <div class="chips" id="cuore-soffio"></div>
+    <div class="chips" id="cuore-pause" style="margin-top:6px;"></div>
     <div id="cuore-soffio-dettagli" style="display:none;">
       <div class="inline-fields" style="margin-top:6px;">
         <div class="field"><label>grado /6</label><input type="number" id="cuore-grado" min="1" max="6" style="width:44px;"></div>
@@ -3225,8 +3225,7 @@ const OPT = {
     {value:'sacca', label:'in sacca di CV'},
     {value:'pappagallo', label:'in pappagallo'},
     {value:'panno', label:'in panno'},
-    {value:'spontanea', label:'spontanea'},
-    {value:'non_valutabile', label:'non valutabile'}
+    {value:'spontanea', label:'spontanea'}
   ],
   diuresiUrine: [
     {value:'normocromiche', label:'Normocromiche', frag:'urine normocromiche'},
@@ -3354,10 +3353,10 @@ function renderAll(){
     if(v === 'aritmici') state.cuore.extrasistoli = false; // impossibile "aritmici con extrasistoli"
   });
   renderCuoreExtrasistoli();
-  renderCuorePause();
   renderCuoreFreq();
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
+  renderCuorePause();
   document.getElementById('cuore-soffio-dettagli').style.display = state.cuore.soffio !== 'nessuno' ? '' : 'none';
   renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
 
