@@ -537,7 +537,7 @@
   </div>
   <div class="group">
     <div class="group-label">Atteggiamento</div>
-    <div class="chips" id="coscienza-atteggiamento"></div>
+    <div class="finding-list" id="coscienza-atteggiamento"></div>
   </div>
   <div class="group">
     <div class="group-label">Linguaggio</div>
@@ -808,7 +808,7 @@ const state = {
   outputManuale: '',
   outputManualeBase: '',
   usaOutputManuale: false,
-  coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), extra:'' },
+  coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
@@ -1369,6 +1369,10 @@ function applyStateObject(o){
   state.coscienza.soporosoRisvegliabile = o.coscienza?.soporosoRisvegliabile ?? '';
   state.coscienza.soporosoStimolo = o.coscienza?.soporosoStimolo ?? '';
   state.coscienza.descrittori = new Set(o.coscienza?.descrittori || ['orientato','collaborante']);
+  const uSalvato = o.coscienza?.umore;
+  state.coscienza.umore = (uSalvato && typeof uSalvato === 'object')
+    ? { attiva: !!uSalvato.attiva, valore: uSalvato.valore || '' }
+    : { attiva:false, valore:'' };
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
@@ -2327,6 +2331,54 @@ function renderOrientamento(){
   });
 }
 
+// Atteggiamento su 3 righe fisse: collaborante/non collaborante,
+// oppositiva/a tratti oppositiva, tranquilla/ansiosa + Umore (tendina
+// Deflesso/In asse, frase a sé separata da un punto - vedi composeCoscienza)
+function renderAtteggiamento(){
+  const el = document.getElementById('coscienza-atteggiamento');
+  el.innerHTML = '';
+  const s = state.coscienza.descrittori;
+  const tutti = OPT.coscienzaDescrittori.filter(o => o.gruppo === 'atteggiamento');
+
+  function creaChip(valore){
+    const opt = tutti.find(o => o.value === valore);
+    if(!opt) return null;
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.chipLabel || g(opt);
+    b.onclick = () => {
+      if(!active && opt.excludes) opt.excludes.forEach(v => s.delete(v));
+      active ? s.delete(opt.value) : s.add(opt.value);
+      update();
+    };
+    return b;
+  }
+  function spacer(){
+    const sp = document.createElement('div');
+    sp.style.cssText = 'flex-basis:100%; height:0;';
+    return sp;
+  }
+
+  ['collaborante', 'non_collaborante'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+  el.appendChild(spacer());
+  ['oppositivo', 'a_tratti_oppositivo'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+  el.appendChild(spacer());
+  ['tranquillo', 'ansioso'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+
+  const umoreAttivo = state.coscienza.umore.attiva;
+  const umoreBuilder = (inner) => {
+    renderGruppoChipInline(inner, '', OPT.umore,
+      v => state.coscienza.umore.valore === v,
+      (v, vAttivo) => { state.coscienza.umore.valore = vAttivo ? '' : v; update(); });
+  };
+  const umoreOnClick = () => {
+    state.coscienza.umore = umoreAttivo ? { attiva:false, valore:'' } : { attiva:true, valore:state.coscienza.umore.valore };
+    update();
+  };
+  el.appendChild(creaRigaConTendina('Umore', umoreAttivo, umoreOnClick, umoreAttivo ? umoreBuilder : null));
+}
+
 // "Dispnoico" apre una tendina con un solo tag "Riferita" (era una voce a
 // sé, "Riferita dispnea"; ora è una sfumatura di Dispnoico)
 function renderRespiroTipo(){
@@ -2934,6 +2986,10 @@ const OPT = {
     {value:'tattile', label:'Stimolo tattile', frag:'allo stimolo tattile'},
     {value:'tattile_vigoroso', label:'Stimolo tattile vigoroso', frag:'allo stimolo tattile vigoroso'}
   ],
+  umore: [
+    {value:'deflesso', label:'Deflesso'},
+    {value:'in_asse', label:'In asse'}
+  ],
   coscienzaDescrittori: [
     {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'discretamente_orientato', chipLabel:'Do', m:'discretamente orientato', f:'discretamente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
@@ -3232,7 +3288,7 @@ function renderAll(){
   renderCoscienzaPrimary();
   const descGruppo = g => renderMultiEsclusivo('coscienza-'+g, OPT.coscienzaDescrittori.filter(o=>o.gruppo===g), ()=>state.coscienza.descrittori);
   renderOrientamento();
-  descGruppo('atteggiamento');
+  renderAtteggiamento();
   descGruppo('linguaggio');
   descGruppo('aspetto');
   descGruppo('contattabilita');
@@ -3354,6 +3410,9 @@ function composeCoscienza(){
   let s = parts.join(', ') + '.';
 
   frasiASe.forEach(o => { s += ' ' + cap(g(o)) + '.'; });
+
+  if(state.coscienza.umore.valore === 'deflesso') s += ' Umore deflesso.';
+  else if(state.coscienza.umore.valore === 'in_asse') s += ' Umore in asse.';
 
   const extra = (state.coscienza.extra || '').trim();
   if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
