@@ -2615,7 +2615,14 @@ function renderCuoreFreq(){
   const targetBtn = document.createElement('div');
   targetBtn.className = 'chip' + (c.targetFA ? ' active' : '');
   targetBtn.textContent = 'a target per FA';
-  targetBtn.onclick = () => { c.targetFA = !c.targetFA; update(); };
+  targetBtn.onclick = () => {
+    c.targetFA = !c.targetFA;
+    if(c.targetFA){
+      c.ritmo = 'aritmici'; // la FA è per definizione un ritmo aritmico
+      c.extrasistoli = false; // incompatibile con "aritmici"
+    }
+    update();
+  };
   el.appendChild(targetBtn);
 
   const spacer = document.createElement('div');
