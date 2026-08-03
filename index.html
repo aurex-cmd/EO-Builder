@@ -39,12 +39,6 @@
     --panel-folder:#241d10;
     --panel-folder-2:#2f2716;
 
-    --admit:#7c93f0;
-    --admit-dim:#1c2140;
-    --on-admit:#0b0e22;
-    --panel-admit:#161a33;
-    --panel-admit-2:#1d2242;
-
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
@@ -76,8 +70,8 @@
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
   }
   .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
-  .topnav-btn.admit{ border-color:var(--admit); background:var(--admit-dim); color:var(--admit); }
-  .topnav-btn.admit:hover{ background:var(--admit); color:var(--on-admit); }
+  .topnav-btn.admit{ border-color:var(--signal); background:var(--signal-dim); color:var(--signal); }
+  .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
   .active-bed-badge{
     font-family:var(--font-mono); font-size:12px; font-weight:600;
     padding:6px 11px; border-radius:7px;
@@ -213,31 +207,17 @@
     background:var(--panel-folder-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap;
   }
-  /* ---------- RICOVERI ---------- */
-  #ricoveri-view h2 .eyebrow{ background:var(--admit); color:var(--on-admit); }
-  #ricoveri-view .btn.primary{ background:var(--admit); border-color:var(--admit); color:var(--on-admit); }
-  #ricoveri-view .btn:not(.primary){ background:var(--panel-admit-2); }
-  #ricoveri-view .btn:not(.primary):hover{ border-color:var(--admit); }
-  #ricoveri-view input[type=text], #ricoveri-view input[type=number], #ricoveri-view textarea{
-    background:var(--panel-admit-2);
-  }
-  #ricoveri-view input:focus, #ricoveri-view textarea:focus{ border-color:var(--admit) !important; }
-  #ricoveri-view .patient-tab{ background:var(--panel-admit-2); }
-  #ricoveri-view .patient-tab:hover{ border-color:var(--admit); }
-  #ricoveri-view .patient-tab.active{
-    background:var(--admit-dim); border-color:var(--admit); border-bottom-color:var(--admit-dim); color:var(--admit);
-  }
+  /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
+  #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea{
     width:100%; min-height:64px; resize:vertical;
-    border:1px solid var(--line); color:var(--ink);
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
     border-radius:9px; padding:10px 12px; font-family:var(--font-body);
     font-size:13px; line-height:1.55;
   }
-  .admit-form-card{ border-color:var(--admit-dim); background:var(--panel-admit); }
+  #ricoveri-view textarea:focus{ border-color:var(--signal); }
+  .admit-form-card{ border-color:var(--line); background:var(--panel); }
   .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
-  .admit-sesso-chips .chip.active{
-    background:var(--admit-dim); border-color:var(--admit); color:var(--admit);
-  }
   .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
   .admit-field{ margin-bottom:12px; }
   .admit-field:last-child{ margin-bottom:0; }
@@ -245,21 +225,21 @@
   @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
   .admit-block{
     margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:12px;
-    background:var(--panel-admit); overflow:hidden;
+    background:var(--panel); overflow:hidden;
   }
   .admit-block:last-child{ margin-bottom:0; }
   .admit-block-head{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:11px 13px; background:var(--panel-admit-2); border-bottom:1px solid var(--line);
+    padding:11px 13px; background:var(--panel-2); border-bottom:1px solid var(--line);
   }
   .admit-block-title{
-    font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--admit);
+    font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
   .admit-block-actions{ display:flex; gap:6px; }
   .admit-del-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
     padding:5px 12px; border-radius:7px; border:1px solid #7a3b33; color:#e2867e;
-    background:var(--panel-admit-2); cursor:pointer; white-space:nowrap;
+    background:var(--panel-2); cursor:pointer; white-space:nowrap;
   }
   .admit-del-btn:hover{ border-color:#d9695f; }
   .admit-sub{ padding:12px 13px; }
@@ -268,16 +248,40 @@
   .admit-sub-title{ font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--ink-dim); }
   .admit-copy-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
-    padding:5px 12px; border-radius:7px; border:1px solid var(--admit-dim);
-    background:var(--panel-admit-2); color:var(--admit); cursor:pointer; white-space:nowrap;
+    padding:5px 12px; border-radius:7px; border:1px solid var(--signal-dim);
+    background:var(--panel-2); color:var(--signal); cursor:pointer; white-space:nowrap;
   }
-  .admit-copy-btn:hover{ border-color:var(--admit); }
+  .admit-copy-btn:hover{ border-color:var(--signal); }
   .admit-editable{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-admit-2); border:1px solid var(--line); border-radius:8px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
   }
-  .admit-editable:focus{ border-color:var(--admit); }
+  .admit-editable:focus{ border-color:var(--signal); }
+  /* righe "altro esame" (+ ECG ecc.) dentro Esami strumentali */
+  .altro-esame-row{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
+    margin-top:8px; padding:9px; border:1px solid var(--line); border-radius:9px;
+    background:var(--panel-2);
+  }
+  .altro-esame-row .altro-esame-nome{
+    flex:1 1 140px; min-width:110px;
+  }
+  .altro-esame-row .altro-esame-testo{
+    flex:2 1 220px; min-width:180px; min-height:38px;
+  }
+  .altro-esame-del{
+    flex:0 0 auto; width:30px; height:30px; border-radius:7px;
+    border:1px solid #7a3b33; background:var(--panel); color:#e2867e;
+    cursor:pointer; font-size:16px; line-height:1; font-family:var(--font-body);
+  }
+  .altro-esame-del:hover{ border-color:#d9695f; }
+  .admit-add-btn{
+    margin-top:8px; font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    padding:6px 13px; border-radius:8px; border:1px dashed var(--signal-dim);
+    background:transparent; color:var(--signal); cursor:pointer;
+  }
+  .admit-add-btn:hover{ border-color:var(--signal); border-style:solid; }
   #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
   #elimina-paziente-btn:hover{ border-color:#d9695f; }
   .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
@@ -399,7 +403,7 @@
 </div>
 
 <!-- RICOVERI -->
-<div class="card" id="ricoveri-view" style="display:none; border-color:var(--admit-dim); background:var(--panel-admit);">
+<div class="card" id="ricoveri-view" style="display:none;">
   <h2>🏨 Ricoveri</h2>
 
   <div class="group">
@@ -481,6 +485,8 @@
           <textarea id="admit-tccerebrale" placeholder="Referto…"></textarea>
         </div>
       </div>
+      <div id="admit-altri-esami"></div>
+      <button type="button" class="admit-add-btn" onclick="aggiungiAltroEsame()">+ Aggiungi esame (es. ECG)</button>
     </div>
 
     <div class="admit-field">
@@ -1033,6 +1039,11 @@ function costruisciAnamnesi(f){
     const t = formattaStrumentale(testo);
     if(t) righe.push(`- ${label}: "${t}"`);
   });
+  (f.altriEsami || []).forEach(es => {
+    const nome = (es.nome || '').trim();
+    const t = formattaStrumentale(es.testo);
+    if(nome && t) righe.push(`- ${nome}: "${t}"`);
+  });
 
   const blocchi = [];
   if((f.prossima || '').trim()) blocchi.push(f.prossima.trim());
@@ -1056,6 +1067,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// aggiunge una riga "altro esame" (es. ECG) dentro Esami strumentali: nome
+// libero + referto libero, con pulsante per rimuoverla
+function aggiungiAltroEsame(nome, testo){
+  const container = document.getElementById('admit-altri-esami');
+  const row = document.createElement('div');
+  row.className = 'altro-esame-row';
+
+  const inputNome = document.createElement('input');
+  inputNome.type = 'text';
+  inputNome.className = 'altro-esame-nome';
+  inputNome.placeholder = 'es. ECG';
+  inputNome.value = nome || '';
+
+  const textareaTesto = document.createElement('textarea');
+  textareaTesto.className = 'altro-esame-testo';
+  textareaTesto.placeholder = 'Referto…';
+  textareaTesto.value = testo || '';
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'altro-esame-del';
+  delBtn.textContent = '×';
+  delBtn.title = 'Rimuovi esame';
+  delBtn.onclick = () => row.remove();
+
+  row.appendChild(inputNome);
+  row.appendChild(textareaTesto);
+  row.appendChild(delBtn);
+  container.appendChild(row);
+}
+
 function raccogliCampiForm(){
   return {
     sesso: document.querySelector('#admit-sesso-chips .chip.active')?.dataset.val || 'F',
@@ -1070,6 +1112,10 @@ function raccogliCampiForm(){
     tcaddome: document.getElementById('admit-tcaddome').value,
     tctorace: document.getElementById('admit-tctorace').value,
     tccerebrale: document.getElementById('admit-tccerebrale').value,
+    altriEsami: Array.from(document.querySelectorAll('#admit-altri-esami .altro-esame-row')).map(row => ({
+      nome: row.querySelector('.altro-esame-nome').value,
+      testo: row.querySelector('.altro-esame-testo').value
+    })),
     remota: document.getElementById('admit-remota').value,
     farmacologica: document.getElementById('admit-farmacologica').value,
     familiare: document.getElementById('admit-familiare').value
@@ -1082,6 +1128,7 @@ function svuotaFormRicovero(){
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('admit-altri-esami').innerHTML = '';
   const chipsEl = document.getElementById('admit-sesso-chips');
   if(chipsEl){
     chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -1160,6 +1207,8 @@ function caricaRicovero(id){
   document.getElementById('admit-tcaddome').value = c.tcaddome || '';
   document.getElementById('admit-tctorace').value = c.tctorace || '';
   document.getElementById('admit-tccerebrale').value = c.tccerebrale || '';
+  document.getElementById('admit-altri-esami').innerHTML = '';
+  (c.altriEsami || []).forEach(es => aggiungiAltroEsame(es.nome, es.testo));
   document.getElementById('admit-remota').value = c.remota || '';
   document.getElementById('admit-farmacologica').value = c.farmacologica || '';
   document.getElementById('admit-familiare').value = c.familiare || '';
@@ -2893,7 +2942,8 @@ const OPT = {
     {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo'], gruppo:'atteggiamento'},
+    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante'], gruppo:'atteggiamento'},
+    {value:'non_collaborante', label:'non collaborante', excludes:['collaborante'], gruppo:'atteggiamento'},
     {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso'], gruppo:'atteggiamento'},
     {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo'], gruppo:'atteggiamento'},
@@ -3249,7 +3299,7 @@ function renderAll(){
    ============================================================ */
 // descrittori che nei referti reali si legano a "tranquillo/a" con "ma"
 // (es. "rallentato ma tranquillo", "disorientata ma tranquilla")
-const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo'];
+const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo','non_collaborante'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
 const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
@@ -3473,11 +3523,20 @@ function composeEdemi(){
   const custom = (e.custom || '').trim();
   if(custom) return custom.endsWith('.') ? custom : custom + '.';
 
-  if(e.base === 'non_edemi') return 'Non edemi.';
-  if(e.base === 'non_declivi'){
-    let s = 'Non edemi declivi';
-    if(e.grinza) s += ', cute grinza agli AAII';
-    return s + '.';
+  // il campo "base" (Non edemi / Non edemi declivi) vale solo se non c'è
+  // NESSUN dato positivo selezionato: così, se per qualsiasi motivo "base"
+  // restasse impostato insieme a una sede/qualità/andamento già scelti,
+  // la selezione reale ha comunque sempre la priorità e non sparisce mai
+  const haDatiPositivi = e.sede.size > 0 || !!e.qualita || e.discrasici ||
+    e.scarico || !!e.andamento || (e.succulenza && e.succulenza.attiva);
+
+  if(!haDatiPositivi){
+    if(e.base === 'non_edemi') return 'Non edemi.';
+    if(e.base === 'non_declivi'){
+      let s = 'Non edemi declivi';
+      if(e.grinza) s += ', cute grinza agli AAII';
+      return s + '.';
+    }
   }
 
   const frasi = [];
@@ -3852,6 +3911,30 @@ function showToast(msg){
 }
 
 document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+
+// Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
+// stessa riga (es. SatO2 -> PA sist. -> PA diast. -> FC), invece di dover
+// usare Tab o il mouse. I browser non permettono di leggere la posizione
+// del cursore in un <input type="number">, quindi qui la freccia sposta
+// sempre il focus al campo numerico adiacente (se esiste) nella riga;
+// i campi di testo liberi (es. "altro", note) non vengono toccati e
+// mantengono il normale comportamento delle frecce.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const el = e.target;
+  if(!(el instanceof HTMLInputElement) || el.type !== 'number') return;
+  const row = el.closest('.inline-fields');
+  if(!row) return;
+  const campi = Array.from(row.querySelectorAll('input[type="number"]'));
+  const idx = campi.indexOf(el);
+  if(idx === -1) return;
+  const target = e.key === 'ArrowRight' ? campi[idx + 1] : campi[idx - 1];
+  if(target){
+    e.preventDefault();
+    target.focus();
+    target.select();
+  }
+});
 
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
