@@ -347,8 +347,8 @@
     </div>
     <div class="header-nav">
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
-      <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
       <button class="topnav-btn" onclick="apriRiepilogo()">Diari</button>
+      <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
       <button class="topnav-btn admit" onclick="apriRicoveri()">Ricoveri</button>
     </div>
   </div>
@@ -2198,14 +2198,14 @@ function fragSibiliFischiGemiti(sottotipi, fallback){
   return joinIt(scelti.map(v => mapLabel[v]));
 }
 
-function comporreSedeTorace(locSet){
+function comporreSedeTorace(locSet, suTapParola){
   if(!locSet) return '';
   const parts = [];
 
   const emiDx = locSet.has('emitorace_dx'), emiSx = locSet.has('emitorace_sx');
   const suTap = locSet.has('su_tap');
   if(emiDx || emiSx || suTap){
-    if(suTap) parts.push('su TAP');
+    if(suTap) parts.push(suTapParola ? `${suTapParola} su TAP` : 'su TAP');
     else parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'destro' : 'sinistro'));
   }
 
@@ -2376,7 +2376,7 @@ function renderAtteggiamento(){
     state.coscienza.umore = umoreAttivo ? { attiva:false, valore:'' } : { attiva:true, valore:state.coscienza.umore.valore };
     update();
   };
-  el.appendChild(creaRigaConTendina('Umore', umoreAttivo, umoreOnClick, umoreAttivo ? umoreBuilder : null));
+  el.appendChild(creaRigaConTendina('umore', umoreAttivo, umoreOnClick, umoreAttivo ? umoreBuilder : null));
 }
 
 // "Dispnoico" apre una tendina con un solo tag "Riferita" (era una voce a
@@ -2987,8 +2987,8 @@ const OPT = {
     {value:'tattile_vigoroso', label:'Stimolo tattile vigoroso', frag:'allo stimolo tattile vigoroso'}
   ],
   umore: [
-    {value:'deflesso', label:'Deflesso'},
-    {value:'in_asse', label:'In asse'}
+    {value:'deflesso', label:'deflesso'},
+    {value:'in_asse', label:'in asse'}
   ],
   coscienzaDescrittori: [
     {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
@@ -3089,11 +3089,11 @@ const OPT = {
   toraceReperti: [
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
     {value:'non_franchi', label:'Non franchi rumori patologici', frag:'non franchi rumori patologici', negativo:true},
-    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true},
-    {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true},
-    {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true},
-    {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true},
-    {value:'sibili_fischi_gemiti', label:'Sibili/fischi/gemiti', frag:'sibili, fischi e gemiti', hasLoc:true}
+    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, diffusoParola:'diffusi'},
+    {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true, diffusoParola:'diffusi'},
+    {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true, diffusoParola:'diffusi'},
+    {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true, diffusoParola:'diffuso'},
+    {value:'sibili_fischi_gemiti', label:'Sibili/fischi/gemiti', frag:'sibili, fischi e gemiti', hasLoc:true, diffusoParola:'diffusi'}
   ],
   toraceBolle: [
     {value:'piccole', label:'Piccole bolle'},
@@ -3490,7 +3490,7 @@ function composeToraceClean(){
       if(scelta) frag = `rantoli a ${scelta} bolle`;
     }
     if(o.hasLoc){
-      const loc = comporreSedeTorace(t.reperteLocPerTipo[o.value]);
+      const loc = comporreSedeTorace(t.reperteLocPerTipo[o.value], o.diffusoParola);
       return loc ? `${frag} ${loc}` : frag;
     }
     return frag;
