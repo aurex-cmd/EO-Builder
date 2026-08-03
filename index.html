@@ -3473,8 +3473,11 @@ function composeCuore(){
 function composeToraceClean(){
   const t = state.torace;
   const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
-  const mvLoc = comporreSedeTorace(t.mvLoc);
-  const mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
+  let mvText = '';
+  if(mvOpt){
+    const mvLoc = comporreSedeTorace(t.mvLoc);
+    mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
+  }
 
   const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
   const repParts = repertiSelezionati.map(o => {
@@ -3497,7 +3500,13 @@ function composeToraceClean(){
   });
   const repText = repParts.join(', ');
 
-  const body = repText ? `${mvText}, ${repText}.` : `${mvText}.`;
+  // MV può essere deselezionato (t.mv === ''): in quel caso non compare
+  // affatto nella frase, senza che questo comprometta il resto (es. "Al
+  // torace ronchi diffusi su TAP." senza menzionare il MV)
+  const corpoParti = [mvText, repText].filter(Boolean);
+  if(!corpoParti.length) return '';
+  const body = corpoParti.join(', ') + '.';
+
   return t.limitata
     ? `Al torace, per quanto valutabile in mancata collaborazione: ${body}`
     : `Al torace ${body}`;
