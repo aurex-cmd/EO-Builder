@@ -814,7 +814,7 @@ const state = {
   usaOutputManuale: false,
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
-  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, malValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
+  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
@@ -1404,7 +1404,7 @@ function applyStateObject(o){
   state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
   state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
   state.cuore.pauseLibere = o.cuore?.pauseLibere ?? false;
-  state.cuore.malValutabili = o.cuore?.malValutabili ?? false;
+  state.cuore.pauseMalValutabili = o.cuore?.pauseMalValutabili ?? false;
   // "a target per FA" era un valore dentro freq (esclusivo con tachi/bradicardici);
   // ora è un tag indipendente, combinabile: le schede vecchie vengono migrate
   const freqSalvato = o.cuore?.freq ?? 'normofrequenti';
@@ -2684,10 +2684,9 @@ function renderCuoreExtrasistoli(){
   el.appendChild(b);
 }
 
-// "pause apparentemente libere" e "toni mal valutabili" sono tag indipendenti,
-// sempre in coda alla frase dei toni: non hanno logica incrociata con altri
-// campi. "Toni mal valutabili" ha però la priorità sull'intera frase (vedi
-// composeCuore): se attivo, sostituisce tutto il resto
+// "pause apparentemente libere" e "pause mal valutabili" sono alternative
+// tra loro (mutuamente esclusive) e vanno in coda alla frase dei toni,
+// senza logica incrociata con ritmo/frequenza/qualità/soffio
 function renderCuorePause(){
   const el = document.getElementById('cuore-pause');
   el.innerHTML = '';
@@ -2698,17 +2697,21 @@ function renderCuorePause(){
   b.textContent = 'Pause apparentemente libere';
   b.onclick = () => {
     state.cuore.pauseLibere = !active;
-    if(state.cuore.pauseLibere) state.cuore.soffio = 'nessuno'; // incompatibile con un soffio
+    if(state.cuore.pauseLibere){
+      state.cuore.soffio = 'nessuno'; // incompatibile con un soffio
+      state.cuore.pauseMalValutabili = false;
+    }
     update();
   };
   el.appendChild(b);
 
   const b2 = document.createElement('div');
-  const active2 = state.cuore.malValutabili;
+  const active2 = state.cuore.pauseMalValutabili;
   b2.className = 'chip' + (active2 ? ' active' : '');
-  b2.textContent = 'Toni mal valutabili';
+  b2.textContent = 'Pause mal valutabili';
   b2.onclick = () => {
-    state.cuore.malValutabili = !active2;
+    state.cuore.pauseMalValutabili = !active2;
+    if(state.cuore.pauseMalValutabili) state.cuore.pauseLibere = false;
     update();
   };
   el.appendChild(b2);
@@ -3559,8 +3562,6 @@ function composeRespiro(){
 
 function composeCuore(){
   const c = state.cuore;
-  if(c.malValutabili) return 'Toni mal valutabili.';
-
   const parts = [];
 
   [...c.qualita].forEach(q => parts.push(q));
@@ -3572,6 +3573,7 @@ function composeCuore(){
   if(c.freq) parts.push(c.freq);
   if(c.targetFA) parts.push('a target per FA');
   if(c.pauseLibere) parts.push('pause apparentemente libere');
+  else if(c.pauseMalValutabili) parts.push('pause mal valutabili');
 
   let s = 'Toni ' + parts.join(', ');
   if(c.soffio !== 'nessuno'){
