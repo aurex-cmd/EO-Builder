@@ -814,7 +814,7 @@ const state = {
   usaOutputManuale: false,
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
-  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
+  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, malValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
@@ -1404,6 +1404,7 @@ function applyStateObject(o){
   state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
   state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
   state.cuore.pauseLibere = o.cuore?.pauseLibere ?? false;
+  state.cuore.malValutabili = o.cuore?.malValutabili ?? false;
   // "a target per FA" era un valore dentro freq (esclusivo con tachi/bradicardici);
   // ora è un tag indipendente, combinabile: le schede vecchie vengono migrate
   const freqSalvato = o.cuore?.freq ?? 'normofrequenti';
@@ -2683,11 +2684,14 @@ function renderCuoreExtrasistoli(){
   el.appendChild(b);
 }
 
-// "pause apparentemente libere" è un tag indipendente, sempre in coda
-// alla frase dei toni: non ha logica incrociata con altri campi
+// "pause apparentemente libere" e "toni mal valutabili" sono tag indipendenti,
+// sempre in coda alla frase dei toni: non hanno logica incrociata con altri
+// campi. "Toni mal valutabili" ha però la priorità sull'intera frase (vedi
+// composeCuore): se attivo, sostituisce tutto il resto
 function renderCuorePause(){
   const el = document.getElementById('cuore-pause');
   el.innerHTML = '';
+
   const b = document.createElement('div');
   const active = state.cuore.pauseLibere;
   b.className = 'chip' + (active ? ' active' : '');
@@ -2698,6 +2702,16 @@ function renderCuorePause(){
     update();
   };
   el.appendChild(b);
+
+  const b2 = document.createElement('div');
+  const active2 = state.cuore.malValutabili;
+  b2.className = 'chip' + (active2 ? ' active' : '');
+  b2.textContent = 'Toni mal valutabili';
+  b2.onclick = () => {
+    state.cuore.malValutabili = !active2;
+    update();
+  };
+  el.appendChild(b2);
 }
 
 // "Assenti" (Non edemi / Non edemi declivi) esclude tutti gli assi positivi
@@ -3085,6 +3099,8 @@ const OPT = {
     {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
+    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico'], gruppo:'linguaggio'},
+    {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'non_collaborante', label:'non collaborante', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'parzialmente_collaborante', label:'parzialmente collaborante', excludes:['collaborante','non_collaborante'], gruppo:'atteggiamento'},
@@ -3093,8 +3109,6 @@ const OPT = {
     {value:'astenico', m:'astenico', f:'astenica', gruppo:'atteggiamento'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo'], gruppo:'atteggiamento'},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
-    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico'], gruppo:'linguaggio'},
-    {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
     {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','orientato','collaborante'], gruppo:'contattabilita'},
@@ -3493,20 +3507,27 @@ function composeCoscienza(){
       primaryText += ', non risvegliabile';
     }
   }
-  const parts = [primaryText];
+
+  // "mantiene gli occhi aperti" ecc (DESCRITTORI_FRASE_INIZIALE) va unito con
+  // la virgola nella stessa frase, non come frase a sé: se il livello di
+  // coscienza primario non è selezionato (primaryText vuoto) non deve
+  // comunque comparire una virgola vagante a inizio frase
+  const parts = [];
+  if(primaryText) parts.push(primaryText);
+  frasiInizio.forEach(o => parts.push(g(o)));
   if(descLabels.length) parts.push(joinIt(descLabels));
-  let s = parts.join(', ') + '.';
+  const corpo = parts.join(', ');
+  let s = corpo ? cap(corpo) + '.' : '';
 
-  frasiASe.forEach(o => { s += ' ' + cap(g(o)) + '.'; });
+  frasiASe.forEach(o => { s += (s ? ' ' : '') + cap(g(o)) + '.'; });
 
-  if(state.coscienza.umore.valore === 'deflesso') s += ' Umore deflesso.';
-  else if(state.coscienza.umore.valore === 'in_asse') s += ' Umore in asse.';
+  if(state.coscienza.umore.valore === 'deflesso') s += (s ? ' ' : '') + 'Umore deflesso.';
+  else if(state.coscienza.umore.valore === 'in_asse') s += (s ? ' ' : '') + 'Umore in asse.';
 
   const extra = (state.coscienza.extra || '').trim();
-  if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
+  if(extra) s += (s ? ' ' : '') + cap(extra) + (extra.endsWith('.') ? '' : '.');
 
-  const prefisso = frasiInizio.map(o => cap(g(o)) + '.').join(' ');
-  return prefisso ? prefisso + ' ' + s : s;
+  return s;
 }
 
 function composeRespiro(){
@@ -3538,6 +3559,8 @@ function composeRespiro(){
 
 function composeCuore(){
   const c = state.cuore;
+  if(c.malValutabili) return 'Toni mal valutabili.';
+
   const parts = [];
 
   [...c.qualita].forEach(q => parts.push(q));
