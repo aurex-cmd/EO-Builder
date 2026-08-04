@@ -2642,7 +2642,10 @@ function renderCuoreExtrasistoli(){
   b.textContent = 'Extrasistoli';
   b.onclick = () => {
     state.cuore.extrasistoli = !active;
-    if(state.cuore.extrasistoli) state.cuore.ritmo = 'ritmici';
+    if(state.cuore.extrasistoli){
+      state.cuore.ritmo = 'ritmici';
+      state.cuore.targetFA = false; // "a target per FA" implica un ritmo aritmico
+    }
     update();
   };
   el.appendChild(b);
@@ -3351,6 +3354,7 @@ function renderAll(){
   renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
     state.cuore.ritmo = v;
     if(v === 'aritmici') state.cuore.extrasistoli = false; // impossibile "aritmici con extrasistoli"
+    if(v === 'ritmici') state.cuore.targetFA = false; // "a target per FA" implica un ritmo aritmico
   });
   renderCuoreExtrasistoli();
   renderCuoreFreq();
