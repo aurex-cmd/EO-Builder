@@ -196,6 +196,10 @@
     font-family:var(--font-mono); font-weight:700; font-size:13.5px;
     color:var(--folder);
   }
+  .referto-block .bed-date{
+    font-family:var(--font-mono); font-weight:500; font-size:11px;
+    color:var(--ink-dim); margin-left:8px;
+  }
   .referto-block .copia-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
     padding:5px 12px; border-radius:7px; border:1px solid var(--folder-dim);
@@ -1314,6 +1318,17 @@ function renderRicoveri(){
         const idx = list2.findIndex(r => r.id === rec.id);
         if(idx !== -1){ list2[idx][campo] = editable.textContent; saveRicoveri(list2); }
       });
+      // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
+      // invece di usare il pulsante "Copia", il browser porterebbe con sé
+      // anche lo sfondo scuro e la formattazione del box: qui forziamo la
+      // copia negli appunti come solo testo semplice
+      editable.addEventListener('copy', (e) => {
+        const selezione = window.getSelection().toString();
+        if(selezione && e.clipboardData){
+          e.clipboardData.setData('text/plain', selezione);
+          e.preventDefault();
+        }
+      });
 
       sub.appendChild(row);
       sub.appendChild(editable);
@@ -1967,6 +1982,18 @@ function schedeConDati(){
   return ordinaPazientiPerLetto(entries);
 }
 
+// formatta un timestamp (es. p.savedAt) come "gg/mm/aaaa, hh:mm" in italiano,
+// usato per mostrare quando è stato compilato/aggiornato ogni diario
+function formattaDataOra(timestamp){
+  if(!timestamp) return '';
+  try{
+    const d = new Date(timestamp);
+    return d.toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' });
+  } catch(e){
+    return '';
+  }
+}
+
 function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
@@ -1993,6 +2020,11 @@ function renderRiepilogo(){
     title.className = 'bed-title';
     title.textContent = p.name;
 
+    const data = document.createElement('span');
+    data.className = 'bed-date';
+    data.textContent = formattaDataOra(p.savedAt);
+    title.appendChild(data);
+
     const copiaBtn = document.createElement('button');
     copiaBtn.className = 'copia-btn';
     copiaBtn.textContent = 'Copia';
@@ -2016,7 +2048,7 @@ function esportaRiepilogoTxt(){
   if(entries.length === 0){ showToast('Nessuna scheda da esportare'); return; }
 
   const testo = entries
-    .map(([id, p]) => p.name + '\n' + getRefertoFor(p.state))
+    .map(([id, p]) => p.name + (p.savedAt ? ' (' + formattaDataOra(p.savedAt) + ')' : '') + '\n' + getRefertoFor(p.state))
     .join('\n\n');
 
   const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
@@ -2369,11 +2401,11 @@ function renderAtteggiamento(){
     return sp;
   }
 
-  ['collaborante', 'non_collaborante'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+  ['collaborante', 'non_collaborante', 'parzialmente_collaborante'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
   el.appendChild(spacer());
   ['oppositivo', 'a_tratti_oppositivo'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
   el.appendChild(spacer());
-  ['tranquillo', 'ansioso'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+  ['tranquillo', 'ansioso', 'astenico'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
 
   const umoreAttivo = state.coscienza.umore.attiva;
   const umoreBuilder = (inner) => {
@@ -3053,10 +3085,12 @@ const OPT = {
     {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante'], gruppo:'atteggiamento'},
-    {value:'non_collaborante', label:'non collaborante', excludes:['collaborante'], gruppo:'atteggiamento'},
+    {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
+    {value:'non_collaborante', label:'non collaborante', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
+    {value:'parzialmente_collaborante', label:'parzialmente collaborante', excludes:['collaborante','non_collaborante'], gruppo:'atteggiamento'},
     {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso'], gruppo:'atteggiamento'},
     {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
+    {value:'astenico', m:'astenico', f:'astenica', gruppo:'atteggiamento'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo'], gruppo:'atteggiamento'},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
     {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico'], gruppo:'linguaggio'},
@@ -3412,7 +3446,7 @@ function renderAll(){
 const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo','non_collaborante'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
-const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande'];
+const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande','astenico'];
 // questi vanno PRIMA, come frase a sé, invece che nell'elenco con "e"
 const DESCRITTORI_FRASE_INIZIALE = ['occhi_aperti'];
 
@@ -3665,12 +3699,19 @@ function composeEdemi(){
   const frasi = [];
 
   // succulenza: sede (pretibiale/perimalleolare, opzionale, default "agli AAII")
-  // + lato (dx/sx, opzionale, default bilaterale)
+  // + lato (dx/sx, opzionale, default bilaterale) + andamento in coda, se scelto
+  // (es. "Succulenza pretibiale bilaterale, in riduzione.")
   if(e.succulenza && e.succulenza.attiva){
     const lato = e.succulenza.lato === 'dx' ? 'dx' : (e.succulenza.lato === 'sx' ? 'sx' : 'bilaterale');
-    if(e.succulenza.sede === 'pretibiale') frasi.push(`Succulenza pretibiale ${lato}.`);
-    else if(e.succulenza.sede === 'perimalleolare') frasi.push(`Succulenza perimalleolare ${lato}.`);
-    else frasi.push(`Succulenza agli AAII ${lato}.`);
+    let corpoSucc;
+    if(e.succulenza.sede === 'pretibiale') corpoSucc = `Succulenza pretibiale ${lato}`;
+    else if(e.succulenza.sede === 'perimalleolare') corpoSucc = `Succulenza perimalleolare ${lato}`;
+    else corpoSucc = `Succulenza agli AAII ${lato}`;
+
+    const andamentoSucculenza = { riduzione:'in riduzione', ripresentati:'ripresentatasi', permangono:'persistente' };
+    if(e.andamento && andamentoSucculenza[e.andamento]) corpoSucc += `, ${andamentoSucculenza[e.andamento]}`;
+
+    frasi.push(corpoSucc + '.');
   }
 
   // per ogni sede: dx/sx -> singolare ("arto inf./sup. dx/sx"), altrimenti
@@ -3723,7 +3764,7 @@ function composeEdemi(){
     let corpo = info.bilaterale ? `Edemi ${info.testo} bilateralmente` : `Edemi ${info.testo}`;
     if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
     frasi.push(corpo.trim() + '.');
-  } else if(sediInfo.length || hasQualifiche){
+  } else if(sediInfo.length || qualitaText || e.scarico || (e.andamento && !(e.succulenza && e.succulenza.attiva))){
     const sedeText = sediInfo.length ? joinIt(sediInfo.map(i => i.testo)) : '';
     const qs = qualitaText ? ' ' + qualitaText : '';
     const ss = sedeText ? ' ' + sedeText : '';
