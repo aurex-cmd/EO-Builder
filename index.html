@@ -255,7 +255,17 @@
   .admit-block-head{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:11px 13px; background:var(--panel-2); border-bottom:1px solid var(--line);
+    cursor:pointer; list-style:none;
   }
+  .admit-block:not([open]) .admit-block-head{ border-bottom:none; }
+  .admit-block-head::-webkit-details-marker{ display:none; }
+  .admit-block-head::marker{ content:''; }
+  .admit-chev{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:14px; flex-shrink:0; color:var(--ink-dim); font-size:15px;
+    transition:transform .15s ease;
+  }
+  .admit-block[open] .admit-chev{ transform:rotate(90deg); }
   .admit-block-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
@@ -914,6 +924,9 @@ function savePatients(patients){
 const RICOVERI_KEY = 'eo_builder_ricoveri_v1';
 const RICOVERI_SEQ_KEY = 'eo_builder_ricoveri_seq_v1';
 let currentRicoveroId = null;
+// id dei ricoveri con la tendina aperta (solo in memoria: all'avvio sono
+// tutti compattati, tranne quello appena generato/modificato)
+let ricoveriAperti = new Set();
 
 function nextRicoveroSeq(){
   let n = 0;
@@ -931,6 +944,17 @@ function loadRicoveri(){
   list.forEach(r => {
     if(!r.seq){ r.seq = nextRicoveroSeq(); migrato = true; }
     if(!r.campi){ r.campi = {}; migrato = true; }
+    // versione precedente: un unico campo "anamnesi" con tutto insieme.
+    // lo spostiamo in "prossima" così non si perde nulla (non è possibile
+    // risuddividerlo automaticamente nelle 4 parti separate)
+    if(r.anamnesi !== undefined && r.prossima === undefined){
+      r.prossima = r.anamnesi;
+      r.remota = r.remota || '';
+      r.farmacologica = r.farmacologica || '';
+      r.familiare = r.familiare || '';
+      delete r.anamnesi;
+      migrato = true;
+    }
   });
   if(migrato) saveRicoveri(list);
   return list;
@@ -1038,6 +1062,17 @@ function formattaAnamnesiRemota(testo){
     .join(', ');
 }
 
+// elenco farmaci incollato con spaziature/virgole incoerenti (es. "cardioASA ,
+// lanoxin,metformina ,Eliquis") -> stesso elenco con virgole pulite ("cardioASA,
+// lanoxin, metformina, Eliquis"). Accetta anche elenchi andati a capo
+function formattaElencoConVirgole(testo){
+  if(!testo) return '';
+  return testo.split(/[,\n]+/)
+    .map(v => v.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
 function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
   const cognomeUp = (cognome || '').trim().toUpperCase();
   const nomeUp = (nome || '').trim().toUpperCase();
@@ -1048,7 +1083,10 @@ function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
   return `Si accoglie in reparto ${articolo} ${cognomeUp} ${nomeUp}${etaTxt ? ', ' + etaTxt : ''}, ${ricoverataForm} dal PS con diagnosi di "${diagnosiTxt}".\nSi visita e si imposta terapia come da grafica.`;
 }
 
-function costruisciAnamnesi(f){
+// anamnesi patologica prossima: testo libero seguito, SENZA riga vuota in
+// mezzo, da "In PS ha eseguito" (deve stare subito dopo l'ultima parte del
+// testo libero, non staccato da uno spazio)
+function costruisciProssima(f){
   const righe = [];
   const esamiTxt = formattaEsamiEmatochimici(f.ematochimici);
   if(esamiTxt) righe.push(`- Esami ematochimici: ${esamiTxt}`);
@@ -1072,11 +1110,19 @@ function costruisciAnamnesi(f){
   const blocchi = [];
   if((f.prossima || '').trim()) blocchi.push(f.prossima.trim());
   if(righe.length) blocchi.push(`In PS ha eseguito:\n${righe.join('\n')}`);
-  const remotaTxt = formattaAnamnesiRemota(f.remota);
-  if(remotaTxt) blocchi.push(`Anamnesi patologica remota: ${remotaTxt}`);
-  if((f.farmacologica || '').trim()) blocchi.push(`Anamnesi farmacologica: ${f.farmacologica.trim()}`);
-  if((f.familiare || '').trim()) blocchi.push(`Anamnesi familiare e fisiologica: ${f.familiare.trim()}`);
-  return blocchi.join('\n\n');
+  return blocchi.join(' ');
+}
+
+function costruisciRemota(f){
+  return formattaAnamnesiRemota(f.remota);
+}
+
+function costruisciFarmacologica(f){
+  return formattaElencoConVirgole(f.farmacologica);
+}
+
+function costruisciFamiliare(f){
+  return (f.familiare || '').trim();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1179,15 +1225,19 @@ function generaRicovero(){
 
   const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || 'Ricovero';
   const diario = costruisciDiario(campi);
-  const anamnesi = costruisciAnamnesi(campi);
+  const prossima = costruisciProssima(campi);
+  const remota = costruisciRemota(campi);
+  const farmacologica = costruisciFarmacologica(campi);
+  const familiare = costruisciFamiliare(campi);
 
   const list = loadRicoveri();
 
   if(currentRicoveroId){
     const idx = list.findIndex(r => r.id === currentRicoveroId);
     if(idx !== -1){
-      list[idx] = { ...list[idx], campi, label, diario, anamnesi };
+      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare };
       saveRicoveri(list);
+      ricoveriAperti.add(currentRicoveroId);
       renderRicoveri();
       renderRicoveriTabs();
       showToast('Ricovero aggiornato');
@@ -1201,11 +1251,15 @@ function generaRicovero(){
     label,
     campi,
     diario,
-    anamnesi
+    prossima,
+    remota,
+    farmacologica,
+    familiare
   };
   list.push(record);
   saveRicoveri(list);
   currentRicoveroId = record.id;
+  ricoveriAperti.add(record.id);
   renderRicoveri();
   renderRicoveriTabs();
   showToast('Ricovero generato');
@@ -1289,31 +1343,54 @@ function renderRicoveri(){
   }
 
   list.forEach(rec => {
-    const block = document.createElement('div');
+    const block = document.createElement('details');
     block.className = 'admit-block';
+    block.open = ricoveriAperti.has(rec.id);
+    block.addEventListener('toggle', () => {
+      if(block.open) ricoveriAperti.add(rec.id);
+      else ricoveriAperti.delete(rec.id);
+    });
 
-    const head = document.createElement('div');
+    const head = document.createElement('summary');
     head.className = 'admit-block-head';
+
+    const titleWrap = document.createElement('div');
+    titleWrap.style.cssText = 'display:flex; align-items:center; gap:7px; min-width:0;';
+    const chev = document.createElement('span');
+    chev.className = 'admit-chev';
+    chev.textContent = '›';
     const title = document.createElement('div');
     title.className = 'admit-block-title';
     title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
+    titleWrap.appendChild(chev);
+    titleWrap.appendChild(title);
+
     const actions = document.createElement('div');
     actions.className = 'admit-block-actions';
     const editBtn = document.createElement('button');
     editBtn.className = 'admit-copy-btn';
     editBtn.textContent = 'Richiama nel form';
-    editBtn.onclick = () => caricaRicovero(rec.id);
+    editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); caricaRicovero(rec.id); };
     const delBtn = document.createElement('button');
     delBtn.className = 'admit-del-btn';
     delBtn.textContent = 'Elimina';
-    delBtn.onclick = () => eliminaRicovero(rec.id);
+    delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    head.appendChild(title);
+
+    head.appendChild(titleWrap);
     head.appendChild(actions);
     block.appendChild(head);
 
-    [['diario','Diario'], ['anamnesi','Anamnesi patologica prossima']].forEach(([campo, etichetta]) => {
+    [
+      ['diario', 'Diario'],
+      ['prossima', 'Anamnesi patologica prossima'],
+      ['remota', 'Anamnesi patologica remota'],
+      ['farmacologica', 'Anamnesi farmacologica'],
+      ['familiare', 'Anamnesi familiare e fisiologica']
+    ].forEach(([campo, etichetta]) => {
+      if(!(rec[campo] || '').trim()) return;
+
       const sub = document.createElement('div');
       sub.className = 'admit-sub';
 
@@ -1374,7 +1451,16 @@ function esportaRicoveriTxt(){
   if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
 
   const testo = list
-    .map(rec => `Ricovero ${rec.seq} · ${rec.label}\n\n${rec.diario}\n\n${rec.anamnesi}`)
+    .map(rec => {
+      const parti = [
+        rec.diario,
+        rec.prossima,
+        rec.remota && `Anamnesi patologica remota: ${rec.remota}`,
+        rec.farmacologica && `Anamnesi farmacologica: ${rec.farmacologica}`,
+        rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`
+      ].filter(Boolean);
+      return `Ricovero ${rec.seq} · ${rec.label}\n\n${parti.join('\n\n')}`;
+    })
     .join('\n\n' + '─'.repeat(40) + '\n\n');
 
   const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
