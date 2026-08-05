@@ -79,17 +79,39 @@
     cursor:pointer;
   }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; }
+  .settore-dot{
+    width:48px; height:48px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:700; font-size:15px;
+    border:2px solid var(--dc); background:var(--dc-dim); color:var(--dc);
+    cursor:pointer; user-select:none; transition:.15s;
+  }
+  .settore-dot:hover{ transform:translateY(-1px); }
+  .settore-dot.active{
+    background:var(--dc); color:var(--dc-on);
+    box-shadow:0 0 0 3px var(--dc-dim);
+  }
   .bed-tile{
     font-family:var(--font-mono); font-weight:600; font-size:13.5px;
     padding:10px 6px; border-radius:8px; min-width:52px; text-align:center;
-    border:1px solid var(--line); background:var(--panel-folder-2); color:var(--ink);
-    cursor:pointer; user-select:none; transition:.12s;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
+    cursor:pointer; user-select:none; transition:.12s; position:relative;
   }
-  .bed-tile:hover{ border-color:var(--folder); }
-  .bed-tile.active{ border-color:var(--folder); color:var(--folder); box-shadow:0 0 0 1px var(--folder); }
+  .bed-tile:hover{ border-color:var(--signal); }
+  .bed-tile.active{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
   }
+  .bed-tile-del{
+    position:absolute; top:-7px; right:-7px; width:20px; height:20px;
+    border-radius:50%; border:1px solid var(--line); background:var(--panel);
+    color:var(--ink-dim); font-size:12px; line-height:1; font-family:var(--font-body);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .12s, border-color .12s, color .12s;
+  }
+  .bed-tile-del:hover, .bed-tile-del:active{ border-color:#d9695f; color:#e2867e; }
+  .bed-tile-del.confirm{ background:#7a3b33; color:#f5d9d5; border-color:#d9695f; }
   .ecg-wrap{ height:34px; margin:8px 0 0; overflow:hidden; }
   .ecg-wrap svg{ width:100%; height:100%; display:block; }
   .ecg-line{
@@ -164,14 +186,14 @@
   }
 
   /* ---------- SCHEDE PAZIENTE (cartellina, colore/stile a parte) ---------- */
-  #wardmap-view h2 .eyebrow{ background:var(--folder); color:var(--on-folder); }
+  #wardmap-view h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
   .patient-tabs{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; }
   .patient-tab{
     font-family:var(--font-body); font-size:14.5px; font-weight:500;
     padding:11px 20px 10px; border-radius:10px 10px 0 0;
     border:1px solid var(--line); border-bottom:2px solid var(--line);
     background:var(--panel-folder-2); color:var(--ink);
-    cursor:pointer; user-select:none; transition:.12s;
+    cursor:pointer; user-select:none; transition:.12s; position:relative;
   }
   .patient-tab:hover{ border-color:var(--folder); }
   .patient-tab.active{
@@ -179,11 +201,9 @@
     color:var(--folder); font-weight:700; transform:translateY(-2px);
     box-shadow:0 -3px 8px rgba(0,0,0,.18);
   }
-  #wardmap-view .btn.primary, #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
-  #wardmap-view .btn:not(.primary), #riepilogo-view .btn:not(.primary){ background:var(--panel-folder-2); }
-  #wardmap-view .btn:not(.primary):hover, #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
-  #wardmap-view input[type=text]{ background:var(--panel-folder-2); }
-  #wardmap-view input:focus{ border-color:var(--folder) !important; }
+  #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
+  #riepilogo-view .btn:not(.primary){ background:var(--panel-folder-2); }
+  #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   .referto-block{
     margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:10px;
     background:var(--panel-folder);
@@ -364,7 +384,7 @@
 </header>
 
 <!-- MAPPA REPARTO (settori/letti) -->
-<div class="card" id="wardmap-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
+<div class="card" id="wardmap-view" style="display:none;">
   <h2>🏥 Reparto</h2>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
@@ -374,7 +394,7 @@
 
   <div class="group">
     <div class="group-label">Settore</div>
-    <div class="patient-tabs" id="settore-tabs"></div>
+    <div class="settore-dots" id="settore-tabs"></div>
   </div>
   <div class="group">
     <div class="bed-grid" id="bed-grid"></div>
@@ -389,7 +409,7 @@
   </div>
 
   <div class="group" id="altre-schede-group" style="display:none;">
-    <div class="group-label">Altre schede salvate (non a letto fisso)</div>
+    <div class="group-label">Appoggi (schede fuori settore)</div>
     <div class="patient-tabs" id="altre-schede-lista"></div>
   </div>
 </div>
@@ -595,6 +615,10 @@
       <div class="field"><label>TC °C</label><input type="number" id="temp-valore" step="0.1"></div>
       <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
+  </div>
+  <div class="group">
+    <div class="group-label">Glicemie</div>
+    <div class="chips" id="glicemie-chips"></div>
   </div>
 </div>
 
@@ -814,6 +838,7 @@ const state = {
   usaOutputManuale: false,
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+  glicemie: '',
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
@@ -1395,6 +1420,7 @@ function applyStateObject(o){
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
+  state.glicemie = o.glicemie ?? '';
   if(state.respiro.tipo === 'riferita_dispnea'){
     // "Riferita dispnea" era una voce a sé, ora è "Dispnoico" + sottoopzione
     state.respiro.tipo = 'dispnoico';
@@ -1752,6 +1778,13 @@ const WARD_MAP = {
   'Settore D': ['23.1','23.2','24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29.1']
 };
 const SETTORI = Object.keys(WARD_MAP);
+// un colore diverso per ciascun settore, usato per il pallino selettore
+const SETTORE_COLORI = {
+  'Settore A': { c:'#35d0ae', dim:'#0f3832', on:'#06231d' },
+  'Settore B': { c:'#dba94a', dim:'#3c2f14', on:'#221a08' },
+  'Settore C': { c:'#7c93f0', dim:'#1c2140', on:'#0b0e22' },
+  'Settore D': { c:'#e08cc0', dim:'#3a1f30', on:'#1f0f18' }
+};
 function bedName(n){ return 'Letto ' + n; }
 
 let wardMapOpen = false;
@@ -1808,12 +1841,16 @@ function renderHeaderBadge(){
 function renderWardMap(){
   const patients = loadPatients();
 
-  // tab dei settori
+  // pallini dei settori, un colore diverso per ciascuno
   const tabsEl = document.getElementById('settore-tabs');
   tabsEl.innerHTML = '';
   SETTORI.forEach(s => {
+    const col = SETTORE_COLORI[s] || SETTORE_COLORI[SETTORI[0]];
     const tab = document.createElement('div');
-    tab.className = 'patient-tab' + (s === settoreAttivo ? ' active' : '');
+    tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
+    tab.style.setProperty('--dc', col.c);
+    tab.style.setProperty('--dc-dim', col.dim);
+    tab.style.setProperty('--dc-on', col.on);
     tab.textContent = s.replace('Settore ', '');
     tab.title = s;
     tab.onclick = () => { settoreAttivo = s; renderWardMap(); };
@@ -1826,12 +1863,29 @@ function renderWardMap(){
   WARD_MAP[settoreAttivo].forEach(n => {
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
+    const occupato = entry && schedaHaDati(entry[1].state);
     const tile = document.createElement('div');
     tile.className = 'bed-tile'
-      + (entry && schedaHaDati(entry[1].state) ? ' occupied' : '')
+      + (occupato ? ' occupied' : '')
       + (entry && entry[0] === currentPatientId ? ' active' : '');
-    tile.textContent = n;
     tile.onclick = () => apriLetto(nome);
+
+    const numero = document.createElement('span');
+    numero.textContent = n;
+    tile.appendChild(numero);
+
+    // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
+    // prima aprire: doppio click di conferma (come "Elimina scheda attiva")
+    if(occupato){
+      const delBtn = document.createElement('div');
+      const armato = eliminaLettoArmatoId === entry[0];
+      delBtn.className = 'bed-tile-del' + (armato ? ' confirm' : '');
+      delBtn.textContent = armato ? '✓' : '×';
+      delBtn.title = armato ? 'Clicca di nuovo per confermare' : 'Elimina questa scheda';
+      delBtn.onclick = (e) => { e.stopPropagation(); eliminaSchedaDaLetto(entry[0]); };
+      tile.appendChild(delBtn);
+    }
+
     gridEl.appendChild(tile);
   });
 
@@ -1861,6 +1915,15 @@ function renderWardMap(){
         tab.className = 'patient-tab' + (id === currentPatientId ? ' active' : '');
         tab.textContent = p.name;
         tab.onclick = () => selezionaPaziente(id);
+
+        const armato = eliminaLettoArmatoId === id;
+        const delBtn = document.createElement('div');
+        delBtn.className = 'bed-tile-del' + (armato ? ' confirm' : '');
+        delBtn.textContent = armato ? '✓' : '×';
+        delBtn.title = armato ? 'Clicca di nuovo per confermare' : 'Elimina questa scheda';
+        delBtn.onclick = (e) => { e.stopPropagation(); eliminaSchedaDaLetto(id); };
+        tab.appendChild(delBtn);
+
         altreList.appendChild(tab);
       });
   } else {
@@ -1918,6 +1981,36 @@ function chiudiPaziente(){
   resetFormToDefaults();
   refreshUI();
   renderWardMap();
+}
+
+// elimina la scheda direttamente dal riquadro del letto in Reparto, senza
+// doverla prima aprire. Conferma a due click sul pulsantino stesso (stessa
+// logica di eliminaPazienteAttivo), niente popup nativi.
+let eliminaLettoArmatoId = null;
+let eliminaLettoTimer = null;
+function eliminaSchedaDaLetto(id){
+  if(eliminaLettoArmatoId !== id){
+    eliminaLettoArmatoId = id;
+    clearTimeout(eliminaLettoTimer);
+    eliminaLettoTimer = setTimeout(() => {
+      eliminaLettoArmatoId = null;
+      renderWardMap();
+    }, 2500);
+    renderWardMap();
+    return;
+  }
+  clearTimeout(eliminaLettoTimer);
+  eliminaLettoArmatoId = null;
+  const patients = loadPatients();
+  const nome = patients[id]?.name || '';
+  delete patients[id];
+  savePatients(patients);
+  if(id === currentPatientId){
+    chiudiPaziente(); // già richiama renderWardMap()
+  } else {
+    renderWardMap();
+  }
+  showToast('Scheda "' + nome + '" eliminata');
 }
 
 // elimina solo la scheda attiva (per eliminarne un'altra, aprila prima).
@@ -2196,17 +2289,54 @@ function costruisciSedeToracica(inner, locSet, extraOptions){
       update();
     });
 
-  // emitorace e "su TAP" vanno sulla loro riga, sotto zona/lato ma sopra le extra
+  // emitorace e "su TAP" vanno sulla loro riga, sotto zona/lato ma sopra le extra.
+  // "Emitorace" è un chip unico: cliccandolo si attiva (bilaterale di default,
+  // cioè locSet contiene sia emitorace_dx sia emitorace_sx); una tendina interna
+  // permette di restringere a un solo lato (dx o sx)
   const spacer1 = document.createElement('div');
   spacer1.style.cssText = 'flex-basis:100%; height:0;';
   inner.appendChild(spacer1);
-  renderGruppoChipInline(inner, null, [...OPT.toraceEmitorace, {value:'su_tap', label:'su TAP'}],
-    v => locSet.has(v),
-    (v, active) => {
-      if(!active) [...zonaValori, ...latoValori].forEach(z => locSet.delete(z));
-      active ? locSet.delete(v) : locSet.add(v);
-      update();
-    });
+
+  const rigaGlobali = document.createElement('div');
+  rigaGlobali.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; align-items:flex-start;';
+  inner.appendChild(rigaGlobali);
+
+  const emiActive = locSet.has('emitorace_dx') || locSet.has('emitorace_sx');
+  const emiOnClick = () => {
+    if(emiActive){
+      locSet.delete('emitorace_dx'); locSet.delete('emitorace_sx');
+    } else {
+      [...zonaValori, ...latoValori].forEach(z => locSet.delete(z));
+      locSet.add('emitorace_dx'); locSet.add('emitorace_sx');
+    }
+    update();
+  };
+  const emiBuilder = emiActive ? (inner2) => {
+    renderGruppoChipInline(inner2, 'Lato (vuoto = bilaterale)', OPT.toraceLato,
+      v => (v === 'dx' ? (locSet.has('emitorace_dx') && !locSet.has('emitorace_sx')) : (locSet.has('emitorace_sx') && !locSet.has('emitorace_dx'))),
+      (v, vAttivo) => {
+        if(vAttivo){
+          locSet.add('emitorace_dx'); locSet.add('emitorace_sx'); // torna bilaterale
+        } else {
+          locSet.delete('emitorace_dx'); locSet.delete('emitorace_sx');
+          locSet.add(v === 'dx' ? 'emitorace_dx' : 'emitorace_sx');
+        }
+        update();
+      });
+  } : null;
+  rigaGlobali.appendChild(creaRigaConTendina('Emitorace', emiActive, emiOnClick, emiBuilder));
+
+  const suTapAttivo = locSet.has('su_tap');
+  const suTapChip = document.createElement('div');
+  suTapChip.className = 'chip' + (suTapAttivo ? ' active' : '');
+  suTapChip.style.cssText = 'font-size:12px; padding:5px 10px;';
+  suTapChip.textContent = 'su TAP';
+  suTapChip.onclick = () => {
+    if(!suTapAttivo) [...zonaValori, ...latoValori].forEach(z => locSet.delete(z));
+    suTapAttivo ? locSet.delete('su_tap') : locSet.add('su_tap');
+    update();
+  };
+  rigaGlobali.appendChild(suTapChip);
 
   const spacer2 = document.createElement('div');
   spacer2.style.cssText = 'flex-basis:100%; height:0;';
@@ -2711,7 +2841,10 @@ function renderCuorePause(){
   b2.textContent = 'Pause mal valutabili';
   b2.onclick = () => {
     state.cuore.pauseMalValutabili = !active2;
-    if(state.cuore.pauseMalValutabili) state.cuore.pauseLibere = false;
+    if(state.cuore.pauseMalValutabili){
+      state.cuore.pauseLibere = false;
+      state.cuore.soffio = 'nessuno'; // incompatibile con un soffio (pause non valutabili)
+    }
     update();
   };
   el.appendChild(b2);
@@ -3136,6 +3269,10 @@ const OPT = {
     {value:'apiretico', m:'Apiretico', f:'Apiretica'},
     {value:'febbrile', label:'Febbrile'}
   ],
+  glicemie: [
+    {value:'buon_controllo', label:'Glicemie in buon controllo'},
+    {value:'non_buon_controllo', label:'Glicemie non in buon controllo'}
+  ],
   cuoreRitmo: [
     {value:'ritmici', label:'Ritmici'},
     {value:'aritmici', label:'Aritmici'}
@@ -3176,10 +3313,6 @@ const OPT = {
   toraceLato: [
     {value:'dx', label:'Dx'},
     {value:'sx', label:'Sx'}
-  ],
-  toraceEmitorace: [
-    {value:'emitorace_dx', label:'Emitorace dx'},
-    {value:'emitorace_sx', label:'Emitorace sx'}
   ],
   toraceMvExtra: [],
   toraceSottotipoSuono: [
@@ -3401,6 +3534,7 @@ function renderAll(){
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
   document.getElementById('respiro-o2-dettagli').style.display = state.respiro.o2 !== 'AA' ? '' : 'none';
   renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
+  renderSingle('glicemie-chips', OPT.glicemie, ()=>state.glicemie, v=>state.glicemie=v);
 
   renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
     state.cuore.ritmo = v;
@@ -3410,7 +3544,10 @@ function renderAll(){
   renderCuoreExtrasistoli();
   renderCuoreFreq();
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
-  renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>state.cuore.soffio=v);
+  renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>{
+    state.cuore.soffio = v;
+    if(v !== 'nessuno') state.cuore.pauseMalValutabili = false; // incompatibile con un soffio descritto
+  });
   renderCuorePause();
   document.getElementById('cuore-soffio-dettagli').style.display = state.cuore.soffio !== 'nessuno' ? '' : 'none';
   renderSingle('cuore-focolaio', OPT.cuoreFocolaio, ()=>state.cuore.focolaio, v=>state.cuore.focolaio=v);
@@ -3973,10 +4110,16 @@ function composeNeuro(){
    ============================================================ */
 // frase completa dell'EO a partire dal contenuto corrente di `state`
 // (usata sia per il referto live sia per ricostruire i referti salvati nel riepilogo)
+function composeGlicemie(){
+  const opt = OPT.glicemie.find(o => o.value === state.glicemie);
+  return opt ? opt.label + '.' : '';
+}
+
 function composeReferto(){
   return [
     composeCoscienza(),
     composeRespiro(),
+    composeGlicemie(),
     composeCuore(),
     composeToraceClean(),
     composeAddome(),
