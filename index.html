@@ -616,10 +616,6 @@
       <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
   </div>
-  <div class="group">
-    <div class="group-label">Glicemie</div>
-    <div class="chips" id="glicemie-chips"></div>
-  </div>
 </div>
 
 <!-- 3. CUORE -->
@@ -838,7 +834,6 @@ const state = {
   usaOutputManuale: false,
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
-  glicemie: '',
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
@@ -1420,7 +1415,6 @@ function applyStateObject(o){
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
-  state.glicemie = o.glicemie ?? '';
   if(state.respiro.tipo === 'riferita_dispnea'){
     // "Riferita dispnea" era una voce a sé, ora è "Dispnoico" + sottoopzione
     state.respiro.tipo = 'dispnoico';
@@ -3269,10 +3263,6 @@ const OPT = {
     {value:'apiretico', m:'Apiretico', f:'Apiretica'},
     {value:'febbrile', label:'Febbrile'}
   ],
-  glicemie: [
-    {value:'buon_controllo', label:'Glicemie in buon controllo'},
-    {value:'non_buon_controllo', label:'Glicemie non in buon controllo'}
-  ],
   cuoreRitmo: [
     {value:'ritmici', label:'Ritmici'},
     {value:'aritmici', label:'Aritmici'}
@@ -3534,7 +3524,6 @@ function renderAll(){
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
   document.getElementById('respiro-o2-dettagli').style.display = state.respiro.o2 !== 'AA' ? '' : 'none';
   renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
-  renderSingle('glicemie-chips', OPT.glicemie, ()=>state.glicemie, v=>state.glicemie=v);
 
   renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
     state.cuore.ritmo = v;
@@ -4110,16 +4099,10 @@ function composeNeuro(){
    ============================================================ */
 // frase completa dell'EO a partire dal contenuto corrente di `state`
 // (usata sia per il referto live sia per ricostruire i referti salvati nel riepilogo)
-function composeGlicemie(){
-  const opt = OPT.glicemie.find(o => o.value === state.glicemie);
-  return opt ? opt.label + '.' : '';
-}
-
 function composeReferto(){
   return [
     composeCoscienza(),
     composeRespiro(),
-    composeGlicemie(),
     composeCuore(),
     composeToraceClean(),
     composeAddome(),
