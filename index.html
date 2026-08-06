@@ -134,10 +134,15 @@
     border:1px solid var(--line); border-radius:14px; padding:16px 17px 17px;
   }
   .card h2{
-    display:flex; align-items:baseline; gap:9px;
+    display:flex; align-items:center; gap:9px;
     font-family:var(--font-display);
     font-size:18px; letter-spacing:.02em;
     color:var(--ink); margin:0 0 13px; font-weight:600;
+  }
+  .hicon{
+    width:20px; height:20px; flex-shrink:0;
+    fill:none; stroke:var(--signal); stroke-width:1.8;
+    stroke-linecap:round; stroke-linejoin:round;
   }
   .card h2 .eyebrow{
     font-family:var(--font-mono); font-size:11px; font-weight:500;
@@ -395,7 +400,7 @@
 
 <!-- MAPPA REPARTO (settori/letti) -->
 <div class="card" id="wardmap-view" style="display:none;">
-  <h2>🏥 Reparto</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
@@ -426,7 +431,7 @@
 
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
-  <h2>📋 Diari</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="1.5"/><rect x="9" y="2.3" width="6" height="3" rx="1"/><line x1="9" y1="10.5" x2="15" y2="10.5"/><line x1="9" y1="13.8" x2="15" y2="13.8"/><line x1="9" y1="17.1" x2="13" y2="17.1"/></svg> Diari</h2>
   <div class="group">
     <div class="inline-fields">
       <button class="btn primary" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
@@ -438,7 +443,7 @@
 
 <!-- RICOVERI -->
 <div class="card" id="ricoveri-view" style="display:none;">
-  <h2>🏨 Ricoveri</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricoveri</h2>
 
   <div class="group">
     <div class="inline-fields">
@@ -551,7 +556,7 @@
 
 <!-- 0. SESSO -->
 <div class="card" id="card-sesso">
-  <h2>🧑 Paziente</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20c0-3.7 3-6.7 6.8-6.7s6.8 3 6.8 6.7"/></svg> Paziente</h2>
   <div class="group">
     <div class="group-label">Sesso (adatta gli aggettivi nel referto)</div>
     <div class="chips" id="sesso-chips"></div>
@@ -560,7 +565,7 @@
 
 <!-- 1. COSCIENZA -->
 <div class="card" id="card-coscienza">
-  <h2>💭 Stato di coscienza</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12S6.5 5.5 12 5.5 21.5 12 21.5 12 17.5 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/></svg> Stato di coscienza</h2>
   <div class="group">
     <div class="group-label">Stato</div>
     <div class="finding-list" id="coscienza-primary"></div>
@@ -594,7 +599,7 @@
 
 <!-- 2. RESPIRO / PARAMETRI -->
 <div class="card" id="card-respiro">
-  <h2>💨 Respiro e parametri</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12h4l2-6.5 4 13 2-6.5h7"/></svg> Respiro e parametri</h2>
   <div class="group">
     <div class="group-label">Tipo respiro</div>
     <div class="finding-list" id="respiro-tipo"></div>
@@ -630,7 +635,7 @@
 
 <!-- 3. CUORE -->
 <div class="card" id="card-cuore">
-  <h2>❤️ Cuore</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20.3s-7.8-4.8-10-9.5C.4 7.2 2.4 3.5 6.3 3.5c2.1 0 3.7 1.2 4.8 2.8 1.1-1.6 2.7-2.8 4.8-2.8 3.9 0 5.9 3.7 4.3 7.3-2.2 4.7-10 9.5-10 9.5z"/></svg> Cuore</h2>
   <div class="group">
     <div class="group-label">Ritmo</div>
     <div class="chips" id="cuore-ritmo"></div>
@@ -660,7 +665,7 @@
 
 <!-- 4. TORACE -->
 <div class="card" id="card-torace">
-  <h2>🫁 Torace</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3v8.5"/><path d="M12 11.5c-.8-3-2.8-3.2-4-2.1-2 1.7-2.6 5.3-2 8.4.4 2 2.2 2.4 3.1 1 .7-1.1.9-2.9.9-4.4"/><path d="M12 11.5c.8-3 2.8-3.2 4-2.1 2 1.7 2.6 5.3 2 8.4-.4 2-2.2 2.4-3.1 1-.7-1.1-.9-2.9-.9-4.4"/></svg> Torace</h2>
   <div class="group">
     <div class="group-label">Murmure vescicolare</div>
     <div class="finding-list" id="torace-mv"></div>
@@ -676,7 +681,7 @@
 
 <!-- 5. ADDOME -->
 <div class="card" id="card-addome">
-  <h2>🫃 Addome</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M8.3 13.2c1-1.6 2.1-1.6 3.1 0s2.1 1.6 3.1 0"/><path d="M12 5.5v2"/></svg> Addome</h2>
   <div class="group">
     <div class="group-label">Forma</div>
     <div class="chips" id="addome-forma"></div>
@@ -701,7 +706,7 @@
 
 <!-- 6. EDEMI -->
 <div class="card" id="card-edemi">
-  <h2>💧 Edemi</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> Edemi</h2>
   <div class="group">
     <div class="group-label">Assenti (esclude il resto)</div>
     <div class="chips" id="edemi-base"></div>
@@ -729,7 +734,7 @@
 
 <!-- 7. DIURESI -->
 <div class="card" id="card-diuresi">
-  <h2>🚰 Diuresi</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> Diuresi</h2>
   <div class="group">
     <div class="group-label">Modalità</div>
     <div class="chips" id="diuresi-modalita"></div>
@@ -748,7 +753,7 @@
 
 <!-- 8. CUTE / NOTE -->
 <div class="card" id="card-cute">
-  <h2>🩹 Cute, cicatrici, note finali</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> Cute, cicatrici, note finali</h2>
   <div class="group">
     <div class="finding-list" id="cute-reperti"></div>
   </div>
@@ -759,7 +764,7 @@
 
 <!-- 9. NEUROLOGICO -->
 <div class="card" id="card-neuro">
-  <h2>🧠 Neurologico</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M9.2 4.2a2.8 2.8 0 00-2.8 2.8 2.8 2.8 0 00-1.4 5.2A2.8 2.8 0 007.5 16a2.8 2.8 0 002.7 2.6V4.2z"/><path d="M14.8 4.2a2.8 2.8 0 012.8 2.8 2.8 2.8 0 011.4 5.2A2.8 2.8 0 0116.5 16a2.8 2.8 0 01-2.7 2.6V4.2z"/></svg> Neurologico</h2>
   <div class="group">
     <div class="group-label">Generale</div>
     <div class="chips" id="neuro-generale"></div>
@@ -796,7 +801,7 @@
 
 <!-- OUTPUT -->
 <div class="card" id="output-card">
-  <h2>📄 Esame obiettivo</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg> Esame obiettivo</h2>
   <textarea id="output"></textarea>
   <div class="row">
     <button class="btn primary" onclick="copyOutput()">Copia referto</button>
