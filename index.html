@@ -39,6 +39,10 @@
     --panel-folder:#241d10;
     --panel-folder-2:#2f2716;
 
+    --violet:#b18cf0;
+    --violet-dim:#2c2140;
+    --on-violet:#1a1330;
+
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
@@ -102,6 +106,9 @@
   .bed-tile.active{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
+  }
+  .bed-tile.occupied-old{
+    background:var(--violet-dim); border-color:var(--violet); color:var(--violet); font-weight:700;
   }
   .bed-tile-del{
     position:absolute; top:-7px; right:-7px; width:20px; height:20px;
@@ -704,7 +711,18 @@
   </div>
 </div>
 
-<!-- 6. EDEMI -->
+<!-- 6. CUTE / ERNIE -->
+<div class="card" id="card-cute">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> Cute, ernie, cicatrici</h2>
+  <div class="group">
+    <div class="finding-list" id="cute-reperti"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
+  </div>
+</div>
+
+<!-- 7. EDEMI -->
 <div class="card" id="card-edemi">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> Edemi</h2>
   <div class="group">
@@ -732,7 +750,7 @@
   </div>
 </div>
 
-<!-- 7. DIURESI -->
+<!-- 8. DIURESI -->
 <div class="card" id="card-diuresi">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> Diuresi</h2>
   <div class="group">
@@ -748,17 +766,6 @@
       <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
       <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
     </div>
-  </div>
-</div>
-
-<!-- 8. CUTE / NOTE -->
-<div class="card" id="card-cute">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> Cute, cicatrici, note finali</h2>
-  <div class="group">
-    <div class="finding-list" id="cute-reperti"></div>
-  </div>
-  <div class="group">
-    <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
   </div>
 </div>
 
@@ -1113,7 +1120,12 @@ function costruisciProssima(f){
   });
 
   const blocchi = [];
-  if((f.prossima || '').trim()) blocchi.push(f.prossima.trim());
+  const prossimaTxt = (f.prossima || '').trim();
+  if(prossimaTxt){
+    // se il medico non ha già messo un punto finale, lo aggiungiamo noi
+    // prima di far partire "In PS ha eseguito"
+    blocchi.push(/[.!?]$/.test(prossimaTxt) ? prossimaTxt : prossimaTxt + '.');
+  }
   if(righe.length) blocchi.push(`In PS ha eseguito:\n${righe.join('\n')}`);
   return blocchi.join(' ');
 }
@@ -1471,9 +1483,16 @@ function esportaRicoveriTxt(){
   const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const oggi = new Date().toISOString().slice(0,10);
+  let nomeFile;
+  if(list.length === 1){
+    // un solo ricovero: il file si chiama come il paziente (es. "ROSSI MARIA.txt")
+    nomeFile = (list[0].label || 'Ricovero').replace(/[\\/:*?"<>|]/g, '').trim() + '.txt';
+  } else {
+    const oggi = new Date().toISOString().slice(0,10);
+    nomeFile = 'ricoveri_' + oggi + '.txt';
+  }
   a.href = url;
-  a.download = 'ricoveri_' + oggi + '.txt';
+  a.download = nomeFile;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1949,9 +1968,10 @@ function renderWardMap(){
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
+    const diOggi = occupato && isOggi(entry[1].savedAt);
     const tile = document.createElement('div');
     tile.className = 'bed-tile'
-      + (occupato ? ' occupied' : '')
+      + (occupato ? (diOggi ? ' occupied' : ' occupied-old') : '')
       + (entry && entry[0] === currentPatientId ? ' active' : '');
     tile.onclick = () => apriLetto(nome);
 
@@ -2171,6 +2191,18 @@ function formattaDataOra(timestamp){
   } catch(e){
     return '';
   }
+}
+
+// vero se il timestamp cade nel giorno di oggi (stessa data di calendario,
+// non solo entro 24 ore): usato per capire se un diario in Reparto va
+// evidenziato in verde (compilato/aggiornato oggi) o in viola (giorni prima)
+function isOggi(timestamp){
+  if(!timestamp) return false;
+  const d = new Date(timestamp);
+  const oggi = new Date();
+  return d.getFullYear() === oggi.getFullYear() &&
+    d.getMonth() === oggi.getMonth() &&
+    d.getDate() === oggi.getDate();
 }
 
 function renderRiepilogo(){
@@ -3862,7 +3894,23 @@ function composeAddome(){
   // SENZA congiunzione tra le due parti: "in ipocondrio destro alla palpazione profonda"
   function comporreDoloreLoc(locSet){
     if(!locSet) return '';
-    const quadranti = OPT.addomeDoloreLoc.filter(o => locSet.has(o.value)).map(o => o.value);
+    let quadranti = OPT.addomeDoloreLoc.filter(o => locSet.has(o.value)).map(o => o.value);
+
+    // "fianco" e "fossa iliaca" dello STESSO lato si accorpano: il lato va
+    // menzionato una sola volta, alla fine ("al fianco e in fossa iliaca sinistra"
+    // invece di "al fianco sinistro e in fossa iliaca sinistra")
+    const coppieStessoLato = [
+      { fianco:'al fianco destro', fossa:'in fossa iliaca destra', unito:'al fianco e in fossa iliaca destra' },
+      { fianco:'al fianco sinistro', fossa:'in fossa iliaca sinistra', unito:'al fianco e in fossa iliaca sinistra' }
+    ];
+    coppieStessoLato.forEach(({fianco, fossa, unito}) => {
+      if(quadranti.includes(fianco) && quadranti.includes(fossa)){
+        const idx = quadranti.indexOf(fianco);
+        quadranti = quadranti.filter(v => v !== fianco && v !== fossa);
+        quadranti.splice(idx, 0, unito);
+      }
+    });
+
     const palpOpt = OPT.addomePalpazione.find(o => locSet.has(o.value));
     const sedeText = quadranti.length ? joinIt(quadranti) : '';
     const palpText = palpOpt ? palpOpt.value : '';
@@ -4089,10 +4137,14 @@ function fraseErniaTipo(tipoValue){
   return '';
 }
 
-function composeCute(){
+// tutto quello che riguarda cute/ernie/cicatrici, TRANNE le discromie da
+// insuff. venosa: quelle vanno scritte dopo gli edemi (vedi composeDiscromieVenosa),
+// il resto va scritto subito dopo l'addome (vedi composeReferto)
+function composeCuteSenzaDiscromie(){
   const c = state.cute;
   const frasi = [];
   OPT.cuteReperti.forEach(opt => {
+    if(opt.value === 'discromie_venosa') return;
     if(opt.customDrawer === 'ernia'){
       if(c.reperti.has(opt.value)){
         c.ernieTipi.forEach(tv => {
@@ -4122,6 +4174,15 @@ function composeCute(){
   if(frasi.length) all.push(cap(joinIt(frasi)));
   if(note) all.push(cap(note));
   return all.length ? all.join('. ') + '.' : '';
+}
+
+// discromie da insufficienza venosa: frase a sé, dopo gli edemi
+function composeDiscromieVenosa(){
+  const c = state.cute;
+  if(!c.reperti.has('discromie_venosa')) return '';
+  const sede = c.sedePerTipo['discromie_venosa'];
+  const f = fraseCute('discromie_venosa', sede, null);
+  return f ? cap(f) + '.' : '';
 }
 
 // combina arto superiore/inferiore/faciale nei termini clinici standard
@@ -4197,9 +4258,10 @@ function composeReferto(){
     composeCuore(),
     composeToraceClean(),
     composeAddome(),
+    composeCuteSenzaDiscromie(),
     composeEdemi(),
+    composeDiscromieVenosa(),
     composeDiuresi(),
-    composeCute(),
     composeNeuro()
   ].filter(Boolean).join(' ');
 }
