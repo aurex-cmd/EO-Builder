@@ -23,6 +23,7 @@
 
     --panel:#12181f;
     --panel-2:#1a222b;
+    --panel-3:#212b38;
     --line:#242f3a;
     --line-soft:#1c252e;
     --ink:#eef2f5;
@@ -67,21 +68,28 @@
     font-weight:700; letter-spacing:.01em; color:var(--page-ink);
   }
   header .sub{ font-size:12px; color:var(--page-ink-dim); font-family:var(--font-mono); }
-  .header-nav{ display:flex; align-items:center; gap:8px; }
+  .header-nav{ display:flex; align-items:center; gap:9px; }
   .topnav-btn{
-    font-family:var(--font-body); font-weight:600; font-size:13px;
-    padding:8px 15px; border-radius:8px; border:1px solid var(--folder);
+    font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
+    font-weight:600; font-size:13.5px; letter-spacing:-0.01em;
+    padding:8px 17px; border-radius:999px; border:none;
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
+    box-shadow:0 1px 2px rgba(0,0,0,.2);
+    transition:transform .12s ease, background .15s ease, opacity .15s ease;
   }
   .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
-  .topnav-btn.admit{ border-color:var(--signal); background:var(--signal-dim); color:var(--signal); }
+  .topnav-btn:active{ transform:scale(.93); opacity:.85; }
+  .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
   .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
   .active-bed-badge{
-    font-family:var(--font-mono); font-size:12px; font-weight:600;
-    padding:6px 11px; border-radius:7px;
-    background:var(--folder-dim); color:var(--folder); border:1px solid var(--folder);
-    cursor:pointer;
+    font-family:-apple-system, BlinkMacSystemFont, var(--font-mono);
+    font-size:12.5px; font-weight:600; letter-spacing:-0.01em;
+    padding:7px 15px; border-radius:999px; border:none;
+    background:var(--folder-dim); color:var(--folder);
+    box-shadow:0 1px 2px rgba(0,0,0,.2);
+    cursor:pointer; transition:transform .12s ease, opacity .15s ease;
   }
+  .active-bed-badge:active{ transform:scale(.93); opacity:.85; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; }
   .settore-dot{
@@ -252,7 +260,7 @@
     font-size:13px; line-height:1.55;
   }
   #ricoveri-view textarea:focus{ border-color:var(--signal); }
-  .admit-form-card{ border-color:var(--line); background:var(--panel); }
+  .admit-form-card{ border-color:var(--line); background:var(--panel-3); }
   .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
   .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
   .admit-field{ margin-bottom:12px; }
@@ -265,13 +273,14 @@
   }
   .admit-block:last-child{ margin-bottom:0; }
   .admit-block-head{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    display:flex; flex-direction:column; gap:10px;
     padding:11px 13px; background:var(--panel-2); border-bottom:1px solid var(--line);
     cursor:pointer; list-style:none;
   }
   .admit-block:not([open]) .admit-block-head{ border-bottom:none; }
   .admit-block-head::-webkit-details-marker{ display:none; }
   .admit-block-head::marker{ content:''; }
+  .admit-block-title-row{ display:flex; align-items:center; gap:7px; min-width:0; }
   .admit-chev{
     display:inline-flex; align-items:center; justify-content:center;
     width:14px; flex-shrink:0; color:var(--ink-dim); font-size:15px;
@@ -281,7 +290,7 @@
   .admit-block-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
-  .admit-block-actions{ display:flex; gap:6px; }
+  .admit-block-actions{ display:flex; flex-wrap:wrap; gap:6px; }
   .admit-del-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
     padding:5px 12px; border-radius:7px; border:1px solid #7a3b33; color:#e2867e;
@@ -328,6 +337,17 @@
     background:transparent; color:var(--signal); cursor:pointer;
   }
   .admit-add-btn:hover{ border-color:var(--signal); border-style:solid; }
+  .admit-altri-radio{
+    margin-top:10px; border:1px dashed var(--line); border-radius:9px; padding:2px 11px;
+  }
+  .admit-altri-radio[open]{ padding-bottom:11px; }
+  .admit-altri-radio-summary{
+    padding:9px 0; font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    color:var(--signal); cursor:pointer; list-style:none;
+  }
+  .admit-altri-radio-summary::-webkit-details-marker{ display:none; }
+  .admit-altri-radio-summary::before{ content:'+ '; }
+  .admit-altri-radio[open] .admit-altri-radio-summary::before{ content:'– '; }
   #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
   #elimina-paziente-btn:hover{ border-color:#d9695f; }
   .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
@@ -454,7 +474,7 @@
 
   <div class="group">
     <div class="inline-fields">
-      <button class="btn primary" onclick="esportaRicoveriTxt()">Esporta (.txt)</button>
+      <button class="btn primary" onclick="generaTutteLeConsegneDocx()">Genera tutte le consegne (.docx)</button>
       <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
     </div>
   </div>
@@ -488,11 +508,11 @@
 
     <div class="admit-grid">
       <div class="admit-field">
-        <div class="field-label">Letto (facoltativo)</div>
+        <div class="field-label">Letto</div>
         <input type="text" id="admit-letto" placeholder="es. 4.1">
       </div>
       <div class="admit-field">
-        <div class="field-label">Età (anni)</div>
+        <div class="field-label">Età (in anni)</div>
         <input type="number" id="admit-eta" placeholder="es. 84">
       </div>
     </div>
@@ -503,45 +523,53 @@
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Anamnesi patologica prossima (testo libero)</div>
+      <div class="field-label">Problemi attivi</div>
+      <textarea id="admit-problemi" placeholder="Polmonite dx: ceftriaxone ev&#10;IVU: CV"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Anamnesi patologica prossima</div>
       <textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea>
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Esami ematochimici (elenco separato da virgole, es. Hb 90, Gb 8.4, N 7.08, Na 127, K 4.4, creatinina 1.28, PCR 38…)</div>
+      <div class="field-label">Esami ematochimici</div>
       <textarea id="admit-ematochimici" placeholder="Hb 90, Gb 8.4, N 7.08, Na 127, K 4.4, creatinina 1.28, PCR 38, TnI 8, procalcitonina 2, bil tot 2, bil diretta 0.5, AST 12, ALT 3, GGT 25"></textarea>
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Esami strumentali (lascia vuoto quello che non è stato eseguito)</div>
-      <div class="admit-grid">
-        <div>
-          <div class="field-label">Rx torace</div>
-          <textarea id="admit-rxtorace" placeholder="Referto…"></textarea>
-        </div>
-        <div>
-          <div class="field-label">Rx addome</div>
-          <textarea id="admit-rxaddome" placeholder="Referto…"></textarea>
-        </div>
-        <div>
-          <div class="field-label">TC addome</div>
-          <textarea id="admit-tcaddome" placeholder="Referto…"></textarea>
-        </div>
-        <div>
-          <div class="field-label">TC torace</div>
-          <textarea id="admit-tctorace" placeholder="Referto…"></textarea>
-        </div>
-        <div>
-          <div class="field-label">TC cerebrale</div>
-          <textarea id="admit-tccerebrale" placeholder="Referto…"></textarea>
-        </div>
+      <div class="field-label">Esami strumentali</div>
+      <div class="admit-field">
+        <div class="field-label">Rx torace</div>
+        <textarea id="admit-rxtorace" placeholder="Referto…"></textarea>
       </div>
+      <details class="admit-altri-radio">
+        <summary class="admit-altri-radio-summary">Altri esami radiologici (Rx addome, TC addome/torace/cerebrale — facoltativi)</summary>
+        <div class="admit-grid" style="margin-top:10px;">
+          <div>
+            <div class="field-label">Rx addome</div>
+            <textarea id="admit-rxaddome" placeholder="Referto…"></textarea>
+          </div>
+          <div>
+            <div class="field-label">TC addome</div>
+            <textarea id="admit-tcaddome" placeholder="Referto…"></textarea>
+          </div>
+          <div>
+            <div class="field-label">TC torace</div>
+            <textarea id="admit-tctorace" placeholder="Referto…"></textarea>
+          </div>
+          <div>
+            <div class="field-label">TC cerebrale</div>
+            <textarea id="admit-tccerebrale" placeholder="Referto…"></textarea>
+          </div>
+        </div>
+      </details>
       <div id="admit-altri-esami"></div>
       <button type="button" class="admit-add-btn" onclick="aggiungiAltroEsame()">+ Aggiungi esame (es. ECG)</button>
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Anamnesi patologica remota (separa le patologie con "-" o vai a capo)</div>
+      <div class="field-label">Anamnesi patologica remota</div>
       <textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia"></textarea>
     </div>
 
@@ -1198,6 +1226,7 @@ function raccogliCampiForm(){
     letto: document.getElementById('admit-letto').value,
     eta: document.getElementById('admit-eta').value,
     diagnosi: document.getElementById('admit-diagnosi').value,
+    problemi: document.getElementById('admit-problemi').value,
     prossima: document.getElementById('admit-prossima').value,
     ematochimici: document.getElementById('admit-ematochimici').value,
     rxtorace: document.getElementById('admit-rxtorace').value,
@@ -1216,12 +1245,14 @@ function raccogliCampiForm(){
 }
 
 function svuotaFormRicovero(){
-  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-prossima',
+  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-problemi','admit-prossima',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('admit-altri-esami').innerHTML = '';
+  const dettagliRadioReset = document.querySelector('.admit-altri-radio');
+  if(dettagliRadioReset) dettagliRadioReset.open = false;
   const chipsEl = document.getElementById('admit-sesso-chips');
   if(chipsEl){
     chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -1302,6 +1333,7 @@ function caricaRicovero(id){
   document.getElementById('admit-letto').value = c.letto || '';
   document.getElementById('admit-eta').value = c.eta || '';
   document.getElementById('admit-diagnosi').value = c.diagnosi || '';
+  document.getElementById('admit-problemi').value = c.problemi || '';
   document.getElementById('admit-prossima').value = c.prossima || '';
   document.getElementById('admit-ematochimici').value = c.ematochimici || '';
   document.getElementById('admit-rxtorace').value = c.rxtorace || '';
@@ -1309,6 +1341,8 @@ function caricaRicovero(id){
   document.getElementById('admit-tcaddome').value = c.tcaddome || '';
   document.getElementById('admit-tctorace').value = c.tctorace || '';
   document.getElementById('admit-tccerebrale').value = c.tccerebrale || '';
+  const dettagliRadio = document.querySelector('.admit-altri-radio');
+  if(dettagliRadio) dettagliRadio.open = !!(c.rxaddome || c.tcaddome || c.tctorace || c.tccerebrale);
   document.getElementById('admit-altri-esami').innerHTML = '';
   (c.altriEsami || []).forEach(es => aggiungiAltroEsame(es.nome, es.testo));
   document.getElementById('admit-remota').value = c.remota || '';
@@ -1379,7 +1413,7 @@ function renderRicoveri(){
     head.className = 'admit-block-head';
 
     const titleWrap = document.createElement('div');
-    titleWrap.style.cssText = 'display:flex; align-items:center; gap:7px; min-width:0;';
+    titleWrap.className = 'admit-block-title-row';
     const chev = document.createElement('span');
     chev.className = 'admit-chev';
     chev.textContent = '›';
@@ -1391,20 +1425,25 @@ function renderRicoveri(){
 
     const actions = document.createElement('div');
     actions.className = 'admit-block-actions';
-    const consegnaBtn = document.createElement('button');
-    consegnaBtn.className = 'admit-copy-btn';
-    consegnaBtn.textContent = 'Genera consegna';
-    consegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); generaConsegnaDocx(rec); };
+    const copiaConsegnaBtn = document.createElement('button');
+    copiaConsegnaBtn.className = 'admit-copy-btn';
+    copiaConsegnaBtn.textContent = 'Copia consegna';
+    copiaConsegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); copiaConsegna(rec); };
     const editBtn = document.createElement('button');
     editBtn.className = 'admit-copy-btn';
     editBtn.textContent = 'Richiama nel form';
     editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); caricaRicovero(rec.id); };
+    const esportaBtn = document.createElement('button');
+    esportaBtn.className = 'admit-copy-btn';
+    esportaBtn.textContent = 'Esporta (.txt)';
+    esportaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); esportaRicoveroSingoloTxt(rec); };
     const delBtn = document.createElement('button');
     delBtn.className = 'admit-del-btn';
     delBtn.textContent = 'Elimina';
     delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
-    actions.appendChild(consegnaBtn);
+    actions.appendChild(copiaConsegnaBtn);
     actions.appendChild(editBtn);
+    actions.appendChild(esportaBtn);
     actions.appendChild(delBtn);
 
     head.appendChild(titleWrap);
@@ -1475,34 +1514,20 @@ function eliminaRicovero(id){
   showToast('Ricovero eliminato');
 }
 
-function esportaRicoveriTxt(){
-  const list = loadRicoveri();
-  if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
-
-  const testo = list
-    .map(rec => {
-      const parti = [
-        rec.diario,
-        rec.prossima,
-        rec.remota && `Anamnesi patologica remota: ${rec.remota}`,
-        rec.farmacologica && `Anamnesi farmacologica: ${rec.farmacologica}`,
-        rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`
-      ].filter(Boolean);
-      return `Ricovero ${rec.seq} · ${rec.label}\n\n${parti.join('\n\n')}`;
-    })
-    .join('\n\n' + '─'.repeat(40) + '\n\n');
+function esportaRicoveroSingoloTxt(rec){
+  const parti = [
+    rec.diario,
+    rec.prossima,
+    rec.remota && `Anamnesi patologica remota: ${rec.remota}`,
+    rec.farmacologica && `Anamnesi farmacologica: ${rec.farmacologica}`,
+    rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`
+  ].filter(Boolean);
+  const testo = parti.join('\n\n');
 
   const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  let nomeFile;
-  if(list.length === 1){
-    // un solo ricovero: il file si chiama come il paziente (es. "ROSSI MARIA.txt")
-    nomeFile = (list[0].label || 'Ricovero').replace(/[\\/:*?"<>|]/g, '').trim() + '.txt';
-  } else {
-    const oggi = new Date().toISOString().slice(0,10);
-    nomeFile = 'ricoveri_' + oggi + '.txt';
-  }
+  const nomeFile = (rec.label || 'Ricovero').replace(/[\\/:*?"<>|]/g, '').trim() + '.txt';
   a.href = url;
   a.download = nomeFile;
   document.body.appendChild(a);
@@ -1630,7 +1655,8 @@ function paraConEtichetta(etichetta, testo, opzioni){
     runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">${escapeXml(etichetta)}</w:t></w:r>`);
   }
   if(testo){
-    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${escapeXml(testo)}</w:t></w:r>`);
+    const grassettoRPr = opzioni.valoreGrassetto ? '<w:b/><w:bCs/>' : '';
+    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${grassettoRPr}</w:rPr><w:t xml:space="preserve">${escapeXml(testo)}</w:t></w:r>`);
   }
   const shd = opzioni.shd ? `<w:shd w:val="clear" w:fill="${opzioni.shd}"/>` : '';
   return `<w:p><w:pPr><w:spacing w:line="240" w:lineRule="auto"/><w:jc w:val="both"/><w:rPr>${shd}</w:rPr></w:pPr>${runs.join('')}</w:p>`;
@@ -1642,6 +1668,9 @@ function paraPuntato(testoGrassetto, testoResto){
   const runs = [];
   if(testoGrassetto){
     runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">-\t${escapeXml(testoGrassetto)}</w:t></w:r>`);
+    if(testoResto){
+      runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">:</w:t></w:r>`);
+    }
   }
   if(testoResto){
     runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve"> ${escapeXml(testoResto)}</w:t></w:r>`);
@@ -1668,7 +1697,23 @@ const COL_SX = COL_LETTO + COL_NOME, COL_DX = COL_SPACER + COL_DATI, COL_TOT = C
 
 // costruisce l'XML della tabella di consegna a partire dai campi grezzi
 // del form di un ricovero (gli stessi salvati in rec.campi)
-function costruisciTabellaConsegna(rec){
+// prepara i dati comuni (usati sia per il .docx sia per la copia HTML)
+// "Problemi attivi" scritti a mano nel box dedicato del form: una riga per
+// punto, formato "Etichetta: dettaglio" -> quello prima dei due punti va in
+// grassetto nella consegna, il resto no (es. "Polmonite dx: ceftriaxone ev")
+function parseProblemiAttivi(testo){
+  if(!testo) return [];
+  return testo.split('\n')
+    .map(riga => riga.trim().replace(/^-+\s*/, '')) // toglie un eventuale "-" già digitato
+    .filter(Boolean)
+    .map(riga => {
+      const idx = riga.indexOf(':');
+      if(idx === -1) return { forte: riga, resto: '' };
+      return { forte: riga.slice(0, idx).trim(), resto: riga.slice(idx + 1).trim() };
+    });
+}
+
+function preparaDatiConsegna(rec){
   const c = rec.campi || {};
   const cognome = (c.cognome || '').trim().toUpperCase();
   const nome = (c.nome || '').trim().toUpperCase();
@@ -1676,29 +1721,41 @@ function costruisciTabellaConsegna(rec){
   const ddmm = String(oggi.getDate()).padStart(2,'0') + '/' + String(oggi.getMonth()+1).padStart(2,'0');
   const meseAbbr = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][oggi.getMonth()];
   const dataAgg = oggi.getDate() + ' ' + meseAbbr;
+  return {
+    c, nomeCompleto: (cognome + ' ' + nome).trim(), ddmm, dataAgg,
+    diagnosi: (c.diagnosi || '').trim(),
+    comorbidita: costruisciRemota(c),
+    programma: costruisciFamiliare(c),
+    farmaci: formattaElencoConVirgole(c.farmacologica),
+    problemi: parseProblemiAttivi(c.problemi)
+  };
+}
+
+function costruisciTabellaConsegna(rec){
+  const d = preparaDatiConsegna(rec);
+  const c = d.c;
 
   const righe = [];
 
   // riga 1: Letto | COGNOME NOME | età aa, IN gg/mm — sfondo oro, grassetto
   righe.push(rigaTabella([
     celle([paraConEtichetta(c.letto ? 'Letto ' + c.letto : 'Letto', '', {shd:CONSEGNA_ORO})], COL_LETTO, 1, CONSEGNA_ORO),
-    celle([paraConEtichetta((cognome + ' ' + nome).trim(), '', {shd:CONSEGNA_ORO})], COL_NOME, 1, CONSEGNA_ORO),
-    celle([paraConEtichetta((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + ddmm, '', {shd:CONSEGNA_ORO})], COL_DX, 2, CONSEGNA_ORO)
+    celle([paraConEtichetta(d.nomeCompleto, '', {shd:CONSEGNA_ORO})], COL_NOME, 1, CONSEGNA_ORO),
+    celle([paraConEtichetta((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, '', {shd:CONSEGNA_ORO})], COL_DX, 2, CONSEGNA_ORO)
   ]));
 
-  // Diagnosi / Comorbidità (= anamnesi remota) / Programma (= anamnesi
-  // familiare e fisiologica, che nell'app descrive già la situazione
-  // abitativa/di autonomia)
-  righe.push(rigaTabella([ celle([paraConEtichetta('Diagnosi: ', (c.diagnosi || '').trim())], COL_TOT, 4) ]));
-  righe.push(rigaTabella([ celle([paraConEtichetta('Comorbidità: ', costruisciRemota(c))], COL_TOT, 4) ]));
-  righe.push(rigaTabella([ celle([paraConEtichetta('Programma: ', costruisciFamiliare(c))], COL_TOT, 4) ]));
+  // Diagnosi (in grassetto anche il valore) / Comorbidità (= anamnesi remota)
+  // / Programma (= anamnesi familiare e fisiologica, che nell'app descrive
+  // già la situazione abitativa/di autonomia)
+  righe.push(rigaTabella([ celle([paraConEtichetta('Diagnosi: ', d.diagnosi, {valoreGrassetto:true})], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle([paraConEtichetta('Comorbidità: ', d.comorbidita)], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle([paraConEtichetta('Programma: ', d.programma)], COL_TOT, 4) ]));
 
-  // Problemi attivi (a sinistra, con la diagnosi e la terapia domiciliare
-  // come punti di partenza) / Dieta-Mob-MdS (a destra, da compilare)
+  // Problemi attivi: scritti a mano dal medico nel box dedicato del form
+  // (una riga per punto, "Etichetta: dettaglio") / Dieta-Mob-MdS (a destra,
+  // da compilare)
   const puntiProblemi = [paraConEtichetta('Problemi attivi: ', '')];
-  if((c.diagnosi || '').trim()) puntiProblemi.push(paraPuntato(c.diagnosi.trim(), ''));
-  const farmaci = formattaElencoConVirgole(c.farmacologica);
-  if(farmaci) puntiProblemi.push(paraPuntato('Terapia domiciliare:', farmaci));
+  d.problemi.forEach(p => puntiProblemi.push(paraPuntato(p.forte, p.resto)));
   if(puntiProblemi.length === 1) puntiProblemi.push(paraPuntato('', ''));
 
   righe.push(rigaTabella([
@@ -1710,7 +1767,7 @@ function costruisciTabellaConsegna(rec){
   righe.push(rigaTabella([ celle([paraConEtichetta('Familiari: ', '')], COL_TOT, 4) ]));
   righe.push(rigaTabella([
     celle([paraConEtichetta('Data colloquio: ', '')], COL_SX, 2),
-    celle([paraConEtichetta('Data agg: ', dataAgg)], COL_DX, 2)
+    celle([paraConEtichetta('Data agg: ', d.dataAgg)], COL_DX, 2)
   ]));
 
   return `<w:tbl><w:tblPr><w:tblW w:w="${COL_TOT}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>`
@@ -1725,12 +1782,115 @@ function costruisciTabellaConsegna(rec){
     + righe.join('') + `</w:tbl>`;
 }
 
-function generaConsegnaDocx(rec){
-  const tabellaXml = costruisciTabellaConsegna(rec);
+/* ------------------------------------------------------------
+   COPIA CONSEGNA (HTML negli appunti, senza scaricare un file)
+   Stessa tabella del .docx ma come HTML: i browser copiano HTML "vero"
+   negli appunti e Google Docs lo incolla mantenendo colori/grassetto/
+   bordi, senza dover passare da un file da aprire e da cui copiare.
+   ------------------------------------------------------------ */
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
 
+const CONSEGNA_STILE_CELLA = 'border:1px solid #000000; padding:4px 7px; vertical-align:top; font-family:Calibri,Arial,sans-serif; font-size:11pt;';
+const CONSEGNA_STILE_ORO = CONSEGNA_STILE_CELLA + ' background-color:#FFD966; font-weight:bold;';
+
+function celleHtml(contenutoHtml, larghezzaPercento, oro, colspan){
+  const stile = (oro ? CONSEGNA_STILE_ORO : CONSEGNA_STILE_CELLA) + (larghezzaPercento ? ` width:${larghezzaPercento}%;` : '');
+  const cs = colspan ? ` colspan="${colspan}"` : '';
+  return `<td${cs} style="${stile}">${contenutoHtml}</td>`;
+}
+function etichettaHtml(etichetta, testo, valoreGrassetto){
+  const lab = etichetta ? `<b>${escapeHtml(etichetta)}</b>` : '';
+  const txtEsc = testo ? escapeHtml(testo) : '';
+  const txt = valoreGrassetto && txtEsc ? `<b>${txtEsc}</b>` : txtEsc;
+  return `<div>${lab}${lab && txt ? ' ' : ''}${txt}</div>`;
+}
+function puntoHtml(grassetto, resto){
+  const g = grassetto ? `<b>${escapeHtml(grassetto)}</b>${resto ? ':' : ''}` : '';
+  const r = resto ? ' ' + escapeHtml(resto) : '';
+  return `<div style="margin-left:14px;">- ${g}${r}</div>`;
+}
+
+function costruisciTabellaConsegnaHtml(rec){
+  const d = preparaDatiConsegna(rec);
+  const c = d.c;
+
+  const righe = [];
+
+  righe.push(`<tr>`
+    + celleHtml(etichettaHtml(c.letto ? 'Letto ' + c.letto : 'Letto', ''), 12, true)
+    + celleHtml(etichettaHtml(d.nomeCompleto, ''), 49, true)
+    + celleHtml(etichettaHtml((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, ''), 39, true, 2)
+    + `</tr>`);
+
+  righe.push(`<tr>${celleHtml(etichettaHtml('Diagnosi: ', d.diagnosi, true), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Comorbidità: ', d.comorbidita), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Programma: ', d.programma), null, false, 4)}</tr>`);
+
+  let problemiHtml = etichettaHtml('Problemi attivi: ', '');
+  d.problemi.forEach(p => { problemiHtml += puntoHtml(p.forte, p.resto); });
+  const dietaHtml = etichettaHtml('Dieta: ', '') + etichettaHtml('Mob: ', '') + etichettaHtml('MdS: ', '');
+  righe.push(`<tr>${celleHtml(problemiHtml, 61, false, 2)}${celleHtml(dietaHtml, 39, false, 2)}</tr>`);
+
+  righe.push(`<tr>${celleHtml(etichettaHtml('Consegne: ', ''), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Familiari: ', ''), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Data colloquio: ', ''), 61, false, 2)}${celleHtml(etichettaHtml('Data agg: ', d.dataAgg), 39, false, 2)}</tr>`);
+
+  return `<table style="border-collapse:collapse; width:100%;">${righe.join('')}</table>`;
+}
+
+function copiaConsegna(rec){
+  const html = costruisciTabellaConsegnaHtml(rec);
+
+  // metodo principale: un contenitore editabile fuori schermo, selezionato
+  // e copiato con execCommand — è il modo più compatibile per copiare HTML
+  // "vero" (funziona anche su Safari/iPhone), a differenza della Clipboard
+  // API moderna che su alcuni browser copia solo testo semplice
+  const tempDiv = document.createElement('div');
+  tempDiv.contentEditable = 'true';
+  tempDiv.style.cssText = 'position:fixed; top:-9999px; left:-9999px; opacity:0;';
+  tempDiv.innerHTML = html;
+  document.body.appendChild(tempDiv);
+
+  const range = document.createRange();
+  range.selectNodeContents(tempDiv);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  let riuscito = false;
+  try{ riuscito = document.execCommand('copy'); } catch(e){ riuscito = false; }
+
+  sel.removeAllRanges();
+  document.body.removeChild(tempDiv);
+
+  if(riuscito){
+    showToast('Consegna copiata: incollala nel Google Doc');
+    return;
+  }
+
+  // fallback per i browser senza execCommand: Clipboard API moderna
+  if(navigator.clipboard && window.ClipboardItem){
+    const testoSemplice = tempDiv.innerText || '';
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], { type:'text/html' }),
+      'text/plain': new Blob([testoSemplice], { type:'text/plain' })
+    })])
+      .then(() => showToast('Consegna copiata: incollala nel Google Doc'))
+      .catch(() => showToast('Copia non riuscita: riprova o usa "Genera tutte le consegne"'));
+  } else {
+    showToast('Copia non riuscita: riprova o usa "Genera tutte le consegne"');
+  }
+}
+
+// costruisce il pacchetto .docx completo (zip) a partire dal solo XML del
+// "corpo" (una o più tabelle), condiviso sia dalla consegna singola sia da
+// quella con tutti i ricoveri insieme
+function costruisciPacchettoDocx(corpoXml, titolo){
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
     + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">`
-    + `<w:body>${tabellaXml}<w:p/>`
+    + `<w:body>${corpoXml}<w:p/>`
     + `<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>`
     + `<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="708" w:footer="708" w:gutter="0"/>`
     + `</w:sectPr></w:body></w:document>`;
@@ -1766,7 +1926,7 @@ function generaConsegnaDocx(rec){
   const nowIso = new Date().toISOString();
   const coreXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
     + `<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`
-    + `<dc:title>Consegna ${escapeXml(rec.label || '')}</dc:title><dc:creator>EO Builder</dc:creator>`
+    + `<dc:title>${escapeXml(titolo || '')}</dc:title><dc:creator>EO Builder</dc:creator>`
     + `<dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created>`
     + `<dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified>`
     + `</cp:coreProperties>`;
@@ -1785,17 +1945,31 @@ function generaConsegnaDocx(rec){
     { name: 'word/_rels/document.xml.rels', data: encoder.encode(docRelsXml) }
   ];
 
-  const blob = creaZipStore(files);
+  return creaZipStore(files);
+}
+
+function scaricaBlob(blob, nomeFile){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const nomeFile = (rec.label || 'Consegna').replace(/[\\/:*?"<>|]/g, '').trim();
   a.href = url;
-  a.download = 'Consegna ' + nomeFile + '.docx';
+  a.download = nomeFile;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('Consegna generata');
+}
+
+// un unico .docx con la tabella di consegna di OGNI ricovero generato,
+// una sotto l'altra (pronto per stampare o incollare tutto insieme)
+function generaTutteLeConsegneDocx(){
+  const list = loadRicoveri();
+  if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
+
+  const corpo = list.map(rec => costruisciTabellaConsegna(rec) + '<w:p/>').join('');
+  const blob = costruisciPacchettoDocx(corpo, 'Consegne');
+  const oggi = new Date().toISOString().slice(0,10);
+  scaricaBlob(blob, 'Consegne_' + oggi + '.docx');
+  showToast('Consegne generate');
 }
 
 function serializeState(){
