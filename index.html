@@ -488,13 +488,18 @@
 
     <div class="admit-grid">
       <div class="admit-field">
+        <div class="field-label">Letto (facoltativo)</div>
+        <input type="text" id="admit-letto" placeholder="es. 4.1">
+      </div>
+      <div class="admit-field">
         <div class="field-label">Età (anni)</div>
         <input type="number" id="admit-eta" placeholder="es. 84">
       </div>
-      <div class="admit-field">
-        <div class="field-label">Diagnosi d'ingresso</div>
-        <input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale destra">
-      </div>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Diagnosi d'ingresso</div>
+      <input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale destra">
     </div>
 
     <div class="admit-field">
@@ -1190,6 +1195,7 @@ function raccogliCampiForm(){
     sesso: document.querySelector('#admit-sesso-chips .chip.active')?.dataset.val || 'F',
     cognome: document.getElementById('admit-cognome').value,
     nome: document.getElementById('admit-nome').value,
+    letto: document.getElementById('admit-letto').value,
     eta: document.getElementById('admit-eta').value,
     diagnosi: document.getElementById('admit-diagnosi').value,
     prossima: document.getElementById('admit-prossima').value,
@@ -1210,7 +1216,7 @@ function raccogliCampiForm(){
 }
 
 function svuotaFormRicovero(){
-  ['admit-cognome','admit-nome','admit-eta','admit-diagnosi','admit-prossima',
+  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-prossima',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id).value = '';
@@ -1293,6 +1299,7 @@ function caricaRicovero(id){
 
   document.getElementById('admit-cognome').value = c.cognome || '';
   document.getElementById('admit-nome').value = c.nome || '';
+  document.getElementById('admit-letto').value = c.letto || '';
   document.getElementById('admit-eta').value = c.eta || '';
   document.getElementById('admit-diagnosi').value = c.diagnosi || '';
   document.getElementById('admit-prossima').value = c.prossima || '';
@@ -1384,6 +1391,10 @@ function renderRicoveri(){
 
     const actions = document.createElement('div');
     actions.className = 'admit-block-actions';
+    const consegnaBtn = document.createElement('button');
+    consegnaBtn.className = 'admit-copy-btn';
+    consegnaBtn.textContent = 'Genera consegna';
+    consegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); generaConsegnaDocx(rec); };
     const editBtn = document.createElement('button');
     editBtn.className = 'admit-copy-btn';
     editBtn.textContent = 'Richiama nel form';
@@ -1392,6 +1403,7 @@ function renderRicoveri(){
     delBtn.className = 'admit-del-btn';
     delBtn.textContent = 'Elimina';
     delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
+    actions.appendChild(consegnaBtn);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
@@ -1498,6 +1510,292 @@ function esportaRicoveriTxt(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('File esportato');
+}
+
+/* ============================================================
+   GENERA CONSEGNA (.docx) — un mini generatore di file Word scritto
+   da zero in JS puro (niente librerie esterne), perché l'app è un
+   singolo file HTML senza build. Un .docx è semplicemente uno ZIP di
+   XML: qui costruiamo uno ZIP "store" (senza compressione, perfettamente
+   valido) contenente i pochi file XML minimi che Word/Google Docs si
+   aspettano, con dentro la tabella di consegna formattata come nel
+   modello CONSEGNE_GERIATRIA (intestazione arancione, bordi, Calibri).
+   ============================================================ */
+
+// --- CRC32, richiesto dal formato ZIP per ogni file contenuto ---
+const CRC32_TABLE = (() => {
+  const t = [];
+  for(let n = 0; n < 256; n++){
+    let c = n;
+    for(let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  let crc = 0xFFFFFFFF;
+  for(let i = 0; i < bytes.length; i++){
+    crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+// --- ZIP "store" (nessuna compressione: valido per il formato ZIP e
+// per .docx, evita di dover reimplementare un algoritmo di deflate) ---
+function creaZipStore(files){
+  const encoder = new TextEncoder();
+  const now = new Date();
+  const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+  const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+
+  const parts = [];
+  const centralParts = [];
+  let offset = 0;
+
+  files.forEach(f => {
+    const nameBytes = encoder.encode(f.name);
+    const data = f.data;
+    const crc = crc32(data);
+    const size = data.length;
+
+    const local = new Uint8Array(30 + nameBytes.length);
+    const dv = new DataView(local.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0, true);
+    dv.setUint16(8, 0, true); // 0 = store, nessuna compressione
+    dv.setUint16(10, dosTime, true);
+    dv.setUint16(12, dosDate, true);
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, size, true);
+    dv.setUint32(22, size, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);
+    local.set(nameBytes, 30);
+
+    parts.push(local, data);
+
+    const central = new Uint8Array(46 + nameBytes.length);
+    const cdv = new DataView(central.buffer);
+    cdv.setUint32(0, 0x02014b50, true);
+    cdv.setUint16(4, 20, true);
+    cdv.setUint16(6, 20, true);
+    cdv.setUint16(8, 0, true);
+    cdv.setUint16(10, 0, true);
+    cdv.setUint16(12, dosTime, true);
+    cdv.setUint16(14, dosDate, true);
+    cdv.setUint32(16, crc, true);
+    cdv.setUint32(20, size, true);
+    cdv.setUint32(24, size, true);
+    cdv.setUint16(28, nameBytes.length, true);
+    cdv.setUint16(30, 0, true);
+    cdv.setUint16(32, 0, true);
+    cdv.setUint16(34, 0, true);
+    cdv.setUint16(36, 0, true);
+    cdv.setUint32(38, 0, true);
+    cdv.setUint32(42, offset, true);
+    central.set(nameBytes, 46);
+    centralParts.push(central);
+
+    offset += local.length + data.length;
+  });
+
+  const centralStart = offset;
+  let centralSize = 0;
+  centralParts.forEach(c => centralSize += c.length);
+
+  const end = new Uint8Array(22);
+  const edv = new DataView(end.buffer);
+  edv.setUint32(0, 0x06054b50, true);
+  edv.setUint16(4, 0, true);
+  edv.setUint16(6, 0, true);
+  edv.setUint16(8, files.length, true);
+  edv.setUint16(10, files.length, true);
+  edv.setUint32(12, centralSize, true);
+  edv.setUint32(16, centralStart, true);
+  edv.setUint16(20, 0, true);
+
+  return new Blob([...parts, ...centralParts, end], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+
+function escapeXml(s){
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&apos;' }[c]));
+}
+
+// paragrafo semplice: etichetta in grassetto (facoltativa) + testo normale
+function paraConEtichetta(etichetta, testo, opzioni){
+  opzioni = opzioni || {};
+  const runs = [];
+  if(etichetta){
+    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">${escapeXml(etichetta)}</w:t></w:r>`);
+  }
+  if(testo){
+    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${escapeXml(testo)}</w:t></w:r>`);
+  }
+  const shd = opzioni.shd ? `<w:shd w:val="clear" w:fill="${opzioni.shd}"/>` : '';
+  return `<w:p><w:pPr><w:spacing w:line="240" w:lineRule="auto"/><w:jc w:val="both"/><w:rPr>${shd}</w:rPr></w:pPr>${runs.join('')}</w:p>`;
+}
+
+// paragrafo puntato (trattino + tab, con indentazione a bandiera: non usa
+// la numerazione automatica di Word per restare più semplice e robusto)
+function paraPuntato(testoGrassetto, testoResto){
+  const runs = [];
+  if(testoGrassetto){
+    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">-\t${escapeXml(testoGrassetto)}</w:t></w:r>`);
+  }
+  if(testoResto){
+    runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve"> ${escapeXml(testoResto)}</w:t></w:r>`);
+  }
+  return `<w:p><w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs><w:spacing w:line="240" w:lineRule="auto"/><w:ind w:left="720" w:hanging="360"/><w:jc w:val="both"/></w:pPr>${runs.join('')}</w:p>`;
+}
+
+// cella di tabella: paragrafi + larghezza (dxa) + span di colonne + colore sfondo
+function celle(paragrafi, larghezza, span, shd){
+  const tcPr = [`<w:tcW w:w="${larghezza}" w:type="dxa"/>`];
+  if(span && span > 1) tcPr.push(`<w:gridSpan w:val="${span}"/>`);
+  if(shd) tcPr.push(`<w:shd w:val="clear" w:fill="${shd}"/>`);
+  tcPr.push('<w:vAlign w:val="center"/>');
+  return `<w:tc><w:tcPr>${tcPr.join('')}</w:tcPr>${paragrafi.join('')}</w:tc>`;
+}
+
+function rigaTabella(celleArr){
+  return `<w:tr>${celleArr.join('')}</w:tr>`;
+}
+
+const CONSEGNA_ORO = 'FFD966';
+const COL_LETTO = 1230, COL_NOME = 5010, COL_SPACER = 105, COL_DATI = 3840;
+const COL_SX = COL_LETTO + COL_NOME, COL_DX = COL_SPACER + COL_DATI, COL_TOT = COL_SX + COL_DX;
+
+// costruisce l'XML della tabella di consegna a partire dai campi grezzi
+// del form di un ricovero (gli stessi salvati in rec.campi)
+function costruisciTabellaConsegna(rec){
+  const c = rec.campi || {};
+  const cognome = (c.cognome || '').trim().toUpperCase();
+  const nome = (c.nome || '').trim().toUpperCase();
+  const oggi = new Date();
+  const ddmm = String(oggi.getDate()).padStart(2,'0') + '/' + String(oggi.getMonth()+1).padStart(2,'0');
+  const meseAbbr = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][oggi.getMonth()];
+  const dataAgg = oggi.getDate() + ' ' + meseAbbr;
+
+  const righe = [];
+
+  // riga 1: Letto | COGNOME NOME | età aa, IN gg/mm — sfondo oro, grassetto
+  righe.push(rigaTabella([
+    celle([paraConEtichetta(c.letto ? 'Letto ' + c.letto : 'Letto', '', {shd:CONSEGNA_ORO})], COL_LETTO, 1, CONSEGNA_ORO),
+    celle([paraConEtichetta((cognome + ' ' + nome).trim(), '', {shd:CONSEGNA_ORO})], COL_NOME, 1, CONSEGNA_ORO),
+    celle([paraConEtichetta((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + ddmm, '', {shd:CONSEGNA_ORO})], COL_DX, 2, CONSEGNA_ORO)
+  ]));
+
+  // Diagnosi / Comorbidità (= anamnesi remota) / Programma (= anamnesi
+  // familiare e fisiologica, che nell'app descrive già la situazione
+  // abitativa/di autonomia)
+  righe.push(rigaTabella([ celle([paraConEtichetta('Diagnosi: ', (c.diagnosi || '').trim())], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle([paraConEtichetta('Comorbidità: ', costruisciRemota(c))], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle([paraConEtichetta('Programma: ', costruisciFamiliare(c))], COL_TOT, 4) ]));
+
+  // Problemi attivi (a sinistra, con la diagnosi e la terapia domiciliare
+  // come punti di partenza) / Dieta-Mob-MdS (a destra, da compilare)
+  const puntiProblemi = [paraConEtichetta('Problemi attivi: ', '')];
+  if((c.diagnosi || '').trim()) puntiProblemi.push(paraPuntato(c.diagnosi.trim(), ''));
+  const farmaci = formattaElencoConVirgole(c.farmacologica);
+  if(farmaci) puntiProblemi.push(paraPuntato('Terapia domiciliare:', farmaci));
+  if(puntiProblemi.length === 1) puntiProblemi.push(paraPuntato('', ''));
+
+  righe.push(rigaTabella([
+    celle(puntiProblemi, COL_SX, 2),
+    celle([paraConEtichetta('Dieta: ', ''), paraConEtichetta('Mob: ', ''), paraConEtichetta('MdS: ', '')], COL_DX, 2, 'FFFFFF')
+  ]));
+
+  righe.push(rigaTabella([ celle([paraConEtichetta('Consegne: ', '')], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle([paraConEtichetta('Familiari: ', '')], COL_TOT, 4) ]));
+  righe.push(rigaTabella([
+    celle([paraConEtichetta('Data colloquio: ', '')], COL_SX, 2),
+    celle([paraConEtichetta('Data agg: ', dataAgg)], COL_DX, 2)
+  ]));
+
+  return `<w:tbl><w:tblPr><w:tblW w:w="${COL_TOT}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>`
+    + `<w:top w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `<w:left w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `<w:bottom w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `<w:right w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `<w:insideH w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `<w:insideV w:val="single" w:sz="8" w:space="0" w:color="000000"/>`
+    + `</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr>`
+    + `<w:tblGrid><w:gridCol w:w="${COL_LETTO}"/><w:gridCol w:w="${COL_NOME}"/><w:gridCol w:w="${COL_SPACER}"/><w:gridCol w:w="${COL_DATI}"/></w:tblGrid>`
+    + righe.join('') + `</w:tbl>`;
+}
+
+function generaConsegnaDocx(rec){
+  const tabellaXml = costruisciTabellaConsegna(rec);
+
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">`
+    + `<w:body>${tabellaXml}<w:p/>`
+    + `<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>`
+    + `<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="708" w:footer="708" w:gutter="0"/>`
+    + `</w:sectPr></w:body></w:document>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">`
+    + `<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri" w:eastAsia="Calibri"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="it-IT"/></w:rPr></w:rPrDefault></w:docDefaults>`
+    + `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>`
+    + `</w:styles>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+    + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+    + `<Default Extension="xml" ContentType="application/xml"/>`
+    + `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>`
+    + `<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>`
+    + `<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`
+    + `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`
+    + `</Types>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>`
+    + `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>`
+    + `<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>`
+    + `</Relationships>`;
+
+  const docRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`
+    + `</Relationships>`;
+
+  const nowIso = new Date().toISOString();
+  const coreXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`
+    + `<dc:title>Consegna ${escapeXml(rec.label || '')}</dc:title><dc:creator>EO Builder</dc:creator>`
+    + `<dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created>`
+    + `<dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified>`
+    + `</cp:coreProperties>`;
+
+  const appXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>EO Builder</Application></Properties>`;
+
+  const encoder = new TextEncoder();
+  const files = [
+    { name: '[Content_Types].xml', data: encoder.encode(contentTypesXml) },
+    { name: '_rels/.rels', data: encoder.encode(relsXml) },
+    { name: 'docProps/core.xml', data: encoder.encode(coreXml) },
+    { name: 'docProps/app.xml', data: encoder.encode(appXml) },
+    { name: 'word/document.xml', data: encoder.encode(documentXml) },
+    { name: 'word/styles.xml', data: encoder.encode(stylesXml) },
+    { name: 'word/_rels/document.xml.rels', data: encoder.encode(docRelsXml) }
+  ];
+
+  const blob = creaZipStore(files);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const nomeFile = (rec.label || 'Consegna').replace(/[\\/:*?"<>|]/g, '').trim();
+  a.href = url;
+  a.download = 'Consegna ' + nomeFile + '.docx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Consegna generata');
 }
 
 function serializeState(){
