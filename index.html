@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --page:#eef1f3;
@@ -368,6 +369,12 @@
   }
   input[type=number]{ width:70px; }
   input[type=text].wide{ width:100%; }
+  select{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:7px; padding:8px 10px; font-size:13px;
+    font-family:var(--font-body); width:100%;
+  }
+  select:focus{ outline:none; border-color:var(--signal); }
 
   /* ---------- OUTPUT ---------- */
   #output-card{
@@ -428,6 +435,25 @@
 <!-- MAPPA REPARTO (settori/letti) -->
 <div class="card" id="wardmap-view" style="display:none;">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
+
+  <div class="group" id="sync-group">
+    <div class="group-label">Sincronizzazione tra dispositivi</div>
+    <div id="sync-logged-out">
+      <div class="inline-fields">
+        <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
+        <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
+      </div>
+      <div class="row">
+        <button class="btn primary" onclick="syncLogin()">Accedi</button>
+        <button class="btn" onclick="syncSignup()">Crea account</button>
+      </div>
+      <div class="group-label" id="sync-status" style="margin-top:8px;"></div>
+    </div>
+    <div id="sync-logged-in" style="display:none;">
+      <div class="group-label" id="sync-logged-in-text"></div>
+      <button class="btn" onclick="syncLogout()">Disconnetti</button>
+    </div>
+  </div>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
@@ -512,14 +538,28 @@
         <input type="text" id="admit-letto" placeholder="es. 4.1">
       </div>
       <div class="admit-field">
-        <div class="field-label">Età (in anni)</div>
-        <input type="number" id="admit-eta" placeholder="es. 84">
+        <div class="field-label">Reparto di ricovero</div>
+        <select id="admit-reparto">
+          <option value="GERIATRIA">GERIATRIA</option>
+          <option value="MED C2">MED C2</option>
+          <option value="MED C1">MED C1</option>
+        </select>
       </div>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Età (in anni)</div>
+      <input type="number" id="admit-eta" placeholder="es. 84">
     </div>
 
     <div class="admit-field">
       <div class="field-label">Diagnosi d'ingresso</div>
       <input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale destra">
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Allergie</div>
+      <input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine">
     </div>
 
     <div class="admit-field">
@@ -530,6 +570,11 @@
     <div class="admit-field">
       <div class="field-label">Anamnesi patologica prossima</div>
       <textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea>
+    </div>
+
+    <div class="admit-field">
+      <div class="field-label">Provvedimenti in PS</div>
+      <textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea>
     </div>
 
     <div class="admit-field">
@@ -947,6 +992,131 @@ function populateInputsFromState(){
    cliniche importanti, il referto va comunque copiato nella
    cartella clinica ufficiale.
    ============================================================ */
+/* ============================================================
+   SINCRONIZZAZIONE CLOUD (Supabase) — facoltativa: l'app funziona
+   esattamente come prima anche senza login, tutto resta nel localStorage
+   del dispositivo. Se l'utente accede con email/password, ogni salvataggio
+   locale viene anche inviato in background al suo account privato
+   (protetto da Row Level Security: solo lui può leggerlo/scriverlo), così
+   da poter ritrovare gli stessi dati su un altro dispositivo.
+   ============================================================ */
+const SUPABASE_URL = 'https://bapfuaxjdjnfvkroznxl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhcGZ1YXhqZGpuZnZrcm96bnhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxNDM5MDAsImV4cCI6MjEwMTcxOTkwMH0.54STShLrLrTcroiCh957vOGLW5-LtLmz9Q0Nfp2sjUI';
+
+const supabaseClient = (window.supabase && window.supabase.createClient)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+// invia (in background, senza bloccare l'interfaccia) il valore grezzo di
+// una chiave di localStorage al database cloud dell'utente connesso
+async function cloudPush(key, rawValue){
+  if(!supabaseClient) return;
+  try{
+    const { data } = await supabaseClient.auth.getUser();
+    const user = data && data.user;
+    if(!user) return;
+    await supabaseClient.from('eo_data').upsert({
+      user_id: user.id,
+      key,
+      value: rawValue,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,key' });
+  } catch(e){ /* resta comunque salvato in locale, silenzioso */ }
+}
+
+// scrive in locale e (se connesso) sincronizza subito nel cloud
+function setLocalAndCloud(key, rawValue){
+  try{ localStorage.setItem(key, rawValue); } catch(e){}
+  cloudPush(key, rawValue);
+}
+
+// scarica tutte le chiavi salvate nel cloud per l'utente connesso e le
+// sovrascrive in locale (usato subito dopo il login)
+async function cloudPullAll(){
+  if(!supabaseClient) return;
+  try{
+    const { data: userData } = await supabaseClient.auth.getUser();
+    const user = userData && userData.user;
+    if(!user) return;
+    const { data, error } = await supabaseClient.from('eo_data').select('key,value').eq('user_id', user.id);
+    if(error || !data) return;
+    data.forEach(row => {
+      if(typeof row.value === 'string'){
+        try{ localStorage.setItem(row.key, row.value); } catch(e){}
+      }
+    });
+  } catch(e){}
+}
+
+async function syncSignup(){
+  const email = (document.getElementById('sync-email').value || '').trim();
+  const password = document.getElementById('sync-password').value || '';
+  if(!email || !password){ showToast('Inserisci email e password'); return; }
+  if(!supabaseClient){ showToast('Sincronizzazione non disponibile'); return; }
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if(error){ showToast('Errore: ' + error.message); return; }
+  document.getElementById('sync-status').textContent = 'Account creato. Controlla la mail se serve confermarlo, poi accedi.';
+  showToast('Account creato');
+}
+
+async function syncLogin(){
+  const email = (document.getElementById('sync-email').value || '').trim();
+  const password = document.getElementById('sync-password').value || '';
+  if(!email || !password){ showToast('Inserisci email e password'); return; }
+  if(!supabaseClient){ showToast('Sincronizzazione non disponibile'); return; }
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if(error){ showToast('Errore: ' + error.message); return; }
+  showToast('Accesso eseguito, sincronizzo…');
+  await cloudPullAll();
+  currentPatientId = null;
+  currentRicoveroId = null;
+  resetFormToDefaults();
+  refreshUI();
+  renderWardMap();
+  aggiornaStatoSync();
+  showToast('Sincronizzato');
+}
+
+async function syncLogout(){
+  if(!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  aggiornaStatoSync();
+  showToast('Disconnesso: i dati restano su questo dispositivo');
+}
+
+async function aggiornaStatoSync(){
+  if(!supabaseClient) return;
+  const { data } = await supabaseClient.auth.getUser();
+  const user = data && data.user;
+  const outEl = document.getElementById('sync-logged-out');
+  const inEl = document.getElementById('sync-logged-in');
+  if(!outEl || !inEl) return;
+  if(user){
+    outEl.style.display = 'none';
+    inEl.style.display = '';
+    document.getElementById('sync-logged-in-text').textContent = 'Connesso come ' + user.email;
+  } else {
+    outEl.style.display = '';
+    inEl.style.display = 'none';
+  }
+}
+
+// al caricamento della pagina: se una sessione era già attiva su questo
+// dispositivo, sincronizza subito in background senza bloccare il
+// rendering iniziale (che parte comunque dal localStorage, per restare
+// affidabile anche senza rete)
+(async function initSyncSession(){
+  if(!supabaseClient) return;
+  const { data } = await supabaseClient.auth.getUser();
+  const user = data && data.user;
+  if(!user) return;
+  await cloudPullAll();
+  if(typeof refreshUI === 'function') refreshUI();
+  if(typeof renderWardMap === 'function') renderWardMap();
+  if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+})();
+document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); });
+
 const PATIENTS_KEY = 'eo_builder_patients_v1';
 const LAST_PATIENT_KEY = 'eo_builder_last_patient_v1';
 let currentPatientId = null;
@@ -958,8 +1128,10 @@ function loadPatients(){
   catch(e){ return {}; }
 }
 function savePatients(patients){
-  try{ localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients)); }
+  const raw = JSON.stringify(patients);
+  try{ localStorage.setItem(PATIENTS_KEY, raw); }
   catch(e){ showToast('Salvataggio locale non disponibile'); }
+  cloudPush(PATIENTS_KEY, raw);
 }
 
 /* ============================================================
@@ -977,7 +1149,7 @@ function nextRicoveroSeq(){
   let n = 0;
   try{ n = parseInt(localStorage.getItem(RICOVERI_SEQ_KEY) || '0', 10) || 0; } catch(e){}
   n += 1;
-  try{ localStorage.setItem(RICOVERI_SEQ_KEY, String(n)); } catch(e){}
+  setLocalAndCloud(RICOVERI_SEQ_KEY, String(n));
   return n;
 }
 
@@ -1005,8 +1177,10 @@ function loadRicoveri(){
   return list;
 }
 function saveRicoveri(list){
-  try{ localStorage.setItem(RICOVERI_KEY, JSON.stringify(list)); }
+  const raw = JSON.stringify(list);
+  try{ localStorage.setItem(RICOVERI_KEY, raw); }
   catch(e){ showToast('Salvataggio locale non disponibile'); }
+  cloudPush(RICOVERI_KEY, raw);
 }
 
 // dizionario esami ematochimici: nome normalizzato -> etichetta + unità di misura.
@@ -1160,7 +1334,14 @@ function costruisciProssima(f){
     blocchi.push(/[.!?]$/.test(prossimaTxt) ? prossimaTxt : prossimaTxt + '.');
   }
   if(righe.length) blocchi.push(`In PS ha eseguito:\n${righe.join('\n')}`);
-  return blocchi.join(' ');
+  let testoProssima = blocchi.join(' ');
+
+  // "Provvedimenti in PS" va subito a capo dopo gli esami, senza spazio
+  // né riga vuota (es. "In PS: somministrato ceftriaxone, SF 500 ml")
+  const provvedimentiTxt = (f.provvedimenti || '').trim();
+  if(provvedimentiTxt) testoProssima += (testoProssima ? '\n' : '') + `In PS: ${provvedimentiTxt}`;
+
+  return testoProssima;
 }
 
 function costruisciRemota(f){
@@ -1173,6 +1354,21 @@ function costruisciFarmacologica(f){
 
 function costruisciFamiliare(f){
   return (f.familiare || '').trim();
+}
+
+function costruisciAllergie(f){
+  return (f.allergie || '').trim();
+}
+
+// "Problemi attivi" nel ricovero generato: stesso elenco scritto nel box del
+// form, normalizzato con un trattino per riga
+function costruisciProblemi(f){
+  if(!f.problemi) return '';
+  return f.problemi.split('\n')
+    .map(r => r.trim().replace(/^-+\s*/, ''))
+    .filter(Boolean)
+    .map(r => '- ' + r)
+    .join('\n');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1224,10 +1420,13 @@ function raccogliCampiForm(){
     cognome: document.getElementById('admit-cognome').value,
     nome: document.getElementById('admit-nome').value,
     letto: document.getElementById('admit-letto').value,
+    reparto: document.getElementById('admit-reparto').value,
     eta: document.getElementById('admit-eta').value,
     diagnosi: document.getElementById('admit-diagnosi').value,
+    allergie: document.getElementById('admit-allergie').value,
     problemi: document.getElementById('admit-problemi').value,
     prossima: document.getElementById('admit-prossima').value,
+    provvedimenti: document.getElementById('admit-provvedimenti').value,
     ematochimici: document.getElementById('admit-ematochimici').value,
     rxtorace: document.getElementById('admit-rxtorace').value,
     rxaddome: document.getElementById('admit-rxaddome').value,
@@ -1245,12 +1444,14 @@ function raccogliCampiForm(){
 }
 
 function svuotaFormRicovero(){
-  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-problemi','admit-prossima',
+  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-allergie','admit-problemi','admit-prossima','admit-provvedimenti',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('admit-altri-esami').innerHTML = '';
+  const repartoSel = document.getElementById('admit-reparto');
+  if(repartoSel) repartoSel.value = 'GERIATRIA';
   const dettagliRadioReset = document.querySelector('.admit-altri-radio');
   if(dettagliRadioReset) dettagliRadioReset.open = false;
   const chipsEl = document.getElementById('admit-sesso-chips');
@@ -1283,13 +1484,15 @@ function generaRicovero(){
   const remota = costruisciRemota(campi);
   const farmacologica = costruisciFarmacologica(campi);
   const familiare = costruisciFamiliare(campi);
+  const allergie = costruisciAllergie(campi);
+  const problemi = costruisciProblemi(campi);
 
   const list = loadRicoveri();
 
   if(currentRicoveroId){
     const idx = list.findIndex(r => r.id === currentRicoveroId);
     if(idx !== -1){
-      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare };
+      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare, allergie, problemi };
       saveRicoveri(list);
       ricoveriAperti.add(currentRicoveroId);
       renderRicoveri();
@@ -1308,7 +1511,9 @@ function generaRicovero(){
     prossima,
     remota,
     farmacologica,
-    familiare
+    familiare,
+    allergie,
+    problemi
   };
   list.push(record);
   saveRicoveri(list);
@@ -1331,10 +1536,13 @@ function caricaRicovero(id){
   document.getElementById('admit-cognome').value = c.cognome || '';
   document.getElementById('admit-nome').value = c.nome || '';
   document.getElementById('admit-letto').value = c.letto || '';
+  document.getElementById('admit-reparto').value = c.reparto || 'GERIATRIA';
   document.getElementById('admit-eta').value = c.eta || '';
   document.getElementById('admit-diagnosi').value = c.diagnosi || '';
+  document.getElementById('admit-allergie').value = c.allergie || '';
   document.getElementById('admit-problemi').value = c.problemi || '';
   document.getElementById('admit-prossima').value = c.prossima || '';
+  document.getElementById('admit-provvedimenti').value = c.provvedimenti || '';
   document.getElementById('admit-ematochimici').value = c.ematochimici || '';
   document.getElementById('admit-rxtorace').value = c.rxtorace || '';
   document.getElementById('admit-rxaddome').value = c.rxaddome || '';
@@ -1452,10 +1660,12 @@ function renderRicoveri(){
 
     [
       ['diario', 'Diario'],
-      ['prossima', 'Anamnesi patologica prossima'],
+      ['familiare', 'Anamnesi familiare e fisiologica'],
+      ['allergie', 'Allergie'],
       ['remota', 'Anamnesi patologica remota'],
+      ['prossima', 'Anamnesi patologica prossima'],
       ['farmacologica', 'Anamnesi farmacologica'],
-      ['familiare', 'Anamnesi familiare e fisiologica']
+      ['problemi', 'Problemi attivi']
     ].forEach(([campo, etichetta]) => {
       if(!(rec[campo] || '').trim()) return;
 
@@ -1517,10 +1727,12 @@ function eliminaRicovero(id){
 function esportaRicoveroSingoloTxt(rec){
   const parti = [
     rec.diario,
-    rec.prossima,
+    rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`,
+    rec.allergie && `Allergie: ${rec.allergie}`,
     rec.remota && `Anamnesi patologica remota: ${rec.remota}`,
+    rec.prossima,
     rec.farmacologica && `Anamnesi farmacologica: ${rec.farmacologica}`,
-    rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`
+    rec.problemi && `Problemi attivi:\n${rec.problemi}`
   ].filter(Boolean);
   const testo = parti.join('\n\n');
 
@@ -1959,13 +2171,41 @@ function scaricaBlob(blob, nomeFile){
   URL.revokeObjectURL(url);
 }
 
+// ordine fisso delle sezioni nel .docx con tutte le consegne insieme
+const REPARTI_ORDINE = ['GERIATRIA', 'MED C2', 'MED C1'];
+
+// intestazione di reparto: grande, grassetto, centrata — solo nel .docx con
+// tutti i ricoveri insieme, mai nelle singole consegne
+function paragrafoRepartoXml(nomeReparto){
+  return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:after="200"/></w:pPr>`
+    + `<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/><w:sz w:val="36"/><w:szCs w:val="36"/></w:rPr><w:t xml:space="preserve">${escapeXml(nomeReparto)}</w:t></w:r>`
+    + `</w:p>`;
+}
+
 // un unico .docx con la tabella di consegna di OGNI ricovero generato,
-// una sotto l'altra (pronto per stampare o incollare tutto insieme)
+// raggruppate per reparto (nell'ordine GERIATRIA, MED C2, MED C1): più
+// ricoveri nello stesso reparto vanno insieme sotto la stessa intestazione,
+// indipendentemente da quando sono stati generati
 function generaTutteLeConsegneDocx(){
   const list = loadRicoveri();
   if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
 
-  const corpo = list.map(rec => costruisciTabellaConsegna(rec) + '<w:p/>').join('');
+  const gruppi = {};
+  list.forEach(rec => {
+    const reparto = (rec.campi && rec.campi.reparto) || '';
+    if(!gruppi[reparto]) gruppi[reparto] = [];
+    gruppi[reparto].push(rec);
+  });
+
+  const altriReparti = Object.keys(gruppi).filter(r => !REPARTI_ORDINE.includes(r));
+  const ordineChiavi = [...REPARTI_ORDINE.filter(r => gruppi[r]), ...altriReparti];
+
+  const corpo = ordineChiavi.map(reparto => {
+    const intestazione = reparto ? paragrafoRepartoXml(reparto) : '';
+    const tabelle = gruppi[reparto].map(rec => costruisciTabellaConsegna(rec) + '<w:p/>').join('');
+    return intestazione + tabelle;
+  }).join('');
+
   const blob = costruisciPacchettoDocx(corpo, 'Consegne');
   const oggi = new Date().toISOString().slice(0,10);
   scaricaBlob(blob, 'Consegne_' + oggi + '.docx');
@@ -2330,7 +2570,7 @@ function autosaveCurrentPatient(){
     patients[id] = { name, savedAt: Date.now(), state: serializeState() };
     savePatients(patients);
     currentPatientId = id;
-    try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+    setLocalAndCloud(LAST_PATIENT_KEY, id);
     renderWardMap();
     return;
   }
@@ -2515,7 +2755,7 @@ function selezionaPaziente(id){
   const p = patients[id];
   if(!p) return;
   currentPatientId = id;
-  try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+  setLocalAndCloud(LAST_PATIENT_KEY, id);
   applyStateObject(p.state);
   populateInputsFromState();
   update();
@@ -2537,7 +2777,7 @@ function apriLetto(nome){
   patients[id] = { name: nome, savedAt: Date.now(), state: serializeState() };
   savePatients(patients);
   currentPatientId = id;
-  try{ localStorage.setItem(LAST_PATIENT_KEY, id); } catch(e){}
+  setLocalAndCloud(LAST_PATIENT_KEY, id);
   update();
   chiudiWardMap();
   showToast('Scheda "' + nome + '" creata');
