@@ -332,6 +332,16 @@
     font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
     background:transparent; border:1px solid var(--signal); border-radius:7px; padding:4px 10px; cursor:pointer;
   }
+  .ric-lista-minimale{
+    display:flex; flex-direction:column;
+    border-top:1px solid var(--line-soft);
+  }
+  .ric-lista-riga{
+    padding:11px 4px; font-family:var(--font-body); font-size:14px; color:var(--ink);
+    border-bottom:1px solid var(--line-soft); cursor:pointer;
+  }
+  .ric-lista-riga:hover{ color:var(--signal); }
+  .ric-lista-riga.attivo{ color:var(--signal); font-weight:600; }
   .admit-checkbox{ width:17px; height:17px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
   .admit-block-actions{ display:flex; flex-wrap:wrap; gap:6px; }
   .admit-del-btn{
@@ -551,8 +561,8 @@
   <div id="ricoveri-calendario"></div>
 
   <div class="group" id="ricoveri-tabs-group" style="display:none;">
-    <div class="group-label">I tuoi ricoveri (clicca per richiamarlo e modificarlo)</div>
-    <div class="patient-tabs" id="ricoveri-tabs"></div>
+    <div class="group-label" id="ricoveri-tabs-label"></div>
+    <div class="ric-lista-minimale" id="ricoveri-tabs"></div>
   </div>
 
   <div class="card admit-form-card" style="margin:0 0 14px;">
@@ -1637,24 +1647,34 @@ function caricaRicovero(id){
 
 function renderRicoveriTabs(){
   const group = document.getElementById('ricoveri-tabs-group');
+  const label = document.getElementById('ricoveri-tabs-label');
   const tabsEl = document.getElementById('ricoveri-tabs');
-  const list = loadRicoveri();
 
+  // senza un giorno selezionato nel calendario, questo elenco resta
+  // nascosto: l'elenco di TUTTI i ricoveri va cercato lì, giorno per giorno
+  if(!filtroGiornoRicoveri){
+    group.style.display = 'none';
+    tabsEl.innerHTML = '';
+    return;
+  }
+
+  const list = loadRicoveri().filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
   if(list.length === 0){
     group.style.display = 'none';
     tabsEl.innerHTML = '';
     return;
   }
+
   group.style.display = '';
+  label.textContent = 'Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri) + ' (clicca per richiamarne uno)';
   tabsEl.innerHTML = '';
 
   list.forEach(rec => {
-    const tab = document.createElement('div');
-    tab.className = 'patient-tab' + (rec.id === currentRicoveroId ? ' active' : '');
-    tab.textContent = `Ricovero ${rec.seq}` + (rec.label && rec.label !== 'Ricovero' ? ` · ${rec.label}` : '');
-    tab.title = rec.label || '';
-    tab.onclick = () => caricaRicovero(rec.id);
-    tabsEl.appendChild(tab);
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga' + (rec.id === currentRicoveroId ? ' attivo' : '');
+    riga.textContent = rec.label || `Ricovero ${rec.seq}`;
+    riga.onclick = () => caricaRicovero(rec.id);
+    tabsEl.appendChild(riga);
   });
 }
 
