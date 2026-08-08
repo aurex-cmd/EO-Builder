@@ -108,7 +108,7 @@
   .bed-tile{
     font-family:var(--font-mono); font-weight:600; font-size:13.5px;
     padding:10px 6px; border-radius:8px; min-width:52px; text-align:center;
-    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
   }
   .bed-tile:hover{ border-color:var(--signal); }
@@ -213,7 +213,7 @@
     font-family:var(--font-body); font-size:14.5px; font-weight:500;
     padding:11px 20px 10px; border-radius:10px 10px 0 0;
     border:1px solid var(--line); border-bottom:2px solid var(--line);
-    background:var(--panel-folder-2); color:var(--ink);
+    background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
   }
   .patient-tab:hover{ border-color:var(--folder); }
@@ -223,11 +223,11 @@
     box-shadow:0 -3px 8px rgba(0,0,0,.18);
   }
   #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
-  #riepilogo-view .btn:not(.primary){ background:var(--panel-folder-2); }
+  #riepilogo-view .btn:not(.primary){ background:var(--panel-2); }
   #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   .referto-block{
     margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:10px;
-    background:var(--panel-folder);
+    background:var(--panel-2);
   }
   .referto-block:last-child{ margin-bottom:0; }
   .referto-block .bed-title-row{
@@ -244,12 +244,12 @@
   .referto-block .copia-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
     padding:5px 12px; border-radius:7px; border:1px solid var(--folder-dim);
-    background:var(--panel-folder-2); color:var(--folder); cursor:pointer; white-space:nowrap;
+    background:var(--panel-2); color:var(--folder); cursor:pointer; white-space:nowrap;
   }
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-folder-2); border:1px solid var(--line); border-radius:8px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap;
   }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
@@ -492,7 +492,7 @@
 </header>
 
 <!-- MAPPA REPARTO (settori/letti) -->
-<div class="card" id="wardmap-view" style="display:none;">
+<div class="card" id="wardmap-view" style="display:none; background:var(--panel-2);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
   <div class="group" id="sync-group">
@@ -542,7 +542,7 @@
 </div>
 
 <!-- RIEPILOGO REFERTI -->
-<div class="card" id="riepilogo-view" style="display:none; border-color:var(--folder-dim); background:var(--panel-folder);">
+<div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="1.5"/><rect x="9" y="2.3" width="6" height="3" rx="1"/><line x1="9" y1="10.5" x2="15" y2="10.5"/><line x1="9" y1="13.8" x2="15" y2="13.8"/><line x1="9" y1="17.1" x2="13" y2="17.1"/></svg> Diari</h2>
   <div class="group">
     <div class="inline-fields">
