@@ -1030,8 +1030,14 @@ function setLocalAndCloud(key, rawValue){
   cloudPush(key, rawValue);
 }
 
-// scarica tutte le chiavi salvate nel cloud per l'utente connesso e le
-// sovrascrive in locale (usato subito dopo il login)
+// le chiavi che l'app tiene in memoria e sincronizza col cloud
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1'];
+
+// sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
+// ha già (sovrascrivendo il locale), e CARICA nel cloud quelle che invece
+// esistono già solo in locale (es. dati creati prima di collegare
+// l'account, o su un dispositivo che non aveva ancora fatto login) —
+// altrimenti quei dati resterebbero invisibili su ogni altro dispositivo
 async function cloudPullAll(){
   if(!supabaseClient) return;
   try{
@@ -1039,12 +1045,21 @@ async function cloudPullAll(){
     const user = userData && userData.user;
     if(!user) return;
     const { data, error } = await supabaseClient.from('eo_data').select('key,value').eq('user_id', user.id);
-    if(error || !data) return;
-    data.forEach(row => {
-      if(typeof row.value === 'string'){
-        try{ localStorage.setItem(row.key, row.value); } catch(e){}
-      }
-    });
+    const chiaviNelCloud = new Set();
+    if(!error && data){
+      data.forEach(row => {
+        chiaviNelCloud.add(row.key);
+        if(typeof row.value === 'string'){
+          try{ localStorage.setItem(row.key, row.value); } catch(e){}
+        }
+      });
+    }
+    for(const key of CHIAVI_SINCRONIZZATE){
+      if(chiaviNelCloud.has(key)) continue;
+      let valoreLocale = null;
+      try{ valoreLocale = localStorage.getItem(key); } catch(e){}
+      if(valoreLocale !== null) await cloudPush(key, valoreLocale);
+    }
   } catch(e){}
 }
 
