@@ -302,7 +302,7 @@
     background:var(--panel-2); color:var(--ink-dim); font-size:14px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
-  .ric-cal-nav-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  .ric-cal-nav-btn:hover{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 10px rgba(53,208,174,.35); }
   .ric-cal-mese{ font-family:var(--font-display); font-weight:600; font-size:14.5px; color:var(--ink); text-transform:capitalize; }
   .ric-cal-grid{
     display:grid; grid-template-columns:repeat(7, 1fr); gap:3px;
@@ -312,6 +312,7 @@
     text-align:center; font-family:var(--font-mono); font-size:10.5px;
     color:var(--ink-dim); padding-bottom:4px; text-transform:uppercase;
   }
+  .ric-cal-weekday.weekend{ color:#8fe8d4; }
   .ric-cal-day{
     aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
     border-radius:9px; font-family:var(--font-body); font-size:13px; color:var(--ink);
@@ -319,8 +320,13 @@
   }
   .ric-cal-day:hover{ background:var(--panel-2); }
   .ric-cal-day.vuoto{ cursor:default; visibility:hidden; }
+  .ric-cal-day.weekend{ color:#8fe8d4; }
   .ric-cal-day.oggi{ font-weight:700; color:var(--signal); }
-  .ric-cal-day.attivo{ background:var(--signal-dim); color:var(--signal); font-weight:700; }
+  .ric-cal-day.attivo{
+    background:var(--signal); color:var(--on-signal); font-weight:700;
+    box-shadow:0 0 16px rgba(53,208,174,.55);
+  }
+  .ric-cal-day.attivo .ric-cal-dot{ background:var(--on-signal); }
   .ric-cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--signal); }
   .ric-cal-filtro{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -553,7 +559,7 @@
 
   <div class="group">
     <div class="inline-fields">
-      <button class="btn primary" onclick="generaTutteLeConsegneDocx()">Genera tutte le consegne (.docx)</button>
+      <button class="btn primary" onclick="generaTutteLeConsegneDocx()"><svg class="hicon" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg>Genera tutte le consegne (.docx)</button>
       <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
     </div>
   </div>
@@ -1666,7 +1672,7 @@ function renderRicoveriTabs(){
   }
 
   group.style.display = '';
-  label.textContent = 'Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri) + ' (clicca per richiamarne uno)';
+  label.innerHTML = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="16.5" cy="8.5" r="2.5"/><path d="M15 13.6c2.7.4 4.5 2.4 4.5 5.4"/></svg>Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri) + ' <span style="font-weight:400;color:var(--ink-dim);">(clicca per richiamarne uno)</span>';
   tabsEl.innerHTML = '';
 
   list.forEach((rec, i) => {
@@ -1728,13 +1734,19 @@ function renderCalendarioRicoveri(listCompleta){
   chev.textContent = '›';
   const summaryTitle = document.createElement('div');
   summaryTitle.className = 'admit-block-title';
+  summaryTitle.style.cssText = 'display:flex; align-items:center; gap:7px;';
+  const iconCalendario = document.createElement('span');
+  iconCalendario.innerHTML = '<svg class="hicon" style="width:17px;height:17px;" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>';
   const chiaveMostrata = filtroGiornoRicoveri || chiaveOggi;
   const etichettaGiorno = chiaveMostrata === chiaveOggi
     ? 'Oggi, ' + oggi.toLocaleDateString('it-IT', { day:'numeric', month:'long' })
     : formattaGiornoEsteso(chiaveMostrata);
   const totale = listCompleta.length;
-  summaryTitle.textContent = etichettaGiorno
+  const testoData = document.createElement('span');
+  testoData.textContent = etichettaGiorno
     + (totale ? ` · ${totale} ricover${totale === 1 ? 'o' : 'i'} totali` : '');
+  summaryTitle.appendChild(iconCalendario);
+  summaryTitle.appendChild(testoData);
   summaryRow.appendChild(chev);
   summaryRow.appendChild(summaryTitle);
   summary.appendChild(summaryRow);
@@ -1770,9 +1782,9 @@ function renderCalendarioRicoveri(listCompleta){
 
   const grid = document.createElement('div');
   grid.className = 'ric-cal-grid';
-  GIORNI_SETTIMANA.forEach(g => {
+  GIORNI_SETTIMANA.forEach((g, idx) => {
     const w = document.createElement('div');
-    w.className = 'ric-cal-weekday';
+    w.className = 'ric-cal-weekday' + (idx >= 5 ? ' weekend' : '');
     w.textContent = g;
     grid.appendChild(w);
   });
@@ -1792,8 +1804,10 @@ function renderCalendarioRicoveri(listCompleta){
 
   for(let giorno = 1; giorno <= giorniNelMese; giorno++){
     const chiave = annoVista + '-' + String(meseVista + 1).padStart(2, '0') + '-' + String(giorno).padStart(2, '0');
+    const posSettimana = (offset + giorno - 1) % 7; // 0=lun ... 6=dom
     const cella = document.createElement('div');
     cella.className = 'ric-cal-day'
+      + (posSettimana >= 5 ? ' weekend' : '')
       + (chiave === chiaveOggi ? ' oggi' : '')
       + (chiave === filtroGiornoRicoveri ? ' attivo' : '');
     const numero = document.createElement('div');
@@ -1807,7 +1821,6 @@ function renderCalendarioRicoveri(listCompleta){
     cella.onclick = (e) => {
       e.preventDefault(); e.stopPropagation();
       filtroGiornoRicoveri = (filtroGiornoRicoveri === chiave) ? null : chiave;
-      calendarioAperto = false;
       renderRicoveri();
     };
     grid.appendChild(cella);
