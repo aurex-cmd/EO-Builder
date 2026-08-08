@@ -985,9 +985,11 @@ window.addEventListener('error', function(e){
    ============================================================ */
 const state = {
   sesso: null,
-  outputManuale: '',
-  outputManualeBase: '',
-  usaOutputManuale: false,
+  // testo scritto a mano in coda al referto generato dai tag (es. esami
+  // ematochimici, provvedimenti): resta sempre lì, anche se poi si tocca
+  // un tag e la parte generata cambia — vedi refreshUI() e il listener
+  // sull'input dell'output più in basso
+  outputExtra: '',
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
@@ -2486,9 +2488,20 @@ function serializeState(){
 function applyStateObject(o){
   o = o || {};
   state.sesso = o.sesso ?? null;
-  state.outputManuale = o.outputManuale ?? '';
-  state.outputManualeBase = o.outputManualeBase ?? '';
-  state.usaOutputManuale = o.usaOutputManuale ?? false;
+  if(o.outputExtra !== undefined){
+    state.outputExtra = o.outputExtra || '';
+  } else if(o.usaOutputManuale && o.outputManuale){
+    // migrazione dal vecchio meccanismo (tutto il referto congelato finché
+    // non si toccava un tag): proviamo a isolare solo la parte aggiunta a
+    // mano rispetto al testo generato di allora, per non perdere nulla
+    const vecchioAuto = o.outputManualeBase || '';
+    const vecchioManuale = o.outputManuale || '';
+    state.outputExtra = vecchioManuale.startsWith(vecchioAuto)
+      ? vecchioManuale.slice(vecchioAuto.length).replace(/^\s+/, '')
+      : vecchioManuale;
+  } else {
+    state.outputExtra = '';
+  }
   state.coscienza.primary = o.coscienza?.primary ?? 'vigile';
   state.coscienza.soporosoRisvegliabile = o.coscienza?.soporosoRisvegliabile ?? '';
   state.coscienza.soporosoStimolo = o.coscienza?.soporosoStimolo ?? '';
@@ -3148,10 +3161,8 @@ function getRefertoFor(patientState){
   applyStateObject(patientState);
   const autoText = composeReferto();
   applyStateObject(backup);
-  if(patientState.usaOutputManuale && autoText === patientState.outputManualeBase){
-    return patientState.outputManuale;
-  }
-  return autoText;
+  const extra = (patientState.outputExtra || '').trim();
+  return extra ? autoText + '\n\n' + extra : autoText;
 }
 
 function schedeConDati(){
@@ -5249,26 +5260,27 @@ function refreshUI(){
   syncInputsToState();
   renderAll();
   const autoText = composeReferto();
-  let testoFinale;
-  if(state.usaOutputManuale && autoText === state.outputManualeBase){
-    testoFinale = state.outputManuale;
-  } else {
-    testoFinale = autoText;
-    state.usaOutputManuale = false; // qualcosa è cambiato: la modifica manuale non è più valida
-  }
-  document.getElementById('output').value = testoFinale;
+  const extra = (state.outputExtra || '').trim();
+  document.getElementById('output').value = extra ? autoText + '\n\n' + extra : autoText;
 }
 function update(){
   refreshUI();
   autosaveCurrentPatient();
 }
-// modifica manuale del referto: la salviamo com'è (senza toccare refreshUI,
-// altrimenti sovrascriveremmo quello che si sta scrivendo). Resta valida
-// finché non cambia qualcosa nelle scelte sopra (vedi refreshUI).
+// quello che si scrive a mano DOPO il testo generato dai tag (tipicamente
+// esami ematochimici/provvedimenti aggiunti a capo) viene isolato e tenuto
+// da parte in state.outputExtra: così, se poi si tocca un tag, si rigenera
+// solo la parte "vera" e l'aggiunta manuale resta al suo posto. Se invece
+// si modifica direttamente la parte generata, quella modifica lì sopravvive
+// solo finché non si tocca di nuovo un tag (a quel punto torna quella vera)
 document.getElementById('output').addEventListener('input', (e) => {
-  state.outputManuale = e.target.value;
-  state.outputManualeBase = composeReferto();
-  state.usaOutputManuale = true;
+  const nuovoValore = e.target.value;
+  const autoText = composeReferto();
+  if(nuovoValore.startsWith(autoText)){
+    state.outputExtra = nuovoValore.slice(autoText.length).replace(/^\s+/, '');
+  } else {
+    state.outputExtra = nuovoValore;
+  }
   autosaveCurrentPatient();
 });
 
