@@ -291,6 +291,48 @@
   .admit-block-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
+  /* calendario dei ricoveri */
+  .ric-cal{ margin-bottom:14px; }
+  .ric-cal-nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 13px; gap:8px;
+  }
+  .ric-cal-nav-btn{
+    width:28px; height:28px; border-radius:50%; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--ink-dim); font-size:14px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .ric-cal-nav-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  .ric-cal-mese{ font-family:var(--font-display); font-weight:600; font-size:14.5px; color:var(--ink); text-transform:capitalize; }
+  .ric-cal-grid{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:3px;
+    padding:0 13px 13px;
+  }
+  .ric-cal-weekday{
+    text-align:center; font-family:var(--font-mono); font-size:10.5px;
+    color:var(--ink-dim); padding-bottom:4px; text-transform:uppercase;
+  }
+  .ric-cal-day{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:9px; font-family:var(--font-body); font-size:13px; color:var(--ink);
+    cursor:pointer; gap:3px; position:relative; background:transparent;
+  }
+  .ric-cal-day:hover{ background:var(--panel-2); }
+  .ric-cal-day.vuoto{ cursor:default; visibility:hidden; }
+  .ric-cal-day.oggi{ font-weight:700; color:var(--signal); }
+  .ric-cal-day.attivo{ background:var(--signal-dim); color:var(--signal); font-weight:700; }
+  .ric-cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--signal); }
+  .ric-cal-filtro{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin:0 0 12px; padding:9px 13px; border-radius:10px;
+    background:var(--signal-dim); border:1px solid var(--signal-dim);
+  }
+  .ric-cal-filtro span{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); font-weight:600; text-transform:capitalize; }
+  .ric-cal-filtro button{
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
+    background:transparent; border:1px solid var(--signal); border-radius:7px; padding:4px 10px; cursor:pointer;
+  }
+  .admit-checkbox{ width:17px; height:17px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
   .admit-block-actions{ display:flex; flex-wrap:wrap; gap:6px; }
   .admit-del-btn{
     font-family:var(--font-body); font-size:12px; font-weight:600;
@@ -314,6 +356,7 @@
     padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
   }
   .admit-editable:focus{ border-color:var(--signal); }
+  .admit-editable:empty::before{ content:attr(data-placeholder); color:var(--ink-dim); }
   /* righe "altro esame" (+ ECG ecc.) dentro Esami strumentali */
   .altro-esame-row{
     display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
@@ -505,6 +548,8 @@
     </div>
   </div>
 
+  <div id="ricoveri-calendario"></div>
+
   <div class="group" id="ricoveri-tabs-group" style="display:none;">
     <div class="group-label">I tuoi ricoveri (clicca per richiamarlo e modificarlo)</div>
     <div class="patient-tabs" id="ricoveri-tabs"></div>
@@ -560,11 +605,6 @@
     <div class="admit-field">
       <div class="field-label">Allergie</div>
       <input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine">
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Problemi attivi</div>
-      <textarea id="admit-problemi" placeholder="Polmonite dx: ceftriaxone ev&#10;IVU: CV"></textarea>
     </div>
 
     <div class="admit-field">
@@ -1159,6 +1199,12 @@ let currentRicoveroId = null;
 // id dei ricoveri con la tendina aperta (solo in memoria: all'avvio sono
 // tutti compattati, tranne quello appena generato/modificato)
 let ricoveriAperti = new Set();
+// stato del calendario dei ricoveri: giorno su cui è filtrata la lista
+// (null = mostra tutti), se la tendina del calendario è aperta, e quale
+// mese sta guardando (tutto solo in memoria, si azzera ricaricando la pagina)
+let filtroGiornoRicoveri = null;
+let calendarioAperto = false;
+let calendarioVista = new Date();
 
 function nextRicoveroSeq(){
   let n = 0;
@@ -1187,6 +1233,19 @@ function loadRicoveri(){
       delete r.anamnesi;
       migrato = true;
     }
+    // data di creazione: se manca (schede create prima di questa modifica)
+    // la recuperiamo dall'id, che la contiene ("ric_<timestamp>_...")
+    if(!r.creatoIl){
+      const m = /^ric_(\d+)_/.exec(r.id || '');
+      r.creatoIl = m ? parseInt(m[1], 10) : Date.now();
+      migrato = true;
+    }
+    // flag "da includere nell'export": di default le schede già esistenti
+    // restano selezionate, per non sorprendere chi aggiorna l'app
+    if(r.selezionato === undefined){ r.selezionato = true; migrato = true; }
+    // il box "Problemi attivi" ora esiste sempre (si scrive a mano dopo
+    // aver generato il ricovero, non più a partire da un campo del form)
+    if(r.problemi === undefined){ r.problemi = ''; migrato = true; }
   });
   if(migrato) saveRicoveri(list);
   return list;
@@ -1375,17 +1434,6 @@ function costruisciAllergie(f){
   return (f.allergie || '').trim();
 }
 
-// "Problemi attivi" nel ricovero generato: stesso elenco scritto nel box del
-// form, normalizzato con un trattino per riga
-function costruisciProblemi(f){
-  if(!f.problemi) return '';
-  return f.problemi.split('\n')
-    .map(r => r.trim().replace(/^-+\s*/, ''))
-    .filter(Boolean)
-    .map(r => '- ' + r)
-    .join('\n');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const chipsEl = document.getElementById('admit-sesso-chips');
   if(chipsEl){
@@ -1439,7 +1487,6 @@ function raccogliCampiForm(){
     eta: document.getElementById('admit-eta').value,
     diagnosi: document.getElementById('admit-diagnosi').value,
     allergie: document.getElementById('admit-allergie').value,
-    problemi: document.getElementById('admit-problemi').value,
     prossima: document.getElementById('admit-prossima').value,
     provvedimenti: document.getElementById('admit-provvedimenti').value,
     ematochimici: document.getElementById('admit-ematochimici').value,
@@ -1459,7 +1506,7 @@ function raccogliCampiForm(){
 }
 
 function svuotaFormRicovero(){
-  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-allergie','admit-problemi','admit-prossima','admit-provvedimenti',
+  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-allergie','admit-prossima','admit-provvedimenti',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id).value = '';
@@ -1500,14 +1547,15 @@ function generaRicovero(){
   const farmacologica = costruisciFarmacologica(campi);
   const familiare = costruisciFamiliare(campi);
   const allergie = costruisciAllergie(campi);
-  const problemi = costruisciProblemi(campi);
 
   const list = loadRicoveri();
 
   if(currentRicoveroId){
     const idx = list.findIndex(r => r.id === currentRicoveroId);
     if(idx !== -1){
-      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare, allergie, problemi };
+      // "problemi" non fa parte del form: si scrive solo a mano nel box del
+      // ricovero già generato, quindi qui non va toccato/sovrascritto
+      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare, allergie };
       saveRicoveri(list);
       ricoveriAperti.add(currentRicoveroId);
       renderRicoveri();
@@ -1520,6 +1568,8 @@ function generaRicovero(){
   const record = {
     id: 'ric_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
     seq: nextRicoveroSeq(),
+    creatoIl: Date.now(),
+    selezionato: true,
     label,
     campi,
     diario,
@@ -1528,7 +1578,7 @@ function generaRicovero(){
     farmacologica,
     familiare,
     allergie,
-    problemi
+    problemi: ''
   };
   list.push(record);
   saveRicoveri(list);
@@ -1555,7 +1605,6 @@ function caricaRicovero(id){
   document.getElementById('admit-eta').value = c.eta || '';
   document.getElementById('admit-diagnosi').value = c.diagnosi || '';
   document.getElementById('admit-allergie').value = c.allergie || '';
-  document.getElementById('admit-problemi').value = c.problemi || '';
   document.getElementById('admit-prossima').value = c.prossima || '';
   document.getElementById('admit-provvedimenti').value = c.provvedimenti || '';
   document.getElementById('admit-ematochimici').value = c.ematochimici || '';
@@ -1609,15 +1658,170 @@ function renderRicoveriTabs(){
   });
 }
 
+function toggleSelezioneRicovero(id, selezionato){
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === id);
+  if(idx === -1) return;
+  list[idx].selezionato = selezionato;
+  saveRicoveri(list);
+}
+
+// "YYYY-MM-DD" a partire da un timestamp — usato per raggruppare i
+// ricoveri per giorno nel calendario e per il filtro della lista
+function chiaveGiorno(timestamp){
+  const d = new Date(timestamp);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function formattaGiornoEsteso(chiave){
+  const [anno, mese, giorno] = chiave.split('-').map(Number);
+  const d = new Date(anno, mese - 1, giorno);
+  return d.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' });
+}
+
+const GIORNI_SETTIMANA = ['L','M','M','G','V','S','D'];
+
+function renderCalendarioRicoveri(listCompleta){
+  const container = document.getElementById('ricoveri-calendario');
+  container.innerHTML = '';
+
+  // quanti ricoveri per ciascun giorno, per i puntini e per il riepilogo di oggi
+  const conteggioPerGiorno = {};
+  listCompleta.forEach(rec => {
+    const k = chiaveGiorno(rec.creatoIl);
+    conteggioPerGiorno[k] = (conteggioPerGiorno[k] || 0) + 1;
+  });
+
+  const oggi = new Date();
+  const chiaveOggi = chiaveGiorno(oggi.getTime());
+
+  const dettagli = document.createElement('details');
+  dettagli.className = 'admit-block ric-cal';
+  dettagli.open = calendarioAperto;
+  dettagli.addEventListener('toggle', () => { calendarioAperto = dettagli.open; });
+
+  const summary = document.createElement('summary');
+  summary.className = 'admit-block-head';
+  const summaryRow = document.createElement('div');
+  summaryRow.className = 'admit-block-title-row';
+  const chev = document.createElement('span');
+  chev.className = 'admit-chev';
+  chev.textContent = '›';
+  const summaryTitle = document.createElement('div');
+  summaryTitle.className = 'admit-block-title';
+  const contoOggi = conteggioPerGiorno[chiaveOggi] || 0;
+  summaryTitle.textContent = 'Oggi, ' + oggi.toLocaleDateString('it-IT', { day:'numeric', month:'long' })
+    + (contoOggi ? ` · ${contoOggi} ricover${contoOggi === 1 ? 'o' : 'i'}` : '');
+  summaryRow.appendChild(chev);
+  summaryRow.appendChild(summaryTitle);
+  summary.appendChild(summaryRow);
+  dettagli.appendChild(summary);
+
+  const corpo = document.createElement('div');
+
+  const nav = document.createElement('div');
+  nav.className = 'ric-cal-nav';
+  const prevBtn = document.createElement('div');
+  prevBtn.className = 'ric-cal-nav-btn';
+  prevBtn.textContent = '‹';
+  prevBtn.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    calendarioVista = new Date(calendarioVista.getFullYear(), calendarioVista.getMonth() - 1, 1);
+    renderCalendarioRicoveri(loadRicoveri());
+  };
+  const meseLabel = document.createElement('div');
+  meseLabel.className = 'ric-cal-mese';
+  meseLabel.textContent = calendarioVista.toLocaleDateString('it-IT', { month:'long', year:'numeric' });
+  const nextBtn = document.createElement('div');
+  nextBtn.className = 'ric-cal-nav-btn';
+  nextBtn.textContent = '›';
+  nextBtn.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    calendarioVista = new Date(calendarioVista.getFullYear(), calendarioVista.getMonth() + 1, 1);
+    renderCalendarioRicoveri(loadRicoveri());
+  };
+  nav.appendChild(prevBtn);
+  nav.appendChild(meseLabel);
+  nav.appendChild(nextBtn);
+  corpo.appendChild(nav);
+
+  const grid = document.createElement('div');
+  grid.className = 'ric-cal-grid';
+  GIORNI_SETTIMANA.forEach(g => {
+    const w = document.createElement('div');
+    w.className = 'ric-cal-weekday';
+    w.textContent = g;
+    grid.appendChild(w);
+  });
+
+  const annoVista = calendarioVista.getFullYear();
+  const meseVista = calendarioVista.getMonth();
+  const primoDelMese = new Date(annoVista, meseVista, 1);
+  // lunedì = 0 ... domenica = 6 (in Italia la settimana inizia di lunedì)
+  const offset = (primoDelMese.getDay() + 6) % 7;
+  const giorniNelMese = new Date(annoVista, meseVista + 1, 0).getDate();
+
+  for(let i = 0; i < offset; i++){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'ric-cal-day vuoto';
+    grid.appendChild(vuoto);
+  }
+
+  for(let giorno = 1; giorno <= giorniNelMese; giorno++){
+    const chiave = annoVista + '-' + String(meseVista + 1).padStart(2, '0') + '-' + String(giorno).padStart(2, '0');
+    const cella = document.createElement('div');
+    cella.className = 'ric-cal-day'
+      + (chiave === chiaveOggi ? ' oggi' : '')
+      + (chiave === filtroGiornoRicoveri ? ' attivo' : '');
+    const numero = document.createElement('div');
+    numero.textContent = giorno;
+    cella.appendChild(numero);
+    if(conteggioPerGiorno[chiave]){
+      const dot = document.createElement('div');
+      dot.className = 'ric-cal-dot';
+      cella.appendChild(dot);
+    }
+    cella.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      filtroGiornoRicoveri = (filtroGiornoRicoveri === chiave) ? null : chiave;
+      calendarioAperto = false;
+      renderRicoveri();
+    };
+    grid.appendChild(cella);
+  }
+
+  corpo.appendChild(grid);
+  dettagli.appendChild(corpo);
+  container.appendChild(dettagli);
+}
+
 function renderRicoveri(){
   const container = document.getElementById('ricoveri-lista');
   container.innerHTML = '';
-  const list = loadRicoveri();
+  const listCompleta = loadRicoveri();
+
+  renderCalendarioRicoveri(listCompleta);
+
+  const list = filtroGiornoRicoveri
+    ? listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri)
+    : listCompleta;
+
+  if(filtroGiornoRicoveri){
+    const filtro = document.createElement('div');
+    filtro.className = 'ric-cal-filtro';
+    const testo = document.createElement('span');
+    testo.textContent = formattaGiornoEsteso(filtroGiornoRicoveri);
+    const chiudi = document.createElement('button');
+    chiudi.textContent = 'Mostra tutti';
+    chiudi.onclick = () => { filtroGiornoRicoveri = null; renderRicoveri(); };
+    filtro.appendChild(testo);
+    filtro.appendChild(chiudi);
+    container.appendChild(filtro);
+  }
 
   if(list.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
-    vuoto.textContent = 'Nessun ricovero composto per ora.';
+    vuoto.textContent = filtroGiornoRicoveri ? 'Nessun ricovero in questo giorno.' : 'Nessun ricovero composto per ora.';
     container.appendChild(vuoto);
     renderRicoveriTabs();
     return;
@@ -1637,12 +1841,20 @@ function renderRicoveri(){
 
     const titleWrap = document.createElement('div');
     titleWrap.className = 'admit-block-title-row';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'admit-checkbox';
+    checkbox.checked = rec.selezionato !== false;
+    checkbox.title = 'Includi nel prossimo export delle consegne';
+    checkbox.onclick = (e) => { e.stopPropagation(); };
+    checkbox.onchange = () => toggleSelezioneRicovero(rec.id, checkbox.checked);
     const chev = document.createElement('span');
     chev.className = 'admit-chev';
     chev.textContent = '›';
     const title = document.createElement('div');
     title.className = 'admit-block-title';
     title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
+    titleWrap.appendChild(checkbox);
     titleWrap.appendChild(chev);
     titleWrap.appendChild(title);
 
@@ -1682,7 +1894,7 @@ function renderRicoveri(){
       ['farmacologica', 'Anamnesi farmacologica'],
       ['problemi', 'Problemi attivi']
     ].forEach(([campo, etichetta]) => {
-      if(!(rec[campo] || '').trim()) return;
+      if(campo !== 'problemi' && !(rec[campo] || '').trim()) return;
 
       const sub = document.createElement('div');
       sub.className = 'admit-sub';
@@ -1703,6 +1915,9 @@ function renderRicoveri(){
       editable.className = 'admit-editable';
       editable.contentEditable = 'true';
       editable.textContent = rec[campo] || '';
+      if(campo === 'problemi'){
+        editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
+      }
       editable.addEventListener('input', () => {
         const list2 = loadRicoveri();
         const idx = list2.findIndex(r => r.id === rec.id);
@@ -1954,7 +2169,7 @@ function preparaDatiConsegna(rec){
     comorbidita: costruisciRemota(c),
     programma: costruisciFamiliare(c),
     farmaci: formattaElencoConVirgole(c.farmacologica),
-    problemi: parseProblemiAttivi(c.problemi)
+    problemi: parseProblemiAttivi(rec.problemi)
   };
 }
 
@@ -2202,8 +2417,8 @@ function paragrafoRepartoXml(nomeReparto){
 // ricoveri nello stesso reparto vanno insieme sotto la stessa intestazione,
 // indipendentemente da quando sono stati generati
 function generaTutteLeConsegneDocx(){
-  const list = loadRicoveri();
-  if(list.length === 0){ showToast('Nessun ricovero da esportare'); return; }
+  const list = loadRicoveri().filter(r => r.selezionato);
+  if(list.length === 0){ showToast('Nessun ricovero selezionato: spunta quelli da esportare'); return; }
 
   const gruppi = {};
   list.forEach(rec => {
