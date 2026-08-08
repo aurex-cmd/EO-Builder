@@ -270,7 +270,7 @@
   @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
   .admit-block{
     margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:12px;
-    background:var(--panel); overflow:hidden;
+    background:var(--panel-3); overflow:hidden;
   }
   .admit-block:last-child{ margin-bottom:0; }
   .admit-block-head{
@@ -292,7 +292,7 @@
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
   /* calendario dei ricoveri */
-  .ric-cal{ margin-bottom:14px; }
+  #ricoveri-calendario .ric-cal{ margin-bottom:22px; }
   .ric-cal-nav{
     display:flex; align-items:center; justify-content:space-between;
     padding:11px 13px; gap:8px;
@@ -1669,10 +1669,10 @@ function renderRicoveriTabs(){
   label.textContent = 'Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri) + ' (clicca per richiamarne uno)';
   tabsEl.innerHTML = '';
 
-  list.forEach(rec => {
+  list.forEach((rec, i) => {
     const riga = document.createElement('div');
     riga.className = 'ric-lista-riga' + (rec.id === currentRicoveroId ? ' attivo' : '');
-    riga.textContent = rec.label || `Ricovero ${rec.seq}`;
+    riga.textContent = `${i + 1}. ` + (rec.label || `Ricovero ${rec.seq}`);
     riga.onclick = () => caricaRicovero(rec.id);
     tabsEl.appendChild(riga);
   });
@@ -1728,9 +1728,13 @@ function renderCalendarioRicoveri(listCompleta){
   chev.textContent = '›';
   const summaryTitle = document.createElement('div');
   summaryTitle.className = 'admit-block-title';
-  const contoOggi = conteggioPerGiorno[chiaveOggi] || 0;
-  summaryTitle.textContent = 'Oggi, ' + oggi.toLocaleDateString('it-IT', { day:'numeric', month:'long' })
-    + (contoOggi ? ` · ${contoOggi} ricover${contoOggi === 1 ? 'o' : 'i'}` : '');
+  const chiaveMostrata = filtroGiornoRicoveri || chiaveOggi;
+  const etichettaGiorno = chiaveMostrata === chiaveOggi
+    ? 'Oggi, ' + oggi.toLocaleDateString('it-IT', { day:'numeric', month:'long' })
+    : formattaGiornoEsteso(chiaveMostrata);
+  const totale = listCompleta.length;
+  summaryTitle.textContent = etichettaGiorno
+    + (totale ? ` · ${totale} ricover${totale === 1 ? 'o' : 'i'} totali` : '');
   summaryRow.appendChild(chev);
   summaryRow.appendChild(summaryTitle);
   summary.appendChild(summaryRow);
