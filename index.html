@@ -77,11 +77,17 @@
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
     box-shadow:0 1px 2px rgba(0,0,0,.2);
     transition:transform .12s ease, background .15s ease, opacity .15s ease;
+    display:inline-flex; align-items:center; gap:6px; position:relative;
   }
   .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
   .topnav-btn:active{ transform:scale(.93); opacity:.85; }
   .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
   .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
+  .topnav-btn .topnav-icon, .active-bed-badge .topnav-icon{ width:15px; height:15px; flex-shrink:0; stroke:currentColor; }
+  .topnav-btn.vista-attiva::after{
+    content:''; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
+    width:22px; height:3px; border-radius:3px; background:var(--signal);
+  }
   .active-bed-badge{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-mono);
     font-size:12.5px; font-weight:600; letter-spacing:-0.01em;
@@ -89,10 +95,30 @@
     background:var(--folder-dim); color:var(--folder);
     box-shadow:0 1px 2px rgba(0,0,0,.2);
     cursor:pointer; transition:transform .12s ease, opacity .15s ease;
+    display:inline-flex; align-items:center; gap:6px;
   }
   .active-bed-badge:active{ transform:scale(.93); opacity:.85; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; }
+  .sync-box{
+    border:1px solid var(--line); border-radius:12px; padding:13px 14px;
+    background:var(--panel-2);
+  }
+  .sync-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
+  .sync-title{
+    display:flex; align-items:center; gap:8px;
+    font-size:13.5px; font-weight:600; color:var(--ink);
+  }
+  .sync-title .hicon{ width:17px; height:17px; color:var(--signal); }
+  .sync-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
+    background:var(--signal-dim); border-radius:999px; padding:4px 11px;
+  }
+  .sync-badge .hicon{ width:13px; height:13px; }
+  .input-con-icona{ position:relative; display:flex; align-items:center; flex:1; min-width:0; }
+  .input-con-icona .hicon{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-dim); pointer-events:none; }
+  .input-con-icona input{ padding-left:33px !important; width:100%; }
   .settore-dot{
     width:48px; height:48px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
@@ -128,6 +154,12 @@
   }
   .bed-tile-del:hover, .bed-tile-del:active{ border-color:#d9695f; color:#e2867e; }
   .bed-tile-del.confirm{ background:#7a3b33; color:#f5d9d5; border-color:#d9695f; }
+  .bed-tile-attiva-badge{
+    position:absolute; top:-7px; left:-7px; width:18px; height:18px;
+    border-radius:50%; background:var(--signal); border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .bed-tile-attiva-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
   .ecg-wrap{ height:34px; margin:8px 0 0; overflow:hidden; }
   .ecg-wrap svg{ width:100%; height:100%; display:block; }
   .ecg-line{
@@ -479,9 +511,9 @@
     </div>
     <div class="header-nav">
       <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
-      <button class="topnav-btn" onclick="apriRiepilogo()">Diari</button>
-      <button class="topnav-btn" onclick="toggleWardMap()">Reparto</button>
-      <button class="topnav-btn admit" onclick="apriRicoveri()">Ricoveri</button>
+      <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
+      <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
+      <button class="topnav-btn admit" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Ricoveri</button>
     </div>
   </div>
   <div class="ecg-wrap" aria-hidden="true">
@@ -495,8 +527,11 @@
 <div class="card" id="wardmap-view" style="display:none; background:var(--panel-2);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
-  <div class="group" id="sync-group">
-    <div class="group-label">Sincronizzazione tra dispositivi</div>
+  <div class="group sync-box" id="sync-group">
+    <div class="sync-header-row">
+      <div class="sync-title"><svg class="hicon" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Sincronizzazione tra dispositivi</div>
+      <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
+    </div>
     <div id="sync-logged-out">
       <div class="inline-fields">
         <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
@@ -510,13 +545,13 @@
     </div>
     <div id="sync-logged-in" style="display:none;">
       <div class="group-label" id="sync-logged-in-text"></div>
-      <button class="btn" onclick="syncLogout()">Disconnetti</button>
+      <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
     </div>
   </div>
 
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
-    <button class="btn" id="elimina-paziente-btn" onclick="eliminaPazienteAttivo()">Elimina scheda attiva</button>
+    <button class="btn" id="elimina-paziente-btn" onclick="eliminaPazienteAttivo()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/><path d="M6 7l1 13a1.5 1.5 0 001.5 1.4h7a1.5 1.5 0 001.5-1.4l1-13"/><path d="M10 11v6M14 11v6"/></svg>Elimina scheda attiva</button>
   </div>
 
   <div class="group">
@@ -530,8 +565,11 @@
   <div class="group">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
     <div class="inline-fields">
-      <input type="text" id="letto-libero-nome" class="wide" style="max-width:220px;" placeholder="es. Appoggio 1">
-      <button class="btn primary" onclick="apriLettoLibero()">Apri/crea</button>
+      <div class="input-con-icona" style="max-width:220px;">
+        <svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg>
+        <input type="text" id="letto-libero-nome" class="wide" placeholder="es. Appoggio 1">
+      </div>
+      <button class="btn primary" onclick="apriLettoLibero()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1H3z"/><path d="M3 10h18l-1.5 9a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7z"/><path d="M12 12.5v5M9.5 15h5"/></svg>Apri/crea</button>
     </div>
   </div>
 
@@ -1163,14 +1201,17 @@ async function aggiornaStatoSync(){
   const user = data && data.user;
   const outEl = document.getElementById('sync-logged-out');
   const inEl = document.getElementById('sync-logged-in');
+  const badge = document.getElementById('sync-connesso-badge');
   if(!outEl || !inEl) return;
   if(user){
     outEl.style.display = 'none';
     inEl.style.display = '';
+    if(badge) badge.style.display = '';
     document.getElementById('sync-logged-in-text').textContent = 'Connesso come ' + user.email;
   } else {
     outEl.style.display = '';
     inEl.style.display = 'none';
+    if(badge) badge.style.display = 'none';
   }
 }
 
@@ -2913,6 +2954,11 @@ function mostraVista(v){
   if(v === 'wardmap') renderWardMap();
   if(v === 'riepilogo') renderRiepilogo();
   if(v === 'ricoveri') renderRicoveri();
+
+  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', ricoveri:'topnav-ricoveri' };
+  ['topnav-diari','topnav-reparto','topnav-ricoveri'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
+  });
 }
 function toggleWardMap(){
   wardMapOpen ? chiudiWardMap() : apriWardMap();
@@ -2927,7 +2973,7 @@ function renderHeaderBadge(){
   const active = patients[currentPatientId];
   const badge = document.getElementById('active-bed-badge');
   if(active){
-    badge.textContent = active.name;
+    badge.innerHTML = '<svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg>' + escapeHtml(active.name);
     badge.style.display = '';
   } else {
     badge.style.display = 'none';
@@ -2970,6 +3016,14 @@ function renderWardMap(){
     const numero = document.createElement('span');
     numero.textContent = n;
     tile.appendChild(numero);
+
+    if(entry && entry[1].refertoCopiato && isOggi(entry[1].refertoCopiatoIl)){
+      const spunta = document.createElement('div');
+      spunta.className = 'bed-tile-attiva-badge';
+      spunta.title = 'Diario copiato oggi';
+      spunta.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+      tile.appendChild(spunta);
+    }
 
     // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
     // prima aprire: doppio click di conferma (come "Elimina scheda attiva")
@@ -3114,20 +3168,21 @@ function eliminaSchedaDaLetto(id){
 // conferma a due click sul pulsante stesso, niente popup nativi.
 function eliminaPazienteAttivo(){
   const btn = document.getElementById('elimina-paziente-btn');
+  const iconCestino = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/><path d="M6 7l1 13a1.5 1.5 0 001.5 1.4h7a1.5 1.5 0 001.5-1.4l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
   if(!currentPatientId) return;
   if(!eliminaArmed){
     eliminaArmed = true;
-    btn.textContent = 'Confermi? Clicca di nuovo';
+    btn.innerHTML = iconCestino + 'Confermi? Clicca di nuovo';
     clearTimeout(eliminaTimer);
     eliminaTimer = setTimeout(() => {
       eliminaArmed = false;
-      btn.textContent = 'Elimina scheda attiva';
+      btn.innerHTML = iconCestino + 'Elimina scheda attiva';
     }, 3000);
     return;
   }
   clearTimeout(eliminaTimer);
   eliminaArmed = false;
-  btn.textContent = 'Elimina scheda attiva';
+  btn.innerHTML = iconCestino + 'Elimina scheda attiva';
   const patients = loadPatients();
   delete patients[currentPatientId];
   savePatients(patients);
@@ -5321,7 +5376,7 @@ function copyOutput(){
   // può non esistere o rifiutare la richiesta.
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(out.value)
-      .then(()=>showToast('Copiato negli appunti'))
+      .then(()=>{ showToast('Copiato negli appunti'); segnaRefertoCopiato(); })
       .catch(()=>fallbackCopy(out));
   } else {
     fallbackCopy(out);
@@ -5331,9 +5386,23 @@ function fallbackCopy(out){
   try{
     const ok = document.execCommand('copy');
     showToast(ok ? 'Copiato negli appunti' : 'Copia manualmente (Ctrl/Cmd+C)');
+    if(ok) segnaRefertoCopiato();
   } catch(e){
     showToast('Copia manualmente (Ctrl/Cmd+C)');
   }
+}
+// il pallino verde sul letto (in Reparto) segnala "ho davvero copiato il
+// diario di oggi per questo paziente" — si accende solo qui, non appena
+// apro la scheda. Chi è il letto aperto ORA lo indica invece il bordo
+// evidenziato del riquadro (.bed-tile.active), non questo badge.
+function segnaRefertoCopiato(){
+  if(!currentPatientId) return;
+  const patients = loadPatients();
+  if(!patients[currentPatientId]) return;
+  patients[currentPatientId].refertoCopiato = true;
+  patients[currentPatientId].refertoCopiatoIl = Date.now();
+  savePatients(patients);
+  renderWardMap();
 }
 
 // window.confirm() può essere bloccato in alcune anteprime sandbox: uso una
