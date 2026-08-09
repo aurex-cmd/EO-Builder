@@ -1284,9 +1284,10 @@ let currentRicoveroId = null;
 // tutti compattati, tranne quello appena generato/modificato)
 let ricoveriAperti = new Set();
 // stato del calendario dei ricoveri: giorno su cui è filtrata la lista
-// (null = mostra tutti), se la tendina del calendario è aperta, e quale
-// mese sta guardando (tutto solo in memoria, si azzera ricaricando la pagina)
-let filtroGiornoRicoveri = null;
+// (sempre uno preciso, di default oggi: la lista non mostra mai "tutti i
+// ricoveri" insieme), se la tendina del calendario è aperta, e quale mese
+// sta guardando (tutto solo in memoria, si azzera ricaricando la pagina)
+let filtroGiornoRicoveri = chiaveGiorno(Date.now());
 let calendarioAperto = false;
 let calendarioVista = new Date();
 
@@ -1952,7 +1953,7 @@ function renderCalendarioRicoveri(listCompleta){
     }
     cella.onclick = (e) => {
       e.preventDefault(); e.stopPropagation();
-      filtroGiornoRicoveri = (filtroGiornoRicoveri === chiave) ? null : chiave;
+      filtroGiornoRicoveri = chiave;
       renderRicoveri();
     };
     grid.appendChild(cella);
@@ -1970,27 +1971,26 @@ function renderRicoveri(){
 
   renderCalendarioRicoveri(listCompleta);
 
-  const list = filtroGiornoRicoveri
-    ? listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri)
-    : listCompleta;
+  const list = listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
 
-  if(filtroGiornoRicoveri){
-    const filtro = document.createElement('div');
-    filtro.className = 'ric-cal-filtro';
-    const testo = document.createElement('span');
-    testo.textContent = formattaGiornoEsteso(filtroGiornoRicoveri);
-    const chiudi = document.createElement('button');
-    chiudi.textContent = 'Mostra tutti';
-    chiudi.onclick = () => { filtroGiornoRicoveri = null; renderRicoveri(); };
-    filtro.appendChild(testo);
-    filtro.appendChild(chiudi);
-    container.appendChild(filtro);
+  const filtro = document.createElement('div');
+  filtro.className = 'ric-cal-filtro';
+  const testo = document.createElement('span');
+  testo.textContent = formattaGiornoEsteso(filtroGiornoRicoveri);
+  filtro.appendChild(testo);
+  const chiaveOggiLista = chiaveGiorno(Date.now());
+  if(filtroGiornoRicoveri !== chiaveOggiLista){
+    const tornaOggi = document.createElement('button');
+    tornaOggi.textContent = 'Torna a oggi';
+    tornaOggi.onclick = () => { filtroGiornoRicoveri = chiaveOggiLista; renderRicoveri(); };
+    filtro.appendChild(tornaOggi);
   }
+  container.appendChild(filtro);
 
   if(list.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
-    vuoto.textContent = filtroGiornoRicoveri ? 'Nessun ricovero in questo giorno.' : 'Nessun ricovero composto per ora.';
+    vuoto.textContent = 'Nessun ricovero in questo giorno.';
     container.appendChild(vuoto);
     renderRicoveriTabs();
     return;
