@@ -87,6 +87,8 @@
   .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
   .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
   .topnav-btn .topnav-icon, .active-bed-badge .topnav-icon{ width:15px; height:15px; flex-shrink:0; stroke:currentColor; }
+  .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); }
+  .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); }
   .topnav-btn.vista-attiva::after{
     content:''; position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
     width:34px; height:4px; border-radius:3px; background:var(--signal);
@@ -388,11 +390,21 @@
     border-top:1px solid var(--line-soft);
   }
   .ric-lista-riga{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:11px 4px; font-family:var(--font-body); font-size:14px; color:var(--ink);
     border-bottom:1px solid var(--line-soft); cursor:pointer;
   }
   .ric-lista-riga:hover{ color:var(--signal); }
   .ric-lista-riga.attivo{ color:var(--signal); font-weight:600; }
+  .ric-lista-nome{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ric-lista-del{
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    border:1px solid #7a3b33; background:var(--panel-2); color:#e2867e;
+    font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .12s, border-color .12s, color .12s;
+  }
+  .ric-lista-del:hover, .ric-lista-del:active{ border-color:#d9695f; color:#f5d9d5; }
+  .ric-lista-del.confirm{ background:#7a3b33; color:#f5d9d5; border-color:#d9695f; }
   .admit-checkbox{ width:17px; height:17px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
   .admit-block-actions{ display:flex; flex-wrap:wrap; gap:6px; }
   .admit-del-btn{
@@ -600,7 +612,7 @@
 
   <div class="group" id="altre-schede-group" style="display:none;">
     <div class="group-label">Appoggi (schede fuori settore)</div>
-    <div class="patient-tabs" id="altre-schede-lista"></div>
+    <div class="ric-lista-minimale" id="altre-schede-lista"></div>
   </div>
 </div>
 
@@ -3180,20 +3192,24 @@ function renderWardMap(){
     altre
       .sort((a,b) => a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' }))
       .forEach(([id,p]) => {
-        const tab = document.createElement('div');
-        tab.className = 'patient-tab' + (id === currentPatientId ? ' active' : '');
-        tab.textContent = p.name;
-        tab.onclick = () => selezionaPaziente(id);
+        const riga = document.createElement('div');
+        riga.className = 'ric-lista-riga' + (id === currentPatientId ? ' attivo' : '');
+
+        const nome = document.createElement('span');
+        nome.className = 'ric-lista-nome';
+        nome.textContent = p.name;
+        nome.onclick = () => selezionaPaziente(id);
+        riga.appendChild(nome);
 
         const armato = eliminaLettoArmatoId === id;
         const delBtn = document.createElement('div');
-        delBtn.className = 'bed-tile-del' + (armato ? ' confirm' : '');
+        delBtn.className = 'ric-lista-del' + (armato ? ' confirm' : '');
         delBtn.textContent = armato ? '✓' : '×';
         delBtn.title = armato ? 'Clicca di nuovo per confermare' : 'Elimina questa scheda';
         delBtn.onclick = (e) => { e.stopPropagation(); eliminaSchedaDaLetto(id); };
-        tab.appendChild(delBtn);
+        riga.appendChild(delBtn);
 
-        altreList.appendChild(tab);
+        altreList.appendChild(riga);
       });
   } else {
     altreGroup.style.display = 'none';
