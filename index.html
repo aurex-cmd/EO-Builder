@@ -69,11 +69,12 @@
     font-weight:700; letter-spacing:.01em; color:var(--page-ink);
   }
   header .sub{ font-size:12px; color:var(--page-ink-dim); font-family:var(--font-mono); }
-  .header-nav{ display:flex; align-items:center; gap:9px; }
+  .header-nav{ display:flex; align-items:flex-start; gap:9px; }
+  .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; }
   .topnav-btn{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
     font-weight:600; font-size:13.5px; letter-spacing:-0.01em;
-    padding:8px 17px; border-radius:999px; border:none;
+    padding:11px 17px; border-radius:999px; border:none;
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
     box-shadow:0 1px 2px rgba(0,0,0,.2);
     transition:transform .12s ease, background .15s ease, opacity .15s ease;
@@ -88,16 +89,17 @@
     content:''; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
     width:22px; height:3px; border-radius:3px; background:var(--signal);
   }
+  .active-bed-row{ display:flex; flex-direction:column; align-items:center; margin-top:2px; }
+  .active-bed-connector{
+    width:0; height:11px; border-left:2px dotted var(--folder-dim);
+  }
   .active-bed-badge{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-mono);
-    font-size:12.5px; font-weight:600; letter-spacing:-0.01em;
-    padding:7px 15px; border-radius:999px; border:none;
-    background:var(--folder-dim); color:var(--folder);
-    box-shadow:0 1px 2px rgba(0,0,0,.2);
-    cursor:pointer; transition:transform .12s ease, opacity .15s ease;
-    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600; letter-spacing:-0.01em;
+    color:var(--folder); cursor:pointer; transition:opacity .15s ease;
+    display:inline-flex; align-items:center; gap:5px; padding:2px 4px;
   }
-  .active-bed-badge:active{ transform:scale(.93); opacity:.85; }
+  .active-bed-badge:active{ opacity:.7; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; }
   .sync-box{
@@ -388,8 +390,15 @@
     background:var(--panel-2); cursor:pointer; white-space:nowrap;
   }
   .admit-del-btn:hover{ border-color:#d9695f; }
-  .admit-sub{ padding:12px 13px; }
+  .admit-sub{ padding:12px 13px; position:relative; }
   .admit-sub + .admit-sub{ border-top:1px solid var(--line-soft); }
+  .admit-sub.copiato .admit-editable{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
+  .admit-sub-copiato-badge{
+    position:absolute; top:2px; right:6px; width:18px; height:18px;
+    border-radius:50%; background:var(--signal); border:2px solid var(--panel-3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .admit-sub-copiato-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
   .admit-sub-title-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
   .admit-sub-title{ font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--ink-dim); }
   .admit-copy-btn{
@@ -510,8 +519,13 @@
       <span class="sub">esame obiettivo · click-to-compose</span>
     </div>
     <div class="header-nav">
-      <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()" style="display:none;"></span>
-      <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
+      <div class="nav-diari-col">
+        <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
+        <div class="active-bed-row" id="active-bed-row" style="display:none;">
+          <span class="active-bed-connector"></span>
+          <span class="active-bed-badge" id="active-bed-badge" onclick="apriWardMap()"></span>
+        </div>
+      </div>
       <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
       <button class="topnav-btn admit" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Ricoveri</button>
     </div>
@@ -1735,6 +1749,70 @@ function toggleSelezioneRicovero(id, selezionato){
   saveRicoveri(list);
 }
 
+// crea (o riusa, se già creato prima) un esame obiettivo NUOVO e VUOTO,
+// intestato al nome del paziente del ricovero, salvato tra gli "Appoggi" di
+// Reparto — completamente slegato da qualunque esame sia aperto ora nella
+// scheda principale (computeDefaultSnapshot fa da sé backup/ripristino,
+// quindi non tocca in alcun modo il lavoro in corso altrove).
+// Ricliccando (una volta già collegato) si limita a rileggere lo stato
+// attuale di quello stesso esame, per aggiornare il box col progresso fatto
+// nel frattempo su quella scheda.
+function collegaEsameObiettivo(id){
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === id);
+  if(idx === -1) return;
+  const rec = list[idx];
+  const nome = (rec.label || '').trim();
+  if(!nome || nome === 'Ricovero'){ showToast('Serve almeno il nome del paziente'); return; }
+
+  const patients = loadPatients();
+  let patientId = rec.esameObiettivoPatientId;
+
+  if(!patientId || !patients[patientId]){
+    // se esiste già un "appoggio" con lo stesso nome, lo colleghiamo invece
+    // di crearne uno doppione
+    const esistente = Object.entries(patients).find(([pid, p]) => p.name === nome);
+    if(esistente){
+      patientId = esistente[0];
+    } else {
+      patientId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      patients[patientId] = { name: nome, savedAt: Date.now(), state: computeDefaultSnapshot() };
+      savePatients(patients);
+    }
+  }
+
+  const testo = getRefertoFor(patients[patientId].state);
+  list[idx].esameObiettivo = testo;
+  list[idx].esameObiettivoPatientId = patientId;
+  if(list[idx].copiati) list[idx].copiati.esameObiettivo = false;
+  saveRicoveri(list);
+  ricoveriAperti.add(id);
+  renderRicoveri();
+  renderWardMap();
+  showToast('Esame obiettivo "' + nome + '" pronto in Appoggi');
+}
+
+// segna un singolo box del ricovero come "copiato": stesso trattamento
+// visivo (contorno acceso + spunta verde) usato per l'esame obiettivo
+// copiato in Reparto, così da confermare che quel pezzo è stato incollato
+// davvero da qualche parte
+function segnaBoxCopiato(id, campo, subEl){
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === id);
+  if(idx === -1) return;
+  if(!list[idx].copiati) list[idx].copiati = {};
+  list[idx].copiati[campo] = true;
+  saveRicoveri(list);
+  if(subEl && !subEl.classList.contains('copiato')){
+    subEl.classList.add('copiato');
+    const badge = document.createElement('div');
+    badge.className = 'admit-sub-copiato-badge';
+    badge.title = 'Copiato';
+    badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    subEl.appendChild(badge);
+  }
+}
+
 // "YYYY-MM-DD" a partire da un timestamp — usato per raggruppare i
 // ricoveri per giorno nel calendario e per il filtro della lista
 function chiaveGiorno(timestamp){
@@ -1940,6 +2018,13 @@ function renderRicoveri(){
 
     const actions = document.createElement('div');
     actions.className = 'admit-block-actions';
+    const linkEOBtn = document.createElement('button');
+    linkEOBtn.className = 'admit-copy-btn';
+    linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Aggiorna esame obiettivo' : '+ Esame obiettivo';
+    linkEOBtn.title = rec.esameObiettivoPatientId
+      ? 'Rilegge lo stato attuale di questo esame obiettivo (in Appoggi)'
+      : 'Crea un nuovo esame obiettivo vuoto, intestato a questo paziente, tra gli Appoggi in Reparto';
+    linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); collegaEsameObiettivo(rec.id); };
     const copiaConsegnaBtn = document.createElement('button');
     copiaConsegnaBtn.className = 'admit-copy-btn';
     copiaConsegnaBtn.textContent = 'Copia consegna';
@@ -1956,6 +2041,7 @@ function renderRicoveri(){
     delBtn.className = 'admit-del-btn';
     delBtn.textContent = 'Elimina';
     delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
+    actions.appendChild(linkEOBtn);
     actions.appendChild(copiaConsegnaBtn);
     actions.appendChild(editBtn);
     actions.appendChild(esportaBtn);
@@ -1967,6 +2053,7 @@ function renderRicoveri(){
 
     [
       ['diario', 'Diario'],
+      ['esameObiettivo', 'Esame obiettivo'],
       ['familiare', 'Anamnesi familiare e fisiologica'],
       ['allergie', 'Allergie'],
       ['remota', 'Anamnesi patologica remota'],
@@ -1977,7 +2064,7 @@ function renderRicoveri(){
       if(campo !== 'problemi' && !(rec[campo] || '').trim()) return;
 
       const sub = document.createElement('div');
-      sub.className = 'admit-sub';
+      sub.className = 'admit-sub' + (rec.copiati && rec.copiati[campo] ? ' copiato' : '');
 
       const row = document.createElement('div');
       row.className = 'admit-sub-title-row';
@@ -1987,9 +2074,17 @@ function renderRicoveri(){
       const copyBtn = document.createElement('button');
       copyBtn.className = 'admit-copy-btn';
       copyBtn.textContent = 'Copia';
-      copyBtn.onclick = () => copiaTesto(rec[campo] || '');
+      copyBtn.onclick = () => { copiaTesto(rec[campo] || ''); segnaBoxCopiato(rec.id, campo, sub); };
       row.appendChild(subTitle);
       row.appendChild(copyBtn);
+
+      if(rec.copiati && rec.copiati[campo]){
+        const badge = document.createElement('div');
+        badge.className = 'admit-sub-copiato-badge';
+        badge.title = 'Copiato';
+        badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+        sub.appendChild(badge);
+      }
 
       const editable = document.createElement('div');
       editable.className = 'admit-editable';
@@ -2001,7 +2096,15 @@ function renderRicoveri(){
       editable.addEventListener('input', () => {
         const list2 = loadRicoveri();
         const idx = list2.findIndex(r => r.id === rec.id);
-        if(idx !== -1){ list2[idx][campo] = editable.textContent; saveRicoveri(list2); }
+        if(idx !== -1){
+          list2[idx][campo] = editable.textContent;
+          if(list2[idx].copiati && list2[idx].copiati[campo]){
+            list2[idx].copiati[campo] = false;
+            sub.classList.remove('copiato');
+            sub.querySelector('.admit-sub-copiato-badge')?.remove();
+          }
+          saveRicoveri(list2);
+        }
       });
       // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
       // invece di usare il pulsante "Copia", il browser porterebbe con sé
@@ -2037,6 +2140,7 @@ function eliminaRicovero(id){
 function esportaRicoveroSingoloTxt(rec){
   const parti = [
     rec.diario,
+    rec.esameObiettivo && `Esame obiettivo:\n${rec.esameObiettivo}`,
     rec.familiare && `Anamnesi familiare e fisiologica: ${rec.familiare}`,
     rec.allergie && `Allergie: ${rec.allergie}`,
     rec.remota && `Anamnesi patologica remota: ${rec.remota}`,
@@ -2971,12 +3075,13 @@ function apriRicoveri(){ mostraVista('ricoveri'); }
 function renderHeaderBadge(){
   const patients = loadPatients();
   const active = patients[currentPatientId];
+  const riga = document.getElementById('active-bed-row');
   const badge = document.getElementById('active-bed-badge');
   if(active){
     badge.innerHTML = '<svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg>' + escapeHtml(active.name);
-    badge.style.display = '';
+    riga.style.display = '';
   } else {
-    badge.style.display = 'none';
+    riga.style.display = 'none';
   }
 }
 
