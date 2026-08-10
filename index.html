@@ -2444,12 +2444,15 @@ function preparaDatiConsegna(rec){
   const ddmm = String(oggi.getDate()).padStart(2,'0') + '/' + String(oggi.getMonth()+1).padStart(2,'0');
   const meseAbbr = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][oggi.getMonth()];
   const dataAgg = oggi.getDate() + ' ' + meseAbbr;
+  // comorbidità/programma/farmaci vengono dal contenuto del BOX (comprese
+  // eventuali modifiche fatte a mano lì dentro), non ricalcolati da zero
+  // dal form grezzo — stessa logica già usata per "problemi"
   return {
     c, nomeCompleto: (cognome + ' ' + nome).trim(), ddmm, dataAgg,
     diagnosi: (c.diagnosi || '').trim(),
-    comorbidita: costruisciRemota(c),
-    programma: costruisciFamiliare(c),
-    farmaci: formattaElencoConVirgole(c.farmacologica),
+    comorbidita: (rec.remota || '').trim(),
+    programma: (rec.familiare || '').trim(),
+    farmaci: (rec.farmacologica || '').trim(),
     problemi: parseProblemiAttivi(rec.problemi)
   };
 }
