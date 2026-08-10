@@ -2162,12 +2162,18 @@ function renderRicoveroSingoloBox(){
       editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
     }
     editable.addEventListener('input', () => {
+      // aggiorna SUBITO anche l'oggetto in memoria (lo stesso usato dai
+      // pulsanti Copia consegna/Esporta/ecc. qui sotto): altrimenti quei
+      // pulsanti resterebbero agganciati al testo di prima della modifica
+      // finché non si ricarica la pagina
+      rec[campo] = editable.textContent;
       const list2 = loadRicoveri();
       const idx = list2.findIndex(r => r.id === rec.id);
       if(idx !== -1){
         list2[idx][campo] = editable.textContent;
         if(list2[idx].copiati && list2[idx].copiati[campo]){
           list2[idx].copiati[campo] = false;
+          rec.copiati[campo] = false;
           sub.classList.remove('copiato');
           sub.querySelector('.admit-sub-copiato-badge')?.remove();
         }
@@ -2189,6 +2195,21 @@ function renderRicoveroSingoloBox(){
     sub.appendChild(row);
     sub.appendChild(editable);
     block.appendChild(sub);
+
+    // pulsante di sicurezza richiesto esplicitamente: forza un ricaricamento
+    // completo del box (anche se ormai non serve più per il problema del
+    // ritardo, che è stato risolto alla radice qui sopra)
+    if(campo === 'problemi'){
+      const aggiornaWrap = document.createElement('div');
+      aggiornaWrap.style.cssText = 'padding:0 13px 12px;';
+      const aggiornaBtn = document.createElement('button');
+      aggiornaBtn.className = 'admit-copy-btn';
+      aggiornaBtn.textContent = '↻ Aggiorna tutto';
+      aggiornaBtn.title = 'Ricarica il box con le ultime modifiche salvate';
+      aggiornaBtn.onclick = () => { renderRicoveroSingoloBox(); showToast('Aggiornato'); };
+      aggiornaWrap.appendChild(aggiornaBtn);
+      block.appendChild(aggiornaWrap);
+    }
   });
 
   container.appendChild(block);
@@ -2386,7 +2407,14 @@ function rigaTabella(celleArr){
   return `<w:tr>${celleArr.join('')}</w:tr>`;
 }
 
-const CONSEGNA_ORO = 'FFD966';
+const CONSEGNA_ORO = 'FED96F';
+const CONSEGNA_VERDE_MED = '09FF32';
+// colore della riga di intestazione della consegna: verde per Medicina
+// (sia C1 sia C2), altrimenti l'oro di sempre (Geriatria e reparti non
+// specificati)
+function coloreIntestazioneConsegna(reparto){
+  return (reparto === 'MED C1' || reparto === 'MED C2') ? CONSEGNA_VERDE_MED : CONSEGNA_ORO;
+}
 const COL_LETTO = 1230, COL_NOME = 5010, COL_SPACER = 105, COL_DATI = 3840;
 const COL_SX = COL_LETTO + COL_NOME, COL_DX = COL_SPACER + COL_DATI, COL_TOT = COL_SX + COL_DX;
 
@@ -2431,12 +2459,14 @@ function costruisciTabellaConsegna(rec){
   const c = d.c;
 
   const righe = [];
+  const coloreTestata = coloreIntestazioneConsegna(c.reparto);
 
-  // riga 1: Letto | COGNOME NOME | età aa, IN gg/mm — sfondo oro, grassetto
+  // riga 1: Letto | COGNOME NOME | età aa, IN gg/mm — sfondo oro (Geriatria)
+  // o verde (Medicina C1/C2), grassetto
   righe.push(rigaTabella([
-    celle([paraConEtichetta(c.letto ? 'Letto ' + c.letto : 'Letto', '', {shd:CONSEGNA_ORO})], COL_LETTO, 1, CONSEGNA_ORO),
-    celle([paraConEtichetta(d.nomeCompleto, '', {shd:CONSEGNA_ORO})], COL_NOME, 1, CONSEGNA_ORO),
-    celle([paraConEtichetta((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, '', {shd:CONSEGNA_ORO})], COL_DX, 2, CONSEGNA_ORO)
+    celle([paraConEtichetta(c.letto ? 'Letto ' + c.letto : 'Letto', '', {shd:coloreTestata})], COL_LETTO, 1, coloreTestata),
+    celle([paraConEtichetta(d.nomeCompleto, '', {shd:coloreTestata})], COL_NOME, 1, coloreTestata),
+    celle([paraConEtichetta((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, '', {shd:coloreTestata})], COL_DX, 2, coloreTestata)
   ]));
 
   // Diagnosi (in grassetto anche il valore) / Comorbidità (= anamnesi remota)
@@ -2488,10 +2518,11 @@ function escapeHtml(s){
 }
 
 const CONSEGNA_STILE_CELLA = 'border:1px solid #000000; padding:4px 7px; vertical-align:top; font-family:Calibri,Arial,sans-serif; font-size:11pt;';
-const CONSEGNA_STILE_ORO = CONSEGNA_STILE_CELLA + ' background-color:#FFD966; font-weight:bold;';
 
-function celleHtml(contenutoHtml, larghezzaPercento, oro, colspan){
-  const stile = (oro ? CONSEGNA_STILE_ORO : CONSEGNA_STILE_CELLA) + (larghezzaPercento ? ` width:${larghezzaPercento}%;` : '');
+function celleHtml(contenutoHtml, larghezzaPercento, coloreSfondo, colspan){
+  const stile = CONSEGNA_STILE_CELLA
+    + (coloreSfondo ? ` background-color:#${coloreSfondo}; font-weight:bold;` : '')
+    + (larghezzaPercento ? ` width:${larghezzaPercento}%;` : '');
   const cs = colspan ? ` colspan="${colspan}"` : '';
   return `<td${cs} style="${stile}">${contenutoHtml}</td>`;
 }
@@ -2512,11 +2543,12 @@ function costruisciTabellaConsegnaHtml(rec){
   const c = d.c;
 
   const righe = [];
+  const coloreTestata = coloreIntestazioneConsegna(c.reparto);
 
   righe.push(`<tr>`
-    + celleHtml(etichettaHtml(c.letto ? 'Letto ' + c.letto : 'Letto', ''), 12, true)
-    + celleHtml(etichettaHtml(d.nomeCompleto, ''), 49, true)
-    + celleHtml(etichettaHtml((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, ''), 39, true, 2)
+    + celleHtml(etichettaHtml(c.letto ? 'Letto ' + c.letto : 'Letto', ''), 12, coloreTestata)
+    + celleHtml(etichettaHtml(d.nomeCompleto, ''), 49, coloreTestata)
+    + celleHtml(etichettaHtml((c.eta ? c.eta + ' aa, ' : '') + 'IN ' + d.ddmm, ''), 39, coloreTestata, 2)
     + `</tr>`);
 
   righe.push(`<tr>${celleHtml(etichettaHtml('Diagnosi: ', d.diagnosi, true), null, false, 4)}</tr>`);
