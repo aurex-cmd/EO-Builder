@@ -301,14 +301,15 @@
   }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
-  #ricoveri-view textarea{
+  #ricoveri-view textarea, #ricovero-singolo-view textarea{
     width:100%; min-height:64px; resize:vertical;
     border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
     border-radius:9px; padding:10px 12px; font-family:var(--font-body);
     font-size:13px; line-height:1.55;
   }
-  #ricoveri-view textarea:focus{ border-color:var(--signal); }
+  #ricoveri-view textarea:focus, #ricovero-singolo-view textarea:focus{ border-color:var(--signal); }
   .admit-form-card{ border-color:var(--line); background:var(--panel-3); }
+  .ric-torna-oggi{ color:var(--signal); font-weight:600; cursor:pointer; }
   .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
   .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
   .admit-field{ margin-bottom:12px; }
@@ -633,21 +634,35 @@
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricoveri</h2>
 
   <div class="group">
-    <div class="inline-fields">
-      <button class="btn primary" onclick="generaTutteLeConsegneDocx()"><svg class="hicon" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg>Genera tutte le consegne (.docx)</button>
-      <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
-    </div>
+    <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
   </div>
 
   <div id="ricoveri-calendario"></div>
+
+  <div class="group">
+    <button class="btn primary" onclick="apriNuovoRicoveroSingolo()">+ Nuovo ricovero</button>
+  </div>
 
   <div class="group" id="ricoveri-tabs-group" style="display:none;">
     <div class="group-label" id="ricoveri-tabs-label"></div>
     <div class="ric-lista-minimale" id="ricoveri-tabs"></div>
   </div>
 
+  <div class="group">
+    <button class="btn primary" onclick="generaTutteLeConsegneDocx()"><svg class="hicon" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg>Genera tutte le consegne (.docx)</button>
+  </div>
+</div>
+
+<div class="card" id="ricovero-singolo-view" style="display:none;">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricovero</h2>
+
+  <div class="group">
+    <button class="btn" onclick="apriRicoveri()">← Torna a Ricoveri</button>
+  </div>
+
   <div class="card admit-form-card" style="margin:0 0 14px;">
-    <h2 style="font-size:15px;" id="admit-form-title">Nuovo ricovero</h2>
+    <h2 style="font-size:15px; margin:0 0 13px;" id="admit-form-title">Nuovo ricovero</h2>
+    <div class="admit-form-body">
 
     <div class="group admit-field">
       <div class="field-label">Sesso</div>
@@ -763,9 +778,10 @@
       <button class="btn primary" id="admit-genera-btn" onclick="generaRicovero()">Genera ricovero</button>
       <button class="btn" id="admit-nuovo-btn" onclick="nuovoRicovero()" style="display:none;">+ Nuovo ricovero</button>
     </div>
+    </div>
   </div>
 
-  <div class="group" id="ricoveri-lista"></div>
+  <div id="ricovero-singolo-box"></div>
 </div>
 
 <div id="clinical-view">
@@ -1626,7 +1642,11 @@ function nuovoRicovero(){
   document.getElementById('admit-form-title').textContent = 'Nuovo ricovero';
   document.getElementById('admit-genera-btn').textContent = 'Genera ricovero';
   document.getElementById('admit-nuovo-btn').style.display = 'none';
-  renderRicoveriTabs();
+  renderRicoveroSingoloBox();
+}
+function apriNuovoRicoveroSingolo(){
+  nuovoRicovero();
+  mostraVista('ricovero-singolo');
 }
 
 function generaRicovero(){
@@ -1655,8 +1675,7 @@ function generaRicovero(){
       list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare, allergie };
       saveRicoveri(list);
       ricoveriAperti.add(currentRicoveroId);
-      renderRicoveri();
-      renderRicoveriTabs();
+      renderRicoveroSingoloBox();
       showToast('Ricovero aggiornato');
       return;
     }
@@ -1681,8 +1700,7 @@ function generaRicovero(){
   saveRicoveri(list);
   currentRicoveroId = record.id;
   ricoveriAperti.add(record.id);
-  renderRicoveri();
-  renderRicoveriTabs();
+  renderRicoveroSingoloBox();
   showToast('Ricovero generato');
   document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
   document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
@@ -1728,8 +1746,11 @@ function caricaRicovero(id){
   document.getElementById('admit-form-title').textContent = `Ricovero ${rec.seq}`;
   document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
   document.getElementById('admit-nuovo-btn').style.display = '';
-  renderRicoveriTabs();
-  document.getElementById('admit-form-title').scrollIntoView({ behavior:'smooth', block:'start' });
+  renderRicoveroSingoloBox();
+}
+function apriRicoveroSingolo(id){
+  caricaRicovero(id);
+  mostraVista('ricovero-singolo');
 }
 
 function renderRicoveriTabs(){
@@ -1763,6 +1784,62 @@ function renderRicoveriTabs(){
     riga.onclick = () => caricaRicovero(rec.id);
     tabsEl.appendChild(riga);
   });
+}
+
+function renderRicoveriLista(){
+  const listCompleta = loadRicoveri();
+  renderCalendarioRicoveri(listCompleta);
+
+  const group = document.getElementById('ricoveri-tabs-group');
+  const label = document.getElementById('ricoveri-tabs-label');
+  const tabsEl = document.getElementById('ricoveri-tabs');
+
+  const list = listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
+
+  const chiaveOggiLista = chiaveGiorno(Date.now());
+  label.innerHTML = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="16.5" cy="8.5" r="2.5"/><path d="M15 13.6c2.7.4 4.5 2.4 4.5 5.4"/></svg>Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri)
+    + (filtroGiornoRicoveri !== chiaveOggiLista ? ' <span class="ric-torna-oggi" onclick="tornaAOggiRicoveri()">· torna a oggi</span>' : '');
+  tabsEl.innerHTML = '';
+
+  if(list.length === 0){
+    group.style.display = '';
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.style.padding = '11px 4px';
+    vuoto.textContent = 'Nessun ricovero in questo giorno.';
+    tabsEl.appendChild(vuoto);
+    return;
+  }
+
+  group.style.display = '';
+  list.forEach((rec, i) => {
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga' + (rec.id === currentRicoveroId ? ' attivo' : '');
+
+    const sinistra = document.createElement('div');
+    sinistra.style.cssText = 'display:flex; align-items:center; gap:10px; min-width:0;';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'admit-checkbox';
+    checkbox.checked = rec.selezionato !== false;
+    checkbox.title = 'Includi nel prossimo export delle consegne';
+    checkbox.onclick = (e) => e.stopPropagation();
+    checkbox.onchange = () => toggleSelezioneRicovero(rec.id, checkbox.checked);
+
+    const nome = document.createElement('span');
+    nome.className = 'ric-lista-nome';
+    nome.textContent = `${i + 1}. ` + (rec.label || `Ricovero ${rec.seq}`);
+
+    sinistra.appendChild(checkbox);
+    sinistra.appendChild(nome);
+    riga.appendChild(sinistra);
+    riga.onclick = () => apriRicoveroSingolo(rec.id);
+    tabsEl.appendChild(riga);
+  });
+}
+function tornaAOggiRicoveri(){
+  filtroGiornoRicoveri = chiaveGiorno(Date.now());
+  renderRicoveriLista();
 }
 
 function toggleSelezioneRicovero(id, selezionato){
@@ -1865,21 +1942,17 @@ function renderCalendarioRicoveri(listCompleta){
   const oggi = new Date();
   const chiaveOggi = chiaveGiorno(oggi.getTime());
 
-  const dettagli = document.createElement('details');
-  dettagli.className = 'admit-block ric-cal';
-  dettagli.open = calendarioAperto;
-  dettagli.addEventListener('toggle', () => { calendarioAperto = dettagli.open; });
+  // il calendario resta sempre visibile (non è più una tendina compattabile)
+  const box = document.createElement('div');
+  box.className = 'admit-block ric-cal';
 
-  const summary = document.createElement('summary');
-  summary.className = 'admit-block-head';
-  const summaryRow = document.createElement('div');
-  summaryRow.className = 'admit-block-title-row';
-  const chev = document.createElement('span');
-  chev.className = 'admit-chev';
-  chev.textContent = '›';
-  const summaryTitle = document.createElement('div');
-  summaryTitle.className = 'admit-block-title';
-  summaryTitle.style.cssText = 'display:flex; align-items:center; gap:7px;';
+  const testata = document.createElement('div');
+  testata.className = 'admit-block-head';
+  const testataRow = document.createElement('div');
+  testataRow.className = 'admit-block-title-row';
+  const testataTitle = document.createElement('div');
+  testataTitle.className = 'admit-block-title';
+  testataTitle.style.cssText = 'display:flex; align-items:center; gap:7px;';
   const iconCalendario = document.createElement('span');
   iconCalendario.innerHTML = '<svg class="hicon" style="width:17px;height:17px;" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>';
   const chiaveMostrata = filtroGiornoRicoveri || chiaveOggi;
@@ -1890,12 +1963,11 @@ function renderCalendarioRicoveri(listCompleta){
   const testoData = document.createElement('span');
   testoData.textContent = etichettaGiorno
     + (totale ? ` · ${totale} ricover${totale === 1 ? 'o' : 'i'} totali` : '');
-  summaryTitle.appendChild(iconCalendario);
-  summaryTitle.appendChild(testoData);
-  summaryRow.appendChild(chev);
-  summaryRow.appendChild(summaryTitle);
-  summary.appendChild(summaryRow);
-  dettagli.appendChild(summary);
+  testataTitle.appendChild(iconCalendario);
+  testataTitle.appendChild(testoData);
+  testataRow.appendChild(testataTitle);
+  testata.appendChild(testataRow);
+  box.appendChild(testata);
 
   const corpo = document.createElement('div');
 
@@ -1966,197 +2038,171 @@ function renderCalendarioRicoveri(listCompleta){
     cella.onclick = (e) => {
       e.preventDefault(); e.stopPropagation();
       filtroGiornoRicoveri = chiave;
-      renderRicoveri();
+      renderRicoveriLista();
     };
     grid.appendChild(cella);
   }
 
   corpo.appendChild(grid);
-  dettagli.appendChild(corpo);
-  container.appendChild(dettagli);
+  box.appendChild(corpo);
+  container.appendChild(box);
 }
 
-function renderRicoveri(){
-  const container = document.getElementById('ricoveri-lista');
+// mostra (nella pagina dedicata al singolo ricovero) il box con Diario,
+// Esame obiettivo ecc. del ricovero attualmente caricato nel form — vuoto
+// se non è ancora stato generato nulla (form pulito, "Nuovo ricovero")
+function renderRicoveroSingoloBox(){
+  const container = document.getElementById('ricovero-singolo-box');
+  if(!container) return;
   container.innerHTML = '';
-  const listCompleta = loadRicoveri();
+  if(!currentRicoveroId) return;
+  const rec = loadRicoveri().find(r => r.id === currentRicoveroId);
+  if(!rec) return;
 
-  renderCalendarioRicoveri(listCompleta);
-
-  const list = listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
-
-  const filtro = document.createElement('div');
-  filtro.className = 'ric-cal-filtro';
-  const testo = document.createElement('span');
-  testo.textContent = formattaGiornoEsteso(filtroGiornoRicoveri);
-  filtro.appendChild(testo);
-  const chiaveOggiLista = chiaveGiorno(Date.now());
-  if(filtroGiornoRicoveri !== chiaveOggiLista){
-    const tornaOggi = document.createElement('button');
-    tornaOggi.textContent = 'Torna a oggi';
-    tornaOggi.onclick = () => { filtroGiornoRicoveri = chiaveOggiLista; renderRicoveri(); };
-    filtro.appendChild(tornaOggi);
-  }
-  container.appendChild(filtro);
-
-  if(list.length === 0){
-    const vuoto = document.createElement('div');
-    vuoto.className = 'group-label';
-    vuoto.textContent = 'Nessun ricovero in questo giorno.';
-    container.appendChild(vuoto);
-    renderRicoveriTabs();
-    return;
-  }
-
-  list.forEach(rec => {
-    const block = document.createElement('details');
-    block.className = 'admit-block';
-    block.open = ricoveriAperti.has(rec.id);
-    block.addEventListener('toggle', () => {
-      if(block.open) ricoveriAperti.add(rec.id);
-      else ricoveriAperti.delete(rec.id);
-    });
-
-    const head = document.createElement('summary');
-    head.className = 'admit-block-head';
-
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'admit-block-title-row';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'admit-checkbox';
-    checkbox.checked = rec.selezionato !== false;
-    checkbox.title = 'Includi nel prossimo export delle consegne';
-    checkbox.onclick = (e) => { e.stopPropagation(); };
-    checkbox.onchange = () => toggleSelezioneRicovero(rec.id, checkbox.checked);
-    const chev = document.createElement('span');
-    chev.className = 'admit-chev';
-    chev.textContent = '›';
-    const title = document.createElement('div');
-    title.className = 'admit-block-title';
-    title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
-    titleWrap.appendChild(checkbox);
-    titleWrap.appendChild(chev);
-    titleWrap.appendChild(title);
-
-    const actions = document.createElement('div');
-    actions.className = 'admit-block-actions';
-    const linkEOBtn = document.createElement('button');
-    linkEOBtn.className = 'admit-copy-btn';
-    linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Aggiorna esame obiettivo' : '+ Esame obiettivo';
-    linkEOBtn.title = rec.esameObiettivoPatientId
-      ? 'Rilegge lo stato attuale di questo esame obiettivo (in Appoggi)'
-      : 'Crea un nuovo esame obiettivo vuoto, intestato a questo paziente, tra gli Appoggi in Reparto';
-    linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); collegaEsameObiettivo(rec.id); };
-    const copiaConsegnaBtn = document.createElement('button');
-    copiaConsegnaBtn.className = 'admit-copy-btn';
-    copiaConsegnaBtn.textContent = 'Copia consegna';
-    copiaConsegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); copiaConsegna(rec); };
-    const editBtn = document.createElement('button');
-    editBtn.className = 'admit-copy-btn';
-    editBtn.textContent = 'Richiama nel form';
-    editBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); caricaRicovero(rec.id); };
-    const esportaBtn = document.createElement('button');
-    esportaBtn.className = 'admit-copy-btn';
-    esportaBtn.textContent = 'Esporta (.txt)';
-    esportaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); esportaRicoveroSingoloTxt(rec); };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'admit-del-btn';
-    delBtn.textContent = 'Elimina';
-    delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
-    actions.appendChild(linkEOBtn);
-    actions.appendChild(copiaConsegnaBtn);
-    actions.appendChild(editBtn);
-    actions.appendChild(esportaBtn);
-    actions.appendChild(delBtn);
-
-    head.appendChild(titleWrap);
-    head.appendChild(actions);
-    block.appendChild(head);
-
-    [
-      ['diario', 'Diario'],
-      ['esameObiettivo', 'Esame obiettivo'],
-      ['familiare', 'Anamnesi familiare e fisiologica'],
-      ['allergie', 'Allergie'],
-      ['remota', 'Anamnesi patologica remota'],
-      ['prossima', 'Anamnesi patologica prossima'],
-      ['farmacologica', 'Anamnesi farmacologica'],
-      ['problemi', 'Problemi attivi']
-    ].forEach(([campo, etichetta]) => {
-      if(campo !== 'problemi' && !(rec[campo] || '').trim()) return;
-
-      const sub = document.createElement('div');
-      sub.className = 'admit-sub' + (rec.copiati && rec.copiati[campo] ? ' copiato' : '');
-
-      const row = document.createElement('div');
-      row.className = 'admit-sub-title-row';
-      const subTitle = document.createElement('div');
-      subTitle.className = 'admit-sub-title';
-      subTitle.textContent = etichetta;
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'admit-copy-btn';
-      copyBtn.textContent = 'Copia';
-      copyBtn.onclick = () => { copiaTesto(rec[campo] || ''); segnaBoxCopiato(rec.id, campo, sub); };
-      row.appendChild(subTitle);
-      row.appendChild(copyBtn);
-
-      if(rec.copiati && rec.copiati[campo]){
-        const badge = document.createElement('div');
-        badge.className = 'admit-sub-copiato-badge';
-        badge.title = 'Copiato';
-        badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
-        sub.appendChild(badge);
-      }
-
-      const editable = document.createElement('div');
-      editable.className = 'admit-editable';
-      editable.contentEditable = 'true';
-      editable.textContent = rec[campo] || '';
-      if(campo === 'problemi'){
-        editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
-      }
-      editable.addEventListener('input', () => {
-        const list2 = loadRicoveri();
-        const idx = list2.findIndex(r => r.id === rec.id);
-        if(idx !== -1){
-          list2[idx][campo] = editable.textContent;
-          if(list2[idx].copiati && list2[idx].copiati[campo]){
-            list2[idx].copiati[campo] = false;
-            sub.classList.remove('copiato');
-            sub.querySelector('.admit-sub-copiato-badge')?.remove();
-          }
-          saveRicoveri(list2);
-        }
-      });
-      // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
-      // invece di usare il pulsante "Copia", il browser porterebbe con sé
-      // anche lo sfondo scuro e la formattazione del box: qui forziamo la
-      // copia negli appunti come solo testo semplice
-      editable.addEventListener('copy', (e) => {
-        const selezione = window.getSelection().toString();
-        if(selezione && e.clipboardData){
-          e.clipboardData.setData('text/plain', selezione);
-          e.preventDefault();
-        }
-      });
-
-      sub.appendChild(row);
-      sub.appendChild(editable);
-      block.appendChild(sub);
-    });
-
-    container.appendChild(block);
+  const block = document.createElement('details');
+  block.className = 'admit-block';
+  block.open = ricoveriAperti.has(rec.id);
+  block.addEventListener('toggle', () => {
+    if(block.open) ricoveriAperti.add(rec.id);
+    else ricoveriAperti.delete(rec.id);
   });
 
-  renderRicoveriTabs();
+  const head = document.createElement('summary');
+  head.className = 'admit-block-head';
+
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'admit-block-title-row';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'admit-checkbox';
+  checkbox.checked = rec.selezionato !== false;
+  checkbox.title = 'Includi nel prossimo export delle consegne';
+  checkbox.onclick = (e) => { e.stopPropagation(); };
+  checkbox.onchange = () => toggleSelezioneRicovero(rec.id, checkbox.checked);
+  const chev = document.createElement('span');
+  chev.className = 'admit-chev';
+  chev.textContent = '›';
+  const title = document.createElement('div');
+  title.className = 'admit-block-title';
+  title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
+  titleWrap.appendChild(checkbox);
+  titleWrap.appendChild(chev);
+  titleWrap.appendChild(title);
+
+  const actions = document.createElement('div');
+  actions.className = 'admit-block-actions';
+  const linkEOBtn = document.createElement('button');
+  linkEOBtn.className = 'admit-copy-btn';
+  linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Aggiorna esame obiettivo' : '+ Esame obiettivo';
+  linkEOBtn.title = rec.esameObiettivoPatientId
+    ? 'Rilegge lo stato attuale di questo esame obiettivo (in Appoggi)'
+    : 'Crea un nuovo esame obiettivo vuoto, intestato a questo paziente, tra gli Appoggi in Reparto';
+  linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); collegaEsameObiettivo(rec.id); };
+  const copiaConsegnaBtn = document.createElement('button');
+  copiaConsegnaBtn.className = 'admit-copy-btn';
+  copiaConsegnaBtn.textContent = 'Copia consegna';
+  copiaConsegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); copiaConsegna(rec); };
+  const esportaBtn = document.createElement('button');
+  esportaBtn.className = 'admit-copy-btn';
+  esportaBtn.textContent = 'Esporta (.txt)';
+  esportaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); esportaRicoveroSingoloTxt(rec); };
+  const delBtn = document.createElement('button');
+  delBtn.className = 'admit-del-btn';
+  delBtn.textContent = 'Elimina';
+  delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
+  actions.appendChild(linkEOBtn);
+  actions.appendChild(copiaConsegnaBtn);
+  actions.appendChild(esportaBtn);
+  actions.appendChild(delBtn);
+
+  head.appendChild(titleWrap);
+  head.appendChild(actions);
+  block.appendChild(head);
+
+  [
+    ['diario', 'Diario'],
+    ['esameObiettivo', 'Esame obiettivo'],
+    ['familiare', 'Anamnesi familiare e fisiologica'],
+    ['allergie', 'Allergie'],
+    ['remota', 'Anamnesi patologica remota'],
+    ['prossima', 'Anamnesi patologica prossima'],
+    ['farmacologica', 'Anamnesi farmacologica'],
+    ['problemi', 'Problemi attivi']
+  ].forEach(([campo, etichetta]) => {
+    if(campo !== 'problemi' && !(rec[campo] || '').trim()) return;
+
+    const sub = document.createElement('div');
+    sub.className = 'admit-sub' + (rec.copiati && rec.copiati[campo] ? ' copiato' : '');
+
+    const row = document.createElement('div');
+    row.className = 'admit-sub-title-row';
+    const subTitle = document.createElement('div');
+    subTitle.className = 'admit-sub-title';
+    subTitle.textContent = etichetta;
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'admit-copy-btn';
+    copyBtn.textContent = 'Copia';
+    copyBtn.onclick = () => { copiaTesto(rec[campo] || ''); segnaBoxCopiato(rec.id, campo, sub); };
+    row.appendChild(subTitle);
+    row.appendChild(copyBtn);
+
+    if(rec.copiati && rec.copiati[campo]){
+      const badge = document.createElement('div');
+      badge.className = 'admit-sub-copiato-badge';
+      badge.title = 'Copiato';
+      badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+      sub.appendChild(badge);
+    }
+
+    const editable = document.createElement('div');
+    editable.className = 'admit-editable';
+    editable.contentEditable = 'true';
+    editable.textContent = rec[campo] || '';
+    if(campo === 'problemi'){
+      editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
+    }
+    editable.addEventListener('input', () => {
+      const list2 = loadRicoveri();
+      const idx = list2.findIndex(r => r.id === rec.id);
+      if(idx !== -1){
+        list2[idx][campo] = editable.textContent;
+        if(list2[idx].copiati && list2[idx].copiati[campo]){
+          list2[idx].copiati[campo] = false;
+          sub.classList.remove('copiato');
+          sub.querySelector('.admit-sub-copiato-badge')?.remove();
+        }
+        saveRicoveri(list2);
+      }
+    });
+    // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
+    // invece di usare il pulsante "Copia", il browser porterebbe con sé
+    // anche lo sfondo scuro e la formattazione del box: qui forziamo la
+    // copia negli appunti come solo testo semplice
+    editable.addEventListener('copy', (e) => {
+      const selezione = window.getSelection().toString();
+      if(selezione && e.clipboardData){
+        e.clipboardData.setData('text/plain', selezione);
+        e.preventDefault();
+      }
+    });
+
+    sub.appendChild(row);
+    sub.appendChild(editable);
+    block.appendChild(sub);
+  });
+
+  container.appendChild(block);
 }
 
 function eliminaRicovero(id){
   const list = loadRicoveri().filter(r => r.id !== id);
   saveRicoveri(list);
-  if(currentRicoveroId === id) nuovoRicovero();
-  renderRicoveri();
+  if(currentRicoveroId === id){
+    nuovoRicovero();
+    showToast('Ricovero eliminato');
+    apriRicoveri();
+    return;
+  }
   showToast('Ricovero eliminato');
 }
 
@@ -3078,11 +3124,12 @@ function mostraVista(v){
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
+  document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   if(v === 'wardmap') renderWardMap();
   if(v === 'riepilogo') renderRiepilogo();
-  if(v === 'ricoveri') renderRicoveri();
+  if(v === 'ricoveri') renderRicoveriLista();
 
-  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', ricoveri:'topnav-ricoveri' };
+  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
