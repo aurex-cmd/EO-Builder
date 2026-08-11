@@ -2161,25 +2161,40 @@ function renderRicoveroSingoloBox(){
     if(campo === 'problemi'){
       editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
     }
-    editable.addEventListener('input', () => {
-      // aggiorna SUBITO anche l'oggetto in memoria (lo stesso usato dai
-      // pulsanti Copia consegna/Esporta/ecc. qui sotto): altrimenti quei
-      // pulsanti resterebbero agganciati al testo di prima della modifica
-      // finché non si ricarica la pagina
-      rec[campo] = editable.textContent;
+    let debounceSalvataggio = null;
+    const salvaSubito = () => {
+      clearTimeout(debounceSalvataggio);
       const list2 = loadRicoveri();
       const idx = list2.findIndex(r => r.id === rec.id);
       if(idx !== -1){
-        list2[idx][campo] = editable.textContent;
-        if(list2[idx].copiati && list2[idx].copiati[campo]){
-          list2[idx].copiati[campo] = false;
-          rec.copiati[campo] = false;
-          sub.classList.remove('copiato');
-          sub.querySelector('.admit-sub-copiato-badge')?.remove();
-        }
+        list2[idx][campo] = rec[campo];
+        list2[idx].copiati = rec.copiati;
         saveRicoveri(list2);
       }
+    };
+    editable.addEventListener('input', () => {
+      // aggiorna SUBITO l'oggetto in memoria (leggero: nessuna lettura da
+      // disco, nessuna rete) — così i pulsanti Copia consegna/Esporta/ecc.
+      // qui sotto vedono subito il testo aggiornato
+      rec[campo] = editable.textContent;
+      if(rec.copiati && rec.copiati[campo]){
+        rec.copiati[campo] = false;
+        sub.classList.remove('copiato');
+        sub.querySelector('.admit-sub-copiato-badge')?.remove();
+      }
+      // il salvataggio vero e proprio (rilettura/riscrittura di tutto
+      // l'elenco ricoveri + sincronizzazione cloud) è più pesante: lo
+      // rimandiamo a quando l'utente smette di scrivere per un attimo,
+      // invece di farlo ad ogni singola lettera — su iPhone, farlo ad ogni
+      // tasto può rallentare la tastiera proprio mentre l'autocorrezione
+      // sta completando una parola, ed è lì che si vedono le "ripetizioni"
+      clearTimeout(debounceSalvataggio);
+      debounceSalvataggio = setTimeout(salvaSubito, 500);
     });
+    // se si esce dal box (tocco altrove, es. per cliccare "Copia consegna")
+    // prima che passino i 500ms, il salvataggio parte comunque subito,
+    // così non si perde nulla
+    editable.addEventListener('blur', salvaSubito);
     // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
     // invece di usare il pulsante "Copia", il browser porterebbe con sé
     // anche lo sfondo scuro e la formattazione del box: qui forziamo la
