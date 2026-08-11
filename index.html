@@ -5263,21 +5263,48 @@ function composeEdemi(){
   }
 
   const frasi = [];
+  const sedeSet = new Set(e.sede); // copia locale: la succulenza può "assorbire" AAII+extra da qui sotto
+
+  // qualità/andamento servono già qui per capire se il caso "si può
+  // accorpare alla succulenza" è pulito (nessun qualificatore in mezzo)
+  const qualitaMap = { improntabili:'improntabili', duri:'duri', colonnari:'colonnari' };
+  const qualitaMapSing = { improntabili:'improntabile', duri:'duro', colonnari:'colonnare' };
+  let qualitaText = e.qualita ? qualitaMap[e.qualita] : '';
+  if(e.discrasici) qualitaText = qualitaText ? qualitaText + ' anche discrasici' : 'discrasici';
 
   // succulenza: sede (pretibiale/perimalleolare, opzionale, default "agli AAII")
   // + lato (dx/sx, opzionale, default bilaterale) + andamento in coda, se scelto
   // (es. "Succulenza pretibiale bilaterale, in riduzione.")
   if(e.succulenza && e.succulenza.attiva){
     const lato = e.succulenza.lato === 'dx' ? 'dx' : (e.succulenza.lato === 'sx' ? 'sx' : 'bilaterale');
-    let corpoSucc;
-    if(e.succulenza.sede === 'pretibiale') corpoSucc = `Succulenza pretibiale ${lato}`;
-    else if(e.succulenza.sede === 'perimalleolare') corpoSucc = `Succulenza perimalleolare ${lato}`;
-    else corpoSucc = `Succulenza agli AAII ${lato}`;
 
-    const andamentoSucculenza = { riduzione:'in riduzione', ripresentati:'ripresentatasi', permangono:'persistente' };
-    if(e.andamento && andamentoSucculenza[e.andamento]) corpoSucc += `, ${andamentoSucculenza[e.andamento]}`;
+    // se la succulenza è agli AAII bilaterale "pulita" (senza andamento) e
+    // gli edemi selezionati includono AAII bilaterale insieme ad altre sedi
+    // (es. fianchi) senza nessun altro qualificatore, le due frasi si
+    // accorpano in una sola: "Succulenza agli AAII e ai fianchi." invece di
+    // due frasi separate che ripetono entrambe "AAII"
+    const succuAAII = !e.succulenza.sede;
+    const aaiiPulitoNegliEdemi = sedeSet.has('aaii') && !e.sedeLato.aaii;
+    const sedeExtra = [...sedeSet].filter(v => v !== 'aaii');
+    const puoAccorpare = succuAAII && lato === 'bilaterale' && aaiiPulitoNegliEdemi
+      && !e.andamento && !qualitaText && !e.scarico && !e.grinza && sedeExtra.length > 0;
 
-    frasi.push(corpoSucc + '.');
+    if(puoAccorpare){
+      const testoExtra = sedeExtra.map(v => v === 'fianchi' ? 'ai fianchi' : (v === 'aass' ? 'agli AASS' : v));
+      frasi.push(`Succulenza ${joinIt(['agli AAII', ...testoExtra])}.`);
+      sedeSet.delete('aaii');
+      sedeExtra.forEach(v => sedeSet.delete(v));
+    } else {
+      let corpoSucc;
+      if(e.succulenza.sede === 'pretibiale') corpoSucc = `Succulenza pretibiale ${lato}`;
+      else if(e.succulenza.sede === 'perimalleolare') corpoSucc = `Succulenza perimalleolare ${lato}`;
+      else corpoSucc = `Succulenza agli AAII ${lato}`;
+
+      const andamentoSucculenza = { riduzione:'in riduzione', ripresentati:'ripresentatasi', permangono:'persistente' };
+      if(e.andamento && andamentoSucculenza[e.andamento]) corpoSucc += `, ${andamentoSucculenza[e.andamento]}`;
+
+      frasi.push(corpoSucc + '.');
+    }
   }
 
   // per ogni sede: dx/sx -> singolare ("arto inf./sup. dx/sx"), altrimenti
@@ -5297,13 +5324,8 @@ function composeEdemi(){
     return { tipo, singolare:false, testo:'ai fianchi' };
   }
 
-  const sediSelezionate = ['aaii','aass','fianchi'].filter(v => e.sede.has(v));
+  const sediSelezionate = ['aaii','aass','fianchi'].filter(v => sedeSet.has(v));
   const sediInfo = sediSelezionate.map(fraseSedeLato);
-
-  const qualitaMap = { improntabili:'improntabili', duri:'duri', colonnari:'colonnari' };
-  const qualitaMapSing = { improntabili:'improntabile', duri:'duro', colonnari:'colonnare' };
-  let qualitaText = e.qualita ? qualitaMap[e.qualita] : '';
-  if(e.discrasici) qualitaText = qualitaText ? qualitaText + ' anche discrasici' : 'discrasici';
 
   const hasQualifiche = !!(qualitaText || e.andamento || e.scarico);
   const unSoloArto = sediInfo.length === 1 && (sediInfo[0].tipo === 'aaii' || sediInfo[0].tipo === 'aass');
@@ -5542,10 +5564,18 @@ function composeReferto(){
   ].filter(Boolean).join(' ');
 }
 
+// tiene traccia dell'ultimo testo "vero" (generato dai tag) effettivamente
+// mostrato nella casella, per poterlo confrontare più sotto — MAI un
+// composeReferto() ricalcolato al volo, perché tra un rendering e l'altro
+// (es. dopo un aggiornamento dell'app) il testo generato può cambiare anche
+// senza che l'utente tocchi nulla, e un confronto "al volo" scambierebbe
+// per errore l'intero paragrafo vecchio per testo scritto a mano
+let outputAutoUltimo = '';
 function refreshUI(){
   syncInputsToState();
   renderAll();
   const autoText = composeReferto();
+  outputAutoUltimo = autoText;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? autoText + '\n\n' + extra : autoText;
 }
@@ -5561,9 +5591,8 @@ function update(){
 // solo finché non si tocca di nuovo un tag (a quel punto torna quella vera)
 document.getElementById('output').addEventListener('input', (e) => {
   const nuovoValore = e.target.value;
-  const autoText = composeReferto();
-  if(nuovoValore.startsWith(autoText)){
-    state.outputExtra = nuovoValore.slice(autoText.length).replace(/^\s+/, '');
+  if(nuovoValore.startsWith(outputAutoUltimo)){
+    state.outputExtra = nuovoValore.slice(outputAutoUltimo.length).replace(/^\s+/, '');
   } else {
     state.outputExtra = nuovoValore;
   }
