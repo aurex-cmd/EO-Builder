@@ -232,6 +232,16 @@
     background:var(--signal-dim); border-color:var(--signal);
     color:var(--signal); font-weight:600;
   }
+  .addome-griglia{
+    display:flex; flex-wrap:wrap; gap:6px; width:100%;
+  }
+  .addome-griglia .addome-cella{
+    flex:0 0 calc((100% - 12px) / 3); box-sizing:border-box;
+    text-align:center; padding:8px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .addome-griglia .addome-diffusamente{
+    flex:0 0 100%; box-sizing:border-box; text-align:center;
+  }
 
   /* ---------- LISTA CON "TENDINA" AGGANCIATA (sede subito sotto la voce) ---------- */
   /* i chip stanno affiancati come una normale riga di pillole; ogni riga
@@ -240,6 +250,7 @@
      in linea con gli altri, la tendina - quando aperta - occupa da sola
      tutta la larghezza (va a capo solo lì, senza spostare gli altri chip) */
   .finding-list{ display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; }
+  #cute-reperti{ justify-content:space-between; }
   .finding-row{ display:contents; }
   .finding-drawer{
     flex-basis:0; width:0; overflow:hidden; max-height:0; opacity:0;
@@ -3647,6 +3658,26 @@ function creaRigaConTendina(chipLabel, isActive, onClickChip, locOptionsOrBuilde
 }
 
 // piccolo gruppo di chip dentro una tendina (es. "Zona", "Lato"...)
+// i 9 quadranti/regioni addominali in griglia 3x3 (stessa disposizione
+// anatomica reale: ipocondri/epigastrio in alto, fianchi/mesogastrio al
+// centro, fosse iliache/ipogastrio in basso), tutte le celle della stessa
+// dimensione; "diffusamente" resta sotto, su una riga a sé
+function renderGrigliaAddomeDoloreLoc(container, getActive, onToggle){
+  const griglia = document.createElement('div');
+  griglia.className = 'addome-griglia';
+  OPT.addomeDoloreLoc.forEach(opt => {
+    const b = document.createElement('div');
+    const active = getActive(opt.value);
+    const isDiffusamente = opt.value === 'diffusamente';
+    b.className = 'chip' + (active ? ' active' : '') + (isDiffusamente ? ' addome-diffusamente' : ' addome-cella');
+    b.style.cssText = 'font-size:12px; padding:5px 10px;';
+    b.textContent = opt.label;
+    b.onclick = (e) => { e.stopPropagation(); onToggle(opt.value, active); };
+    griglia.appendChild(b);
+  });
+  container.appendChild(griglia);
+}
+
 function renderGruppoChipInline(container, label, options, getActive, onToggle){
   if(label){
     const lbl = document.createElement('div');
@@ -4061,7 +4092,7 @@ function renderDolorabilita(){
     // una sola alla volta): usata sia per "dolente/dolorabile" sia per
     // "non dolente ma dolorabile" (che ora richiede anch'essa tutte le sedi)
     const locOptions = opt.value === 'non_dolente' ? null : (inner) => {
-      renderGruppoChipInline(inner, null, OPT.addomeDoloreLoc,
+      renderGrigliaAddomeDoloreLoc(inner,
         v => locSet.has(v),
         (v, vAttivo) => { vAttivo ? locSet.delete(v) : locSet.add(v); update(); });
       renderGruppoChipInline(inner, null, OPT.addomePalpazione,
@@ -4499,8 +4530,9 @@ function renderCute(){
     } else {
       const sedeSet = getLocSet(state.cute.sedePerTipo, opt.value);
       const extraSet = opt.extra ? getLocSet(state.cute.extraPerTipo, opt.value) : null;
+      const opzioniSede = opt.locOptions ? OPT[opt.locOptions] : OPT.cuteLato;
       builder = (inner) => {
-        renderGruppoChipInline(inner, null, OPT.cuteLato,
+        renderGruppoChipInline(inner, null, opzioniSede,
           v => sedeSet.has(v),
           (v, sAttivo) => { sAttivo ? sedeSet.delete(v) : sedeSet.add(v); update(); });
         if(opt.extra){
@@ -4814,6 +4846,10 @@ const OPT = {
     {value:'dx', label:'Dx'},
     {value:'sx', label:'Sx'}
   ],
+  cuteArti: [
+    {value:'aaii', label:'AAII'},
+    {value:'aass', label:'AASS'}
+  ],
   cuteCicatrici: [
     {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
     {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
@@ -4839,7 +4875,9 @@ const OPT = {
     {value:'ernia', label:'Ernia', customDrawer:'ernia'},
     {value:'colostomia', label:'Colostomia', extra:[{value:'in_ordine', label:'In ordine'}]},
     {value:'ureterocutaneostomia', label:'Ureterocutaneostomia'},
-    {value:'discromie_venosa', label:'Discromie da insuff. venosa'}
+    {value:'discromie_venosa', label:'Discromie da insuff. venosa'},
+    {value:'equinismo', label:'Piedi in equinismo'},
+    {value:'anchilosi', label:'Anchilosi', locOptions:'cuteArti'}
   ],
   neuroGenerale: [
     {value:'muove_arti', label:'Muove i quattro arti', frag:'muove i quattro arti'},
@@ -4901,6 +4939,19 @@ function fraseCute(valore, sedeSet, extraSet){
     if(hasDx) return "discromie cutanee all'arto inferiore destro da insufficienza venosa cronica";
     if(hasSx) return "discromie cutanee all'arto inferiore sinistro da insufficienza venosa cronica";
     return 'discromie cutanee da insufficienza venosa cronica';
+  }
+  if(valore === 'equinismo'){
+    if(hasDx && !hasSx) return 'piede dx in equinismo';
+    if(hasSx && !hasDx) return 'piede sx in equinismo';
+    return 'piedi in equinismo';
+  }
+  if(valore === 'anchilosi'){
+    const hasAAII = sedeSet && sedeSet.has('aaii');
+    const hasAASS = sedeSet && sedeSet.has('aass');
+    if(hasAAII && hasAASS) return 'anchilosi flessoria degli AAII e degli AASS';
+    if(hasAAII) return 'anchilosi flessoria degli AAII';
+    if(hasAASS) return 'anchilosi flessoria degli AASS';
+    return ''; // senza AAII/AASS specificati non generiamo una frase incompleta
   }
   return '';
 }
