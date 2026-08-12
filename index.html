@@ -214,6 +214,9 @@
   }
   .group{ margin-bottom:15px; }
   .group:last-child{ margin-bottom:0; }
+  .group-row{ display:flex; gap:15px; margin-bottom:15px; }
+  .group-row:last-child{ margin-bottom:0; }
+  .group-row > .group{ flex:1 1 0; min-width:0; margin-bottom:0; }
   .group-label{
     font-size:12.5px; color:var(--ink-dim); margin-bottom:7px;
     letter-spacing:.01em; font-weight:500;
@@ -1025,21 +1028,25 @@
     <div class="group-label">Mingazzini</div>
     <div class="finding-list" id="neuro-mingazzini"></div>
   </div>
-  <div class="group">
-    <div class="group-label">Paresi / Plegia</div>
-    <div class="finding-list" id="neuro-motorio"></div>
+  <div class="group-row">
+    <div class="group">
+      <div class="group-label">Paresi / Plegia</div>
+      <div class="finding-list" id="neuro-motorio"></div>
+    </div>
+    <div class="group">
+      <div class="group-label">Emineglect</div>
+      <div class="chips" id="neuro-emineglect"></div>
+    </div>
   </div>
-  <div class="group">
-    <div class="group-label">Emisindrome</div>
-    <div class="chips" id="neuro-emisindrome"></div>
-  </div>
-  <div class="group">
-    <div class="group-label">Emineglect</div>
-    <div class="chips" id="neuro-emineglect"></div>
-  </div>
-  <div class="group">
-    <div class="group-label">Occhi deviati</div>
-    <div class="chips" id="neuro-occhi"></div>
+  <div class="group-row">
+    <div class="group">
+      <div class="group-label">Emisindrome</div>
+      <div class="chips" id="neuro-emisindrome"></div>
+    </div>
+    <div class="group">
+      <div class="group-label">Occhi deviati</div>
+      <div class="chips" id="neuro-occhi"></div>
+    </div>
   </div>
   <div class="group">
     <div class="group-label">Lato del solco spianato (paresi) — la rima si calcola dal lato opposto</div>
@@ -1105,7 +1112,7 @@ const state = {
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
-  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:'', mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
 };
 
 /* ============================================================
@@ -3095,7 +3102,19 @@ function applyStateObject(o){
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
-  state.neuro.mingazzini = o.neuro?.mingazzini ?? '';
+  {
+    const mRaw = o.neuro?.mingazzini;
+    if(Array.isArray(mRaw)){
+      state.neuro.mingazzini = new Set(mRaw);
+    } else if(mRaw === 'i_ii'){
+      // retrocompatibilità con versioni precedenti dell'app
+      state.neuro.mingazzini = new Set(['i','ii']);
+    } else if(mRaw){
+      state.neuro.mingazzini = new Set([mRaw]);
+    } else {
+      state.neuro.mingazzini = new Set();
+    }
+  }
   state.neuro.mingazziniLato = o.neuro?.mingazziniLato ?? '';
   state.neuro.motorio = new Set(o.neuro?.motorio || []);
   state.neuro.motorioDistribuzione = {};
@@ -4598,10 +4617,28 @@ function renderNeuroMotorio(){
 function renderNeuroMingazzini(){
   const el = document.getElementById('neuro-mingazzini');
   el.innerHTML = '';
+  const s = state.neuro.mingazzini;
   OPT.neuroMingazzini.forEach(opt => {
-    const active = state.neuro.mingazzini === opt.value;
+    if(opt.breakBefore){
+      const br = document.createElement('div');
+      br.style.cssText = 'flex-basis:100%; height:0;';
+      el.appendChild(br);
+    }
+    const active = s.has(opt.value);
     const onClickChip = () => {
-      state.neuro.mingazzini = active ? '' : opt.value;
+      if(opt.value === 'i' || opt.value === 'ii'){
+        // "I regolare" e "II regolare" sono indipendenti e combinabili tra loro,
+        // ma escludono "Non eseguibile" e "Positivo"
+        s.delete('non_eseguibile');
+        s.delete('positivo');
+        active ? s.delete(opt.value) : s.add(opt.value);
+      } else {
+        // "Non eseguibile" e "Positivo" restano esclusivi tra loro e con I/II
+        s.delete('i');
+        s.delete('ii');
+        s.delete(opt.value === 'positivo' ? 'non_eseguibile' : 'positivo');
+        active ? s.delete(opt.value) : s.add(opt.value);
+      }
       update();
     };
     const builder = opt.hasLoc ? (inner) => {
@@ -4905,9 +4942,9 @@ const OPT = {
     {value:'faciale', label:'Faciale'}
   ],
   neuroMingazzini: [
-    {value:'i_ii', label:'I e II regolari'},
-    {value:'i', label:'Solo I regolare'},
-    {value:'non_eseguibile', label:'Non eseguibile'},
+    {value:'i', label:'I regolare'},
+    {value:'ii', label:'II regolare'},
+    {value:'non_eseguibile', label:'Non eseguibile', breakBefore:true},
     {value:'positivo', label:'Positivo', hasLoc:true}
   ],
   neuroLato: [
@@ -5568,15 +5605,16 @@ function composeNeuro(){
   const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
   if(ling.length) parts.push(joinIt(ling));
 
-  const mingLabel = {
-    i_ii:'mantiene correttamente la posizione in Mingazzini I e II',
-    i:'mantiene correttamente la posizione in Mingazzini I',
-    non_eseguibile:'Mingazzini non eseguibile'
-  };
-  if(n.mingazzini === 'positivo'){
+  if(n.mingazzini.has('positivo')){
     parts.push('Mingazzini positivo' + (n.mingazziniLato ? ' a ' + n.mingazziniLato : ''));
-  } else if(n.mingazzini){
-    parts.push(mingLabel[n.mingazzini]);
+  } else if(n.mingazzini.has('non_eseguibile')){
+    parts.push('Mingazzini non eseguibile');
+  } else if(n.mingazzini.has('i') && n.mingazzini.has('ii')){
+    parts.push('mantiene correttamente la posizione in Mingazzini I e II');
+  } else if(n.mingazzini.has('i')){
+    parts.push('mantiene correttamente la posizione in Mingazzini I');
+  } else if(n.mingazzini.has('ii')){
+    parts.push('Mantiene correttamente la posizione al Mingazzini II');
   }
 
   OPT.neuroMotorio.forEach(opt => {
