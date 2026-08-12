@@ -265,6 +265,10 @@
     transition:max-height .22s ease, opacity .18s ease, margin-top .22s ease;
   }
   .finding-drawer.open{ flex-basis:100%; width:auto; max-height:260px; opacity:1; margin-top:2px; }
+  /* MV può avere più blocchi sede (vedi costruisciSedeToraciceMulti): il tetto
+     fisso di 260px basterebbe per un solo blocco ma taglia il secondo/terzo,
+     quindi qui alziamo il limite solo per la tendina di MV */
+  #torace-mv .finding-drawer.open{ max-height:700px; }
   .finding-drawer-inner{
     display:flex; flex-wrap:wrap; gap:6px;
     padding:2px 0 2px 12px;
@@ -1107,7 +1111,7 @@ const state = {
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:new Set(), reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
+  torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
@@ -2830,7 +2834,20 @@ function applyStateObject(o){
   state.cuore.focolaio = o.cuore?.focolaio ?? '';
 
   state.torace.mv = o.torace?.mv ?? 'presente';
-  state.torace.mvLoc = convertiSedeTorace(o.torace?.mvLoc || []);
+  // mvLoc ora è un array di "blocchi sede" (uno per ciascuna combinazione
+  // zona+lato), per poter esprimere lateralità diverse sulla stessa riga
+  // di MV (es. "in medio-basale sinistro e in base destra"). Le schede
+  // salvate col vecchio formato (array piatto di atomi) diventano un
+  // unico blocco.
+  {
+    const raw = o.torace?.mvLoc;
+    if(Array.isArray(raw) && raw.length && Array.isArray(raw[0])){
+      state.torace.mvLoc = raw.map(blocco => convertiSedeTorace(blocco));
+      if(state.torace.mvLoc.length === 0) state.torace.mvLoc = [new Set()];
+    } else {
+      state.torace.mvLoc = [convertiSedeTorace(raw || [])];
+    }
+  }
   state.torace.reperti = new Set(o.torace?.reperti || ['non_rumori']);
   // migrazione: le vecchie voci sibili separate confluiscono nell'unica
   // "sibili/fischi/gemiti" con sede, riportando la sfumatura come atomo
@@ -2922,6 +2939,25 @@ function applyStateObject(o){
       if(set.has(codice)){
         set.delete(codice);
         set.add(CODICI_PALPAZIONE[codice]);
+      }
+    });
+  });
+  // migrazione: le vecchie sedi con "destro/destra/sinistro/sinistra" per esteso
+  // diventano le nuove forme accorciate "dx"/"sx"
+  const MIGRAZIONE_SEDE_ADDOME = {
+    'in ipocondrio destro':'in ipocondrio dx',
+    'in ipocondrio sinistro':'in ipocondrio sx',
+    'al fianco destro':'al fianco dx',
+    'al fianco sinistro':'al fianco sx',
+    'in fossa iliaca destra':'in fossa iliaca dx',
+    'in fossa iliaca sinistra':'in fossa iliaca sx'
+  };
+  Object.keys(state.addome.doloreLocPerTipo).forEach(k => {
+    const set = state.addome.doloreLocPerTipo[k];
+    Object.keys(MIGRAZIONE_SEDE_ADDOME).forEach(vecchio => {
+      if(set.has(vecchio)){
+        set.delete(vecchio);
+        set.add(MIGRAZIONE_SEDE_ADDOME[vecchio]);
       }
     });
   });
@@ -3461,7 +3497,8 @@ function eliminaPazienteAttivo(){
    ============================================================ */
 
 // stesso ordine della mappa reparto (settore per settore); le schede che
-// non corrispondono a un letto fisso vanno in coda, in ordine alfabetico
+// non corrispondono a un letto fisso (appoggi, schede libere/extra) vanno
+// per prime, in ordine alfabetico
 function ordinaPazientiPerLetto(entries){
   const nomiOrdinati = [];
   SETTORI.forEach(s => WARD_MAP[s].forEach(n => nomiOrdinati.push(bedName(n))));
@@ -3469,8 +3506,8 @@ function ordinaPazientiPerLetto(entries){
     const ia = nomiOrdinati.indexOf(a[1].name);
     const ib = nomiOrdinati.indexOf(b[1].name);
     if(ia !== -1 && ib !== -1) return ia - ib;
-    if(ia !== -1) return -1;
-    if(ib !== -1) return 1;
+    if(ia !== -1) return 1;
+    if(ib !== -1) return -1;
     return a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' });
   });
 }
@@ -3488,7 +3525,7 @@ function getRefertoFor(patientState){
 
 function schedeConDati(){
   const patients = loadPatients();
-  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state));
+  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && isOggi(p.savedAt));
   return ordinaPazientiPerLetto(entries);
 }
 
@@ -3542,11 +3579,6 @@ function renderRiepilogo(){
     title.className = 'bed-title';
     title.textContent = p.name;
 
-    const data = document.createElement('span');
-    data.className = 'bed-date';
-    data.textContent = formattaDataOra(p.savedAt);
-    title.appendChild(data);
-
     const copiaBtn = document.createElement('button');
     copiaBtn.className = 'copia-btn';
     copiaBtn.textContent = 'Copia';
@@ -3570,7 +3602,7 @@ function esportaRiepilogoTxt(){
   if(entries.length === 0){ showToast('Nessuna scheda da esportare'); return; }
 
   const testo = entries
-    .map(([id, p]) => p.name + (p.savedAt ? ' (' + formattaDataOra(p.savedAt) + ')' : '') + '\n' + getRefertoFor(p.state))
+    .map(([id, p]) => p.name + '\n' + getRefertoFor(p.state))
     .join('\n\n');
 
   const blob = new Blob([testo], { type:'text/plain;charset=utf-8' });
@@ -3806,6 +3838,47 @@ function costruisciSedeToracica(inner, locSet, extraOptions){
   }
 }
 
+// variante di costruisciSedeToracica che permette più "blocchi sede"
+// indipendenti sulla stessa riga (usata solo per MV, per poter esprimere
+// lateralità diverse su zone diverse, es. "medio-basale sx" + "base dx")
+function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
+  locSetArray.forEach((blocco, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'flex-basis:100%; border-top:' + (i > 0 ? '1px solid var(--line); padding-top:8px; margin-top:4px;' : 'none;');
+    inner.appendChild(wrap);
+
+    if(locSetArray.length > 1){
+      const headerRow = document.createElement('div');
+      headerRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; width:100%; margin:2px 0 3px;';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:10.5px; color:var(--ink-dim);';
+      lbl.textContent = 'Sede ' + (i + 1);
+      headerRow.appendChild(lbl);
+      const rm = document.createElement('div');
+      rm.textContent = 'Rimuovi';
+      rm.style.cssText = 'font-size:10.5px; color:var(--ink-dim); cursor:pointer; text-decoration:underline;';
+      rm.onclick = (e) => { e.stopPropagation(); locSetArray.splice(i, 1); update(); };
+      headerRow.appendChild(rm);
+      wrap.appendChild(headerRow);
+    }
+
+    const bloccoInner = document.createElement('div');
+    bloccoInner.style.cssText = 'display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; width:100%;';
+    wrap.appendChild(bloccoInner);
+    costruisciSedeToracica(bloccoInner, blocco, extraOptions);
+  });
+
+  const addWrap = document.createElement('div');
+  addWrap.style.cssText = 'flex-basis:100%; margin-top:6px;';
+  inner.appendChild(addWrap);
+  const addBtn = document.createElement('div');
+  addBtn.className = 'chip';
+  addBtn.style.cssText = 'font-size:12px; padding:5px 10px; display:inline-block;';
+  addBtn.textContent = '+ Aggiungi sede';
+  addBtn.onclick = (e) => { e.stopPropagation(); locSetArray.push(new Set()); update(); };
+  addWrap.appendChild(addBtn);
+}
+
 // converte la frase composta a partire dagli "atomi" di sede selezionati
 // (zona, lato, emitorace...) rispettando il genere corretto in italiano
 // (es. "base destra" ma "apice destro", "campo medio destro")
@@ -3826,18 +3899,18 @@ function comporreSedeTorace(locSet, suTapParola){
   const suTap = locSet.has('su_tap');
   if(emiDx || emiSx || suTap){
     if(suTap) parts.push(suTapParola ? `${suTapParola} su TAP` : 'su TAP');
-    else parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'destro' : 'sinistro'));
+    else parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'dx' : 'sx'));
   }
 
   const hasApice = locSet.has('apice'), hasMedio = locSet.has('medio'), hasBase = locSet.has('base');
-  let zoneText = '', genereMaschile = false, soloBase = false;
+  let zoneText = '', soloBase = false;
   if(hasApice && hasMedio && hasBase){ zoneText = 'diffusamente su tutto l\'ambito'; }
-  else if(hasMedio && hasBase){ zoneText = 'medio-basale'; genereMaschile = true; }
-  else if(hasApice && hasBase){ zoneText = 'apico-basale'; genereMaschile = true; }
-  else if(hasApice && hasMedio){ zoneText = 'apice e campo medio'; genereMaschile = true; }
+  else if(hasMedio && hasBase){ zoneText = 'medio-basale'; }
+  else if(hasApice && hasBase){ zoneText = 'apico-basale'; }
+  else if(hasApice && hasMedio){ zoneText = 'apice e campo medio'; }
   else if(hasBase){ zoneText = 'base'; soloBase = true; }
-  else if(hasMedio){ zoneText = 'campo medio'; genereMaschile = true; }
-  else if(hasApice){ zoneText = 'apice'; genereMaschile = true; }
+  else if(hasMedio){ zoneText = 'campo medio'; }
+  else if(hasApice){ zoneText = 'apice'; }
 
   if(zoneText){
     const hasDx = locSet.has('dx'), hasSx = locSet.has('sx');
@@ -3847,8 +3920,8 @@ function comporreSedeTorace(locSet, suTapParola){
     } else {
       let lato = '';
       if(bilaterale) lato = 'bilaterale';
-      else if(hasDx) lato = genereMaschile ? 'destro' : 'destra';
-      else if(hasSx) lato = genereMaschile ? 'sinistro' : 'sinistra';
+      else if(hasDx) lato = 'dx';
+      else if(hasSx) lato = 'sx';
       const prefisso = zoneText.startsWith('diffusamente') ? '' : 'in ';
       parts.push(prefisso + zoneText + (lato ? ' ' + lato : ''));
     }
@@ -3858,6 +3931,14 @@ function comporreSedeTorace(locSet, suTapParola){
   if(locSet.has('delle_alte_vie')) parts.push('delle alte vie');
 
   return parts.join(', ');
+}
+
+// compone il testo per più blocchi sede indipendenti (usata solo per MV):
+// unisce le frasi dei singoli blocchi con "e"
+function comporreSedeToraceMulti(locSetArray, suTapParola){
+  if(!locSetArray || !locSetArray.length) return '';
+  const frasi = locSetArray.map(b => comporreSedeTorace(b, suTapParola)).filter(Boolean);
+  return joinIt(frasi);
 }
 
 // traduce le vecchie sedi (stringhe fisse tipo "in base destra") nei nuovi
@@ -4148,7 +4229,7 @@ function renderToraceMv(){
   OPT.toraceMv.forEach(opt => {
     const active = state.torace.mv === opt.value;
     const onClickChip = () => { state.torace.mv = active ? '' : opt.value; update(); };
-    const builder = opt.noLoc ? null : (inner) => costruisciSedeToracica(inner, state.torace.mvLoc, OPT.toraceMvExtra);
+    const builder = opt.noLoc ? null : (inner) => costruisciSedeToraciceMulti(inner, state.torace.mvLoc, OPT.toraceMvExtra);
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
 }
@@ -4819,15 +4900,15 @@ const OPT = {
     {value:'dolente_dolorabile', label:'Dolente/dolorabile'}
   ],
   addomeDoloreLoc: [
-    {value:'in ipocondrio destro', label:'ipocondrio dx'},
+    {value:'in ipocondrio dx', label:'ipocondrio dx'},
     {value:'in epigastrio', label:'epigastrio'},
-    {value:'in ipocondrio sinistro', label:'ipocondrio sx'},
-    {value:'al fianco destro', label:'fianco dx'},
+    {value:'in ipocondrio sx', label:'ipocondrio sx'},
+    {value:'al fianco dx', label:'fianco dx'},
     {value:'in mesogastrio', label:'mesogastrio'},
-    {value:'al fianco sinistro', label:'fianco sx'},
-    {value:'in fossa iliaca destra', label:'fossa iliaca dx'},
+    {value:'al fianco sx', label:'fianco sx'},
+    {value:'in fossa iliaca dx', label:'fossa iliaca dx'},
     {value:'in ipogastrio', label:'ipogastrio'},
-    {value:'in fossa iliaca sinistra', label:'fossa iliaca sx'},
+    {value:'in fossa iliaca sx', label:'fossa iliaca sx'},
     {value:'diffusamente', label:'diffusamente'}
   ],
   addomePalpazione: [
@@ -4897,15 +4978,15 @@ const OPT = {
   cuteCicatrici: [
     {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
     {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
-    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca destra'},
-    {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale destra'},
-    {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sinistra'},
-    {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia destra'},
-    {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sinistra'},
+    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca dx'},
+    {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale dx'},
+    {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sx'},
+    {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia dx'},
+    {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sx'},
     {value:'laparoscopica', label:'Laparoscopica/ombelicale', frag:'cicatrici laparoscopiche periombelicali'},
     {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
-    {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale destra'},
-    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sinistra'}
+    {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale dx'},
+    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'}
   ],
   cuteErnieTipi: [
     {value:'ombelicale', label:'Ombelicale', riducibile:true, lato:false},
@@ -4966,22 +5047,22 @@ function fraseCute(valore, sedeSet, extraSet){
   const hasSx = sedeSet && sedeSet.has('sx');
   if(valore === 'colostomia'){
     let s = hasDx && hasSx ? 'colostomia bilaterale'
-      : hasDx ? 'colostomia in fianco destro'
-      : hasSx ? 'colostomia in fianco sinistro'
+      : hasDx ? 'colostomia in fianco dx'
+      : hasSx ? 'colostomia in fianco sx'
       : 'colostomia';
     if(extraSet && extraSet.has('in_ordine')) s += ' in ordine';
     return s;
   }
   if(valore === 'ureterocutaneostomia'){
     return hasDx && hasSx ? 'ureterocutaneostomia bilaterale'
-      : hasDx ? 'ureterocutaneostomia in fianco destro'
-      : hasSx ? 'ureterocutaneostomia in fianco sinistro'
+      : hasDx ? 'ureterocutaneostomia in fianco dx'
+      : hasSx ? 'ureterocutaneostomia in fianco sx'
       : 'ureterocutaneostomia';
   }
   if(valore === 'discromie_venosa'){
     if(hasDx && hasSx) return 'discromie cutanee agli AAII da insufficienza venosa cronica';
-    if(hasDx) return "discromie cutanee all'arto inferiore destro da insufficienza venosa cronica";
-    if(hasSx) return "discromie cutanee all'arto inferiore sinistro da insufficienza venosa cronica";
+    if(hasDx) return "discromie cutanee all'arto inferiore dx da insufficienza venosa cronica";
+    if(hasSx) return "discromie cutanee all'arto inferiore sx da insufficienza venosa cronica";
     return 'discromie cutanee da insufficienza venosa cronica';
   }
   if(valore === 'equinismo'){
@@ -5209,7 +5290,7 @@ function composeToraceClean(){
   const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
   let mvText = '';
   if(mvOpt){
-    const mvLoc = comporreSedeTorace(t.mvLoc);
+    const mvLoc = comporreSedeToraceMulti(t.mvLoc);
     mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
   }
 
@@ -5271,8 +5352,8 @@ function composeAddome(){
     // menzionato una sola volta, alla fine ("al fianco e in fossa iliaca sinistra"
     // invece di "al fianco sinistro e in fossa iliaca sinistra")
     const coppieStessoLato = [
-      { fianco:'al fianco destro', fossa:'in fossa iliaca destra', unito:'al fianco e in fossa iliaca destra' },
-      { fianco:'al fianco sinistro', fossa:'in fossa iliaca sinistra', unito:'al fianco e in fossa iliaca sinistra' }
+      { fianco:'al fianco dx', fossa:'in fossa iliaca dx', unito:'al fianco e in fossa iliaca dx' },
+      { fianco:'al fianco sx', fossa:'in fossa iliaca sx', unito:'al fianco e in fossa iliaca sx' }
     ];
     coppieStessoLato.forEach(({fianco, fossa, unito}) => {
       if(quadranti.includes(fianco) && quadranti.includes(fossa)){
@@ -5492,8 +5573,8 @@ function fraseErniaTipo(tipoValue){
   const hasSx = latoSet && latoSet.has('sx');
   let latoText = '';
   if(hasDx && hasSx) latoText = ' bilaterale';
-  else if(hasDx) latoText = ' destra';
-  else if(hasSx) latoText = ' sinistra';
+  else if(hasDx) latoText = ' dx';
+  else if(hasSx) latoText = ' sx';
 
   if(tipoValue === 'ombelicale'){
     const riduc = state.cute.ernieRiducibile[tipoValue];
@@ -5507,8 +5588,8 @@ function fraseErniaTipo(tipoValue){
     const riducMap = (state.cute.ernieRiducibile.inguinale && typeof state.cute.ernieRiducibile.inguinale === 'object')
       ? state.cute.ernieRiducibile.inguinale : {};
     const lati = [];
-    if(hasDx) lati.push({ nome:'destra', r:riducMap.dx || '' });
-    if(hasSx) lati.push({ nome:'sinistra', r:riducMap.sx || '' });
+    if(hasDx) lati.push({ nome:'dx', r:riducMap.dx || '' });
+    if(hasSx) lati.push({ nome:'sx', r:riducMap.sx || '' });
     if(lati.length === 0) return 'ernia inguinale';
     if(lati.length === 2 && lati[0].r === lati[1].r){
       const riducText = lati[0].r === 'si' ? ' riducibile' : lati[0].r === 'no' ? ' non riducibile' : '';
@@ -5523,8 +5604,8 @@ function fraseErniaTipo(tipoValue){
   if(tipoValue === 'laparocele'){
     const lv = state.cute.ernieLaparocele;
     if(lv === 'mediano') return 'laparocele mediano';
-    if(lv === 'laterale_dx') return 'laparocele laterale destro';
-    if(lv === 'laterale_sx') return 'laparocele laterale sinistro';
+    if(lv === 'laterale_dx') return 'laparocele laterale dx';
+    if(lv === 'laterale_sx') return 'laparocele laterale sx';
     return 'laparocele';
   }
   return '';
