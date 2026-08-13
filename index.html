@@ -687,6 +687,12 @@
     <h2 style="font-size:15px; margin:0 0 13px;" id="admit-form-title">Nuovo ricovero</h2>
     <div class="admit-form-body">
 
+    <div class="admit-field" style="background:var(--bg-soft, rgba(255,255,255,0.03)); border:1px dashed var(--line); border-radius:10px; padding:10px;">
+      <div class="field-label">Incolla qui il verbale del PS (opzionale)</div>
+      <textarea id="admit-smista-testo" placeholder="Incolla il testo intero del verbale: se contiene i marcatori A: / P: / TP: viene smistato automaticamente nei campi sottostanti (allergie, anamnesi remota, terapia). Il testo prima del primo marcatore diventa anamnesi prossima."></textarea>
+      <button type="button" class="btn" style="margin-top:8px;" onclick="smistaTestoPSInCampi()">Smista nei campi</button>
+    </div>
+
     <div class="group admit-field">
       <div class="field-label">Sesso</div>
       <div class="chips admit-sesso-chips" id="admit-sesso-chips">
@@ -1622,6 +1628,65 @@ function aggiungiAltroEsame(nome, testo){
   container.appendChild(row);
 }
 
+// individua i marcatori "A:" (allergie), "P:" (anamnesi patologica remota) e
+// "TP:" (terapia/anamnesi farmacologica) nel testo di un verbale di PS
+// incollato per intero, per poterlo smistare nei campi giusti. Ogni
+// marcatore deve essere preceduto da inizio testo, spazio o punto (per non
+// confonderlo con lettere dentro altre parole, es. la "P" di "PA" o la "A"
+// di "Almarytm"), e seguito da uno o più spazi.
+function trovaMarcatoriPS(testo){
+  const specs = [
+    { campo:'farmacologica', regex:/(?:^|[\s.])TP:\s*/g },
+    { campo:'allergie', regex:/(?:^|[\s.])A:\s*/g },
+    { campo:'remota', regex:/(?:^|[\s.])P:\s*/g }
+  ];
+  const marcatori = [];
+  specs.forEach(spec => {
+    let m;
+    while((m = spec.regex.exec(testo))){
+      marcatori.push({ campo:spec.campo, start:m.index, end:m.index + m[0].length });
+    }
+  });
+  marcatori.sort((a, b) => a.start - b.start);
+  return marcatori;
+}
+
+// smista il testo di un verbale di PS incollato per intero nei 4 campi:
+// anamnesi patologica prossima (tutto ciò che precede il primo marcatore),
+// allergie (dopo "A:"), anamnesi patologica remota (dopo "P:"), anamnesi
+// farmacologica (dopo "TP:"). Non tutti i marcatori sono sempre presenti:
+// quelli mancanti restano semplicemente vuoti.
+function smistaTestoPS(testo){
+  const segmenti = { prossima:'', allergie:'', remota:'', farmacologica:'' };
+  const marcatori = trovaMarcatoriPS(testo);
+  if(marcatori.length === 0){
+    segmenti.prossima = testo.trim();
+    return segmenti;
+  }
+  segmenti.prossima = testo.slice(0, marcatori[0].start).trim();
+  marcatori.forEach((m, i) => {
+    const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].start : testo.length;
+    const pezzo = testo.slice(m.end, fine).trim();
+    segmenti[m.campo] = segmenti[m.campo] ? segmenti[m.campo] + ' ' + pezzo : pezzo;
+  });
+  return segmenti;
+}
+
+function smistaTestoPSInCampi(){
+  const box = document.getElementById('admit-smista-testo');
+  const testo = box.value.trim();
+  if(!testo){ showToast('Incolla prima il testo del verbale'); return; }
+  const s = smistaTestoPS(testo);
+  if(s.prossima) document.getElementById('admit-prossima').value = s.prossima;
+  if(s.allergie) document.getElementById('admit-allergie').value = s.allergie;
+  if(s.remota) document.getElementById('admit-remota').value = s.remota;
+  if(s.farmacologica) document.getElementById('admit-farmacologica').value = s.farmacologica;
+  const trovati = ['prossima','allergie','remota','farmacologica'].filter(k => s[k]);
+  showToast(trovati.length ? 'Smistato in: ' + trovati.map(k => ({
+    prossima:'anamnesi prossima', allergie:'allergie', remota:'anamnesi remota', farmacologica:'terapia'
+  })[k]).join(', ') : 'Nessun marcatore trovato: tutto in anamnesi prossima');
+}
+
 function raccogliCampiForm(){
   return {
     sesso: document.querySelector('#admit-sesso-chips .chip.active')?.dataset.val || 'F',
@@ -1653,7 +1718,7 @@ function raccogliCampiForm(){
 function svuotaFormRicovero(){
   ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-allergie','admit-prossima','admit-provvedimenti',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
-   'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
+   'admit-remota','admit-farmacologica','admit-familiare','admit-smista-testo'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('admit-altri-esami').innerHTML = '';
@@ -2668,7 +2733,7 @@ function costruisciPacchettoDocx(corpoXml, titolo){
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
     + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">`
     + `<w:body>${corpoXml}<w:p/>`
-    + `<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>`
+    + `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>`
     + `<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="708" w:footer="708" w:gutter="0"/>`
     + `</w:sectPr></w:body></w:document>`;
 
@@ -3399,6 +3464,25 @@ function selezionaPaziente(id){
   currentPatientId = id;
   setLocalAndCloud(LAST_PATIENT_KEY, id);
   applyStateObject(p.state);
+  // i parametri vitali (SatO2/PA/FC/temperatura) cambiano ogni giorno: se
+  // l'ultimo salvataggio di questa scheda risale a un giorno diverso da
+  // oggi, li azzeriamo automaticamente all'apertura, così non restano
+  // quelli di ieri da cancellare a mano. Tutto il resto dell'esame
+  // obiettivo (torace, addome, ecc.) resta invariato, come comodo modello
+  // di partenza.
+  if(p.savedAt && !isOggi(p.savedAt)){
+    state.respiro.sat = '';
+    state.respiro.pas = '';
+    state.respiro.pad = '';
+    state.respiro.fc = '';
+    state.respiro.temp = 'apiretico';
+    state.respiro.tempValore = '';
+    // se il giorno prima avevi migliorato a mano il testo (vedi
+    // outputEsameManuale), conteneva probabilmente i vecchi parametri
+    // scritti dentro la frase: lo scartiamo insieme ai parametri, così il
+    // testo mostrato riparte pulito e coerente con i campi appena azzerati
+    state.outputEsameManuale = '';
+  }
   populateInputsFromState();
   update(false); // solo apertura, non un tocco di tag: non scartare un eventuale testo manuale salvato
   chiudiWardMap();
