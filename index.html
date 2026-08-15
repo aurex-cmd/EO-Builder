@@ -333,6 +333,8 @@
   }
   #ricoveri-view textarea:focus, #ricovero-singolo-view textarea:focus{ border-color:var(--signal); }
   .admit-form-card{ border-color:var(--line); background:var(--panel-3); }
+  .admit-form-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px; }
+  .admit-form-header-row h2{ margin-bottom:0; }
   .ric-torna-oggi{ color:var(--signal); font-weight:600; cursor:pointer; }
   .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
   .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
@@ -589,28 +591,6 @@
 <div class="card" id="wardmap-view" style="display:none; background:var(--panel-2);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
-  <div class="group sync-box" id="sync-group">
-    <div class="sync-header-row">
-      <div class="sync-title"><svg class="hicon" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Sincronizzazione tra dispositivi</div>
-      <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
-    </div>
-    <div id="sync-logged-out">
-      <div class="inline-fields">
-        <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
-        <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
-      </div>
-      <div class="row">
-        <button class="btn primary" onclick="syncLogin()">Accedi</button>
-        <button class="btn" onclick="syncSignup()">Crea account</button>
-      </div>
-      <div class="group-label" id="sync-status" style="margin-top:8px;"></div>
-    </div>
-    <div id="sync-logged-in" style="display:none;">
-      <div class="group-label" id="sync-logged-in-text"></div>
-      <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
-    </div>
-  </div>
-
   <div class="group" id="scheda-attiva-info" style="display:none;">
     <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
     <button class="btn" id="elimina-paziente-btn" onclick="eliminaPazienteAttivo()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/><path d="M6 7l1 13a1.5 1.5 0 001.5 1.4h7a1.5 1.5 0 001.5-1.4l1-13"/><path d="M10 11v6M14 11v6"/></svg>Elimina scheda attiva</button>
@@ -638,6 +618,28 @@
   <div class="group" id="altre-schede-group" style="display:none;">
     <div class="group-label">Appoggi (schede fuori settore)</div>
     <div class="ric-lista-minimale" id="altre-schede-lista"></div>
+  </div>
+
+  <div class="group sync-box" id="sync-group">
+    <div class="sync-header-row">
+      <div class="sync-title"><svg class="hicon" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Sincronizzazione tra dispositivi</div>
+      <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
+    </div>
+    <div id="sync-logged-out">
+      <div class="inline-fields">
+        <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
+        <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
+      </div>
+      <div class="row">
+        <button class="btn primary" onclick="syncLogin()">Accedi</button>
+        <button class="btn" onclick="syncSignup()">Crea account</button>
+      </div>
+      <div class="group-label" id="sync-status" style="margin-top:8px;"></div>
+    </div>
+    <div id="sync-logged-in" style="display:none;">
+      <div class="group-label" id="sync-logged-in-text"></div>
+      <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
+    </div>
   </div>
 </div>
 
@@ -685,8 +687,11 @@
   </div>
 
   <div class="card admit-form-card" style="margin:0 0 14px;">
-    <h2 style="font-size:15px; margin:0 0 13px;" id="admit-form-title">Nuovo ricovero</h2>
-    <div class="admit-form-body">
+    <div class="admit-form-header-row">
+      <h2 style="font-size:15px; margin:0;" id="admit-form-title">Nuovo ricovero</h2>
+      <button type="button" class="btn" id="admit-form-toggle-btn" onclick="toggleAdmitFormCompatto()" style="display:none;">Modifica</button>
+    </div>
+    <div class="admit-form-body" id="admit-form-body">
 
     <div class="admit-field" style="background:var(--bg-soft, rgba(255,255,255,0.03)); border:1px dashed var(--line); border-radius:10px; padding:10px;">
       <div class="field-label">Incolla qui il verbale del PS (opzionale)</div>
@@ -1551,6 +1556,27 @@ function formattaElencoConVirgole(testo){
     .join(', ');
 }
 
+// terapia domiciliare incollata dal verbale del PS, spesso con un elenco
+// puntato a trattini (uno per farmaco, anche a capo) e nomi commerciali in
+// stampatello con asterischi (es. "COSOPT*COLL..."). NON si può separare
+// sulle virgole come formattaElencoConVirgole: la posologia di un singolo
+// farmaco contiene già virgole al suo interno (orari multipli, dosaggi).
+// Il vero confine tra un farmaco e il successivo è il trattino puntato:
+// - si eliminano tutti i trattini puntati (a inizio riga o dopo virgola)
+// - tutto il testo va in minuscolo, TRANNE "UI" (unità internazionali) che
+//   resta sempre maiuscolo
+// - gli asterischi (es. COSOPT*COLL) diventano uno spazio
+function formattaAnamnesiFarmacologica(testo){
+  if(!testo) return '';
+  return testo
+    .replace(/(?:^|[,\n])\s*-\s+/g, (m, offset) => offset === 0 ? '' : ', ')
+    .replace(/\*/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\bui\b/g, 'UI');
+}
+
 function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
   const cognomeUp = (cognome || '').trim().toUpperCase();
   const nomeUp = (nome || '').trim().toUpperCase();
@@ -1608,7 +1634,7 @@ function costruisciRemota(f){
 }
 
 function costruisciFarmacologica(f){
-  return formattaElencoConVirgole(f.farmacologica);
+  return formattaAnamnesiFarmacologica(f.farmacologica);
 }
 
 function costruisciFamiliare(f){
@@ -1767,12 +1793,32 @@ function svuotaFormRicovero(){
   }
 }
 
+// comprime/espande il form di compilazione del ricovero: una volta generato
+// (o aperto per la sola consultazione) si compatta da solo, così la scheda
+// vera e propria (ricovero-singolo-box) resta subito visibile senza dover
+// scorrere oltre il form. "Modifica" lo riapre per correggere i campi.
+function impostaAdmitFormCompatto(compatto){
+  const body = document.getElementById('admit-form-body');
+  const btn = document.getElementById('admit-form-toggle-btn');
+  if(!body) return;
+  body.style.display = compatto ? 'none' : '';
+  if(btn){
+    btn.style.display = compatto ? '' : 'none';
+    btn.textContent = 'Modifica';
+  }
+}
+function toggleAdmitFormCompatto(){
+  const body = document.getElementById('admit-form-body');
+  impostaAdmitFormCompatto(body && body.style.display !== 'none');
+}
+
 function nuovoRicovero(){
   currentRicoveroId = null;
   svuotaFormRicovero();
   document.getElementById('admit-form-title').textContent = 'Nuovo ricovero';
   document.getElementById('admit-genera-btn').textContent = 'Genera ricovero';
   document.getElementById('admit-nuovo-btn').style.display = 'none';
+  impostaAdmitFormCompatto(false);
   renderRicoveroSingoloBox();
 }
 function apriNuovoRicoveroSingolo(){
@@ -1807,6 +1853,7 @@ function generaRicovero(){
       saveRicoveri(list);
       ricoveriAperti.add(currentRicoveroId);
       renderRicoveroSingoloBox();
+      impostaAdmitFormCompatto(true);
       showToast('Ricovero aggiornato');
       return;
     }
@@ -1836,6 +1883,7 @@ function generaRicovero(){
   document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
   document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
   document.getElementById('admit-nuovo-btn').style.display = '';
+  impostaAdmitFormCompatto(true);
 }
 
 function caricaRicovero(id){
@@ -1877,6 +1925,7 @@ function caricaRicovero(id){
   document.getElementById('admit-form-title').textContent = `Ricovero ${rec.seq}`;
   document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
   document.getElementById('admit-nuovo-btn').style.display = '';
+  impostaAdmitFormCompatto(true);
   renderRicoveroSingoloBox();
 }
 function apriRicoveroSingolo(id){
@@ -2019,7 +2068,7 @@ function collegaEsameObiettivo(id){
   if(list[idx].copiati) list[idx].copiati.esameObiettivo = false;
   saveRicoveri(list);
   ricoveriAperti.add(id);
-  renderRicoveri();
+  renderRicoveriLista();
   renderWardMap();
   showToast('Esame obiettivo "' + nome + '" pronto in Appoggi');
 }
