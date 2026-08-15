@@ -114,7 +114,8 @@
   }
   .active-bed-chevron svg{ width:13px; height:13px; stroke:var(--on-folder); stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
-  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; }
+  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
   .sync-box{
     border:1px solid var(--line); border-radius:12px; padding:13px 14px;
     background:var(--panel-2);
@@ -623,7 +624,7 @@
     <div class="bed-grid" id="bed-grid"></div>
   </div>
 
-  <div class="group">
+  <div class="group" id="scheda-libera-group" style="display:none;">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
     <div class="inline-fields">
       <div class="input-con-icona" style="max-width:220px;">
@@ -1413,11 +1414,21 @@ function saveRicoveri(list){
 const DIZ_EMATOCHIMICI = {
   'hb':{label:'Hb', unit:'g/L'},
   'emoglobina':{label:'Hb', unit:'g/L'},
+  'ht':{label:'Ht', unit:'%'},
+  'ematocrito':{label:'Ht', unit:'%'},
+  'mcv':{label:'MCV', unit:'fL'},
+  'mch':{label:'MCH', unit:'pg'},
+  'mchc':{label:'MCHC', unit:'g/L'},
+  'rdw':{label:'RDW', unit:'%'},
   'gb':{label:'Gb', unit:'x 10^9/L'},
   'globuli bianchi':{label:'Gb', unit:'x 10^9/L'},
   'wbc':{label:'Gb', unit:'x 10^9/L'},
   'n':{label:'N', unit:'x 10^9/L'},
   'neutrofili':{label:'N', unit:'x 10^9/L'},
+  'linfociti':{label:'linfociti', unit:'x 10^9/L'},
+  'monociti':{label:'monociti', unit:'x 10^9/L'},
+  'eosinofili':{label:'eosinofili', unit:'x 10^9/L'},
+  'basofili':{label:'basofili', unit:'x 10^9/L'},
   'na':{label:'Na', unit:'mmol/L'},
   'sodio':{label:'Na', unit:'mmol/L'},
   'k':{label:'K', unit:'mmol/L'},
@@ -1426,6 +1437,7 @@ const DIZ_EMATOCHIMICI = {
   'cloro':{label:'Cl', unit:'mmol/L'},
   'creatinina':{label:'creatinina', unit:'mg/dL'},
   'crea':{label:'creatinina', unit:'mg/dL'},
+  'egfr':{label:'eGFR', unit:'mL/min'},
   'urea':{label:'urea', unit:'mg/dL'},
   'azotemia':{label:'urea', unit:'mg/dL'},
   'glicemia':{label:'glicemia', unit:'mg/dL'},
@@ -1445,9 +1457,11 @@ const DIZ_EMATOCHIMICI = {
   'alt':{label:'ALT', unit:'U/L'},
   'gpt':{label:'ALT', unit:'U/L'},
   'ggt':{label:'GGT', unit:'U/L'},
+  'fosfatasi alcalina':{label:'fosfatasi alcalina', unit:'U/L'},
   'plt':{label:'PLT', unit:'x 10^9/L'},
   'piastrine':{label:'PLT', unit:'x 10^9/L'},
   'inr':{label:'INR', unit:''},
+  'ptt':{label:'PTT', unit:'s'},
   'ck':{label:'CK', unit:'U/L'},
   'ldh':{label:'LDH', unit:'U/L'},
   'amilasi':{label:'amilasi', unit:'U/L'},
@@ -1460,10 +1474,30 @@ const DIZ_EMATOCHIMICI = {
   'ddimero':{label:'D-dimero', unit:'ng/mL'},
   'ferritina':{label:'ferritina', unit:'ng/mL'},
   'tsh':{label:'TSH', unit:'mUI/L'},
-  'albumina':{label:'albumina', unit:'g/dL'},
-  'proteine totali':{label:'proteine totali', unit:'g/dL'},
+  'albumina':{label:'albumina', unit:'g/L'},
+  'proteine totali':{label:'proteine totali', unit:'g/L'},
+  'alfa 1':{label:'alfa-1', unit:'g/L'},
+  'alfa1':{label:'alfa-1', unit:'g/L'},
+  'alfa 2':{label:'alfa-2', unit:'g/L'},
+  'alfa2':{label:'alfa-2', unit:'g/L'},
+  'beta 1':{label:'beta-1', unit:'g/L'},
+  'beta1':{label:'beta-1', unit:'g/L'},
+  'beta 2':{label:'beta-2', unit:'g/L'},
+  'beta2':{label:'beta-2', unit:'g/L'},
+  'gamma':{label:'gamma', unit:'g/L'},
+  'rapporto albumina globuline':{label:'rapp. albumina/globuline', unit:''},
+  'omocisteina':{label:'omocisteina', unit:'umol/L'},
+  'ph urinario':{label:'pH urinario', unit:''},
+  'densita urinaria':{label:'densità urinaria', unit:''},
+  'densità urinaria':{label:'densità urinaria', unit:''},
+  'globuli rossi urinari':{label:'globuli rossi urinari', unit:'/uL'},
+  'gr urinari':{label:'globuli rossi urinari', unit:'/uL'},
+  'globuli bianchi urinari':{label:'globuli bianchi urinari', unit:'/uL'},
+  'gb urinari':{label:'globuli bianchi urinari', unit:'/uL'},
+  'batteri':{label:'batteri', unit:'/uL'},
   'acido urico':{label:'acido urico', unit:'mg/dL'},
   'colesterolo':{label:'colesterolo tot.', unit:'mg/dL'},
+  'colesterolo totale':{label:'colesterolo tot.', unit:'mg/dL'},
   'trigliceridi':{label:'trigliceridi', unit:'mg/dL'},
   'vitamina d':{label:'vitamina D', unit:'ng/mL'},
   'pth':{label:'PTH', unit:'pg/mL'},
@@ -3285,8 +3319,14 @@ const SETTORE_COLORI = {
   'Settore A': { c:'#35d0ae', dim:'#0f3832', on:'#06231d' },
   'Settore B': { c:'#dba94a', dim:'#3c2f14', on:'#221a08' },
   'Settore C': { c:'#7c93f0', dim:'#1c2140', on:'#0b0e22' },
-  'Settore D': { c:'#e08cc0', dim:'#3a1f30', on:'#1f0f18' }
+  'Settore D': { c:'#e08cc0', dim:'#3a1f30', on:'#1f0f18' },
+  'Settore E': { c:'#9aa0ac', dim:'#2c2f36', on:'#1a1c21' }
 };
+// "Settore E" non è un vero settore con letti fissi: raccoglie le schede
+// extra (appoggi, ricoveri fuori mappa). Per questo non sta in WARD_MAP,
+// ma viene mostrato come pallino a parte nella barra dei settori, separato
+// dagli altri da un trattino — vedi renderWardMap()
+const SETTORE_EXTRA = 'Settore E';
 function bedName(n){ return 'Letto ' + n; }
 
 let wardMapOpen = false;
@@ -3352,7 +3392,8 @@ function renderHeaderBadge(){
 function renderWardMap(){
   const patients = loadPatients();
 
-  // pallini dei settori, un colore diverso per ciascuno
+  // pallini dei settori, un colore diverso per ciascuno, con "E" (schede
+  // extra: appoggi/ricoveri fuori mappa) separato dagli altri da un trattino
   const tabsEl = document.getElementById('settore-tabs');
   tabsEl.innerHTML = '';
   SETTORI.forEach(s => {
@@ -3367,11 +3408,28 @@ function renderWardMap(){
     tab.onclick = () => { settoreAttivo = s; renderWardMap(); };
     tabsEl.appendChild(tab);
   });
+  const separatore = document.createElement('div');
+  separatore.className = 'settore-dot-sep';
+  separatore.textContent = '–';
+  tabsEl.appendChild(separatore);
+  const colExtra = SETTORE_COLORI[SETTORE_EXTRA];
+  const tabExtra = document.createElement('div');
+  tabExtra.className = 'settore-dot' + (settoreAttivo === SETTORE_EXTRA ? ' active' : '');
+  tabExtra.style.setProperty('--dc', colExtra.c);
+  tabExtra.style.setProperty('--dc-dim', colExtra.dim);
+  tabExtra.style.setProperty('--dc-on', colExtra.on);
+  tabExtra.textContent = 'E';
+  tabExtra.title = SETTORE_EXTRA + ' (appoggi/ricoveri fuori mappa)';
+  tabExtra.onclick = () => { settoreAttivo = SETTORE_EXTRA; renderWardMap(); };
+  tabsEl.appendChild(tabExtra);
 
-  // letti del settore attivo
+  const inExtra = settoreAttivo === SETTORE_EXTRA;
+
+  // letti del settore attivo (nascosti quando è selezionato "E")
   const gridEl = document.getElementById('bed-grid');
   gridEl.innerHTML = '';
-  WARD_MAP[settoreAttivo].forEach(n => {
+  gridEl.style.display = inExtra ? 'none' : '';
+  if(!inExtra) WARD_MAP[settoreAttivo].forEach(n => {
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
@@ -3419,14 +3477,19 @@ function renderWardMap(){
     info.style.display = 'none';
   }
 
+  // form "Scheda libera" per crearne una nuova: visibile solo nel settore E
+  const formLibera = document.getElementById('scheda-libera-group');
+  if(formLibera) formLibera.style.display = inExtra ? '' : 'none';
+
   // altre schede salvate che non corrispondono a un letto della mappa
-  // (es. cree con "Scheda libera", o dalla rete di sicurezza)
+  // (es. create con "Scheda libera", o dalla rete di sicurezza): visibili
+  // solo quando è selezionato il settore E
   const nomiLetti = new Set(Object.values(WARD_MAP).flat().map(bedName));
   const altre = Object.entries(patients).filter(([id,p]) => !nomiLetti.has(p.name));
   const altreGroup = document.getElementById('altre-schede-group');
   const altreList = document.getElementById('altre-schede-lista');
   altreList.innerHTML = '';
-  if(altre.length){
+  if(inExtra && altre.length){
     altreGroup.style.display = '';
     altre
       .sort((a,b) => a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' }))
