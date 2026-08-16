@@ -45,16 +45,6 @@
     --violet-dim:#2c2140;
     --on-violet:#1a1330;
 
-    /* ---- claymorphism: ombre morbide (rilievo) e incavi (stato attivo/premuto) ---- */
-    --clay-border:rgba(255,255,255,.045);
-    --clay-out:-6px -6px 14px rgba(255,255,255,.028), 8px 8px 18px rgba(0,0,0,.55);
-    --clay-out-sm:-4px -4px 9px rgba(255,255,255,.03), 5px 5px 11px rgba(0,0,0,.5);
-    --clay-in:inset 3px 3px 7px rgba(0,0,0,.6), inset -2px -2px 5px rgba(255,255,255,.03);
-    --clay-in-sm:inset 2px 2px 5px rgba(0,0,0,.55), inset -2px -2px 4px rgba(255,255,255,.025);
-    --glow-signal:0 0 10px rgba(53,208,174,.35);
-    --glow-folder:0 0 10px rgba(219,169,74,.35);
-    --glow-violet:0 0 10px rgba(177,140,240,.35);
-
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
@@ -87,8 +77,8 @@
     font-weight:600; font-size:12.5px; letter-spacing:-0.01em;
     padding:10px 10px; border-radius:999px; border:none;
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
-    box-shadow:var(--clay-out-sm);
-    transition:transform .12s ease, background .15s ease, opacity .15s ease, box-shadow .15s ease;
+    box-shadow:0 3px 8px rgba(0,0,0,.22);
+    transition:transform .12s ease, background .15s ease, opacity .15s ease;
     display:inline-flex; align-items:center; justify-content:center; gap:5px; position:relative;
     min-width:0; flex:1 1 0; white-space:nowrap;
   }
@@ -97,8 +87,8 @@
   .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
   .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
   .topnav-btn .topnav-icon, .active-bed-badge .topnav-icon{ width:15px; height:15px; flex-shrink:0; stroke:currentColor; }
-  .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); box-shadow:var(--clay-in-sm), var(--glow-folder); }
-  .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); box-shadow:var(--clay-in-sm), var(--glow-signal); }
+  .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); }
+  .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); }
   .topnav-btn.vista-attiva::after{
     content:''; position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
     width:34px; height:4px; border-radius:3px; background:var(--signal);
@@ -114,7 +104,7 @@
     color:#2a1f0d; cursor:pointer; transition:transform .12s ease, opacity .15s ease;
     display:inline-flex; align-items:center; gap:9px; margin-top:2px;
     background:#fbf1de; border-radius:16px; padding:8px 8px 8px 14px;
-    box-shadow:-5px -5px 11px rgba(255,255,255,.4), 6px 6px 14px rgba(0,0,0,.4); white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.18); white-space:nowrap;
   }
   .active-bed-badge:active{ transform:scale(.97); opacity:.85; }
   .active-bed-badge .topnav-icon{ stroke:var(--folder); }
@@ -127,8 +117,8 @@
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
   .sync-box{
-    border:1px solid var(--clay-border); border-radius:16px; padding:13px 14px;
-    background:var(--panel-2); box-shadow:var(--clay-out-sm);
+    border:1px solid var(--line); border-radius:16px; padding:13px 14px;
+    background:var(--panel-2);
   }
   .sync-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
   .sync-title{
@@ -140,7 +130,6 @@
     display:inline-flex; align-items:center; gap:5px;
     font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
     background:var(--signal-dim); border-radius:999px; padding:4px 11px;
-    box-shadow:var(--clay-in-sm);
   }
   .sync-badge .hicon{ width:13px; height:13px; }
   .input-con-icona{ position:relative; display:flex; align-items:center; flex:1; min-width:0; }
@@ -152,32 +141,25 @@
     font-family:var(--font-mono); font-weight:700; font-size:15px;
     border:2px solid var(--dc); background:var(--dc-dim); color:var(--dc);
     cursor:pointer; user-select:none; transition:.15s;
-    box-shadow:var(--clay-out-sm);
   }
   .settore-dot:hover{ transform:translateY(-1px); }
   .settore-dot.active{
     background:var(--dc); color:var(--dc-on);
-    box-shadow:var(--clay-in-sm), 0 0 0 3px var(--dc-dim);
+    box-shadow:0 0 0 3px var(--dc-dim);
   }
   .bed-tile{
     font-family:var(--font-mono); font-weight:600; font-size:13.5px;
     padding:10px 6px; border-radius:12px; min-width:52px; text-align:center;
-    border:1px solid var(--clay-border); background:var(--panel-3); color:var(--ink);
+    border:1px solid var(--line); background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
-    box-shadow:var(--clay-out-sm);
   }
   .bed-tile:hover{ border-color:var(--signal); }
-  .bed-tile.active{
-    border-color:var(--signal); color:var(--signal);
-    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal), var(--glow-signal);
-  }
+  .bed-tile.active{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
-    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
   }
   .bed-tile.occupied-old{
     background:var(--violet-dim); border-color:var(--violet); color:var(--violet); font-weight:700;
-    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--violet);
   }
   .bed-tile-del{
     position:absolute; top:-7px; right:-7px; width:20px; height:20px;
@@ -213,8 +195,7 @@
   /* ---------- CARDS ---------- */
   .card{
     margin:14px 14px 0; background:var(--panel); color:var(--ink);
-    border:1px solid var(--clay-border); border-radius:20px; padding:16px 17px 17px;
-    box-shadow:var(--clay-out);
+    border:1px solid var(--line); border-radius:20px; padding:16px 17px 17px;
   }
   .card h2{
     display:flex; align-items:center; gap:9px;
@@ -231,7 +212,6 @@
     font-family:var(--font-mono); font-size:11px; font-weight:500;
     color:var(--signal); background:var(--signal-dim);
     padding:2px 6px; border-radius:7px; letter-spacing:.02em;
-    box-shadow:var(--clay-in-sm);
   }
   .group{ margin-bottom:15px; }
   .group:last-child{ margin-bottom:0; }
@@ -246,17 +226,15 @@
   .chip{
     font-family:var(--font-body);
     font-size:13px; line-height:1.3; padding:8px 14px; border-radius:12px;
-    border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
     cursor:pointer; user-select:none;
-    box-shadow:var(--clay-out-sm);
-    transition:box-shadow .15s ease, border-color .12s, background .12s, color .12s, transform .08s;
+    transition:border-color .12s, background .12s, color .12s, transform .08s;
   }
   .chip:hover{ border-color:var(--signal); color:var(--ink); }
   .chip:active{ transform:scale(.97); }
   .chip.active{
     background:var(--signal-dim); border-color:var(--signal);
     color:var(--signal); font-weight:600;
-    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal), var(--glow-signal);
   }
   .addome-griglia{
     display:flex; flex-wrap:wrap; gap:6px; width:100%;
@@ -305,23 +283,22 @@
   .patient-tab{
     font-family:var(--font-body); font-size:14.5px; font-weight:500;
     padding:11px 20px 10px; border-radius:14px 14px 0 0;
-    border:1px solid var(--clay-border); border-bottom:2px solid var(--clay-border);
+    border:1px solid var(--line); border-bottom:2px solid var(--line);
     background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
-    box-shadow:var(--clay-out-sm);
   }
   .patient-tab:hover{ border-color:var(--folder); }
   .patient-tab.active{
     background:var(--folder-dim); border-color:var(--folder); border-bottom-color:var(--folder-dim);
     color:var(--folder); font-weight:700; transform:translateY(-2px);
-    box-shadow:var(--clay-in-sm), var(--glow-folder);
+    box-shadow:0 -3px 8px rgba(0,0,0,.18);
   }
   #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
   #riepilogo-view .btn:not(.primary){ background:var(--panel-2); }
   #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   .referto-block{
-    margin-bottom:14px; padding:12px; border:1px solid var(--clay-border); border-radius:16px;
-    background:var(--panel-2); box-shadow:var(--clay-out-sm);
+    margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:16px;
+    background:var(--panel-2);
   }
   .referto-block:last-child{ margin-bottom:0; }
   .referto-block .bed-title-row{
@@ -343,19 +320,19 @@
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
-    padding:11px 13px; white-space:pre-wrap; box-shadow:var(--clay-in-sm);
+    background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
+    padding:11px 13px; white-space:pre-wrap;
   }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
     width:100%; min-height:64px; resize:vertical;
-    border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
     border-radius:12px; padding:10px 12px; font-family:var(--font-body);
-    font-size:13px; line-height:1.55; box-shadow:var(--clay-in-sm);
+    font-size:13px; line-height:1.55;
   }
   #ricoveri-view textarea:focus, #ricovero-singolo-view textarea:focus{ border-color:var(--signal); }
-  .admit-form-card{ border-color:var(--clay-border); background:var(--panel-3); }
+  .admit-form-card{ border-color:var(--line); background:var(--panel-3); }
   .admit-form-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px; }
   .admit-form-header-row h2{ margin-bottom:0; }
   .ric-torna-oggi{ color:var(--signal); font-weight:600; cursor:pointer; }
@@ -366,8 +343,8 @@
   .admit-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
   .admit-block{
-    margin-bottom:16px; padding:0; border:1px solid var(--clay-border); border-radius:16px;
-    background:var(--panel-3); overflow:hidden; box-shadow:var(--clay-out-sm);
+    margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:16px;
+    background:var(--panel-3); overflow:hidden;
   }
   .admit-block:last-child{ margin-bottom:0; }
   .admit-block-head{
@@ -395,10 +372,9 @@
     padding:11px 13px; gap:8px;
   }
   .ric-cal-nav-btn{
-    width:28px; height:28px; border-radius:50%; border:1px solid var(--clay-border);
+    width:28px; height:28px; border-radius:50%; border:1px solid var(--line);
     background:var(--panel-2); color:var(--ink-dim); font-size:14px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
-    box-shadow:var(--clay-out-sm);
   }
   .ric-cal-nav-btn:hover{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 10px rgba(53,208,174,.35); }
   .ric-cal-mese{ font-family:var(--font-display); font-weight:600; font-size:14.5px; color:var(--ink); text-transform:capitalize; }
@@ -422,7 +398,7 @@
   .ric-cal-day.oggi{ font-weight:700; color:var(--signal); }
   .ric-cal-day.attivo{
     background:var(--signal); color:var(--on-signal); font-weight:700;
-    box-shadow:var(--clay-in-sm), 0 0 16px rgba(53,208,174,.55);
+    box-shadow:0 0 16px rgba(53,208,174,.55);
   }
   .ric-cal-day.attivo .ric-cal-dot{ background:var(--on-signal); }
   .ric-cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--signal); }
@@ -430,7 +406,6 @@
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     margin:0 0 12px; padding:9px 13px; border-radius:14px;
     background:var(--signal-dim); border:1px solid var(--signal-dim);
-    box-shadow:var(--clay-in-sm);
   }
   .ric-cal-filtro span{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); font-weight:600; text-transform:capitalize; }
   .ric-cal-filtro button{
@@ -484,17 +459,16 @@
   .admit-copy-btn:hover{ border-color:var(--signal); }
   .admit-editable{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
     padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
-    box-shadow:var(--clay-in-sm);
   }
   .admit-editable:focus{ border-color:var(--signal); }
   .admit-editable:empty::before{ content:attr(data-placeholder); color:var(--ink-dim); }
   /* righe "altro esame" (+ ECG ecc.) dentro Esami strumentali */
   .altro-esame-row{
     display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
-    margin-top:8px; padding:9px; border:1px solid var(--clay-border); border-radius:13px;
-    background:var(--panel-2); box-shadow:var(--clay-out-sm);
+    margin-top:8px; padding:9px; border:1px solid var(--line); border-radius:13px;
+    background:var(--panel-2);
   }
   .altro-esame-row .altro-esame-nome{
     flex:1 1 140px; min-width:110px;
@@ -535,9 +509,9 @@
   .field{ display:flex; align-items:center; gap:7px; }
   .field label{ font-size:12.5px; color:var(--ink-dim); }
   input[type=number], input[type=text]{
-    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
     border-radius:10px; padding:8px 10px; font-size:13px;
-    font-family:var(--font-mono); box-shadow:var(--clay-in-sm);
+    font-family:var(--font-mono);
   }
   input[type=text]{ font-family:var(--font-body); }
   input[type=number]:focus, input[type=text]:focus{
@@ -546,9 +520,9 @@
   input[type=number]{ width:70px; }
   input[type=text].wide{ width:100%; }
   select{
-    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
     border-radius:10px; padding:8px 10px; font-size:13px;
-    font-family:var(--font-body); width:100%; box-shadow:var(--clay-in-sm);
+    font-family:var(--font-body); width:100%;
   }
   select:focus{ outline:none; border-color:var(--signal); }
 
@@ -561,24 +535,20 @@
   #output-card h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
   textarea#output{
     width:100%; min-height:180px; resize:vertical;
-    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
     border-radius:13px; padding:13px; font-family:var(--font-mono);
-    font-size:13px; line-height:1.65; box-shadow:var(--clay-in-sm);
+    font-size:13px; line-height:1.65;
   }
   textarea#output:focus{ outline:none; border-color:var(--signal); }
   .row{ display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
   .btn{
     font-family:var(--font-body);
-    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
     border-radius:12px; padding:9px 15px; font-size:13px; font-weight:500; cursor:pointer;
-    transition:border-color .12s, background .12s, box-shadow .15s;
-    box-shadow:var(--clay-out-sm);
+    transition:border-color .12s, background .12s;
   }
   .btn:hover{ border-color:var(--signal); }
-  .btn.primary{
-    background:var(--signal); border-color:var(--signal); color:var(--on-signal); font-weight:600;
-    box-shadow:var(--clay-out-sm), var(--glow-signal);
-  }
+  .btn.primary{ background:var(--signal); border-color:var(--signal); color:var(--on-signal); font-weight:600; }
   .btn.primary:hover{ opacity:.92; border-color:var(--signal); }
 
   #toast{
@@ -586,7 +556,6 @@
     background:var(--signal); border:1px solid var(--signal); color:var(--on-signal);
     padding:8px 16px; border-radius:999px; font-size:12.5px; font-weight:600;
     opacity:0; pointer-events:none; transition:.2s;
-    box-shadow:var(--clay-out-sm), var(--glow-signal);
   }
   #toast.show{ opacity:1; }
 </style>
