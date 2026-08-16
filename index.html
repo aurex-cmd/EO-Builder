@@ -900,7 +900,26 @@
   </div>
 </div>
 
-<!-- 3. CUORE -->
+<!-- 3. DIURESI -->
+<div class="card" id="card-diuresi">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> Diuresi</h2>
+  <div class="group">
+    <div class="group-label">Modalità</div>
+    <div class="chips" id="diuresi-modalita"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Urine</div>
+    <div class="chips" id="diuresi-urine"></div>
+  </div>
+  <div class="group">
+    <div class="inline-fields">
+      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
+      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
+    </div>
+  </div>
+</div>
+
+<!-- 4. CUORE -->
 <div class="card" id="card-cuore">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20.3s-7.8-4.8-10-9.5C.4 7.2 2.4 3.5 6.3 3.5c2.1 0 3.7 1.2 4.8 2.8 1.1-1.6 2.7-2.8 4.8-2.8 3.9 0 5.9 3.7 4.3 7.3-2.2 4.7-10 9.5-10 9.5z"/></svg> Cuore</h2>
   <div class="group">
@@ -930,7 +949,7 @@
   </div>
 </div>
 
-<!-- 4. TORACE -->
+<!-- 5. TORACE -->
 <div class="card" id="card-torace">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3v8.5"/><path d="M12 11.5c-.8-3-2.8-3.2-4-2.1-2 1.7-2.6 5.3-2 8.4.4 2 2.2 2.4 3.1 1 .7-1.1.9-2.9.9-4.4"/><path d="M12 11.5c.8-3 2.8-3.2 4-2.1 2 1.7 2.6 5.3 2 8.4-.4 2-2.2 2.4-3.1 1-.7-1.1-.9-2.9-.9-4.4"/></svg> Torace</h2>
   <div class="group">
@@ -946,7 +965,7 @@
   </div>
 </div>
 
-<!-- 5. ADDOME -->
+<!-- 6. ADDOME -->
 <div class="card" id="card-addome">
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M8.3 13.2c1-1.6 2.1-1.6 3.1 0s2.1 1.6 3.1 0"/><path d="M12 5.5v2"/></svg> Addome</h2>
   <div class="group">
@@ -971,7 +990,7 @@
   </div>
 </div>
 
-<!-- 6. CUTE / ERNIE -->
+<!-- 7. CUTE / ERNIE -->
 <div class="card" id="card-cute">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> Cute, ernie, cicatrici</h2>
   <div class="group">
@@ -982,7 +1001,7 @@
   </div>
 </div>
 
-<!-- 7. EDEMI -->
+<!-- 8. EDEMI -->
 <div class="card" id="card-edemi">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> Edemi</h2>
   <div class="group">
@@ -1007,25 +1026,6 @@
   </div>
   <div class="group">
     <input type="text" class="wide" id="edemi-custom" placeholder="Frase personalizzata (sovrascrive tutto il resto)">
-  </div>
-</div>
-
-<!-- 8. DIURESI -->
-<div class="card" id="card-diuresi">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> Diuresi</h2>
-  <div class="group">
-    <div class="group-label">Modalità</div>
-    <div class="chips" id="diuresi-modalita"></div>
-  </div>
-  <div class="group">
-    <div class="group-label">Urine</div>
-    <div class="chips" id="diuresi-urine"></div>
-  </div>
-  <div class="group">
-    <div class="inline-fields">
-      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
-      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
-    </div>
   </div>
 </div>
 
