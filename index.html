@@ -29,6 +29,7 @@
     --line-soft:#1c252e;
     --ink:#eef2f5;
     --ink-dim:#93a4b1;
+    --ink-faint:#5c6c78;
     --signal:#35d0ae;
     --signal-dark:#0c8f74;
     --signal-dim:#0f3832;
@@ -44,6 +45,14 @@
     --violet:#b18cf0;
     --violet-dim:#2c2140;
     --on-violet:#1a1330;
+
+    /* colori dedicati alla striscia vitali: più vividi/saturi di quelli
+       usati come tinta dei bordi card, pensati per leggersi come un vero
+       display da monitor */
+    --vs-spo2:#4a90e2;
+    --vs-pa:#f0953f;
+    --vs-fc:#e35a5f;
+    --vs-tc:#b9b6ff;
 
     /* ---- claymorphism: ombre morbide (rilievo) e incavi (stato attivo/premuto) ---- */
     --clay-border:rgba(255,255,255,.045);
@@ -68,61 +77,45 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* ---------- HEADER + SIGNATURE ECG TRACE ---------- */
+  /* ---------- HEADER ---------- */
   header{
     padding:18px 18px 0; border-bottom:1px solid var(--page-line);
     position:sticky; top:0; background:var(--page); z-index:5;
   }
-  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:nowrap; }
+  .header-top > div:first-child{ min-width:0; }
   header h1{
     font-family:var(--font-display); font-size:22px; margin:0;
-    font-weight:700; letter-spacing:.01em; color:var(--page-ink);
+    font-weight:700; letter-spacing:.01em; color:#1a2b4c;
   }
   header .sub{ font-size:12px; color:var(--page-ink-dim); font-family:var(--font-mono); }
-  .header-nav{ display:flex; align-items:flex-start; gap:6px; width:100%; }
-  .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; flex:1 1 0; min-width:0; }
-  .nav-diari-col .topnav-btn{ width:100%; }
+  .active-bed-pill{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em;
+    color:var(--signal); background:var(--panel); border:1px solid var(--signal); border-radius:100px;
+    padding:4px 10px; white-space:nowrap; cursor:pointer; text-transform:lowercase;
+    align-self:flex-start; flex-shrink:0;
+    max-width:38vw; overflow:hidden; text-overflow:ellipsis;
+  }
+  .header-nav{ display:flex; align-items:flex-end; gap:0; width:100%; margin-top:14px; border-bottom:1px solid var(--page-line); }
+  .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+  .nav-diari-col .topnav-btn{ width:auto; }
+  /* tab piatte, testo semplice: niente più sfondo a pillola — solo colore
+     del testo e una sottile riga colorata sotto quando attive */
   .topnav-btn{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
-    font-weight:600; font-size:12.5px; letter-spacing:-0.01em;
-    padding:10px 10px; border-radius:999px; border:none;
-    background:var(--folder-dim); color:var(--folder); cursor:pointer;
-    box-shadow:var(--clay-out-sm);
-    transition:transform .12s ease, background .15s ease, opacity .15s ease, box-shadow .15s ease;
-    display:inline-flex; align-items:center; justify-content:center; gap:5px; position:relative;
-    min-width:0; flex:1 1 0; white-space:nowrap;
+    font-weight:600; font-size:13.5px; letter-spacing:0;
+    padding:9px 4px 11px; margin-right:18px; border-radius:0; border:none;
+    border-bottom:2px solid transparent;
+    background:none; color:var(--page-ink-dim); cursor:pointer;
+    box-shadow:none;
+    transition:color .15s ease, border-color .15s ease;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; position:relative;
+    min-width:0; flex:0 0 auto; white-space:nowrap;
   }
-  .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
-  .topnav-btn:active{ transform:scale(.93); opacity:.85; }
-  .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
-  .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
-  .topnav-btn .topnav-icon, .active-bed-badge .topnav-icon{ width:15px; height:15px; flex-shrink:0; stroke:currentColor; }
-  .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); box-shadow:var(--clay-in-sm), var(--glow-folder); }
-  .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); box-shadow:var(--clay-in-sm), var(--glow-signal); }
-  .topnav-btn.vista-attiva::after{
-    content:''; position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
-    width:34px; height:4px; border-radius:3px; background:var(--signal);
-  }
-  .active-bed-row{ display:flex; flex-direction:column; align-items:flex-start; margin-top:6px; padding-left:6px; }
-  .active-bed-connector{
-    width:0; height:14px; margin-left:14px;
-    border-left:3px dotted var(--folder);
-  }
-  .active-bed-badge{
-    font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
-    font-size:14px; font-weight:700; letter-spacing:-0.01em;
-    color:#2a1f0d; cursor:pointer; transition:transform .12s ease, opacity .15s ease;
-    display:inline-flex; align-items:center; gap:9px; margin-top:2px;
-    background:#fbf1de; border-radius:16px; padding:8px 8px 8px 14px;
-    box-shadow:-5px -5px 11px rgba(255,255,255,.4), 6px 6px 14px rgba(0,0,0,.4); white-space:nowrap;
-  }
-  .active-bed-badge:active{ transform:scale(.97); opacity:.85; }
-  .active-bed-badge .topnav-icon{ stroke:var(--folder); }
-  .active-bed-chevron{
-    width:22px; height:22px; border-radius:50%; background:var(--folder);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .active-bed-chevron svg{ width:13px; height:13px; stroke:var(--on-folder); stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .topnav-btn:hover{ background:none; color:var(--page-ink); }
+  .topnav-btn:active{ opacity:.7; }
+  .topnav-btn .topnav-icon{ width:17px; height:17px; flex-shrink:0; stroke:currentColor; }
+  .topnav-btn.vista-attiva{ background:none; color:var(--page-ink); border-bottom-color:var(--signal); font-weight:700; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
@@ -171,6 +164,46 @@
     border-color:var(--signal); color:var(--signal);
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal), var(--glow-signal);
   }
+
+  /* ---------- striscia vitali fissa (elemento firma) ---------- */
+  .vitals-strip{
+    position:sticky; bottom:14px; z-index:20;
+    margin:14px 14px 0; padding:12px 14px;
+    background:var(--panel); border:1px solid var(--clay-border); border-radius:20px;
+    box-shadow:var(--clay-out);
+  }
+  .vitals-strip.inline-fields{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:2px; flex-wrap:unset;
+  }
+  .vitals-strip .v{
+    text-align:center; padding:2px 0; position:relative;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .vitals-strip .v:not(:last-child)::after{
+    content:''; position:absolute; right:0; top:15%; bottom:15%; width:1px; background:var(--line);
+  }
+  .vitals-strip .v label{
+    display:block; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em;
+    color:var(--ink-faint); text-transform:uppercase; margin-bottom:3px;
+  }
+  .vitals-strip .v input{
+    font-family:var(--font-mono); font-size:20px; font-weight:600; line-height:1;
+    color:var(--ink-dim); background:none; border:none; text-align:center;
+    width:36px; padding:2px 0; -moz-appearance:textfield;
+  }
+  .vitals-strip .v input::-webkit-outer-spin-button,
+  .vitals-strip .v input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .vitals-strip .v input:focus{ outline:none; color:var(--ink); }
+  .vitals-strip .v input::placeholder{ color:var(--ink-faint); font-weight:400; }
+  .vitals-strip .v .val-row{ display:flex; align-items:baseline; justify-content:center; gap:1px; }
+  .vitals-strip .v .unit{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); }
+  .vitals-strip .v.pa .pa-row{ display:flex; align-items:center; justify-content:center; }
+  .vitals-strip .v.pa input{ width:38px; }
+  .vitals-strip .v.pa .sep{ color:var(--ink-dim); font-family:var(--font-mono); padding:0 1px; }
+  .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
+  .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
+  .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
+  .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
@@ -194,21 +227,6 @@
     display:flex; align-items:center; justify-content:center;
   }
   .bed-tile-attiva-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-  .ecg-wrap{ height:34px; margin:8px 0 0; overflow:hidden; }
-  .ecg-wrap svg{ width:100%; height:100%; display:block; }
-  .ecg-line{
-    fill:none; stroke:var(--signal-dark); stroke-width:1.8;
-    stroke-linecap:round; stroke-linejoin:round;
-    stroke-dasharray:340; stroke-dashoffset:0;
-    animation:ecg-sweep 3.2s linear infinite;
-  }
-  @keyframes ecg-sweep{
-    0%{ stroke-dashoffset:340; }
-    100%{ stroke-dashoffset:0; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .ecg-line{ animation:none; }
-  }
 
   /* ---------- CARDS ---------- */
   .card{
@@ -248,7 +266,6 @@
     font-size:13px; line-height:1.3; padding:8px 14px; border-radius:12px;
     border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
     cursor:pointer; user-select:none;
-    box-shadow:var(--clay-out-sm);
     transition:box-shadow .15s ease, border-color .12s, background .12s, color .12s, transform .08s;
   }
   .chip:hover{ border-color:var(--signal); color:var(--ink); }
@@ -599,22 +616,14 @@
       <h1>E.O. Builder</h1>
       <span class="sub">esame obiettivo · click-to-compose</span>
     </div>
-    <div class="header-nav">
-      <div class="nav-diari-col">
-        <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
-        <div class="active-bed-row" id="active-bed-row" style="display:none;">
-          <span class="active-bed-connector"></span>
-          <span class="active-bed-badge" id="active-bed-badge" onclick="chiudiWardMap()"></span>
-        </div>
-      </div>
-      <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
-      <button class="topnav-btn admit" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Ricoveri</button>
-    </div>
+    <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
   </div>
-  <div class="ecg-wrap" aria-hidden="true">
-    <svg viewBox="0 0 400 34" preserveAspectRatio="none">
-      <path class="ecg-line" d="M0,17 L60,17 L72,17 L78,4 L84,30 L90,10 L96,17 L140,17 L400,17 M400,17 L460,17 L472,17 L478,4 L484,30 L490,10 L496,17 L540,17"/>
-    </svg>
+  <div class="header-nav">
+    <div class="nav-diari-col">
+      <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()">Diari</button>
+    </div>
+    <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()">Reparto</button>
+    <button class="topnav-btn" id="topnav-ricoveri" onclick="apriRicoveri()">Ricoveri</button>
   </div>
 </header>
 
@@ -1099,6 +1108,13 @@
     <div class="group-label">Lato del solco spianato (paresi) — la rima si calcola dal lato opposto</div>
     <div class="chips" id="neuro-facciale"></div>
   </div>
+</div>
+
+<div class="vitals-strip inline-fields" id="vitals-strip">
+  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
+  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+  <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
+  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
 </div>
 
 <!-- OUTPUT -->
@@ -3454,18 +3470,19 @@ function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
 function apriRicoveri(){ mostraVista('ricoveri'); }
 
+// pillola col nome del paziente attivo, in alto a destra nell'header
+// (stile prototipo): visibile solo se c'è una scheda aperta, un tap
+// riporta alla scheda clinica
 function renderHeaderBadge(){
+  const pill = document.getElementById('active-bed-pill');
+  if(!pill) return;
   const patients = loadPatients();
   const active = patients[currentPatientId];
-  const riga = document.getElementById('active-bed-row');
-  const badge = document.getElementById('active-bed-badge');
   if(active){
-    badge.innerHTML = '<svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg>'
-      + '<span>' + escapeHtml(active.name) + '</span>'
-      + '<span class="active-bed-chevron"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
-    riga.style.display = '';
+    pill.textContent = active.name;
+    pill.style.display = '';
   } else {
-    riga.style.display = 'none';
+    pill.style.display = 'none';
   }
 }
 
@@ -5996,6 +6013,29 @@ function refreshUI(discardManuale = true){
   const esameText = state.outputEsameManuale || autoText;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
+  renderVitalsStrip();
+}
+
+// striscia vitali fissa in cima alla scheda clinica: legge/scrive
+// direttamente su state.respiro, sempre visibile anche scorrendo giù nelle
+// altre sezioni, per non dimenticarsi di compilarli durante il giro visita
+function renderVitalsStrip(){
+  const r = state.respiro;
+  const campi = [
+    ['vs-sat', r.sat],
+    ['vs-pas', r.pas],
+    ['vs-pad', r.pad],
+    ['vs-fc', r.fc],
+    ['vs-temp', r.tempValore]
+  ];
+  campi.forEach(([id, valore]) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    // non tocca il valore del campo su cui si sta scrivendo in questo momento,
+    // per non spostare il cursore mentre si digita
+    if(document.activeElement !== el && el.value !== (valore || '')) el.value = valore || '';
+    el.classList.toggle('filled', !!valore);
+  });
 }
 function update(discardManuale = true){
   refreshUI(discardManuale);
@@ -6123,6 +6163,31 @@ function showToast(msg){
 }
 
 document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+
+// la striscia vitali in alto è uno specchio dei campi già presenti più
+// sotto (SatO2/PA/FC/Temperatura): stesso dato, due punti dove inserirlo.
+// Non li mettiamo in TEXT_FIELD_MAP (che assume un solo id per ogni
+// percorso di stato: con due id sullo stesso percorso l'ultimo letto in
+// ordine sovrascriverebbe per sbaglio l'altro) — qui invece, digitando in
+// alto, si scrive subito lo stato e si copia il valore anche nel campo
+// sotto; il percorso inverso (digitare sotto -> aggiornare sopra) è già
+// coperto da renderVitalsStrip(), richiamata a ogni update().
+[
+  ['vs-sat', 'v-sat', 'sat'],
+  ['vs-pas', 'v-pas', 'pas'],
+  ['vs-pad', 'v-pad', 'pad'],
+  ['vs-fc', 'v-fc', 'fc'],
+  ['vs-temp', 'temp-valore', 'tempValore']
+].forEach(([idAlto, idBasso, campo]) => {
+  const alto = document.getElementById(idAlto);
+  const basso = document.getElementById(idBasso);
+  if(!alto || !basso) return;
+  alto.addEventListener('input', () => {
+    basso.value = alto.value;
+    state.respiro[campo] = alto.value;
+    update();
+  });
+});
 
 // Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
 // stessa riga (es. SatO2 -> PA sist. -> PA diast. -> FC), invece di dover
