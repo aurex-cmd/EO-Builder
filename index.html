@@ -164,7 +164,7 @@
 
   /* ---------- striscia vitali fissa (elemento firma) ---------- */
   .vitals-strip{
-    position:sticky; top:var(--header-h, 78px); z-index:20;
+    position:sticky; bottom:14px; z-index:20;
     margin:14px 14px 0; padding:12px 14px;
     background:#0d1215; border:1px solid var(--line); border-radius:10px;
     box-shadow:0 8px 24px -12px rgba(0,0,0,.6);
@@ -858,13 +858,6 @@
 
 <div id="clinical-view">
 
-<div class="vitals-strip inline-fields" id="vitals-strip">
-  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
-  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
-  <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
-  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
-</div>
-
 <!-- 0. SESSO -->
 <div class="card" id="card-sesso">
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20c0-3.7 3-6.7 6.8-6.7s6.8 3 6.8 6.7"/></svg> <span class="eyebrow">00</span> Paziente</h2>
@@ -1112,6 +1105,13 @@
     <div class="group-label">Lato del solco spianato (paresi) — la rima si calcola dal lato opposto</div>
     <div class="chips" id="neuro-facciale"></div>
   </div>
+</div>
+
+<div class="vitals-strip inline-fields" id="vitals-strip">
+  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
+  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+  <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
+  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
 </div>
 
 <!-- OUTPUT -->
@@ -3481,7 +3481,6 @@ function renderHeaderBadge(){
   } else {
     pill.style.display = 'none';
   }
-  if(typeof aggiornaAltezzaHeader === 'function') aggiornaAltezzaHeader();
 }
 
 function renderWardMap(){
@@ -6212,17 +6211,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// la striscia vitali è "sticky" appena sotto l'header (anch'esso sticky):
-// misuriamo l'altezza reale dell'header e la usiamo come offset, così non
-// si sovrappongono mai durante lo scroll, indipendentemente dalla vista
-// (letto attivo/non attivo cambia l'altezza del titolo)
-function aggiornaAltezzaHeader(){
-  const header = document.querySelector('header');
-  if(!header) return;
-  document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-}
-window.addEventListener('resize', aggiornaAltezzaHeader);
-
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
   renderWardMap();
@@ -6234,7 +6222,6 @@ try{
     renderAll();
     update();
   }
-  aggiornaAltezzaHeader();
   appInitialized = true;
 } catch(err){
   mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
