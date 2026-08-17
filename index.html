@@ -240,7 +240,7 @@
   .card{
     margin:14px 14px 0; background:var(--panel); color:var(--ink);
     border:1px solid var(--line); border-left:3px solid var(--sig, var(--line));
-    border-radius:14px; padding:16px 17px 17px;
+    border-radius:20px; padding:16px 17px 17px;
   }
   .card h2{
     display:flex; align-items:center; gap:9px;
@@ -275,11 +275,14 @@
     cursor:pointer; user-select:none;
     transition:border-color .12s, background .12s, color .12s, transform .08s;
   }
-  .chip:hover{ border-color:var(--sig, var(--signal)); color:var(--ink); }
+  /* colore di selezione dei tag SEMPRE uguale in tutta l'app (lo stesso di
+     Maschio/Femmina), a prescindere dalla card in cui ci si trova — solo il
+     bordo laterale/icona/numero della card restano colorati per dominio */
+  .chip:hover{ border-color:var(--signal); color:var(--ink); }
   .chip:active{ transform:scale(.97); }
   .chip.active{
-    background:var(--sig, var(--signal)); border-color:var(--sig, var(--signal));
-    color:var(--sig-on, var(--on-signal)); font-weight:600;
+    background:var(--signal); border-color:var(--signal);
+    color:var(--on-signal); font-weight:600;
   }
   .chip.active::before{ content:'✓ '; }
 
