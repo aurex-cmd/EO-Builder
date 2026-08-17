@@ -45,6 +45,29 @@
     --violet-dim:#2c2140;
     --on-violet:#1a1330;
 
+    /* famiglie "traccia da monitor" aggiunte per coprire tutte le sezioni
+       cliniche: ciano = respiro (SpO2), corallo = distretto addominale/cute,
+       riusando teal=cuore, ambra=diuresi, viola=coscienza/neuro già esistenti */
+    --cyan:#3fc6e6;
+    --cyan-dim:#0f333c;
+    --on-cyan:#062126;
+
+    --coral:#e8896f;
+    --coral-dim:#3a2018;
+    --on-coral:#2a140c;
+
+    --heart:#e35a5f;
+    --heart-dim:#3a1418;
+    --on-heart:#2b0a0c;
+
+    /* colori dedicati alla striscia vitali: più vividi/saturi di quelli
+       usati come tinta dei bordi card, pensati per leggersi come un vero
+       display da monitor */
+    --vs-spo2:#4a90e2;
+    --vs-pa:#f0953f;
+    --vs-fc:#e35a5f;
+    --vs-tc:#b9b6ff;
+
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
@@ -74,50 +97,33 @@
   .nav-diari-col .topnav-btn{ width:100%; }
   .topnav-btn{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
-    font-weight:600; font-size:12.5px; letter-spacing:-0.01em;
-    padding:10px 10px; border-radius:999px; border:none;
+    font-weight:600; font-size:13.5px; letter-spacing:0;
+    padding:11px 12px; border-radius:999px; border:none;
     background:var(--folder-dim); color:var(--folder); cursor:pointer;
     box-shadow:0 3px 8px rgba(0,0,0,.22);
     transition:transform .12s ease, background .15s ease, opacity .15s ease;
-    display:inline-flex; align-items:center; justify-content:center; gap:5px; position:relative;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; position:relative;
     min-width:0; flex:1 1 0; white-space:nowrap;
   }
   .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
   .topnav-btn:active{ transform:scale(.93); opacity:.85; }
+  .topnav-btn.reparto{ background:var(--cyan-dim); color:var(--cyan); }
+  .topnav-btn.reparto:hover{ background:var(--cyan); color:var(--on-cyan); }
   .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
   .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
-  .topnav-btn .topnav-icon, .active-bed-badge .topnav-icon{ width:15px; height:15px; flex-shrink:0; stroke:currentColor; }
+  .topnav-btn .topnav-icon{ width:17px; height:17px; flex-shrink:0; stroke:currentColor; }
   .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); }
+  .topnav-btn.reparto.vista-attiva{ background:var(--cyan); color:var(--on-cyan); }
   .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); }
   .topnav-btn.vista-attiva::after{
     content:''; position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
     width:34px; height:4px; border-radius:3px; background:var(--signal);
   }
-  .active-bed-row{ display:flex; flex-direction:column; align-items:flex-start; margin-top:6px; padding-left:6px; }
-  .active-bed-connector{
-    width:0; height:14px; margin-left:14px;
-    border-left:3px dotted var(--folder);
-  }
-  .active-bed-badge{
-    font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
-    font-size:14px; font-weight:700; letter-spacing:-0.01em;
-    color:#2a1f0d; cursor:pointer; transition:transform .12s ease, opacity .15s ease;
-    display:inline-flex; align-items:center; gap:9px; margin-top:2px;
-    background:#fbf1de; border-radius:16px; padding:8px 8px 8px 14px;
-    box-shadow:0 3px 8px rgba(0,0,0,.18); white-space:nowrap;
-  }
-  .active-bed-badge:active{ transform:scale(.97); opacity:.85; }
-  .active-bed-badge .topnav-icon{ stroke:var(--folder); }
-  .active-bed-chevron{
-    width:22px; height:22px; border-radius:50%; background:var(--folder);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .active-bed-chevron svg{ width:13px; height:13px; stroke:var(--on-folder); stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
   .sync-box{
-    border:1px solid var(--line); border-radius:16px; padding:13px 14px;
+    border:1px solid var(--line); border-radius:12px; padding:13px 14px;
     background:var(--panel-2);
   }
   .sync-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
@@ -136,7 +142,7 @@
   .input-con-icona .hicon{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-dim); pointer-events:none; }
   .input-con-icona input{ padding-left:33px !important; width:100%; }
   .settore-dot{
-    width:48px; height:48px; border-radius:50%; flex-shrink:0;
+    width:48px; height:48px; border-radius:12px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-mono); font-weight:700; font-size:15px;
     border:2px solid var(--dc); background:var(--dc-dim); color:var(--dc);
@@ -149,12 +155,50 @@
   }
   .bed-tile{
     font-family:var(--font-mono); font-weight:600; font-size:13.5px;
-    padding:10px 6px; border-radius:12px; min-width:52px; text-align:center;
+    padding:10px 6px; border-radius:8px; min-width:52px; text-align:center;
     border:1px solid var(--line); background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
   }
   .bed-tile:hover{ border-color:var(--signal); }
   .bed-tile.active{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
+
+  /* ---------- striscia vitali fissa (elemento firma) ---------- */
+  .vitals-strip{
+    position:sticky; top:0; z-index:20;
+    margin:14px 14px 0; padding:11px 12px;
+    background:var(--panel-3); border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 8px 20px -12px rgba(0,0,0,.55);
+  }
+  .vitals-strip.inline-fields{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:2px; flex-wrap:unset;
+  }
+  .vitals-strip .v{
+    text-align:center; padding:2px 0; position:relative;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .vitals-strip .v:not(:last-child)::after{
+    content:''; position:absolute; right:0; top:15%; bottom:15%; width:1px; background:var(--line);
+  }
+  .vitals-strip .v label{
+    display:block; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em;
+    color:var(--ink-dim); text-transform:uppercase; margin-bottom:3px;
+  }
+  .vitals-strip .v input{
+    font-family:var(--font-mono); font-size:18px; font-weight:600; line-height:1;
+    color:var(--ink-dim); background:none; border:none; text-align:center;
+    width:44px; padding:2px 0; -moz-appearance:textfield;
+  }
+  .vitals-strip .v input::-webkit-outer-spin-button,
+  .vitals-strip .v input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .vitals-strip .v input:focus{ outline:none; color:var(--ink); }
+  .vitals-strip .v input::placeholder{ color:var(--ink-dim); opacity:.5; }
+  .vitals-strip .v.pa .pa-row{ display:flex; align-items:center; justify-content:center; }
+  .vitals-strip .v.pa input{ width:32px; }
+  .vitals-strip .v.pa .sep{ color:var(--ink-dim); font-family:var(--font-mono); padding:0 1px; }
+  .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
+  .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
+  .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
+  .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
   }
@@ -195,7 +239,8 @@
   /* ---------- CARDS ---------- */
   .card{
     margin:14px 14px 0; background:var(--panel); color:var(--ink);
-    border:1px solid var(--line); border-radius:20px; padding:16px 17px 17px;
+    border:1px solid var(--line); border-left:3px solid var(--sig, var(--line));
+    border-radius:14px; padding:16px 17px 17px;
   }
   .card h2{
     display:flex; align-items:center; gap:9px;
@@ -205,13 +250,13 @@
   }
   .hicon{
     width:20px; height:20px; flex-shrink:0;
-    fill:none; stroke:var(--signal); stroke-width:1.8;
+    fill:none; stroke:var(--sig, var(--signal)); stroke-width:1.8;
     stroke-linecap:round; stroke-linejoin:round;
   }
   .card h2 .eyebrow{
     font-family:var(--font-mono); font-size:11px; font-weight:500;
-    color:var(--signal); background:var(--signal-dim);
-    padding:2px 6px; border-radius:7px; letter-spacing:.02em;
+    color:var(--sig, var(--signal)); background:var(--sig-dim, var(--signal-dim));
+    padding:2px 6px; border-radius:5px; letter-spacing:.02em;
   }
   .group{ margin-bottom:15px; }
   .group:last-child{ margin-bottom:0; }
@@ -225,17 +270,27 @@
   .chips{ display:flex; flex-wrap:wrap; gap:8px; }
   .chip{
     font-family:var(--font-body);
-    font-size:13px; line-height:1.3; padding:8px 14px; border-radius:12px;
+    font-size:13px; line-height:1.3; padding:8px 14px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
     cursor:pointer; user-select:none;
     transition:border-color .12s, background .12s, color .12s, transform .08s;
   }
-  .chip:hover{ border-color:var(--signal); color:var(--ink); }
+  .chip:hover{ border-color:var(--sig, var(--signal)); color:var(--ink); }
   .chip:active{ transform:scale(.97); }
   .chip.active{
-    background:var(--signal-dim); border-color:var(--signal);
-    color:var(--signal); font-weight:600;
+    background:var(--sig, var(--signal)); border-color:var(--sig, var(--signal));
+    color:var(--sig-on, var(--on-signal)); font-weight:600;
   }
+  .chip.active::before{ content:'✓ '; }
+
+  /* famiglia "traccia da monitor": un colore per dominio clinico, per
+     riconoscere la sezione dal bordo/eyebrow anche scorrendo veloce */
+  #card-coscienza, #card-neuro{ --sig:var(--violet); --sig-dim:var(--violet-dim); --sig-on:var(--on-violet); }
+  #card-respiro, #card-torace{ --sig:var(--cyan); --sig-dim:var(--cyan-dim); --sig-on:var(--on-cyan); }
+  #card-diuresi{ --sig:var(--folder); --sig-dim:var(--folder-dim); --sig-on:var(--on-folder); }
+  #card-cuore{ --sig:var(--heart); --sig-dim:var(--heart-dim); --sig-on:var(--on-heart); }
+  #card-addome, #card-cute{ --sig:var(--coral); --sig-dim:var(--coral-dim); --sig-on:var(--on-coral); }
+  #card-edemi{ --sig:var(--signal); --sig-dim:var(--signal-dim); --sig-on:var(--on-signal); }
   .addome-griglia{
     display:flex; flex-wrap:wrap; gap:6px; width:100%;
   }
@@ -282,7 +337,7 @@
   .patient-tabs{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; }
   .patient-tab{
     font-family:var(--font-body); font-size:14.5px; font-weight:500;
-    padding:11px 20px 10px; border-radius:14px 14px 0 0;
+    padding:11px 20px 10px; border-radius:10px 10px 0 0;
     border:1px solid var(--line); border-bottom:2px solid var(--line);
     background:var(--panel-3); color:var(--ink);
     cursor:pointer; user-select:none; transition:.12s; position:relative;
@@ -297,7 +352,7 @@
   #riepilogo-view .btn:not(.primary){ background:var(--panel-2); }
   #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
   .referto-block{
-    margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:16px;
+    margin-bottom:14px; padding:12px; border:1px solid var(--line); border-radius:10px;
     background:var(--panel-2);
   }
   .referto-block:last-child{ margin-bottom:0; }
@@ -320,7 +375,7 @@
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap;
   }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
@@ -328,7 +383,7 @@
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
     width:100%; min-height:64px; resize:vertical;
     border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
-    border-radius:12px; padding:10px 12px; font-family:var(--font-body);
+    border-radius:9px; padding:10px 12px; font-family:var(--font-body);
     font-size:13px; line-height:1.55;
   }
   #ricoveri-view textarea:focus, #ricovero-singolo-view textarea:focus{ border-color:var(--signal); }
@@ -343,7 +398,7 @@
   .admit-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
   .admit-block{
-    margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:16px;
+    margin-bottom:16px; padding:0; border:1px solid var(--line); border-radius:12px;
     background:var(--panel-3); overflow:hidden;
   }
   .admit-block:last-child{ margin-bottom:0; }
@@ -404,7 +459,7 @@
   .ric-cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--signal); }
   .ric-cal-filtro{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    margin:0 0 12px; padding:9px 13px; border-radius:14px;
+    margin:0 0 12px; padding:9px 13px; border-radius:10px;
     background:var(--signal-dim); border:1px solid var(--signal-dim);
   }
   .ric-cal-filtro span{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); font-weight:600; text-transform:capitalize; }
@@ -459,7 +514,7 @@
   .admit-copy-btn:hover{ border-color:var(--signal); }
   .admit-editable{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
-    background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
     padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
   }
   .admit-editable:focus{ border-color:var(--signal); }
@@ -467,7 +522,7 @@
   /* righe "altro esame" (+ ECG ecc.) dentro Esami strumentali */
   .altro-esame-row{
     display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
-    margin-top:8px; padding:9px; border:1px solid var(--line); border-radius:13px;
+    margin-top:8px; padding:9px; border:1px solid var(--line); border-radius:9px;
     background:var(--panel-2);
   }
   .altro-esame-row .altro-esame-nome{
@@ -510,7 +565,7 @@
   .field label{ font-size:12.5px; color:var(--ink-dim); }
   input[type=number], input[type=text]{
     background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
-    border-radius:10px; padding:8px 10px; font-size:13px;
+    border-radius:7px; padding:8px 10px; font-size:13px;
     font-family:var(--font-mono);
   }
   input[type=text]{ font-family:var(--font-body); }
@@ -521,7 +576,7 @@
   input[type=text].wide{ width:100%; }
   select{
     background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
-    border-radius:10px; padding:8px 10px; font-size:13px;
+    border-radius:7px; padding:8px 10px; font-size:13px;
     font-family:var(--font-body); width:100%;
   }
   select:focus{ outline:none; border-color:var(--signal); }
@@ -536,7 +591,7 @@
   textarea#output{
     width:100%; min-height:180px; resize:vertical;
     background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
-    border-radius:13px; padding:13px; font-family:var(--font-mono);
+    border-radius:9px; padding:13px; font-family:var(--font-mono);
     font-size:13px; line-height:1.65;
   }
   textarea#output:focus{ outline:none; border-color:var(--signal); }
@@ -544,7 +599,7 @@
   .btn{
     font-family:var(--font-body);
     background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
-    border-radius:12px; padding:9px 15px; font-size:13px; font-weight:500; cursor:pointer;
+    border-radius:8px; padding:9px 15px; font-size:13px; font-weight:500; cursor:pointer;
     transition:border-color .12s, background .12s;
   }
   .btn:hover{ border-color:var(--signal); }
@@ -571,12 +626,8 @@
     <div class="header-nav">
       <div class="nav-diari-col">
         <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
-        <div class="active-bed-row" id="active-bed-row" style="display:none;">
-          <span class="active-bed-connector"></span>
-          <span class="active-bed-badge" id="active-bed-badge" onclick="chiudiWardMap()"></span>
-        </div>
       </div>
-      <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
+      <button class="topnav-btn reparto" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
       <button class="topnav-btn admit" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Ricoveri</button>
     </div>
   </div>
@@ -821,9 +872,16 @@
 
 <div id="clinical-view">
 
+<div class="vitals-strip inline-fields" id="vitals-strip">
+  <div class="v spo2"><label>SpO₂</label><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric"></div>
+  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric"></div></div>
+  <div class="v fc"><label>FC</label><input type="number" id="vs-fc" min="0" inputmode="numeric"></div>
+  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal"></div>
+</div>
+
 <!-- 0. SESSO -->
 <div class="card" id="card-sesso">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20c0-3.7 3-6.7 6.8-6.7s6.8 3 6.8 6.7"/></svg> Paziente</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20c0-3.7 3-6.7 6.8-6.7s6.8 3 6.8 6.7"/></svg> <span class="eyebrow">00</span> Paziente</h2>
   <div class="group">
     <div class="group-label">Sesso (adatta gli aggettivi nel referto)</div>
     <div class="chips" id="sesso-chips"></div>
@@ -832,7 +890,7 @@
 
 <!-- 1. COSCIENZA -->
 <div class="card" id="card-coscienza">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12S6.5 5.5 12 5.5 21.5 12 21.5 12 17.5 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/></svg> Stato di coscienza</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12S6.5 5.5 12 5.5 21.5 12 21.5 12 17.5 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/></svg> <span class="eyebrow">01</span> Stato di coscienza</h2>
   <div class="group">
     <div class="group-label">Stato</div>
     <div class="finding-list" id="coscienza-primary"></div>
@@ -866,7 +924,7 @@
 
 <!-- 2. RESPIRO / PARAMETRI -->
 <div class="card" id="card-respiro">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12h4l2-6.5 4 13 2-6.5h7"/></svg> Respiro e parametri</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12h4l2-6.5 4 13 2-6.5h7"/></svg> <span class="eyebrow">02</span> Respiro e parametri</h2>
   <div class="group">
     <div class="group-label">Tipo respiro</div>
     <div class="finding-list" id="respiro-tipo"></div>
@@ -902,7 +960,7 @@
 
 <!-- 3. DIURESI -->
 <div class="card" id="card-diuresi">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> Diuresi</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 9.5h9.5A4.5 4.5 0 0118 14v1.3"/><circle cx="4" cy="9.5" r="1.4"/><path d="M17 16v1.6"/><path d="M15.4 21.3c0-1.5.9-2.3 1.6-3.1.7.8 1.6 1.6 1.6 3.1a1.6 1.6 0 01-3.2 0z"/></svg> <span class="eyebrow">03</span> Diuresi</h2>
   <div class="group">
     <div class="group-label">Modalità</div>
     <div class="chips" id="diuresi-modalita"></div>
@@ -921,7 +979,7 @@
 
 <!-- 4. CUORE -->
 <div class="card" id="card-cuore">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20.3s-7.8-4.8-10-9.5C.4 7.2 2.4 3.5 6.3 3.5c2.1 0 3.7 1.2 4.8 2.8 1.1-1.6 2.7-2.8 4.8-2.8 3.9 0 5.9 3.7 4.3 7.3-2.2 4.7-10 9.5-10 9.5z"/></svg> Cuore</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20.3s-7.8-4.8-10-9.5C.4 7.2 2.4 3.5 6.3 3.5c2.1 0 3.7 1.2 4.8 2.8 1.1-1.6 2.7-2.8 4.8-2.8 3.9 0 5.9 3.7 4.3 7.3-2.2 4.7-10 9.5-10 9.5z"/></svg> <span class="eyebrow">04</span> Cuore</h2>
   <div class="group">
     <div class="group-label">Ritmo</div>
     <div class="chips" id="cuore-ritmo"></div>
@@ -951,7 +1009,7 @@
 
 <!-- 5. TORACE -->
 <div class="card" id="card-torace">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3v8.5"/><path d="M12 11.5c-.8-3-2.8-3.2-4-2.1-2 1.7-2.6 5.3-2 8.4.4 2 2.2 2.4 3.1 1 .7-1.1.9-2.9.9-4.4"/><path d="M12 11.5c.8-3 2.8-3.2 4-2.1 2 1.7 2.6 5.3 2 8.4-.4 2-2.2 2.4-3.1 1-.7-1.1-.9-2.9-.9-4.4"/></svg> Torace</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3v8.5"/><path d="M12 11.5c-.8-3-2.8-3.2-4-2.1-2 1.7-2.6 5.3-2 8.4.4 2 2.2 2.4 3.1 1 .7-1.1.9-2.9.9-4.4"/><path d="M12 11.5c.8-3 2.8-3.2 4-2.1 2 1.7 2.6 5.3 2 8.4-.4 2-2.2 2.4-3.1 1-.7-1.1-.9-2.9-.9-4.4"/></svg> <span class="eyebrow">05</span> Torace</h2>
   <div class="group">
     <div class="group-label">Murmure vescicolare</div>
     <div class="finding-list" id="torace-mv"></div>
@@ -967,7 +1025,7 @@
 
 <!-- 6. ADDOME -->
 <div class="card" id="card-addome">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M8.3 13.2c1-1.6 2.1-1.6 3.1 0s2.1 1.6 3.1 0"/><path d="M12 5.5v2"/></svg> Addome</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M8.3 13.2c1-1.6 2.1-1.6 3.1 0s2.1 1.6 3.1 0"/><path d="M12 5.5v2"/></svg> <span class="eyebrow">06</span> Addome</h2>
   <div class="group">
     <div class="group-label">Forma</div>
     <div class="chips" id="addome-forma"></div>
@@ -992,7 +1050,7 @@
 
 <!-- 7. CUTE / ERNIE -->
 <div class="card" id="card-cute">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> Cute, ernie, cicatrici</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.3" y="8.7" width="17.4" height="6.6" rx="3.3" transform="rotate(-30 12 12)"/><circle cx="9" cy="10.1" r=".5" transform="rotate(-30 12 12)"/><circle cx="15" cy="13.9" r=".5" transform="rotate(-30 12 12)"/></svg> <span class="eyebrow">07</span> Cute, ernie, cicatrici</h2>
   <div class="group">
     <div class="finding-list" id="cute-reperti"></div>
   </div>
@@ -1003,7 +1061,7 @@
 
 <!-- 8. EDEMI -->
 <div class="card" id="card-edemi">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> Edemi</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> <span class="eyebrow">08</span> Edemi</h2>
   <div class="group">
     <div class="group-label">Assenti (esclude il resto)</div>
     <div class="chips" id="edemi-base"></div>
@@ -1031,7 +1089,7 @@
 
 <!-- 9. NEUROLOGICO -->
 <div class="card" id="card-neuro">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M9.2 4.2a2.8 2.8 0 00-2.8 2.8 2.8 2.8 0 00-1.4 5.2A2.8 2.8 0 007.5 16a2.8 2.8 0 002.7 2.6V4.2z"/><path d="M14.8 4.2a2.8 2.8 0 012.8 2.8 2.8 2.8 0 011.4 5.2A2.8 2.8 0 0116.5 16a2.8 2.8 0 01-2.7 2.6V4.2z"/></svg> Neurologico</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M9.2 4.2a2.8 2.8 0 00-2.8 2.8 2.8 2.8 0 00-1.4 5.2A2.8 2.8 0 007.5 16a2.8 2.8 0 002.7 2.6V4.2z"/><path d="M14.8 4.2a2.8 2.8 0 012.8 2.8 2.8 2.8 0 011.4 5.2A2.8 2.8 0 0116.5 16a2.8 2.8 0 01-2.7 2.6V4.2z"/></svg> <span class="eyebrow">09</span> Neurologico</h2>
   <div class="group">
     <div class="group-label">Generale</div>
     <div class="chips" id="neuro-generale"></div>
@@ -3423,19 +3481,10 @@ function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
 function apriRicoveri(){ mostraVista('ricoveri'); }
 
+// il badge "letto attivo" sotto Diari è stato rimosso su richiesta: questa
+// funzione ora non fa più nulla, ma resta per non rompere renderWardMap()
+// che la chiama
 function renderHeaderBadge(){
-  const patients = loadPatients();
-  const active = patients[currentPatientId];
-  const riga = document.getElementById('active-bed-row');
-  const badge = document.getElementById('active-bed-badge');
-  if(active){
-    badge.innerHTML = '<svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg>'
-      + '<span>' + escapeHtml(active.name) + '</span>'
-      + '<span class="active-bed-chevron"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
-    riga.style.display = '';
-  } else {
-    riga.style.display = 'none';
-  }
 }
 
 function renderWardMap(){
@@ -5965,6 +6014,29 @@ function refreshUI(discardManuale = true){
   const esameText = state.outputEsameManuale || autoText;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
+  renderVitalsStrip();
+}
+
+// striscia vitali fissa in cima alla scheda clinica: legge/scrive
+// direttamente su state.respiro, sempre visibile anche scorrendo giù nelle
+// altre sezioni, per non dimenticarsi di compilarli durante il giro visita
+function renderVitalsStrip(){
+  const r = state.respiro;
+  const campi = [
+    ['vs-sat', r.sat],
+    ['vs-pas', r.pas],
+    ['vs-pad', r.pad],
+    ['vs-fc', r.fc],
+    ['vs-temp', r.tempValore]
+  ];
+  campi.forEach(([id, valore]) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    // non tocca il valore del campo su cui si sta scrivendo in questo momento,
+    // per non spostare il cursore mentre si digita
+    if(document.activeElement !== el && el.value !== (valore || '')) el.value = valore || '';
+    el.classList.toggle('filled', !!valore);
+  });
 }
 function update(discardManuale = true){
   refreshUI(discardManuale);
@@ -6092,6 +6164,31 @@ function showToast(msg){
 }
 
 document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+
+// la striscia vitali in alto è uno specchio dei campi già presenti più
+// sotto (SatO2/PA/FC/Temperatura): stesso dato, due punti dove inserirlo.
+// Non li mettiamo in TEXT_FIELD_MAP (che assume un solo id per ogni
+// percorso di stato: con due id sullo stesso percorso l'ultimo letto in
+// ordine sovrascriverebbe per sbaglio l'altro) — qui invece, digitando in
+// alto, si scrive subito lo stato e si copia il valore anche nel campo
+// sotto; il percorso inverso (digitare sotto -> aggiornare sopra) è già
+// coperto da renderVitalsStrip(), richiamata a ogni update().
+[
+  ['vs-sat', 'v-sat', 'sat'],
+  ['vs-pas', 'v-pas', 'pas'],
+  ['vs-pad', 'v-pad', 'pad'],
+  ['vs-fc', 'v-fc', 'fc'],
+  ['vs-temp', 'temp-valore', 'tempValore']
+].forEach(([idAlto, idBasso, campo]) => {
+  const alto = document.getElementById(idAlto);
+  const basso = document.getElementById(idBasso);
+  if(!alto || !basso) return;
+  alto.addEventListener('input', () => {
+    basso.value = alto.value;
+    state.respiro[campo] = alto.value;
+    update();
+  });
+});
 
 // Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
 // stessa riga (es. SatO2 -> PA sist. -> PA diast. -> FC), invece di dover
