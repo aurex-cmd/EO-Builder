@@ -29,6 +29,7 @@
     --line-soft:#1c252e;
     --ink:#eef2f5;
     --ink-dim:#93a4b1;
+    --ink-faint:#5c6c78;
     --signal:#35d0ae;
     --signal-dark:#0c8f74;
     --signal-dim:#0f3832;
@@ -83,42 +84,41 @@
 
   /* ---------- HEADER + SIGNATURE ECG TRACE ---------- */
   header{
-    padding:18px 18px 0; border-bottom:1px solid var(--page-line);
-    position:sticky; top:0; background:var(--page); z-index:5;
+    padding:18px 18px 14px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--panel); z-index:5;
   }
   .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
   header h1{
     font-family:var(--font-display); font-size:22px; margin:0;
-    font-weight:700; letter-spacing:.01em; color:var(--page-ink);
+    font-weight:700; letter-spacing:.01em; color:var(--ink);
   }
-  header .sub{ font-size:12px; color:var(--page-ink-dim); font-family:var(--font-mono); }
-  .header-nav{ display:flex; align-items:flex-start; gap:6px; width:100%; }
-  .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; flex:1 1 0; min-width:0; }
-  .nav-diari-col .topnav-btn{ width:100%; }
+  header .sub{ font-size:12px; color:var(--ink-dim); font-family:var(--font-mono); }
+  .active-bed-pill{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em;
+    color:var(--signal); border:1px solid var(--signal); border-radius:100px;
+    padding:4px 10px; white-space:nowrap; cursor:pointer; text-transform:lowercase;
+    align-self:flex-start;
+  }
+  .header-nav{ display:flex; align-items:flex-end; gap:0; width:100%; margin-top:14px; border-bottom:1px solid var(--line); }
+  .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+  .nav-diari-col .topnav-btn{ width:auto; }
+  /* tab piatte, testo semplice: niente più sfondo a pillola — solo colore
+     del testo e una sottile riga colorata sotto quando attive */
   .topnav-btn{
     font-family:-apple-system, BlinkMacSystemFont, var(--font-body);
     font-weight:600; font-size:13.5px; letter-spacing:0;
-    padding:11px 12px; border-radius:999px; border:none;
-    background:var(--folder-dim); color:var(--folder); cursor:pointer;
-    box-shadow:0 3px 8px rgba(0,0,0,.22);
-    transition:transform .12s ease, background .15s ease, opacity .15s ease;
+    padding:9px 4px 11px; margin-right:18px; border-radius:0; border:none;
+    border-bottom:2px solid transparent;
+    background:none; color:var(--ink-dim); cursor:pointer;
+    box-shadow:none;
+    transition:color .15s ease, border-color .15s ease;
     display:inline-flex; align-items:center; justify-content:center; gap:6px; position:relative;
-    min-width:0; flex:1 1 0; white-space:nowrap;
+    min-width:0; flex:0 0 auto; white-space:nowrap;
   }
-  .topnav-btn:hover{ background:var(--folder); color:var(--on-folder); }
-  .topnav-btn:active{ transform:scale(.93); opacity:.85; }
-  .topnav-btn.reparto{ background:var(--cyan-dim); color:var(--cyan); }
-  .topnav-btn.reparto:hover{ background:var(--cyan); color:var(--on-cyan); }
-  .topnav-btn.admit{ background:var(--signal-dim); color:var(--signal); }
-  .topnav-btn.admit:hover{ background:var(--signal); color:var(--on-signal); }
+  .topnav-btn:hover{ background:none; color:var(--ink); }
+  .topnav-btn:active{ opacity:.7; }
   .topnav-btn .topnav-icon{ width:17px; height:17px; flex-shrink:0; stroke:currentColor; }
-  .topnav-btn.vista-attiva{ background:var(--folder); color:var(--on-folder); }
-  .topnav-btn.reparto.vista-attiva{ background:var(--cyan); color:var(--on-cyan); }
-  .topnav-btn.admit.vista-attiva{ background:var(--signal); color:var(--on-signal); }
-  .topnav-btn.vista-attiva::after{
-    content:''; position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
-    width:34px; height:4px; border-radius:3px; background:var(--signal);
-  }
+  .topnav-btn.vista-attiva{ background:none; color:var(--ink); border-bottom-color:var(--signal); font-weight:700; }
   .bed-grid{ display:flex; flex-wrap:wrap; gap:8px; }
   .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
   .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
@@ -164,10 +164,10 @@
 
   /* ---------- striscia vitali fissa (elemento firma) ---------- */
   .vitals-strip{
-    position:sticky; top:0; z-index:20;
-    margin:14px 14px 0; padding:11px 12px;
-    background:var(--panel-3); border:1px solid var(--line); border-radius:12px;
-    box-shadow:0 8px 20px -12px rgba(0,0,0,.55);
+    position:sticky; top:var(--header-h, 78px); z-index:20;
+    margin:14px 14px 0; padding:12px 14px;
+    background:#0d1215; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 8px 24px -12px rgba(0,0,0,.6);
   }
   .vitals-strip.inline-fields{
     display:grid; grid-template-columns:repeat(4,1fr); gap:2px; flex-wrap:unset;
@@ -181,19 +181,21 @@
   }
   .vitals-strip .v label{
     display:block; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em;
-    color:var(--ink-dim); text-transform:uppercase; margin-bottom:3px;
+    color:var(--ink-faint); text-transform:uppercase; margin-bottom:3px;
   }
   .vitals-strip .v input{
-    font-family:var(--font-mono); font-size:18px; font-weight:600; line-height:1;
+    font-family:var(--font-mono); font-size:20px; font-weight:600; line-height:1;
     color:var(--ink-dim); background:none; border:none; text-align:center;
-    width:44px; padding:2px 0; -moz-appearance:textfield;
+    width:36px; padding:2px 0; -moz-appearance:textfield;
   }
   .vitals-strip .v input::-webkit-outer-spin-button,
   .vitals-strip .v input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   .vitals-strip .v input:focus{ outline:none; color:var(--ink); }
-  .vitals-strip .v input::placeholder{ color:var(--ink-dim); opacity:.5; }
+  .vitals-strip .v input::placeholder{ color:var(--ink-faint); font-weight:400; }
+  .vitals-strip .v .val-row{ display:flex; align-items:baseline; justify-content:center; gap:1px; }
+  .vitals-strip .v .unit{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); }
   .vitals-strip .v.pa .pa-row{ display:flex; align-items:center; justify-content:center; }
-  .vitals-strip .v.pa input{ width:32px; }
+  .vitals-strip .v.pa input{ width:38px; }
   .vitals-strip .v.pa .sep{ color:var(--ink-dim); font-family:var(--font-mono); padding:0 1px; }
   .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
   .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
@@ -220,21 +222,6 @@
     display:flex; align-items:center; justify-content:center;
   }
   .bed-tile-attiva-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-  .ecg-wrap{ height:34px; margin:8px 0 0; overflow:hidden; }
-  .ecg-wrap svg{ width:100%; height:100%; display:block; }
-  .ecg-line{
-    fill:none; stroke:var(--signal-dark); stroke-width:1.8;
-    stroke-linecap:round; stroke-linejoin:round;
-    stroke-dasharray:340; stroke-dashoffset:0;
-    animation:ecg-sweep 3.2s linear infinite;
-  }
-  @keyframes ecg-sweep{
-    0%{ stroke-dashoffset:340; }
-    100%{ stroke-dashoffset:0; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    .ecg-line{ animation:none; }
-  }
 
   /* ---------- CARDS ---------- */
   .card{
@@ -626,18 +613,14 @@
       <h1>E.O. Builder</h1>
       <span class="sub">esame obiettivo · click-to-compose</span>
     </div>
-    <div class="header-nav">
-      <div class="nav-diari-col">
-        <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M4 4.5c2.2-1 5-1 7 0v15c-2-1-4.8-1-7 0z"/><path d="M20 4.5c-2.2-1-5-1-7 0v15c2-1 4.8-1 7 0z"/></svg>Diari</button>
-      </div>
-      <button class="topnav-btn reparto" id="topnav-reparto" onclick="toggleWardMap()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg>Reparto</button>
-      <button class="topnav-btn admit" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="hicon topnav-icon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Ricoveri</button>
-    </div>
+    <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
   </div>
-  <div class="ecg-wrap" aria-hidden="true">
-    <svg viewBox="0 0 400 34" preserveAspectRatio="none">
-      <path class="ecg-line" d="M0,17 L60,17 L72,17 L78,4 L84,30 L90,10 L96,17 L140,17 L400,17 M400,17 L460,17 L472,17 L478,4 L484,30 L490,10 L496,17 L540,17"/>
-    </svg>
+  <div class="header-nav">
+    <div class="nav-diari-col">
+      <button class="topnav-btn" id="topnav-diari" onclick="apriRiepilogo()">Diari</button>
+    </div>
+    <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()">Reparto</button>
+    <button class="topnav-btn" id="topnav-ricoveri" onclick="apriRicoveri()">Ricoveri</button>
   </div>
 </header>
 
@@ -876,10 +859,10 @@
 <div id="clinical-view">
 
 <div class="vitals-strip inline-fields" id="vitals-strip">
-  <div class="v spo2"><label>SpO₂</label><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric"></div>
-  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric"></div></div>
-  <div class="v fc"><label>FC</label><input type="number" id="vs-fc" min="0" inputmode="numeric"></div>
-  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal"></div>
+  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
+  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+  <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
+  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
 </div>
 
 <!-- 0. SESSO -->
@@ -3484,10 +3467,21 @@ function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
 function apriRicoveri(){ mostraVista('ricoveri'); }
 
-// il badge "letto attivo" sotto Diari è stato rimosso su richiesta: questa
-// funzione ora non fa più nulla, ma resta per non rompere renderWardMap()
-// che la chiama
+// pillola col nome del paziente attivo, in alto a destra nell'header
+// (stile prototipo): visibile solo se c'è una scheda aperta, un tap
+// riporta alla scheda clinica
 function renderHeaderBadge(){
+  const pill = document.getElementById('active-bed-pill');
+  if(!pill) return;
+  const patients = loadPatients();
+  const active = patients[currentPatientId];
+  if(active){
+    pill.textContent = active.name;
+    pill.style.display = '';
+  } else {
+    pill.style.display = 'none';
+  }
+  if(typeof aggiornaAltezzaHeader === 'function') aggiornaAltezzaHeader();
 }
 
 function renderWardMap(){
@@ -6018,6 +6012,7 @@ function refreshUI(discardManuale = true){
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
   renderVitalsStrip();
+  renderHeaderBadge();
 }
 
 // striscia vitali fissa in cima alla scheda clinica: legge/scrive
@@ -6217,6 +6212,17 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// la striscia vitali è "sticky" appena sotto l'header (anch'esso sticky):
+// misuriamo l'altezza reale dell'header e la usiamo come offset, così non
+// si sovrappongono mai durante lo scroll, indipendentemente dalla vista
+// (letto attivo/non attivo cambia l'altezza del titolo)
+function aggiornaAltezzaHeader(){
+  const header = document.querySelector('header');
+  if(!header) return;
+  document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+}
+window.addEventListener('resize', aggiornaAltezzaHeader);
+
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
   renderWardMap();
@@ -6228,6 +6234,7 @@ try{
     renderAll();
     update();
   }
+  aggiornaAltezzaHeader();
   appInitialized = true;
 } catch(err){
   mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
