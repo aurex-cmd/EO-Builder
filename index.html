@@ -87,7 +87,8 @@
     padding:18px 18px 14px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--panel); z-index:5;
   }
-  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:nowrap; }
+  .header-top > div:first-child{ min-width:0; }
   header h1{
     font-family:var(--font-display); font-size:22px; margin:0;
     font-weight:700; letter-spacing:.01em; color:var(--ink);
@@ -97,7 +98,8 @@
     font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em;
     color:var(--signal); border:1px solid var(--signal); border-radius:100px;
     padding:4px 10px; white-space:nowrap; cursor:pointer; text-transform:lowercase;
-    align-self:flex-start;
+    align-self:flex-start; flex-shrink:0;
+    max-width:38vw; overflow:hidden; text-overflow:ellipsis;
   }
   .header-nav{ display:flex; align-items:flex-end; gap:0; width:100%; margin-top:14px; border-bottom:1px solid var(--line); }
   .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
