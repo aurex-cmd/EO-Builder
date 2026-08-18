@@ -5542,13 +5542,16 @@ function composeToraceClean(){
   const t = state.torace;
   const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
   let mvText = '';
+  let mvLoc = '';
   if(mvOpt){
-    const mvLoc = comporreSedeToraceMulti(t.mvLoc);
+    mvLoc = comporreSedeToraceMulti(t.mvLoc);
     mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
   }
 
   const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
-  const repParts = repertiSelezionati.map(o => {
+  // per ciascun reperto teniamo separati il frammento testuale e, se previsto,
+  // la sua sede: serve per poter poi capire se coincide con quella del MV
+  const repItems = repertiSelezionati.map(o => {
     let frag = o.frag;
     if(o.value === 'sibili_fischi_gemiti'){
       frag = fragSibiliFischiGemiti(t.reperteSottotipi[o.value], o.frag);
@@ -5560,18 +5563,27 @@ function composeToraceClean(){
       const scelta = sotto && ['piccole','medie','grandi'].find(v => sotto.has(v));
       if(scelta) frag = `rantoli a ${scelta} bolle`;
     }
-    if(o.hasLoc){
-      const loc = comporreSedeTorace(t.reperteLocPerTipo[o.value], o.diffusoParola);
-      return loc ? `${frag} ${loc}` : frag;
-    }
-    return frag;
+    const loc = o.hasLoc ? comporreSedeTorace(t.reperteLocPerTipo[o.value], o.diffusoParola) : '';
+    return { frag, loc, text: loc ? `${frag} ${loc}` : frag };
   });
-  const repText = repParts.join(', ');
 
-  // MV può essere deselezionato (t.mv === ''): in quel caso non compare
-  // affatto nella frase, senza che questo comprometta il resto (es. "Al
-  // torace ronchi diffusi su TAP." senza menzionare il MV)
-  const corpoParti = [mvText, repText].filter(Boolean);
+  // se il MV ha una sede e un reperto condivide ESATTAMENTE la stessa sede
+  // (es. entrambi "base dx"), le due frasi si fondono con "con" invece di
+  // essere elencate separate, evitando di ripetere due volte la sede:
+  // "MV ridotto in base dx con fini crepitii" invece di
+  // "MV ridotto in base dx, fini crepitii in base dx"
+  let corpoParti;
+  if(mvOpt && mvLoc){
+    const idx = repItems.findIndex(r => r.loc && r.loc === mvLoc);
+    if(idx !== -1){
+      const fuso = `${mvText} con ${repItems[idx].frag}`;
+      const resto = repItems.filter((_, i) => i !== idx).map(r => r.text);
+      corpoParti = [fuso, ...resto].filter(Boolean);
+    }
+  }
+  if(!corpoParti){
+    corpoParti = [mvText, ...repItems.map(r => r.text)].filter(Boolean);
+  }
   if(!corpoParti.length) return '';
   const body = corpoParti.join(', ') + '.';
 
