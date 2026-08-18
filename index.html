@@ -354,6 +354,11 @@
     background:var(--panel-2); box-shadow:var(--clay-out-sm);
   }
   .referto-block:last-child{ margin-bottom:0; }
+  .referto-block.copiato{
+    border-color:var(--signal);
+    box-shadow:var(--clay-out-sm), 0 0 0 1px var(--signal), var(--glow-signal);
+  }
+  .referto-block.copiato .bed-title{ color:var(--signal); }
   .referto-block .bed-title-row{
     display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;
   }
@@ -375,7 +380,9 @@
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
     padding:11px 13px; white-space:pre-wrap; box-shadow:var(--clay-in-sm);
+    width:100%; resize:none; overflow-y:hidden; min-height:64px;
   }
+  .referto-block textarea.bed-text:focus{ outline:none; border-color:var(--signal); }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -3702,10 +3709,17 @@ function renderVitaliSettore(){
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
     const isCurrent = entry && entry[0] === currentPatientId;
-    // se è la scheda attualmente aperta, leggiamo dallo stato live (più
-    // aggiornato di quanto salvato finora), altrimenti da quanto su disco
-    const respiro = isCurrent ? state.respiro : ((entry && entry[1].state.respiro) || {});
     const diOggi = occupato && isOggi(entry[1].savedAt);
+    // se è la scheda attualmente aperta, leggiamo dallo stato live (più
+    // aggiornato di quanto salvato finora); se l'ultimo salvataggio risale
+    // a un giorno diverso da oggi, mostriamo i campi vuoti invece dei
+    // vecchi numeri (stesso azzeramento automatico di selezionaPaziente,
+    // qui solo "a video": la scheda salvata non viene toccata finché non
+    // si scrive davvero in uno di questi campi, vedi aggiornaVitaleLetto)
+    let respiro;
+    if(isCurrent) respiro = state.respiro;
+    else if(entry && diOggi) respiro = entry[1].state.respiro || {};
+    else respiro = respiroVuotoDiOggi();
 
     const riga = document.createElement('div');
     riga.className = 'vitali-riga';
@@ -3768,11 +3782,26 @@ function aggiornaVitaleLetto(nome, campo, valore){
     const nuovoId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
     patients[nuovoId] = { name: nome, savedAt: Date.now(), state: JSON.parse(DEFAULT_SNAPSHOT_JSON) };
     entry = [nuovoId, patients[nuovoId]];
+  } else if(entry[1].savedAt && !isOggi(entry[1].savedAt)){
+    // stesso azzeramento automatico di selezionaPaziente: l'ultimo
+    // salvataggio di questo letto è di un giorno diverso, quindi i vecchi
+    // parametri vitali (e un eventuale testo manuale che li citava) vanno
+    // ripuliti prima di scrivere il valore appena digitato
+    entry[1].state.respiro = respiroVuotoDiOggi();
+    entry[1].state.outputEsameManuale = '';
   }
   entry[1].state.respiro = entry[1].state.respiro || {};
   entry[1].state.respiro[campo] = valore;
   entry[1].savedAt = Date.now();
   savePatients(patients);
+}
+
+// i valori "vuoti" dei parametri vitali con cui si riparte quando cambia
+// giorno: usata sia aprendo la scheda classica (selezionaPaziente) sia
+// dalla pagina Parametri vitali (renderVitaliSettore/aggiornaVitaleLetto),
+// così il comportamento è identico indipendentemente da dove si aggiornano
+function respiroVuotoDiOggi(){
+  return { sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' };
 }
 
 function selezionaPaziente(id){
@@ -3789,12 +3818,7 @@ function selezionaPaziente(id){
   // obiettivo (torace, addome, ecc.) resta invariato, come comodo modello
   // di partenza.
   if(p.savedAt && !isOggi(p.savedAt)){
-    state.respiro.sat = '';
-    state.respiro.pas = '';
-    state.respiro.pad = '';
-    state.respiro.fc = '';
-    state.respiro.temp = 'apiretico';
-    state.respiro.tempValore = '';
+    Object.assign(state.respiro, respiroVuotoDiOggi());
     // se il giorno prima avevi migliorato a mano il testo (vedi
     // outputEsameManuale), conteneva probabilmente i vecchi parametri
     // scritti dentro la frase: lo scartiamo insieme ai parametri, così il
@@ -3920,13 +3944,21 @@ function ordinaPazientiPerLetto(entries){
   });
 }
 
-// ricompone il testo dell'EO per uno stato salvato, senza toccare
-// la scheda attualmente aperta (scambia state, compone, ripristina)
-function getRefertoFor(patientState){
+// ricompone SOLO la parte automatica (dai tag) per uno stato salvato,
+// senza toccare la scheda attualmente aperta (scambia state, compone,
+// ripristina). Serve sia per mostrare il diario sia, editandolo, per
+// capire se la parte "esame" è rimasta identica al testo auto-generato
+// (nel qual caso non è una modifica manuale, vedi aggiornaDiarioTesto)
+function composeAutoTextFor(patientState){
   const backup = serializeState();
   applyStateObject(patientState);
   const autoText = composeReferto();
   applyStateObject(backup);
+  return autoText;
+}
+
+function getRefertoFor(patientState){
+  const autoText = composeAutoTextFor(patientState);
   const esameText = (patientState.outputEsameManuale || '').trim() || autoText;
   const extra = (patientState.outputExtra || '').trim();
   return extra ? esameText + '\n\n' + extra : esameText;
@@ -3979,7 +4011,7 @@ function renderRiepilogo(){
     const testo = getRefertoFor(p.state);
 
     const block = document.createElement('div');
-    block.className = 'referto-block';
+    block.className = 'referto-block' + (p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '');
 
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
@@ -3991,19 +4023,75 @@ function renderRiepilogo(){
     const copiaBtn = document.createElement('button');
     copiaBtn.className = 'copia-btn';
     copiaBtn.textContent = 'Copia';
-    copiaBtn.onclick = () => copiaTesto(testo);
+    copiaBtn.onclick = () => {
+      copiaTesto(body.value);
+      segnaRefertoCopiato(id);
+      block.classList.add('copiato');
+    };
 
     titleRow.appendChild(title);
     titleRow.appendChild(copiaBtn);
 
-    const body = document.createElement('div');
+    const body = document.createElement('textarea');
     body.className = 'bed-text';
-    body.textContent = testo;
+    body.value = testo;
+    body.addEventListener('input', () => {
+      aggiornaDiarioTesto(id, body.value);
+      autoResizeTextarea(body);
+    });
 
     block.appendChild(titleRow);
     block.appendChild(body);
     container.appendChild(block);
+    // l'altezza esatta si può calcolare solo a elemento già nel DOM
+    // (serve scrollHeight), quindi dopo l'appendChild qui sopra
+    autoResizeTextarea(body);
   });
+}
+
+// altezza della textarea = altezza esatta del contenuto (niente scrollbar
+// interna): si azzera l'altezza per lasciare che il browser ricalcoli lo
+// scrollHeight "naturale", poi si applica quel valore. Richiamata a ogni
+// tocco di tasto così, scrivendo delle aggiunte, il riquadro si allunga
+// subito insieme al testo invece di restare fisso con lo scroll dentro
+function autoResizeTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// salva la modifica fatta direttamente nel diario (vista Riepilogo) sulla
+// scheda del paziente corrispondente, mantenendo la stessa distinzione tra
+// esame obiettivo ed eventuali aggiunte usata nella scheda clinica: le due
+// parti restano separate da una riga vuota, e la parte "esame" diventa una
+// modifica manuale SOLO se differisce dal testo che i tag genererebbero
+// da soli (altrimenti resta agganciata ai tag, come se non l'avessi toccata)
+function aggiornaDiarioTesto(patientId, nuovoValore){
+  const patients = loadPatients();
+  const p = patients[patientId];
+  if(!p) return;
+
+  const autoText = composeAutoTextFor(p.state);
+  const sepIdx = nuovoValore.indexOf('\n\n');
+  const esameParte = sepIdx === -1 ? nuovoValore : nuovoValore.slice(0, sepIdx);
+  const extraParte = sepIdx === -1 ? '' : nuovoValore.slice(sepIdx + 2).replace(/^\s+/, '');
+  p.state.outputEsameManuale = (esameParte === autoText) ? '' : esameParte;
+  p.state.outputExtra = extraParte;
+  p.savedAt = Date.now();
+
+  // se è la scheda attualmente aperta nel form clinico, sincronizza anche
+  // lo stato live e la casella "output" lì visibile: stesso principio già
+  // usato per i parametri vitali (vedi aggiornaVitaleLetto), per evitare
+  // che riaprendo quella scheda si veda ancora la versione precedente o
+  // che un successivo autosave la sovrascriva
+  if(patientId === currentPatientId){
+    state.outputEsameManuale = p.state.outputEsameManuale;
+    state.outputExtra = p.state.outputExtra;
+    outputAutoUltimo = autoText;
+    const outputEl = document.getElementById('output');
+    if(outputEl) outputEl.value = nuovoValore;
+  }
+
+  savePatients(patients);
 }
 
 function esportaRiepilogoTxt(){
@@ -6289,12 +6377,15 @@ function fallbackCopy(out){
 // diario di oggi per questo paziente" — si accende solo qui, non appena
 // apro la scheda. Chi è il letto aperto ORA lo indica invece il bordo
 // evidenziato del riquadro (.bed-tile.active), non questo badge.
-function segnaRefertoCopiato(){
-  if(!currentPatientId) return;
+// Accetta un id opzionale: dalla scheda clinica classica (copyOutput) si
+// riferisce sempre al paziente aperto, ma dalla vista Diari (renderRiepilogo)
+// può riguardare un paziente diverso da quello correntemente aperto.
+function segnaRefertoCopiato(patientId = currentPatientId){
+  if(!patientId) return;
   const patients = loadPatients();
-  if(!patients[currentPatientId]) return;
-  patients[currentPatientId].refertoCopiato = true;
-  patients[currentPatientId].refertoCopiatoIl = Date.now();
+  if(!patients[patientId]) return;
+  patients[patientId].refertoCopiato = true;
+  patients[patientId].refertoCopiatoIl = Date.now();
   savePatients(patients);
   renderWardMap();
 }
