@@ -705,7 +705,10 @@
 <div class="card" id="vitali-settore-view" style="display:none; background:var(--panel-2);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg> Parametri vitali — <span id="vitali-settore-nome"></span></h2>
   <div class="group">
-    <button class="btn" onclick="chiudiVitaliSettore()">← Torna al reparto</button>
+    <div class="inline-fields">
+      <button class="btn" onclick="chiudiVitaliSettore()">← Torna al reparto</button>
+      <button class="btn primary" id="vitali-aggiorna-btn" onclick="aggiornaVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Aggiorna</button>
+    </div>
   </div>
   <div class="group" id="vitali-settore-lista"></div>
 </div>
@@ -1275,20 +1278,35 @@ const supabaseClient = (window.supabase && window.supabase.createClient)
   : null;
 
 // invia (in background, senza bloccare l'interfaccia) il valore grezzo di
-// una chiave di localStorage al database cloud dell'utente connesso
-async function cloudPush(key, rawValue){
-  if(!supabaseClient) return;
-  try{
-    const { data } = await supabaseClient.auth.getUser();
-    const user = data && data.user;
-    if(!user) return;
-    await supabaseClient.from('eo_data').upsert({
-      user_id: user.id,
-      key,
-      value: rawValue,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id,key' });
-  } catch(e){ /* resta comunque salvato in locale, silenzioso */ }
+// una chiave di localStorage al database cloud dell'utente connesso.
+// Gli invii sono messe in coda uno dopo l'altro (non in parallelo): così
+// "Aggiorna" nella pagina Parametri vitali può aspettare che la coda si
+// sia svuotata prima di scaricare dal cloud (vedi attendiCloudPush), invece
+// di rischiare di tirare giù una versione ancora vecchia e sovrascrivere
+// in locale un parametro appena digitato ma non ancora inviato.
+let codaCloudPush = Promise.resolve();
+function cloudPush(key, rawValue){
+  if(!supabaseClient) return codaCloudPush;
+  const invio = async () => {
+    try{
+      const { data } = await supabaseClient.auth.getUser();
+      const user = data && data.user;
+      if(!user) return;
+      await supabaseClient.from('eo_data').upsert({
+        user_id: user.id,
+        key,
+        value: rawValue,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,key' });
+    } catch(e){ /* resta comunque salvato in locale, silenzioso */ }
+  };
+  codaCloudPush = codaCloudPush.then(invio, invio);
+  return codaCloudPush;
+}
+// da chiamare prima di un cloudPullAll manuale, per non tirare giù dal
+// cloud una versione più vecchia di quella che si sta ancora inviando
+async function attendiCloudPush(){
+  try{ await codaCloudPush; } catch(e){}
 }
 
 // scrive in locale e (se connesso) sincronizza subito nel cloud
@@ -3502,6 +3520,22 @@ function apriRiepilogo(){ mostraVista('riepilogo'); }
 function apriRicoveri(){ mostraVista('ricoveri'); }
 function apriVitaliSettore(){ mostraVista('vitali'); }
 function chiudiVitaliSettore(){ mostraVista('wardmap'); }
+
+// tira giù dal cloud le schede più recenti (utile se un altro dispositivo
+// ha già aggiornato dei parametri) e ridisegna la lista: serve perché la
+// pagina non si aggiorna da sola quando cambia qualcosa altrove
+async function aggiornaVitaliSettore(){
+  const btn = document.getElementById('vitali-aggiorna-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Aggiorno…'; }
+  try{
+    await attendiCloudPush();
+    await cloudPullAll();
+  } finally {
+    renderVitaliSettore();
+    if(btn){ btn.disabled = false; btn.innerHTML = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Aggiorna'; }
+    showToast('Parametri aggiornati');
+  }
+}
 
 // pillola col nome del paziente attivo, in alto a destra nell'header
 // (stile prototipo): visibile solo se c'è una scheda aperta, un tap
