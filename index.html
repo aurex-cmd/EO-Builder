@@ -3746,11 +3746,19 @@ function renderVitaliSettore(){
 // ancora una scheda propria). Se è la scheda attualmente aperta nel form
 // clinico, aggiorna anche lo stato live invece di toccare solo il
 // localStorage, così un successivo autosave non lo sovrascrive per sbaglio.
+const CAMPO_VITALE_ID_CLASSICO = { sat:'v-sat', pas:'v-pas', pad:'v-pad', fc:'v-fc', tempValore:'temp-valore' };
 function aggiornaVitaleLetto(nome, campo, valore){
   const patients = loadPatients();
   let entry = Object.entries(patients).find(([id,p]) => p.name === nome);
 
   if(entry && entry[0] === currentPatientId){
+    // il campo "gemello" nella scheda clinica classica (in questo momento
+    // nascosta, ma ancora presente nel DOM) va aggiornato anche lui:
+    // update() richiama syncInputsToState(), che rilegge quell'input e,
+    // se lo trova col valore vecchio, cancellerebbe quello appena scritto qui
+    const idClassico = CAMPO_VITALE_ID_CLASSICO[campo];
+    const inputClassico = idClassico && document.getElementById(idClassico);
+    if(inputClassico) inputClassico.value = valore;
     state.respiro[campo] = valore;
     update(false);
     return;
