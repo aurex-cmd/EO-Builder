@@ -206,6 +206,17 @@
   .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
   .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
   .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
+
+  /* pagina "Parametri vitali" del settore: una riga per letto, ciascuna con
+     gli stessi 4 campi della striscia flottante — qui però statica (non
+     sticky) e senza margini esterni, dato che è già dentro .vitali-settore-lista */
+  #vitali-settore-lista{ display:flex; flex-direction:column; gap:10px; }
+  .vitali-riga .riga-label{
+    font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--ink);
+    margin-bottom:6px; display:flex; align-items:baseline; gap:8px;
+  }
+  .vitali-riga .riga-label .riga-stato{ font-weight:400; color:var(--ink-faint); font-size:11px; text-transform:none; letter-spacing:0; }
+  .vitali-riga .vitals-strip{ position:static; margin:0; }
   .bed-tile.occupied{
     background:var(--signal-dim); border-color:var(--signal); color:var(--signal); font-weight:700;
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
@@ -645,6 +656,9 @@
   <div class="group">
     <div class="bed-grid" id="bed-grid"></div>
   </div>
+  <div class="group" id="vitali-settore-group">
+    <button class="btn primary" style="width:100%;" onclick="apriVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Parametri vitali</button>
+  </div>
 
   <div class="group" id="scheda-libera-group" style="display:none;">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
@@ -683,6 +697,17 @@
       <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
     </div>
   </div>
+</div>
+
+<!-- PARAMETRI VITALI DEL SETTORE: tutti i letti di un settore in una sola
+     pagina, per aggiornare rapidamente SpO2/PA/FC/TC di ogni paziente dal
+     giro dell'infermiera, senza dover aprire una scheda alla volta -->
+<div class="card" id="vitali-settore-view" style="display:none; background:var(--panel-2);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg> Parametri vitali — <span id="vitali-settore-nome"></span></h2>
+  <div class="group">
+    <button class="btn" onclick="chiudiVitaliSettore()">← Torna al reparto</button>
+  </div>
+  <div class="group" id="vitali-settore-lista"></div>
 </div>
 
 <!-- RIEPILOGO REFERTI -->
@@ -3455,11 +3480,15 @@ function mostraVista(v){
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
+  document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
   if(v === 'wardmap') renderWardMap();
   if(v === 'riepilogo') renderRiepilogo();
   if(v === 'ricoveri') renderRicoveriLista();
+  if(v === 'vitali') renderVitaliSettore();
 
-  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
+  // come attiva anche lì, così il contesto (che settore) è chiaro
+  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
@@ -3471,6 +3500,8 @@ function apriWardMap(){ mostraVista('wardmap'); }
 function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
 function apriRicoveri(){ mostraVista('ricoveri'); }
+function apriVitaliSettore(){ mostraVista('vitali'); }
+function chiudiVitaliSettore(){ mostraVista('wardmap'); }
 
 // pillola col nome del paziente attivo, in alto a destra nell'header
 // (stile prototipo): visibile solo se c'è una scheda aperta, un tap
@@ -3528,6 +3559,7 @@ function renderWardMap(){
   const gridEl = document.getElementById('bed-grid');
   gridEl.innerHTML = '';
   gridEl.style.display = inExtra ? 'none' : '';
+  document.getElementById('vitali-settore-group').style.display = inExtra ? 'none' : '';
   if(!inExtra) WARD_MAP[settoreAttivo].forEach(n => {
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
@@ -3617,6 +3649,88 @@ function renderWardMap(){
   }
 
   renderHeaderBadge();
+}
+
+// pagina "Parametri vitali": tutti i letti del settore attivo, ciascuno con
+// i 4 campi SpO2/PA/FC/TC precompilati con l'ultimo valore salvato. Digitare
+// in un campo salva subito quella scheda (o ne crea una vuota se il letto
+// non è ancora occupato), senza dover passare dalla scheda clinica intera.
+function renderVitaliSettore(){
+  const inExtra = settoreAttivo === SETTORE_EXTRA;
+  document.getElementById('vitali-settore-nome').textContent = inExtra ? '' : settoreAttivo;
+  const lista = document.getElementById('vitali-settore-lista');
+  lista.innerHTML = '';
+  if(inExtra) return; // il Settore E non ha letti fissi, vedi renderWardMap
+
+  const patients = loadPatients();
+  WARD_MAP[settoreAttivo].forEach(n => {
+    const nome = bedName(n);
+    const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
+    const occupato = entry && schedaHaDati(entry[1].state);
+    const isCurrent = entry && entry[0] === currentPatientId;
+    // se è la scheda attualmente aperta, leggiamo dallo stato live (più
+    // aggiornato di quanto salvato finora), altrimenti da quanto su disco
+    const respiro = isCurrent ? state.respiro : ((entry && entry[1].state.respiro) || {});
+    const diOggi = occupato && isOggi(entry[1].savedAt);
+
+    const riga = document.createElement('div');
+    riga.className = 'vitali-riga';
+
+    const label = document.createElement('div');
+    label.className = 'riga-label';
+    let stato = 'vuoto';
+    if(occupato) stato = diOggi ? 'occupato' : 'non aggiornato oggi';
+    label.innerHTML = `<span>${nome}</span><span class="riga-stato">${stato}</span>`;
+    riga.appendChild(label);
+
+    const campi = document.createElement('div');
+    campi.className = 'vitals-strip inline-fields';
+    const idPrefix = 'vitset-' + n.replace(/\./g,'_');
+    campi.innerHTML = `
+      <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="${idPrefix}-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
+      <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="${idPrefix}-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="${idPrefix}-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+      <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="${idPrefix}-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
+      <div class="v tc"><label>TC</label><input type="number" id="${idPrefix}-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
+    `;
+    riga.appendChild(campi);
+    lista.appendChild(riga);
+
+    [['sat','sat'], ['pas','pas'], ['pad','pad'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
+      const input = document.getElementById(`${idPrefix}-${suffix}`);
+      input.value = respiro[campo] || '';
+      input.classList.toggle('filled', !!respiro[campo]);
+      input.addEventListener('input', () => {
+        input.classList.toggle('filled', !!input.value);
+        aggiornaVitaleLetto(nome, campo, input.value);
+      });
+    });
+  });
+}
+
+// scrive un singolo parametro vitale nella scheda del letto indicato
+// (identificato per nome, non per id: più semplice quando il letto non ha
+// ancora una scheda propria). Se è la scheda attualmente aperta nel form
+// clinico, aggiorna anche lo stato live invece di toccare solo il
+// localStorage, così un successivo autosave non lo sovrascrive per sbaglio.
+function aggiornaVitaleLetto(nome, campo, valore){
+  const patients = loadPatients();
+  let entry = Object.entries(patients).find(([id,p]) => p.name === nome);
+
+  if(entry && entry[0] === currentPatientId){
+    state.respiro[campo] = valore;
+    update(false);
+    return;
+  }
+
+  if(!entry){
+    const nuovoId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    patients[nuovoId] = { name: nome, savedAt: Date.now(), state: JSON.parse(DEFAULT_SNAPSHOT_JSON) };
+    entry = [nuovoId, patients[nuovoId]];
+  }
+  entry[1].state.respiro = entry[1].state.respiro || {};
+  entry[1].state.respiro[campo] = valore;
+  entry[1].savedAt = Date.now();
+  savePatients(patients);
 }
 
 function selezionaPaziente(id){
