@@ -3441,7 +3441,7 @@ function autosaveCurrentPatient(){
     const patients = loadPatients();
     const id = 'p_' + Date.now();
     const name = 'Paziente ' + (Object.keys(patients).length + 1);
-    patients[id] = { name, savedAt: Date.now(), esameAggiornatoIl: Date.now(), state: serializeState() };
+    patients[id] = { name, savedAt: Date.now(), esameAggiornatoIl: Date.now(), esameIniziatoOggiIl: Date.now(), state: serializeState() };
     savePatients(patients);
     currentPatientId = id;
     setLocalAndCloud(LAST_PATIENT_KEY, id);
@@ -3450,6 +3450,11 @@ function autosaveCurrentPatient(){
   }
   const patients = loadPatients();
   if(!patients[currentPatientId]) return;
+  // se il salvataggio "vero" (esame, non solo vitali) precedente non era
+  // di oggi, questo è il primo di oggi: registriamo l'orario a parte,
+  // così anche se poi si riapre la scheda più tardi nella giornata
+  // esameIniziatoOggiIl resta quello di stamattina (vedi Diari)
+  const primaVoltaOggi = !isOggi(patients[currentPatientId].esameAggiornatoIl);
   patients[currentPatientId].state = serializeState();
   patients[currentPatientId].savedAt = Date.now();
   // a differenza di savedAt (che si aggiorna anche per i soli parametri
@@ -3457,6 +3462,7 @@ function autosaveCurrentPatient(){
   // della scheda clinica: è quello che decide se il letto in Reparto
   // compare verde ("diario di oggi pronto") oppure viola
   patients[currentPatientId].esameAggiornatoIl = Date.now();
+  if(primaVoltaOggi) patients[currentPatientId].esameIniziatoOggiIl = Date.now();
   savePatients(patients);
 }
 
@@ -4024,6 +4030,17 @@ const FRASI_ESAMI_DOMANI = [
   'esami di controllo per domani',
   'esami di controllo programmati per domani'
 ];
+const MESI_ITALIANI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+// "09:15, 19 agosto" — usata in Diari per mostrare quando è stato
+// compilato inizialmente l'esame (non l'ultimo tocco, il primo di oggi)
+function formattaOrarioData(timestamp){
+  if(!timestamp) return '';
+  const d = new Date(timestamp);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}, ${d.getDate()} ${MESI_ITALIANI[d.getMonth()]}`;
+}
+
 function haEsamiDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -4061,9 +4078,26 @@ function renderRiepilogo(){
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
 
+    const titleWrap = document.createElement('div');
+    titleWrap.style.display = 'flex';
+    titleWrap.style.alignItems = 'baseline';
+    titleWrap.style.flexWrap = 'wrap';
+
     const title = document.createElement('div');
     title.className = 'bed-title';
     title.textContent = p.name;
+    titleWrap.appendChild(title);
+
+    // orario del PRIMO salvataggio dell'esame di oggi (non l'ultimo tocco):
+    // per schede più vecchie di quando esiste questo campo, si torna
+    // sull'ultimo aggiornamento noto, per non lasciare la data vuota
+    const orarioCompilazione = formattaOrarioData(p.esameIniziatoOggiIl || p.esameAggiornatoIl || p.savedAt);
+    if(orarioCompilazione){
+      const dateEl = document.createElement('div');
+      dateEl.className = 'bed-date';
+      dateEl.textContent = orarioCompilazione;
+      titleWrap.appendChild(dateEl);
+    }
 
     const copiaBtn = document.createElement('button');
     copiaBtn.className = 'copia-btn';
@@ -4074,7 +4108,7 @@ function renderRiepilogo(){
       block.classList.add('copiato');
     };
 
-    titleRow.appendChild(title);
+    titleRow.appendChild(titleWrap);
     titleRow.appendChild(copiaBtn);
 
     const body = document.createElement('textarea');
