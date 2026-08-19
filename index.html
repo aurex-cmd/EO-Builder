@@ -240,6 +240,12 @@
     display:flex; align-items:center; justify-content:center;
   }
   .bed-tile-attiva-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .bed-tile-esami-badge{
+    position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
+    border-radius:50%; background:#d9695f; border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
 
   /* ---------- CARDS ---------- */
   .card{
@@ -3435,7 +3441,7 @@ function autosaveCurrentPatient(){
     const patients = loadPatients();
     const id = 'p_' + Date.now();
     const name = 'Paziente ' + (Object.keys(patients).length + 1);
-    patients[id] = { name, savedAt: Date.now(), state: serializeState() };
+    patients[id] = { name, savedAt: Date.now(), esameAggiornatoIl: Date.now(), state: serializeState() };
     savePatients(patients);
     currentPatientId = id;
     setLocalAndCloud(LAST_PATIENT_KEY, id);
@@ -3446,6 +3452,11 @@ function autosaveCurrentPatient(){
   if(!patients[currentPatientId]) return;
   patients[currentPatientId].state = serializeState();
   patients[currentPatientId].savedAt = Date.now();
+  // a differenza di savedAt (che si aggiorna anche per i soli parametri
+  // vitali, vedi aggiornaVitaleLetto), questo segna un vero salvataggio
+  // della scheda clinica: è quello che decide se il letto in Reparto
+  // compare verde ("diario di oggi pronto") oppure viola
+  patients[currentPatientId].esameAggiornatoIl = Date.now();
   savePatients(patients);
 }
 
@@ -3605,7 +3616,11 @@ function renderWardMap(){
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
-    const diOggi = occupato && isOggi(entry[1].savedAt);
+    // verde solo se la scheda clinica vera e propria è stata salvata oggi
+    // (esameAggiornatoIl): un tocco ai soli parametri vitali dalla pagina
+    // "Parametri vitali" NON la fa diventare verde, resta viola — vedi
+    // aggiornaVitaleLetto, che aggiorna savedAt ma non esameAggiornatoIl
+    const diOggi = occupato && isOggi(entry[1].esameAggiornatoIl);
     const tile = document.createElement('div');
     tile.className = 'bed-tile'
       + (occupato ? (diOggi ? ' occupied' : ' occupied-old') : '')
@@ -3622,6 +3637,18 @@ function renderWardMap(){
       spunta.title = 'Diario copiato oggi';
       spunta.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
       tile.appendChild(spunta);
+    }
+
+    // pallino rosso "E": segnala che nelle aggiunte del diario compare una
+    // delle frasi standard con cui si annotano esami di controllo
+    // programmati per il giorno dopo (vedi haEsamiDomani)
+    const extraTesto = (entry && entry[0] === currentPatientId) ? state.outputExtra : (entry && entry[1].state.outputExtra);
+    if(entry && haEsamiDomani(extraTesto)){
+      const esamiBadge = document.createElement('div');
+      esamiBadge.className = 'bed-tile-esami-badge';
+      esamiBadge.title = 'Esami di controllo programmati per domani';
+      esamiBadge.textContent = 'E';
+      tile.appendChild(esamiBadge);
     }
 
     // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
@@ -3985,6 +4012,24 @@ function formattaDataOra(timestamp){
 // vero se il timestamp cade nel giorno di oggi (stessa data di calendario,
 // non solo entro 24 ore): usato per capire se un diario in Reparto va
 // evidenziato in verde (compilato/aggiornato oggi) o in viola (giorni prima)
+// riconosce, nel testo delle "aggiunte" del diario, una delle frasi
+// standard con cui si annota che per il paziente sono programmati esami
+// di controllo il giorno dopo. Volutamente solo queste 4 varianti esatte
+// (a meno di maiuscole/spazi), non un riconoscimento più largo/fuzzy: così
+// non scatta per errore su frasi solo simili
+const FRASI_ESAMI_DOMANI = [
+  'domani esami',
+  'esami domani',
+  'esami per domani',
+  'esami di controllo per domani',
+  'esami di controllo programmati per domani'
+];
+function haEsamiDomani(testoExtra){
+  if(!testoExtra) return false;
+  const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
+  return FRASI_ESAMI_DOMANI.some(frase => normalizzato.includes(frase));
+}
+
 function isOggi(timestamp){
   if(!timestamp) return false;
   const d = new Date(timestamp);
