@@ -1054,6 +1054,7 @@
   <div class="group">
     <div class="group-label">Forma</div>
     <div class="chips" id="addome-forma"></div>
+    <div class="chips" id="addome-meteorico" style="margin-top:8px;"></div>
   </div>
   <div class="group">
     <div class="group-label">Consistenza</div>
@@ -1219,7 +1220,7 @@ const state = {
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
-  addome: { forma:'', consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
+  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
@@ -3161,6 +3162,7 @@ function applyStateObject(o){
   state.torace.limitata = o.torace?.limitata ?? false;
 
   state.addome.forma = o.addome?.forma ?? '';
+  state.addome.meteorico = o.addome?.meteorico ?? false;
   state.addome.consistenza = new Set(o.addome?.consistenza || ['trattabile']);
   state.addome.dolorabilita = new Set(o.addome?.dolorabilita || ['non_dolente']);
   state.addome.doloreLocPerTipo = {};
@@ -4410,7 +4412,15 @@ function costruisciSedeToracica(inner, locSet, extraOptions){
   if(extraOptions && extraOptions.length){
     renderGruppoChipInline(inner, null, extraOptions,
       v => locSet.has(v),
-      (v, active) => { active ? locSet.delete(v) : locSet.add(v); update(); });
+      (v, active) => {
+        // "Dx > Sx" e "Sx > Dx" sono alternativi tra loro (l'asimmetria ha
+        // un verso solo): selezionandone uno si disattiva l'altro
+        if(!active && (v === 'dx_maggiore' || v === 'sx_maggiore')){
+          locSet.delete('dx_maggiore'); locSet.delete('sx_maggiore');
+        }
+        active ? locSet.delete(v) : locSet.add(v);
+        update();
+      });
   }
 }
 
@@ -4491,15 +4501,21 @@ function comporreSedeTorace(locSet, suTapParola){
   if(zoneText){
     const hasDx = locSet.has('dx'), hasSx = locSet.has('sx');
     const bilaterale = locSet.has('bilaterale') || (hasDx && hasSx);
+    // annotazione di asimmetria (es. "dx > sx"): ha senso solo se la sede
+    // è bilaterale, altrimenti va ignorata anche se per qualche motivo
+    // il chip risultasse selezionato
+    const asimmetria = bilaterale
+      ? (locSet.has('dx_maggiore') ? ' (dx > sx)' : locSet.has('sx_maggiore') ? ' (sx > dx)' : '')
+      : '';
     if(soloBase && bilaterale){
-      parts.push('alle basi bilateralmente');
+      parts.push('alle basi bilateralmente' + asimmetria);
     } else {
       let lato = '';
       if(bilaterale) lato = 'bilaterale';
       else if(hasDx) lato = 'dx';
       else if(hasSx) lato = 'sx';
       const prefisso = zoneText.startsWith('diffusamente') ? '' : 'in ';
-      parts.push(prefisso + zoneText + (lato ? ' ' + lato : ''));
+      parts.push(prefisso + zoneText + (lato ? ' ' + lato : '') + asimmetria);
     }
   }
 
@@ -5444,7 +5460,9 @@ const OPT = {
   ],
   toraceReperteExtra: [
     {value:'sparsi', label:'Sparsi'},
-    {value:'delle_alte_vie', label:'delle alte vie'}
+    {value:'delle_alte_vie', label:'delle alte vie'},
+    {value:'dx_maggiore', label:'Dx > Sx'},
+    {value:'sx_maggiore', label:'Sx > Dx'}
   ],
   toraceReperti: [
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
@@ -5698,6 +5716,8 @@ function renderAll(){
     ()=>state.torace.limitata, ()=>{ state.torace.limitata = !state.torace.limitata; });
 
   renderSingle('addome-forma', OPT.addomeForma, ()=>state.addome.forma, v=>state.addome.forma=v);
+  renderSingle('addome-meteorico', [{value:true,label:'Meteorico'}],
+    ()=>state.addome.meteorico, ()=>{ state.addome.meteorico = !state.addome.meteorico; });
   renderMultiEsclusivo('addome-consistenza', OPT.addomeConsistenza, ()=>state.addome.consistenza);
   renderDolorabilita();
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
@@ -5918,7 +5938,17 @@ function composeToraceClean(){
 function composeAddome(){
   const a = state.addome;
   const parts = [];
-  if(a.forma) parts.push(a.forma);
+  // "meteorico" non è un valore alternativo della forma (che resta un
+  // scelta singola tra globoso/piano/cavo), ma un tag indipendente che si
+  // può combinare con "globoso per adipe" in un'unica frase, oppure comparire
+  // da solo: le due frasi richieste sono gestite qui, il resto (piano/cavo
+  // + meteorico) segue la stessa logica in modo naturale
+  if(a.forma === 'globoso per adipe' && a.meteorico){
+    parts.push('globoso per adipe e meteorismo');
+  } else {
+    if(a.forma) parts.push(a.forma);
+    if(a.meteorico) parts.push('meteorico');
+  }
 
   const cons = [...a.consistenza];
   if(cons.length){
