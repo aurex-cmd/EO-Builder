@@ -6890,8 +6890,7 @@ try{
 
       <div class="detail-line"><span class="label">Formula</span><span class="value" id="vfg-outFormula"></span></div>
       <div class="detail-line"><span class="label">Sesso</span><span class="value" id="vfg-outSex"></span></div>
-
-      <div class="note-box" id="vfg-interpretationNote"></div>
+      <div class="detail-line"><span class="label" id="vfg-outStadioLabel">Stadio</span><span class="value" id="vfg-outStadio"></span></div>
     </div>
 
     <div class="note-box" style="margin-top:14px; font-family:var(--font-body); font-size:11.5px; color:var(--ink-dim); box-shadow:none;">
@@ -7384,25 +7383,25 @@ function vfgCalc(){
   let vfg = ((140 - age) * weight) / (72 * creat);
   if (vfgSex === 'F') vfg *= 0.85;
 
-  let badgeClass, stageLabel, note;
+  let badgeClass, stageLabel, stadioCode, stadioRange;
   if (vfg >= 90){
     badgeClass = 'normale'; stageLabel = 'Funzione renale normale';
-    note = 'VFG ≥90 mL/min: nella norma per un adulto sano. In presenza di danno renale (proteinuria, alterazioni strutturali) con VFG normale si parla comunque di IRC stadio G1.';
+    stadioCode = 'G1'; stadioRange = '≥90';
   } else if (vfg >= 60){
     badgeClass = 'lieve'; stageLabel = 'Lieve riduzione (stadio G2)';
-    note = 'VFG 60–89 mL/min: lieve riduzione della funzione renale. Significativa solo se associata a markers di danno renale (proteinuria, alterazioni strutturali); altrimenti può rientrare nella variabilità età-correlata.';
+    stadioCode = 'G2'; stadioRange = '60-89';
   } else if (vfg >= 45){
     badgeClass = 'lieve'; stageLabel = 'Riduzione lieve-moderata (stadio G3a)';
-    note = 'VFG 45–59 mL/min: riduzione lieve-moderata. Attenzione alla correzione posologica dei farmaci a escrezione renale ed è indicato monitoraggio nefrologico periodico.';
+    stadioCode = 'G3a'; stadioRange = '45-59';
   } else if (vfg >= 30){
     badgeClass = 'moderata'; stageLabel = 'Riduzione moderata-severa (stadio G3b)';
-    note = 'VFG 30–44 mL/min: riduzione moderata-severa. Necessaria cautela con farmaci nefrotossici e a escrezione renale; valutare invio nefrologico.';
+    stadioCode = 'G3b'; stadioRange = '30-44';
   } else if (vfg >= 15){
     badgeClass = 'moderata'; stageLabel = 'Riduzione severa (stadio G4)';
-    note = 'VFG 15–29 mL/min: riduzione severa della funzione renale. Indicata valutazione nefrologica per pianificazione della terapia sostitutiva e gestione delle complicanze (anemia, MBD, acidosi).';
+    stadioCode = 'G4'; stadioRange = '15-29';
   } else {
     badgeClass = 'severa'; stageLabel = 'Insufficienza renale terminale (stadio G5)';
-    note = 'VFG <15 mL/min: insufficienza renale terminale. Richiede gestione nefrologica per eventuale avvio di terapia sostitutiva (dialisi o trapianto).';
+    stadioCode = 'G5'; stadioRange = '<15';
   }
 
   document.getElementById('vfg-vfgValue').innerHTML = vfgFmt(vfg,0) + ' <span class="unit">mL/min</span>';
@@ -7410,7 +7409,8 @@ function vfgCalc(){
   document.getElementById('vfg-diagnosisText').textContent = stageLabel;
   document.getElementById('vfg-outFormula').textContent = 'Cockcroft-Gault';
   document.getElementById('vfg-outSex').textContent = vfgSex === 'M' ? 'Uomo' : 'Donna (×0.85)';
-  document.getElementById('vfg-interpretationNote').innerHTML = '<b>Interpretazione</b><br>' + note;
+  document.getElementById('vfg-outStadioLabel').textContent = 'Stadio ' + stadioCode;
+  document.getElementById('vfg-outStadio').textContent = 'VFG ' + stadioRange + ' mL/min';
 
   const outputCard = document.getElementById('vfg-output-card');
   outputCard.className = 'card show tone-' + badgeClass;
