@@ -61,6 +61,8 @@
     --clay-in:inset 3px 3px 7px rgba(0,0,0,.6), inset -2px -2px 5px rgba(255,255,255,.03);
     --clay-in-sm:inset 2px 2px 5px rgba(0,0,0,.55), inset -2px -2px 4px rgba(255,255,255,.025);
     --glow-signal:0 0 10px rgba(53,208,174,.35);
+    --acid:#e2867e; --acid-strong:#e35a5f; --acid-dim:#3a201d; --on-acid:#2a0f0c; --acid-border:#7a3b33;
+    --glow-acid:0 0 10px rgba(227,90,95,.35);
     --glow-folder:0 0 10px rgba(219,169,74,.35);
     --glow-violet:0 0 10px rgba(177,140,240,.35);
 
@@ -632,6 +634,82 @@
     box-shadow:var(--clay-out-sm), var(--glow-signal);
   }
   #toast.show{ opacity:1; }
+
+  /* ---------- EGA ANALYZER (modale) ----------
+     tool separato, richiamato scrivendo "EGA:" in Diari — vedi
+     apriEgaAnalyzer/chiudiEgaAnalyzer. Riusa le classi già esistenti
+     (.card, .chip, .btn, .group, input...), qui solo lo stretto necessario
+     per il modale e i pezzi che l'app non aveva ancora (badge, diagnosis,
+     detail-line, note-box) */
+  #ega-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  #ega-modal-overlay.show{ display:flex; }
+  #ega-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px 20px 0 0;
+    border:1px solid var(--clay-border); border-bottom:none;
+    box-shadow:var(--clay-out);
+    padding:16px 17px calc(17px + env(safe-area-inset-bottom, 0px));
+  }
+  .ega-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+  .ega-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal-dark);
+  }
+  .ega-modal-header .sub{ font-size:11.5px; color:var(--ink-dim); font-family:var(--font-mono); margin-top:2px; }
+  #ega-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #ega-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #ega-modal input[type=number]{ width:100%; font-size:15px; padding:9px 10px; }
+
+  #ega-modal .badge{
+    display:inline-block; font-family:var(--font-mono); font-size:11.5px; font-weight:700;
+    letter-spacing:.06em; padding:5px 12px; border-radius:999px; margin-bottom:10px;
+    box-shadow:var(--clay-in-sm);
+  }
+  #ega-modal .badge.normale{ background:var(--signal-dim); color:var(--signal); }
+  #ega-modal .badge.acidosi{ background:var(--acid-dim); color:var(--acid); }
+  #ega-modal .badge.alcalosi{ background:var(--violet-dim); color:var(--violet); }
+  #ega-modal .badge.misto{ background:var(--folder-dim); color:var(--folder); }
+
+  #ega-modal .diagnosis{
+    font-family:var(--font-display); font-size:19px; font-weight:700;
+    margin:0 0 12px; line-height:1.25; color:var(--ink);
+  }
+
+  #ega-modal .detail-line{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:13.5px;
+  }
+  #ega-modal .detail-line:last-child{ border-bottom:none; }
+  #ega-modal .detail-line .label{ color:var(--ink-dim); }
+  #ega-modal .detail-line .value{ font-family:var(--font-mono); font-weight:600; text-align:right; color:var(--ink); }
+
+  #ega-modal .note-box{
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.6; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:13px;
+    padding:12px; margin-top:10px; box-shadow:var(--clay-in-sm);
+  }
+  #ega-modal .note-box b{ color:var(--signal); font-family:var(--font-body); }
+  #ega-modal .note-box.lac b{ color:var(--folder); }
+
+  #ega-modal .ag-section{ margin-top:14px; padding-top:13px; border-top:1px solid var(--line); }
+  #ega-modal .ag-section h3{
+    font-family:var(--font-display); font-size:14.5px; margin:0 0 9px; color:var(--ink); font-weight:600;
+  }
+
+  #ega-output-card{ display:none; margin-top:14px; }
+  #ega-output-card.show{ display:block; }
+  #ega-output-card.tone-normale{ box-shadow:inset 0 0 0 1px var(--signal-dim); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-acidosi{ box-shadow:inset 0 0 0 1px var(--acid-border); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-alcalosi{ box-shadow:inset 0 0 0 1px var(--violet-dim); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-misto{ box-shadow:inset 0 0 0 1px var(--folder-dim); border-radius:14px; padding:12px; }
 </style>
 </head>
 <body>
@@ -4119,6 +4197,7 @@ function renderRiepilogo(){
     body.addEventListener('input', () => {
       aggiornaDiarioTesto(id, body.value);
       autoResizeTextarea(body);
+      egaControllaTrigger(body.value, body, id);
     });
 
     block.appendChild(titleRow);
@@ -6598,6 +6677,524 @@ try{
 } catch(err){
   mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
 }
+</script>
+<!-- EGA ANALYZER: modale richiamato scrivendo "EGA:" in Diari (vedi script
+     dedicato più sotto). Contenuto adattato dal tool standalone dell'utente,
+     stessa logica clinica identica, solo id con prefisso "ega-" per non
+     entrare in conflitto con nulla nel resto della pagina -->
+<div id="ega-modal-overlay" onclick="if(event.target===this) chiudiEgaAnalyzer()">
+  <div id="ega-modal">
+    <div class="ega-modal-header">
+      <div>
+        <h2>EGA Analyzer</h2>
+        <div class="sub">interpretazione equilibrio acido-base</div>
+      </div>
+      <button id="ega-chiudi-btn" onclick="chiudiEgaAnalyzer()">✕</button>
+    </div>
+
+    <div class="group-row">
+      <div class="group">
+        <div class="group-label">pH</div>
+        <input type="number" id="ega-ph" inputmode="decimal" step="0.01" placeholder="7.40">
+      </div>
+      <div class="group">
+        <div class="group-label">pCO₂ mmHg</div>
+        <input type="number" id="ega-pco2" inputmode="decimal" step="0.1" placeholder="40">
+      </div>
+      <div class="group">
+        <div class="group-label">HCO₃⁻ mEq/L</div>
+        <input type="number" id="ega-hco3" inputmode="decimal" step="0.1" placeholder="24">
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">se disturbo respiratorio</div>
+      <div class="chips">
+        <div class="chip active" id="ega-chipAcute" onclick="egaSetChronicity(false)">Acuto</div>
+        <div class="chip" id="ega-chipChronic" onclick="egaSetChronicity(true)">Cronico</div>
+      </div>
+    </div>
+
+    <details class="admit-altri-radio" id="ega-optionalDetails">
+      <summary class="admit-altri-radio-summary">Na / Cl / Albumina / Lattati (anion gap)</summary>
+      <div class="group-row">
+        <div class="group">
+          <div class="group-label">Na⁺ mEq/L</div>
+          <input type="number" id="ega-na" inputmode="decimal" step="1" placeholder="140">
+        </div>
+        <div class="group">
+          <div class="group-label">Cl⁻ mEq/L</div>
+          <input type="number" id="ega-cl" inputmode="decimal" step="1" placeholder="104">
+        </div>
+      </div>
+      <div class="group-row">
+        <div class="group">
+          <div class="group-label">Albumina g/dL</div>
+          <input type="number" id="ega-alb" inputmode="decimal" step="0.1" placeholder="4.0">
+        </div>
+        <div class="group">
+          <div class="group-label">Lattati mmol/L</div>
+          <input type="number" id="ega-lac" inputmode="decimal" step="0.1" placeholder="1.0">
+        </div>
+      </div>
+    </details>
+
+    <button class="btn primary" style="margin-top:14px;" onclick="egaAnalyze()">Analizza</button>
+
+    <div id="ega-output-card">
+      <div id="ega-badgeContainer"></div>
+      <div class="diagnosis" id="ega-diagnosisText"></div>
+
+      <div class="detail-line"><span class="label">pH</span><span class="value" id="ega-outPh"></span></div>
+      <div class="detail-line"><span class="label">pCO₂</span><span class="value" id="ega-outPco2"></span></div>
+      <div class="detail-line"><span class="label">HCO₃⁻</span><span class="value" id="ega-outHco3"></span></div>
+      <div class="detail-line" id="ega-compLine" style="display:none;">
+        <span class="label" id="ega-compLabel">Compenso atteso</span>
+        <span class="value" id="ega-compValue"></span>
+      </div>
+
+      <div class="note-box" id="ega-interpretationNote"></div>
+
+      <div class="ag-section" id="ega-agSection" style="display:none;">
+        <h3>Anion Gap</h3>
+        <div class="detail-line"><span class="label">AG</span><span class="value" id="ega-outAg"></span></div>
+        <div class="detail-line" id="ega-agCorrLine" style="display:none;"><span class="label">AG corretto</span><span class="value" id="ega-outAgCorr"></span></div>
+        <div class="detail-line" id="ega-deltaLine" style="display:none;"><span class="label">Delta ratio</span><span class="value" id="ega-outDelta"></span></div>
+        <div class="note-box" id="ega-agNote"></div>
+        <div class="detail-line" id="ega-lacLine" style="display:none;"><span class="label">Lattati</span><span class="value" id="ega-outLac"></span></div>
+        <div class="note-box lac" id="ega-lacNote" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// EGA ANALYZER — tool standalone dell'utente, integrato come modale.
+// Logica clinica IDENTICA all'originale (Winter, Narins-Emmett, anion gap,
+// delta ratio, lattati): qui solo id/nomi con prefisso "ega" e l'aggiunta
+// di apertura/chiusura del modale + riconoscimento/estrazione dal diario.
+// ============================================================
+let egaIsChronic = false;
+
+function egaSetChronicity(chronic){
+  egaIsChronic = chronic;
+  document.getElementById('ega-chipAcute').classList.toggle('active', !chronic);
+  document.getElementById('ega-chipChronic').classList.toggle('active', chronic);
+}
+
+function egaFmt(n, d=1){
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toFixed(d);
+}
+
+function egaAnalyze(){
+  const ph = parseFloat(document.getElementById('ega-ph').value);
+  const pco2 = parseFloat(document.getElementById('ega-pco2').value);
+  const hco3 = parseFloat(document.getElementById('ega-hco3').value);
+
+  if (isNaN(ph) || isNaN(pco2) || isNaN(hco3)){
+    alert('Inserisci almeno pH, pCO₂ e HCO₃⁻');
+    return;
+  }
+
+  const acidemia = ph < 7.35;
+  const alkalemia = ph > 7.45;
+  const normalPH = !acidemia && !alkalemia;
+
+  const metAcid = hco3 < 22;
+  const metAlk = hco3 > 26;
+  const respAcid = pco2 > 45;
+  const respAlk = pco2 < 35;
+
+  let badgeClass = 'normale';
+  let diagnosis = 'Equilibrio acido-base nella norma';
+  let compLabel = '';
+  let compValue = '';
+  let note = '';
+  let showComp = false;
+
+  function winterExpected(h){
+    const exp = 1.5*h + 8;
+    return {min: exp-2, max: exp+2, val: exp};
+  }
+  function metAlkExpected(h){
+    const exp = 0.7*(h-24) + 40;
+    return {min: exp-5, max: Math.min(exp+5, 55), val: exp};
+  }
+  function respAcidExpected(p, chronic){
+    const delta = p - 40;
+    const slope = chronic ? 0.35 : 0.1;
+    const range = chronic ? 4 : 3;
+    const exp = 24 + slope*delta;
+    return {min: exp-range, max: exp+range, val: exp};
+  }
+  function respAlkExpected(p, chronic){
+    const delta = 40 - p;
+    const slope = chronic ? 0.4 : 0.2;
+    const range = 2;
+    const exp = 24 - slope*delta;
+    return {min: exp-range, max: exp+range, val: exp};
+  }
+
+  if (normalPH && !metAcid && !metAlk && !respAcid && !respAlk){
+    badgeClass = 'normale';
+    diagnosis = 'Equilibrio acido-base nella norma';
+    note = 'Tutti i parametri rientrano nei range di normalità (pH 7.35–7.45, pCO₂ 35–45, HCO₃⁻ 22–26).';
+  }
+  else if (normalPH && (metAcid || metAlk || respAcid || respAlk)){
+    badgeClass = 'misto';
+    diagnosis = 'pH normale ma componenti alterate — possibile disturbo misto';
+    note = 'Il pH è normale ma pCO₂ e/o HCO₃⁻ sono fuori range: ciò suggerisce due processi opposti che si compensano a vicenda (es. acidosi metabolica + alcalosi metabolica, o compenso completo). ';
+    if (metAcid && metAlk) note += 'Attenzione: HCO₃⁻ non può essere contemporaneamente alto e basso — controllare il dato inserito.';
+    else if (metAcid && respAlk) note += 'Combinazione compatibile con acidosi metabolica + alcalosi respiratoria concomitante (es. sepsi, salicilati, insufficienza epatica).';
+    else if (metAlk && respAcid) note += 'Combinazione compatibile con alcalosi metabolica + acidosi respiratoria concomitante (es. BPCO riacutizzata in terapia diuretica).';
+    else note += 'Calcolare comunque l\'anion gap per non perdere un\'acidosi metabolica mascherata.';
+  }
+  else if (acidemia){
+    if (metAcid && !respAcid){
+      const w = winterExpected(hco3);
+      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
+      if (pco2 >= w.min && pco2 <= w.max){
+        badgeClass='acidosi'; diagnosis='Acidosi metabolica semplice, compenso respiratorio adeguato';
+        note = `Con HCO₃⁻ ${egaFmt(hco3)} la pCO₂ attesa per compenso è ${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg; il valore misurato (${egaFmt(pco2,0)}) rientra nel range → compenso appropriato.`;
+      } else if (pco2 > w.max){
+        badgeClass='misto'; diagnosis='Acidosi mista: metabolica + respiratoria';
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) è superiore all'atteso (max ${egaFmt(w.max,0)}) → compenso respiratorio insufficiente / componente respiratoria acidosica sovrapposta.`;
+      } else {
+        badgeClass='misto'; diagnosis='Acidosi metabolica + alcalosi respiratoria sovrapposta';
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) è inferiore all'atteso (min ${egaFmt(w.min,0)}) → iperventilazione oltre il compenso previsto, suggestiva di alcalosi respiratoria concomitante (es. sepsi, dolore, ansia, salicilati).`;
+      }
+    }
+    else if (respAcid && !metAcid){
+      const r = respAcidExpected(pco2, egaIsChronic);
+      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+      if (hco3 >= r.min && hco3 <= r.max){
+        badgeClass='acidosi'; diagnosis=`Acidosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
+        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
+      } else if (hco3 < r.min){
+        badgeClass='misto'; diagnosis='Acidosi mista: respiratoria + metabolica';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → acidosi metabolica sovrapposta. Calcolare l'anion gap.`;
+      } else {
+        badgeClass='misto'; diagnosis='Acidosi respiratoria + alcalosi metabolica sovrapposta';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → componente di alcalosi metabolica concomitante (es. diuretici, vomito, steroidi in BPCO).`;
+      }
+    }
+    else if (metAcid && respAcid){
+      const w = winterExpected(hco3);
+      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
+      if (pco2 > w.max){
+        badgeClass='misto'; diagnosis='Acidosi mista: metabolica + respiratoria (entrambe primitive)';
+        note = `HCO₃⁻ basso e pCO₂ alto in un quadro di acidemia: la pCO₂ misurata (${egaFmt(pco2,0)}) supera ampiamente l'atteso per compenso puro (max ${egaFmt(w.max,0)}) → entrambi i processi sono primitivi, non solo compenso.`;
+      } else {
+        badgeClass='acidosi'; diagnosis='Acidosi metabolica con compenso respiratorio al limite/adeguato';
+        note = `pCO₂ elevata ma comunque coerente con il grado di compenso atteso per l'acidosi metabolica presente (HCO₃⁻ ${egaFmt(hco3)}).`;
+      }
+    }
+    else if (metAlk && respAcid){
+      badgeClass='misto'; diagnosis='Acidosi respiratoria + alcalosi metabolica (disturbo misto)';
+      const r = respAcidExpected(pco2, egaIsChronic);
+      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+      note = `pH acido con pCO₂ alta (acidosi respiratoria) e HCO₃⁻ alto oltre quanto atteso per compenso (${egaFmt(r.min)}–${egaFmt(r.max)}) → alcalosi metabolica sovrapposta.`;
+    }
+    else {
+      badgeClass='misto'; diagnosis='Quadro complesso — valutare anion gap e contesto clinico';
+      note = 'La combinazione di valori non rientra in un pattern semplice standard: possibile disturbo triplo o errore di laboratorio. Ricontrollare i dati e correlare clinicamente.';
+    }
+  }
+  else if (alkalemia){
+    if (metAlk && !respAlk){
+      const e = metAlkExpected(hco3);
+      showComp = true; compLabel = 'pCO₂ attesa'; compValue = `${egaFmt(e.min,0)}–${egaFmt(e.max,0)} mmHg`;
+      if (pco2 >= e.min && pco2 <= e.max){
+        badgeClass='alcalosi'; diagnosis='Alcalosi metabolica semplice, compenso respiratorio adeguato';
+        note = `Con HCO₃⁻ ${egaFmt(hco3)} la pCO₂ attesa è ${egaFmt(e.min,0)}–${egaFmt(e.max,0)} mmHg; il valore misurato (${egaFmt(pco2,0)}) rientra nel range.`;
+      } else if (pco2 < e.min){
+        badgeClass='misto'; diagnosis='Alcalosi mista: metabolica + respiratoria';
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) inferiore all'atteso (min ${egaFmt(e.min,0)}) → componente di alcalosi respiratoria sovrapposta.`;
+      } else {
+        badgeClass='misto'; diagnosis='Alcalosi metabolica + acidosi respiratoria sovrapposta';
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) superiore all'atteso (max ${egaFmt(e.max,0)}) → ipoventilazione oltre il compenso previsto, componente respiratoria acidosica concomitante.`;
+      }
+    }
+    else if (respAlk && !metAlk){
+      const r = respAlkExpected(pco2, egaIsChronic);
+      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+      if (hco3 >= r.min && hco3 <= r.max){
+        badgeClass='alcalosi'; diagnosis=`Alcalosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
+        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
+      } else if (hco3 > r.max){
+        badgeClass='misto'; diagnosis='Alcalosi mista: respiratoria + metabolica';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → alcalosi metabolica sovrapposta.`;
+      } else {
+        badgeClass='misto'; diagnosis='Alcalosi respiratoria + acidosi metabolica sovrapposta';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → componente di acidosi metabolica concomitante. Calcolare l'anion gap.`;
+      }
+    }
+    else if (metAlk && respAlk){
+      badgeClass='misto'; diagnosis='Alcalosi mista: metabolica + respiratoria (entrambe primitive)';
+      note = `HCO₃⁻ alto e pCO₂ basso in un quadro di alcalemia oltre il range di compenso atteso: entrambi i processi sono verosimilmente primitivi.`;
+    }
+    else if (metAcid && respAlk){
+      badgeClass='misto'; diagnosis='Alcalosi respiratoria + acidosi metabolica (disturbo misto)';
+      const w = winterExpected(hco3);
+      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
+      note = `pH alcalino con pCO₂ bassa (alcalosi respiratoria) e HCO₃⁻ basso oltre quanto atteso per compenso semplice → acidosi metabolica sovrapposta (es. sepsi, salicilati).`;
+    }
+    else {
+      badgeClass='misto'; diagnosis='Quadro complesso — valutare anion gap e contesto clinico';
+      note = 'La combinazione di valori non rientra in un pattern semplice standard: possibile disturbo triplo o errore di laboratorio. Ricontrollare i dati e correlare clinicamente.';
+    }
+  }
+
+  document.getElementById('ega-outPh').textContent = egaFmt(ph,2) + (acidemia?' (acidemia)':alkalemia?' (alcalemia)':' (normale)');
+  document.getElementById('ega-outPco2').textContent = egaFmt(pco2,0) + ' mmHg' + (respAcid?' ↑':respAlk?' ↓':'');
+  document.getElementById('ega-outHco3').textContent = egaFmt(hco3,1) + ' mEq/L' + (metAcid?' ↓':metAlk?' ↑':'');
+
+  const badgeEl = document.getElementById('ega-badgeContainer');
+  badgeEl.innerHTML = `<span class="badge ${badgeClass}">${badgeClass.toUpperCase()}</span>`;
+  document.getElementById('ega-diagnosisText').textContent = diagnosis;
+  document.getElementById('ega-interpretationNote').innerHTML = '<b>Interpretazione</b><br>' + note;
+
+  const outputCard = document.getElementById('ega-output-card');
+  outputCard.className = 'card show tone-' + badgeClass;
+
+  const compLine = document.getElementById('ega-compLine');
+  if (showComp){
+    compLine.style.display='flex';
+    document.getElementById('ega-compLabel').textContent = compLabel;
+    document.getElementById('ega-compValue').textContent = compValue;
+  } else {
+    compLine.style.display='none';
+  }
+
+  const na = parseFloat(document.getElementById('ega-na').value);
+  const cl = parseFloat(document.getElementById('ega-cl').value);
+  const alb = parseFloat(document.getElementById('ega-alb').value);
+  const agSection = document.getElementById('ega-agSection');
+
+  if (!isNaN(na) && !isNaN(cl)){
+    agSection.style.display = 'block';
+    const ag = na - (cl + hco3);
+    document.getElementById('ega-outAg').textContent = egaFmt(ag,1) + ' mEq/L' + (ag>12?' (elevato)':ag<8?' (basso)':' (normale)');
+
+    let agForDelta = ag;
+    const agCorrLine = document.getElementById('ega-agCorrLine');
+    if (!isNaN(alb)){
+      const agCorr = ag + 2.5*(4.0 - alb);
+      agCorrLine.style.display='flex';
+      document.getElementById('ega-outAgCorr').textContent = egaFmt(agCorr,1) + ' mEq/L';
+      agForDelta = agCorr;
+    } else {
+      agCorrLine.style.display='none';
+    }
+
+    let agNote = 'AG normale: 8–12 mEq/L (range può variare per metodica laboratorio). ';
+    const deltaLine = document.getElementById('ega-deltaLine');
+    if (agForDelta > 12 && (metAcid || acidemia)){
+      const deltaRatio = (agForDelta - 12) / (24 - hco3);
+      if (isFinite(deltaRatio) && (24-hco3) !== 0){
+        deltaLine.style.display='flex';
+        document.getElementById('ega-outDelta').textContent = egaFmt(deltaRatio,2);
+        if (deltaRatio < 0.4){
+          agNote += 'Delta ratio &lt;0.4 → acidosi metabolica normocloremica (AG normale) predominante o coesistente con quella ad AG elevato.';
+        } else if (deltaRatio <= 0.8){
+          agNote += 'Delta ratio 0.4–0.8 → possibile combinazione di acidosi ad AG elevato + acidosi normocloremica (AG normale).';
+        } else if (deltaRatio <= 2){
+          agNote += 'Delta ratio 1–2 → acidosi metabolica ad anion gap elevato "pura" (consumo di HCO₃⁻ proporzionale all\'accumulo di acidi).';
+        } else {
+          agNote += 'Delta ratio &gt;2 → suggerisce alcalosi metabolica concomitante o HCO₃⁻ basale elevato (es. compenso di acidosi respiratoria cronica preesistente).';
+        }
+      } else {
+        deltaLine.style.display='none';
+      }
+    } else {
+      deltaLine.style.display='none';
+      if (agForDelta > 12) agNote += 'Anion gap elevato: considerare cause (chetoacidosi, acidosi lattica, uremia, tossici — MUDPILES/GOLDMARK).';
+    }
+    document.getElementById('ega-agNote').innerHTML = '<b>Anion gap</b><br>' + agNote;
+
+    const lac = parseFloat(document.getElementById('ega-lac').value);
+    const lacLine = document.getElementById('ega-lacLine');
+    const lacNoteBox = document.getElementById('ega-lacNote');
+    if (!isNaN(lac)){
+      lacLine.style.display = 'flex';
+      let lacStatus = lac <= 2.2 ? 'normale' : (lac <= 4 ? 'moderatamente elevato' : 'marcatamente elevato');
+      document.getElementById('ega-outLac').textContent = egaFmt(lac,1) + ' mmol/L (' + lacStatus + ')';
+
+      let lacNote = '';
+      if (agForDelta > 12){
+        const gap_excess = agForDelta - 12;
+        const lac_excess = Math.max(lac - 1, 0);
+        const pctExplained = gap_excess > 0 ? Math.min((lac_excess/gap_excess)*100, 200) : 0;
+        if (lac <= 2.2){
+          lacNote = 'Lattati nella norma: l\'anion gap elevato non è spiegato da acidosi lattica → considerare altre cause (chetoacidosi, uremia, tossici — metanolo, glicole etilenico, salicilati).';
+        } else if (pctExplained >= 70){
+          lacNote = `I lattati spiegano gran parte dell'anion gap elevato (~${egaFmt(pctExplained,0)}%) → acidosi lattica verosimilmente la causa predominante. Valutare causa tipo A (ipoperfusione/ipossia) vs tipo B (farmaci, sepsi, epatopatia, neoplasie).`;
+        } else {
+          lacNote = `I lattati sono elevati ma spiegano solo in parte l'anion gap (~${egaFmt(pctExplained,0)}%) → probabile componente mista (acidosi lattica + altra causa di AG elevato, es. chetoacidosi o uremia).`;
+        }
+      } else if (lac > 2.2){
+        lacNote = 'Lattati elevati ma anion gap non elevato: quadro atipico, verificare il dosaggio e considerare iperlattatemia senza acidosi franca o compenso di base alterato.';
+      }
+      if (lacNote){
+        lacNoteBox.style.display = 'block';
+        lacNoteBox.innerHTML = '<b>Lattati</b><br>' + lacNote;
+      } else {
+        lacNoteBox.style.display = 'none';
+      }
+    } else {
+      lacLine.style.display = 'none';
+      lacNoteBox.style.display = 'none';
+    }
+  } else {
+    agSection.style.display = 'none';
+  }
+
+  outputCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function egaResetForm(){
+  ['ega-ph','ega-pco2','ega-hco3','ega-na','ega-cl','ega-alb','ega-lac'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  egaSetChronicity(false);
+  document.getElementById('ega-output-card').classList.remove('show');
+  document.getElementById('ega-optionalDetails').open = false;
+}
+
+// isola, nel testo del diario, solo la porzione dopo "EGA:" fino a fine
+// riga: evitiamo di cercare i valori in tutto il resto del testo, dove
+// parole come "ph" potrebbero comparire per altri motivi
+function egaEstraiRiga(testoCompleto){
+  const m = testoCompleto.match(/ega\s*:\s*(.*)/i);
+  return m ? m[1].split('\n')[0] : '';
+}
+
+// riconosce pH / pCO2 / HCO3 / Lac nella riga EGA, ignorando eventuali
+// pO2/SatO2 scritti insieme (non hanno un pattern dedicato, quindi
+// restano semplicemente non estratti). Tollera i pedici tipografici
+// (pCO₂, HCO₃⁻) e la virgola come separatore decimale
+function egaParseValori(rigaEga){
+  const norm = rigaEga
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, d => '₀₁₂₃₄₅₆₇₈₉'.indexOf(d))
+    .replace(/[⁻⁺]/g, '');
+  const trova = (regex) => {
+    const m = norm.match(regex);
+    return m ? m[1].replace(',', '.') : '';
+  };
+  return {
+    ph:   trova(/\bph\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
+    pco2: trova(/\bpco2\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
+    hco3: trova(/\bhco3\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
+    lac:  trova(/\blac(?:tati)?\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i)
+  };
+}
+
+// tiene traccia di quale textarea (e paziente) ha aperto il modale, per
+// poter scrivere l'interpretazione al suo posto quando si chiude — vedi
+// chiudiEgaAnalyzer
+let egaContestoAttivo = null;
+
+function apriEgaAnalyzer(testoDiario, textareaEl, patientId){
+  egaContestoAttivo = { textareaEl, patientId };
+  egaResetForm();
+  const valori = egaParseValori(egaEstraiRiga(testoDiario || ''));
+  ['ph','pco2','hco3','lac'].forEach(campo => {
+    const el = document.getElementById('ega-' + campo);
+    if(el && valori[campo]) el.value = valori[campo];
+  });
+  document.getElementById('ega-modal-overlay').classList.add('show');
+}
+
+// mappa la diagnosi testuale completa (quella mostrata per esteso nel
+// modale, che resta invariata lì) su una forma abbreviata da usare nella
+// riga compatta del diario — es. "Acidosi metabolica semplice, compenso
+// respiratorio adeguato" -> "acidosi metabolica compensata". Elenco
+// esaustivo di tutte le diagnosi che egaAnalyze() può produrre; se per
+// qualche motivo una non fosse in mappa, si torna al testo per esteso
+// (in minuscolo) invece di lasciare la riga vuota
+const EGA_DIAGNOSI_BREVE = {
+  'Equilibrio acido-base nella norma': 'equilibrio acido-base nella norma',
+  'pH normale ma componenti alterate — possibile disturbo misto': 'disturbo misto a pH compensato',
+  'Acidosi metabolica semplice, compenso respiratorio adeguato': 'acidosi metabolica compensata',
+  'Acidosi mista: metabolica + respiratoria': 'acidosi mista (metabolica + respiratoria)',
+  'Acidosi metabolica + alcalosi respiratoria sovrapposta': 'acidosi metabolica + alcalosi respiratoria',
+  'Acidosi respiratoria acuta semplice, compenso metabolico adeguato': 'acidosi respiratoria acuta compensata',
+  'Acidosi respiratoria cronica semplice, compenso metabolico adeguato': 'acidosi respiratoria cronica compensata',
+  'Acidosi mista: respiratoria + metabolica': 'acidosi mista (respiratoria + metabolica)',
+  'Acidosi respiratoria + alcalosi metabolica sovrapposta': 'acidosi respiratoria + alcalosi metabolica',
+  'Acidosi mista: metabolica + respiratoria (entrambe primitive)': 'acidosi mista (metabolica + respiratoria)',
+  'Acidosi metabolica con compenso respiratorio al limite/adeguato': 'acidosi metabolica compensata',
+  'Acidosi respiratoria + alcalosi metabolica (disturbo misto)': 'acidosi respiratoria + alcalosi metabolica',
+  'Quadro complesso — valutare anion gap e contesto clinico': 'quadro acido-base complesso',
+  'Alcalosi metabolica semplice, compenso respiratorio adeguato': 'alcalosi metabolica compensata',
+  'Alcalosi mista: metabolica + respiratoria': 'alcalosi mista (metabolica + respiratoria)',
+  'Alcalosi metabolica + acidosi respiratoria sovrapposta': 'alcalosi metabolica + acidosi respiratoria',
+  'Alcalosi respiratoria acuta semplice, compenso metabolico adeguato': 'alcalosi respiratoria acuta compensata',
+  'Alcalosi respiratoria cronica semplice, compenso metabolico adeguato': 'alcalosi respiratoria cronica compensata',
+  'Alcalosi mista: respiratoria + metabolica': 'alcalosi mista (respiratoria + metabolica)',
+  'Alcalosi respiratoria + acidosi metabolica sovrapposta': 'alcalosi respiratoria + acidosi metabolica',
+  'Alcalosi mista: metabolica + respiratoria (entrambe primitive)': 'alcalosi mista (metabolica + respiratoria)',
+  'Alcalosi respiratoria + acidosi metabolica (disturbo misto)': 'alcalosi respiratoria + acidosi metabolica'
+};
+
+// "acidosi metabolica compensata (pH 7.21, pCO2 38, HCO3 21, Lac 2.5)" —
+// forma abbreviata della diagnosi (la versione per esteso resta invariata
+// nel modale) più i soli valori effettivamente compilati, senza unità di
+// misura per restare compatta
+function egaComponiRigaFinale(){
+  const diagnosi = document.getElementById('ega-diagnosisText').textContent.trim();
+  if(!diagnosi) return null;
+  const diagnosiBreve = EGA_DIAGNOSI_BREVE[diagnosi] || (diagnosi.charAt(0).toLowerCase() + diagnosi.slice(1));
+
+  const pezzi = [];
+  const ph = document.getElementById('ega-ph').value;
+  const pco2 = document.getElementById('ega-pco2').value;
+  const hco3 = document.getElementById('ega-hco3').value;
+  const lac = document.getElementById('ega-lac').value;
+  if(ph) pezzi.push('pH ' + ph);
+  if(pco2) pezzi.push('pCO2 ' + pco2);
+  if(hco3) pezzi.push('HCO3 ' + hco3);
+  if(lac) pezzi.push('Lac ' + lac);
+
+  return 'EGA: ' + diagnosiBreve + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
+}
+
+function chiudiEgaAnalyzer(){
+  const analisiFatta = document.getElementById('ega-output-card').classList.contains('show');
+  if(analisiFatta && egaContestoAttivo && egaContestoAttivo.textareaEl){
+    const nuovaRiga = egaComponiRigaFinale();
+    if(nuovaRiga){
+      const { textareaEl, patientId } = egaContestoAttivo;
+      // sostituisce solo la riga "EGA: ..." (fino a fine riga), lasciando
+      // intatto tutto il resto del diario prima e dopo
+      const nuovoTesto = textareaEl.value.replace(/ega\s*:.*/i, () => nuovaRiga);
+      textareaEl.value = nuovoTesto;
+      aggiornaDiarioTesto(patientId, nuovoTesto);
+      autoResizeTextarea(textareaEl);
+    }
+  }
+  egaContestoAttivo = null;
+  document.getElementById('ega-modal-overlay').classList.remove('show');
+}
+
+// scritto "EGA:" nel diario (in Diari) -> apre il modale precompilato una
+// volta sola per comparsa: se poi lo si chiude e si continua a scrivere
+// altro, non si riapre da solo; si riapre solo se si cancella e si
+// riscrive "EGA:" di nuovo (vedi renderRiepilogo)
+function egaControllaTrigger(testoAttuale, elementoTextarea, patientId){
+  const contieneEga = /ega\s*:/i.test(testoAttuale);
+  if(contieneEga && elementoTextarea.dataset.egaAperto !== '1'){
+    apriEgaAnalyzer(testoAttuale, elementoTextarea, patientId);
+    elementoTextarea.dataset.egaAperto = '1';
+  } else if(!contieneEga){
+    elementoTextarea.dataset.egaAperto = '0';
+  }
+}
+
+
 </script>
 </body>
 </html>
