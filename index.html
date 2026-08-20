@@ -7490,9 +7490,9 @@ function vfgComponiRigaFinale(){
   const age = document.getElementById('vfg-age').value;
   const weight = document.getElementById('vfg-weight').value;
   const creat = document.getElementById('vfg-creat').value;
-  if(age) pezzi.push('età ' + age);
-  if(weight) pezzi.push('peso ' + weight);
-  if(creat) pezzi.push('creat ' + creat);
+  if(age) pezzi.push('età ' + age + ' anni');
+  if(weight) pezzi.push('peso ' + weight + ' kg');
+  if(creat) pezzi.push('creat ' + creat + ' mg/dL');
 
   return 'VFG: ' + valore + ', ' + stadioBreve + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
 }
