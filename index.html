@@ -7675,13 +7675,16 @@ const FARMACI_DB = {
           { peso: '50–100 kg', dose: '7,5 mg' },
           { peso: '> 100 kg', dose: '10 mg' }
         ] },
-      { min: 20, max: 50, label: '20–49',
+      { min: 30, max: 50, label: '30–49',
         profilassi: '1,5 mg SC 1×/die (ridotta).',
-        terapeutico: 'Dose peso-based standard ma con cautela; se peso >100 kg valutare riduzione a 7,5 mg dopo una prima dose di 10 mg.' },
+        terapeutico: 'Dose peso-based standard, con cautela (insufficienza renale moderata). Se peso >100 kg: dopo una prima dose di 10 mg, considerare la riduzione a 7,5 mg/die.' },
+      { min: 20, max: 30, label: '20–29',
+        profilassi: '1,5 mg SC 1×/die (ridotta).',
+        terapeutico: 'CONTROINDICATO (insufficienza renale grave).' },
       { min: 0, max: 20, label: '< 20',
         dose: 'CONTROINDICATO (profilassi e terapeutico).' }
     ],
-    note: 'A differenza delle EBPM, il fondaparinux non ha eliminazione epatica: è quindi particolarmente sensibile alla funzione renale.'
+    note: 'A differenza delle EBPM, il fondaparinux non ha eliminazione epatica: è quindi particolarmente sensibile alla funzione renale. Attenzione: la soglia di controindicazione del terapeutico (30 mL/min) è più alta di quella della profilassi (20 mL/min) — non sono la stessa soglia.'
   },
   inhixa: {
     nome: 'Inhixa (enoxaparina)',
@@ -7689,14 +7692,14 @@ const FARMACI_DB = {
     fasce: [
       { min: 30, max: Infinity, label: '≥ 30',
         profilassi: '4000 UI SC 1×/die.',
-        terapeutico: '100 UI/kg SC ogni 12h, oppure 150 UI/kg SC 1×/die.\nNessun aggiustamento richiesto tra 30 e 80 (scheda tecnica), ma monitoraggio clinico consigliato.' },
+        terapeutico: '100 UI/kg SC ogni 12h, oppure 150 UI/kg SC 1×/die.\nNessun aggiustamento richiesto in scheda tecnica in questa fascia, ma monitoraggio clinico consigliato.' },
       { min: 15, max: 30, label: '15–29 (grave)',
         profilassi: '2000 UI SC 1×/die.',
         terapeutico: '100 UI/kg SC 1×/die — SOLO monosomministrazione, non ogni 12h.' },
       { min: 0, max: 15, label: '< 15',
-        dose: 'Non raccomandato (dati insufficienti).' }
+        dose: 'Non raccomandato (insufficienza renale allo stadio terminale, dati insufficienti). Uso ammesso solo per la prevenzione della trombosi nel circuito extracorporeo durante emodialisi.' }
     ],
-    note: 'A differenza del fondaparinux, l\'enoxaparina ha una quota di eliminazione non renale: per questo l\'aggiustamento formale scatta solo sotto i 30 mL/min.'
+    note: 'A differenza del fondaparinux, l\'enoxaparina ha una quota di eliminazione non renale: per questo l\'aggiustamento formale scatta solo sotto i 30 mL/min, con un\'ulteriore soglia a 15 (sotto la quale non è raccomandata).'
   },
   dabigatran: {
     nome: 'Dabigatran (Pradaxa)',
