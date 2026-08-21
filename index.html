@@ -430,6 +430,7 @@
     transition:transform .15s ease;
   }
   .admit-block[open] .admit-chev{ transform:rotate(90deg); }
+  #app-farmaci-chev.aperto{ transform:rotate(90deg); }
   .admit-block-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
@@ -882,6 +883,7 @@
     </div>
     <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()">Reparto</button>
     <button class="topnav-btn" id="topnav-ricoveri" onclick="apriRicoveri()">Ricoveri</button>
+    <button class="topnav-btn" id="topnav-app" onclick="apriAppTools()">App</button>
   </div>
 </header>
 
@@ -968,6 +970,44 @@
     </div>
   </div>
   <div class="group" id="riepilogo-lista"></div>
+</div>
+
+<!-- APP: elenco degli strumenti clinici integrati (EGA, VFG, farmaci),
+     stesse righe separate da una linea già usate per gli Appoggi in
+     Settore E (vedi .ric-lista-riga). Cliccando si apre lo stesso modale
+     che si aprirebbe scrivendo il trigger in un diario — qui però senza
+     alcun diario/paziente collegato, quindi nessuna scrittura automatica
+     alla chiusura (vedi apriAppEga/apriAppVfg/apriAppFarmaco) -->
+<div class="card" id="app-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg> App</h2>
+  <div class="group">
+    <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
+  </div>
+  <div class="group">
+    <div class="ric-lista-minimale">
+      <div class="ric-lista-riga" onclick="apriAppEga()">
+        <span class="ric-lista-nome">EGA Analyzer</span>
+      </div>
+      <div class="ric-lista-riga" onclick="apriAppVfg()">
+        <span class="ric-lista-nome">VFG Calc (Cockcroft-Gault)</span>
+      </div>
+      <div class="ric-lista-riga" onclick="toggleAppFarmaciSotto()">
+        <span class="ric-lista-nome">Box farmaci</span>
+        <span class="admit-chev" id="app-farmaci-chev">›</span>
+      </div>
+      <div id="app-farmaci-sotto" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+        <div class="ric-lista-riga" onclick="apriAppFarmaco('arixtra')">
+          <span class="ric-lista-nome">Arixtra (fondaparinux)</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriAppFarmaco('inhixa')">
+          <span class="ric-lista-nome">Inhixa (enoxaparina)</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriAppFarmaco('nao')">
+          <span class="ric-lista-nome">NAO / DOAC (tutti e 4)</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- RICOVERI -->
@@ -3754,6 +3794,7 @@ function mostraVista(v){
   document.getElementById('clinical-view').style.display = (v === 'clinical') ? '' : 'none';
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
+  document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
@@ -3764,8 +3805,8 @@ function mostraVista(v){
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
-  const mappaTab = { riepilogo:'topnav-diari', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
-  ['topnav-diari','topnav-reparto','topnav-ricoveri'].forEach(id => {
+  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
 }
@@ -3775,6 +3816,25 @@ function toggleWardMap(){
 function apriWardMap(){ mostraVista('wardmap'); }
 function chiudiWardMap(){ mostraVista('clinical'); }
 function apriRiepilogo(){ mostraVista('riepilogo'); }
+
+// vista "App": elenco degli strumenti clinici integrati (EGA, VFG,
+// farmaci). Aprirli da qui usa le stesse funzioni già richiamate scrivendo
+// il trigger in un diario, ma senza passare né testo né una textarea:
+// niente valori precompilati, e niente scrittura automatica alla chiusura
+// (egaContestoAttivo/vfgContestoAttivo restano senza textareaEl, vedi
+// chiudiEgaAnalyzer/chiudiVfgCalc)
+function apriAppTools(){ mostraVista('app'); }
+function apriAppEga(){ apriEgaAnalyzer('', null, null); }
+function apriAppVfg(){ apriVfgCalc('', null, null); }
+function apriAppFarmaco(chiave){ apriFarmaco(chiave, ''); }
+
+function toggleAppFarmaciSotto(){
+  const sotto = document.getElementById('app-farmaci-sotto');
+  const chev = document.getElementById('app-farmaci-chev');
+  const aperto = sotto.style.display !== 'none';
+  sotto.style.display = aperto ? 'none' : '';
+  chev.classList.toggle('aperto', !aperto);
+}
 function apriRicoveri(){ mostraVista('ricoveri'); }
 function apriVitaliSettore(){ mostraVista('vitali'); }
 function chiudiVitaliSettore(){ mostraVista('wardmap'); }
@@ -7705,14 +7765,12 @@ const FARMACI_DB = {
     nome: 'Dabigatran (Pradaxa)',
     sottotitolo: 'inibitore diretto della trombina · ~80% eliminazione renale',
     fasce: [
-      { min: 50, max: Infinity, label: '≥ 50',
-        dose: '150 mg x2/die (standard). Considerare 110 mg x2/die se età ≥80 anni, verapamil concomitante, o rischio emorragico aumentato (es. età 75–80 con altri fattori di rischio).' },
-      { min: 30, max: 50, label: '30–49',
-        dose: '110 mg x2/die.' },
+      { min: 30, max: Infinity, label: '≥ 30',
+        dose: '150 mg x2/die (dose standard raccomandata, anche a VFG 30-49 — la scheda tecnica non impone qui una riduzione automatica, ma raccomanda monitoraggio più attento). Ridurre a 110 mg x2/die se: età ≥80 anni o verapamil concomitante (riduzione raccomandata); considerare comunque 110 mg per rischio emorragico elevato o età 75-80 con altri fattori di rischio — criteri indipendenti dalla VFG.' },
       { min: 0, max: 30, label: '< 30',
         dose: 'CONTROINDICATO.' }
     ],
-    note: 'Il DOAC più sensibile alla funzione renale: unico ad eliminazione prevalentemente renale (~80%).'
+    note: 'Il DOAC più sensibile alla funzione renale: unico ad eliminazione prevalentemente renale (~80%). A differenza degli altri DOAC qui elencati, tra 30 e 49 mL/min la dose standard resta raccomandata: non c\'è una fascia intermedia con dose automaticamente dimezzata.'
   },
   rivaroxaban: {
     nome: 'Rivaroxaban (Xarelto)',
