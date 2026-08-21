@@ -786,6 +786,84 @@
   #vfg-output-card.tone-lieve{ box-shadow:inset 0 0 0 1px var(--folder-dim); border-radius:14px; padding:12px; }
   #vfg-output-card.tone-moderata{ box-shadow:inset 0 0 0 1px var(--acid-border); border-radius:14px; padding:12px; }
   #vfg-output-card.tone-severa{ box-shadow:inset 0 0 0 1px var(--violet-dim); border-radius:14px; padding:12px; }
+
+  /* ---------- BOX FARMACI (modale) ----------
+     box informativi (sola lettura, nessun calcolo interattivo): dosaggi
+     renali dei farmaci richiamati scrivendo "/nomefarmaco" in Diari.
+     Stesso stile "centrato" degli altri due modali, contenuto costruito
+     dinamicamente perché qui, a differenza di EGA/VFG, un solo trigger
+     (/NAO, /DOAC) può mostrare più farmaci insieme */
+  #farmaco-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #farmaco-modal-overlay.show{ display:flex; }
+  #farmaco-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .farmaco-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .farmaco-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:#fff;
+  }
+  #farmaco-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #farmaco-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #farmaco-vfg-info{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:14px;
+    padding:8px 11px; background:var(--panel-2); border-radius:10px; border:1px solid var(--clay-border);
+  }
+  #farmaco-vfg-info.trovata{ color:var(--signal); border-color:var(--signal-dim); }
+
+  .farmaco-scheda{ margin-bottom:18px; }
+  .farmaco-scheda:last-child{ margin-bottom:0; }
+  .farmaco-titolo{ font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px; }
+  .farmaco-sottotitolo{ font-size:11.5px; color:var(--ink-dim); font-family:var(--font-mono); margin-bottom:10px; }
+
+  /* tabella fine: colonne strette, poco padding, righe separate da un
+     filo sottile invece dei box separati usati prima */
+  .farmaco-tabella{ width:100%; border-collapse:collapse; font-size:12px; }
+  .farmaco-tabella th{
+    text-align:left; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 7px 5px 0; border-bottom:1px solid var(--clay-border);
+  }
+  .farmaco-tabella td{
+    padding:7px 7px 7px 0; border-bottom:1px solid var(--line-soft);
+    color:var(--ink-dim); line-height:1.45; vertical-align:top;
+  }
+  .farmaco-tabella tr:last-child td{ border-bottom:none; }
+  .farmaco-tabella td:first-child{
+    font-family:var(--font-mono); font-weight:700; color:var(--ink);
+    white-space:nowrap; width:1%;
+  }
+  .farmaco-tabella tr.match{ background:var(--signal-dim); }
+  .farmaco-tabella tr.match td{ color:var(--ink); }
+  .farmaco-tabella tr.match td:first-child{ color:var(--signal); }
+
+  /* sotto-tabella dei pesi (es. Arixtra terapeutico): stessa idea ma
+     ancora più fine, senza bordi propri, annidata nella cella */
+  .farmaco-subtabella{ width:100%; border-collapse:collapse; }
+  .farmaco-subtabella td{ padding:0 8px 1px 0; border:none; color:inherit; line-height:1.5; }
+  .farmaco-subtabella td:first-child{
+    font-family:var(--font-mono); font-weight:600; color:inherit;
+    white-space:nowrap; width:1%;
+  }
+
+  .farmaco-scheda .note-box{
+    font-family:var(--font-mono); font-size:12px; line-height:1.5; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:11px;
+    padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
+  }
 </style>
 </head>
 <body>
@@ -4275,6 +4353,7 @@ function renderRiepilogo(){
       autoResizeTextarea(body);
       egaControllaTrigger(body.value, body, id);
       vfgControllaTrigger(body.value, body, id);
+      farmacoControllaTrigger(body.value, body);
     });
 
     block.appendChild(titleRow);
@@ -6899,6 +6978,21 @@ try{
   </div>
 </div>
 
+<!-- BOX FARMACI: box informativi (sola lettura) con dosaggi renali,
+     richiamati scrivendo "/nomefarmaco" in Diari (es. /Arixtra, /Inhixa,
+     /NAO, /DOAC). Il contenuto si costruisce dinamicamente in JS in base
+     al farmaco/gruppo richiamato — vedi apriFarmaco più sotto -->
+<div id="farmaco-modal-overlay" onclick="if(event.target===this) chiudiFarmaco()">
+  <div id="farmaco-modal">
+    <div class="farmaco-modal-header">
+      <h2 id="farmaco-modal-titolo">Farmaco</h2>
+      <button id="farmaco-chiudi-btn" onclick="chiudiFarmaco()">✕</button>
+    </div>
+    <div id="farmaco-vfg-info"></div>
+    <div id="farmaco-corpo"></div>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // EGA ANALYZER — tool standalone dell'utente, integrato come modale.
@@ -7547,6 +7641,237 @@ document.getElementById('vfg-modal').addEventListener('keydown', (e) => {
     target.select();
   }
 });
+
+</script>
+<script>
+// ============================================================
+// BOX FARMACI — dosaggi renali richiamati scrivendo "/nomefarmaco" in
+// Diari (vedi farmacoControllaTrigger, agganciato alla stessa textarea
+// di EGA/VFG). A differenza di quei due, qui non c'è calcolo interattivo:
+// sono box informativi di sola lettura, e leggono la VFG più recente già
+// scritta nel diario (tipicamente da /VFG) per evidenziare la fascia di
+// dosaggio giusta — se la VFG non si trova, mostrano comunque tutte le
+// fasce, senza evidenziarne nessuna.
+//
+// Fonti: schede tecniche AIFA/EMA (fondaparinux, enoxaparina, dabigatran,
+// rivaroxaban, apixaban, edoxaban), consultate ad agosto 2026. Dati clinici
+// da verificare comunque con la scheda tecnica aggiornata al momento d'uso.
+//
+// Per aggiungere un nuovo farmaco: aggiungere una voce a FARMACI_DB con
+// chiave = il trigger desiderato (es. "eliquis": {...}), tutto minuscolo.
+// Per un gruppo che ne apre più di uno insieme, aggiungere una voce a
+// FARMACI_GRUPPI con l'elenco delle chiavi da mostrare.
+// ============================================================
+
+const FARMACI_DB = {
+  arixtra: {
+    nome: 'Arixtra (fondaparinux)',
+    sottotitolo: 'anticoagulante · inibitore indiretto del fattore Xa · eliminazione quasi solo renale',
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        profilassi: '2,5 mg SC 1×/die.',
+        terapeuticoPesoBased: [
+          { peso: '< 50 kg', dose: '5 mg' },
+          { peso: '50–100 kg', dose: '7,5 mg' },
+          { peso: '> 100 kg', dose: '10 mg' }
+        ] },
+      { min: 20, max: 50, label: '20–49',
+        profilassi: '1,5 mg SC 1×/die (ridotta).',
+        terapeutico: 'Dose peso-based standard ma con cautela; se peso >100 kg valutare riduzione a 7,5 mg dopo una prima dose di 10 mg.' },
+      { min: 0, max: 20, label: '< 20',
+        dose: 'CONTROINDICATO (profilassi e terapeutico).' }
+    ],
+    note: 'A differenza delle EBPM, il fondaparinux non ha eliminazione epatica: è quindi particolarmente sensibile alla funzione renale.'
+  },
+  inhixa: {
+    nome: 'Inhixa (enoxaparina)',
+    sottotitolo: 'eparina a basso peso molecolare · eliminazione anche non renale · dosi in UI',
+    fasce: [
+      { min: 30, max: Infinity, label: '≥ 30',
+        profilassi: '4000 UI SC 1×/die.',
+        terapeutico: '100 UI/kg SC ogni 12h, oppure 150 UI/kg SC 1×/die.\nNessun aggiustamento richiesto tra 30 e 80 (scheda tecnica), ma monitoraggio clinico consigliato.' },
+      { min: 15, max: 30, label: '15–29 (grave)',
+        profilassi: '2000 UI SC 1×/die.',
+        terapeutico: '100 UI/kg SC 1×/die — SOLO monosomministrazione, non ogni 12h.' },
+      { min: 0, max: 15, label: '< 15',
+        dose: 'Non raccomandato (dati insufficienti).' }
+    ],
+    note: 'A differenza del fondaparinux, l\'enoxaparina ha una quota di eliminazione non renale: per questo l\'aggiustamento formale scatta solo sotto i 30 mL/min.'
+  },
+  dabigatran: {
+    nome: 'Dabigatran (Pradaxa)',
+    sottotitolo: 'inibitore diretto della trombina · ~80% eliminazione renale',
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        dose: '150 mg x2/die (standard). Considerare 110 mg x2/die se età ≥80 anni, verapamil concomitante, o rischio emorragico aumentato (es. età 75–80 con altri fattori di rischio).' },
+      { min: 30, max: 50, label: '30–49',
+        dose: '110 mg x2/die.' },
+      { min: 0, max: 30, label: '< 30',
+        dose: 'CONTROINDICATO.' }
+    ],
+    note: 'Il DOAC più sensibile alla funzione renale: unico ad eliminazione prevalentemente renale (~80%).'
+  },
+  rivaroxaban: {
+    nome: 'Rivaroxaban (Xarelto)',
+    sottotitolo: 'inibitore diretto del fattore Xa',
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50', dose: '20 mg x1/die, con il pasto.' },
+      { min: 15, max: 50, label: '15–49', dose: '15 mg x1/die, con il pasto (ridotta).' },
+      { min: 0, max: 15, label: '< 15', dose: 'Non raccomandato.' }
+    ],
+    note: ''
+  },
+  apixaban: {
+    nome: 'Apixaban (Eliquis)',
+    sottotitolo: 'inibitore diretto del fattore Xa',
+    fasce: [
+      { min: 30, max: Infinity, label: '≥ 30',
+        dose: '5 mg x2/die. Ridurre a 2,5 mg x2/die se ≥2 tra: età ≥80, peso ≤60 kg, creatinina ≥1,5 mg/dL (criterio indipendente dalla VFG, va controllato comunque).' },
+      { min: 15, max: 30, label: '15–29 (grave)',
+        dose: '2,5 mg x2/die (obbligatoria anche da sola, come unico criterio).' },
+      { min: 0, max: 15, label: '< 15 o dialisi',
+        dose: 'Non raccomandato.' }
+    ],
+    note: 'Unico DOAC il cui criterio di riduzione NON dipende solo dalla VFG: verificare sempre anche età e peso corporeo.'
+  },
+  edoxaban: {
+    nome: 'Edoxaban (Lixiana)',
+    sottotitolo: 'inibitore diretto del fattore Xa',
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        dose: '60 mg x1/die. Ridurre a 30 mg x1/die se peso ≤60 kg o inibitori potenti P-gp concomitanti (ciclosporina, dronedarone, eritromicina, ketoconazolo).' },
+      { min: 15, max: 50, label: '15–49', dose: '30 mg x1/die (ridotta).' },
+      { min: 0, max: 15, label: '< 15', dose: 'Non raccomandato.' }
+    ],
+    note: 'Attenzione anche al limite superiore: con VFG molto alta (>95 mL/min) alcuni dati indicano minore efficacia a parità di dose — da valutare col centro TAO/cardiologia.'
+  }
+};
+
+// gruppi: un trigger che ne apre più di uno insieme
+const FARMACI_GRUPPI = {
+  nao: ['apixaban', 'edoxaban', 'rivaroxaban', 'dabigatran'],
+  doac: ['apixaban', 'edoxaban', 'rivaroxaban', 'dabigatran']
+};
+
+// cerca, nel testo del diario, l'ultima VFG scritta nel formato prodotto
+// dal calcolatore VFG ("VFG: 37 mL/min, ..."): serve per capire quale
+// fascia di dosaggio evidenziare
+function farmacoEstraiVfg(testoCompleto){
+  const m = (testoCompleto || '').match(/vfg\s*:\s*([0-9]+(?:[.,][0-9]+)?)\s*ml\s*\/?\s*min/i);
+  if(!m) return null;
+  return parseFloat(m[1].replace(',', '.'));
+}
+
+// scandisce il testo cercando "/parola": ritorna l'ULTIMA parola (la più
+// recente digitata) che corrisponde a un farmaco o un gruppo noto,
+// ignorando qualunque altro uso dello slash (date, frazioni, ecc.) che
+// non corrisponde a nulla nel database
+function farmacoTrovaChiaveAttiva(testo){
+  const matches = [...(testo || '').matchAll(/\/([a-z]+)/gi)];
+  for(let i = matches.length - 1; i >= 0; i--){
+    const chiave = matches[i][1].toLowerCase();
+    if(FARMACI_DB[chiave] || FARMACI_GRUPPI[chiave]) return chiave;
+  }
+  return null;
+}
+
+function farmacoVfgMatch(vfg, fascia){
+  return vfg !== null && vfg >= fascia.min && vfg < fascia.max;
+}
+
+// una fascia può avere un campo unico "dose" (es. i DOAC, dove non ha
+// senso distinguere profilassi/terapeutico) oppure due campi separati
+// "profilassi" e "terapeutico" (Arixtra, Inhixa), resi come righe distinte
+// cella "Terapeutico": se la fascia ha pesi diversi (es. Arixtra), li
+// mostra come piccola tabella annidata (peso | dose) invece che in riga
+function farmacoRenderCellaTerapeutico(fascia){
+  if(fascia.terapeuticoPesoBased){
+    const righeSub = fascia.terapeuticoPesoBased.map(w =>
+      '<tr><td>' + w.peso + '</td><td>' + w.dose + '</td></tr>'
+    ).join('');
+    return '<table class="farmaco-subtabella">' + righeSub + '</table>';
+  }
+  if(fascia.terapeutico) return fascia.terapeutico.replace(/\n/g, '<br>');
+  return '';
+}
+
+// tabella compatta: VFG | Profilassi | Terapeutico per Arixtra/Inhixa,
+// VFG | Dose per i DOAC (che non distinguono profilassi/terapeutico)
+function farmacoRenderCard(chiave, vfg, mostraTitolo){
+  const f = FARMACI_DB[chiave];
+  if(!f) return '';
+
+  const haProfTerap = f.fasce.some(fascia => fascia.profilassi !== undefined);
+  const intestazione = haProfTerap
+    ? '<tr><th>VFG</th><th>Profilassi</th><th>Terapeutico</th></tr>'
+    : '<tr><th>VFG</th><th>Dose</th></tr>';
+
+  const righe = f.fasce.map(fascia => {
+    const attivo = farmacoVfgMatch(vfg, fascia);
+    const classeRiga = attivo ? ' class="match"' : '';
+    if(fascia.dose && !fascia.profilassi){
+      const colspan = haProfTerap ? 2 : 1;
+      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td colspan="' + colspan + '">' + fascia.dose.replace(/\n/g, '<br>') + '</td></tr>';
+    }
+    if(haProfTerap){
+      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + (fascia.profilassi || '') + '</td><td>' + farmacoRenderCellaTerapeutico(fascia) + '</td></tr>';
+    }
+    return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + fascia.dose.replace(/\n/g, '<br>') + '</td></tr>';
+  }).join('');
+
+  return '<div class="farmaco-scheda">'
+    + (mostraTitolo ? '<div class="farmaco-titolo">' + f.nome + '</div>' : '')
+    + '<div class="farmaco-sottotitolo">' + f.sottotitolo + '</div>'
+    + '<table class="farmaco-tabella">' + intestazione + righe + '</table>'
+    + (f.note ? '<div class="note-box">' + f.note + '</div>' : '')
+    + '</div>';
+}
+
+function apriFarmaco(chiave, testoDiario){
+  const chiavi = FARMACI_GRUPPI[chiave] || [chiave];
+  const vfg = farmacoEstraiVfg(testoDiario);
+  const gruppo = chiavi.length > 1;
+
+  document.getElementById('farmaco-modal-titolo').textContent =
+    gruppo ? 'Anticoagulanti orali diretti (NAO/DOAC)' : FARMACI_DB[chiavi[0]].nome;
+
+  // il nome del farmaco compare già nel titolo del modale: nella scheda
+  // sotto va ripetuto solo quando si mostra un gruppo di più farmaci
+  // insieme (altrimenti sarebbe un doppione inutile)
+  const vfgInfoEl = document.getElementById('farmaco-vfg-info');
+  if(vfg !== null){
+    vfgInfoEl.style.display = '';
+    vfgInfoEl.classList.add('trovata');
+    vfgInfoEl.textContent = 'VFG paziente: ' + vfg + ' mL/min (dal diario)';
+  } else {
+    vfgInfoEl.style.display = 'none';
+    vfgInfoEl.textContent = '';
+  }
+
+  document.getElementById('farmaco-corpo').innerHTML =
+    chiavi.map(k => farmacoRenderCard(k, vfg, gruppo)).join('');
+
+  document.getElementById('farmaco-modal-overlay').classList.add('show');
+}
+
+function chiudiFarmaco(){
+  document.getElementById('farmaco-modal-overlay').classList.remove('show');
+}
+
+// scritto "/nomefarmaco" nel diario (in Diari) -> apre il box del
+// farmaco corrispondente, una volta sola per comparsa di QUELLA parola
+// specifica: se poi si scrive "/altrofarmaco" (chiave diversa) si apre
+// anche quello. Chiudere e continuare a scrivere non lo riapre; si
+// riapre solo cancellando e riscrivendo lo stesso trigger da capo
+function farmacoControllaTrigger(testoAttuale, elementoTextarea){
+  const chiave = farmacoTrovaChiaveAttiva(testoAttuale);
+  if(chiave && elementoTextarea.dataset.farmacoAperto !== chiave){
+    apriFarmaco(chiave, testoAttuale);
+    elementoTextarea.dataset.farmacoAperto = chiave;
+  } else if(!chiave){
+    elementoTextarea.dataset.farmacoAperto = '';
+  }
+}
 
 </script>
 </body>
