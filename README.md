@@ -1,6 +1,17 @@
-# EO Builder
+# E.O. Builder
 
-App singola pagina (nessuna dipendenza da server) per comporre l'esame obiettivo cliccando le voci cliniche. Le schede paziente si salvano solo nel browser di chi la usa (localStorage), non su un server.
+App a pagina singola (nessuna dipendenza da server per il funzionamento di base) per comporre l'esame obiettivo cliccando le voci cliniche. Include anche una mappa reparto, la vista Diari, la gestione ricoveri e alcuni strumenti clinici integrati (analizzatore EGA, calcolatore VFG, dosaggi renali dei farmaci).
+
+## Cosa c'è dentro
+
+- **Esame obiettivo click-to-compose**, per apparato, con referto generato automaticamente
+- **Reparto**: mappa dei letti per settore, stato del diario di oggi (verde/viola), pagina dedicata "Parametri vitali" per aggiornare rapidamente SpO2/PA/FC/TC di tutto un settore
+- **Diari**: tutti i diari scritti oggi in un'unica vista, modificabili direttamente
+- **Ricoveri**: anamnesi e diario d'ingresso, generazione consegne in .docx
+- **Strumenti clinici integrati**, richiamati scrivendo un trigger dentro un diario (in Diari):
+  - `EGA:` → analizzatore emogasanalisi (equilibrio acido-base, anion gap, lattati); alla chiusura scrive un'interpretazione abbreviata nel diario
+  - `VFG` o `Cockroft`/`Cockcroft` → calcolatore Cockcroft-Gault; stesso comportamento alla chiusura
+  - `/Arixtra`, `/Inhixa`, `/NAO` o `/DOAC` → box informativi con i dosaggi renali (fondaparinux, enoxaparina, i 4 anticoagulanti orali diretti), che evidenziano la fascia giusta se nel diario è già presente una VFG
 
 ## Pubblicarla su GitHub Pages
 
@@ -25,10 +36,17 @@ App singola pagina (nessuna dipendenza da server) per comporre l'esame obiettivo
 
 5. Aggiungila alla schermata Home dell'iPhone (Safari → icona Condividi → **"Aggiungi a Home"**) per aprirla con un tap come un'app, sempre con JavaScript attivo — niente più anteprima Quick Look.
 
+Il file è autosufficiente: non serve configurare nient'altro su GitHub per far funzionare né l'app di base né la sincronizzazione (le chiavi del servizio di sincronizzazione sono già incluse in `index.html`).
+
 ## Aggiornarla in futuro
 
 Per ogni modifica: carica di nuovo `index.html` sostituendo quello esistente (upload → stesso nome → Commit changes). GitHub Pages si aggiorna da solo in un paio di minuti, senza bisogno di rifare i passaggi 3-4.
 
-## Nota sui dati
+## Dati e sincronizzazione
 
-Le schede paziente restano **solo sul dispositivo/browser** che le crea (localStorage) — non sono condivise tra iPhone, iPad o computer diversi, e non transitano mai dal repository GitHub (il codice è pubblico, i dati dei pazienti no, restano locali). Se cancelli i dati di navigazione di Safari, le schede si perdono: il referto va comunque sempre copiato nella cartella clinica ufficiale.
+Per impostazione predefinita le schede paziente restano **solo sul dispositivo/browser** che le crea (localStorage) — esattamente come prima. Se cancelli i dati di navigazione di Safari, le schede si perdono: il referto va comunque sempre copiato nella cartella clinica ufficiale.
+
+**Sincronizzazione tra dispositivi (facoltativa)**: nella vista Reparto è presente un riquadro "Sincronizzazione tra dispositivi" con cui puoi creare un account (email + password) per far vedere le stesse schede su più dispositivi (es. iPhone e iPad). Se attivata:
+- i dati (schede pazienti, ricoveri) vengono inviati a un servizio cloud esterno (Supabase), separato da GitHub — il codice dell'app resta pubblico su GitHub, i dati dei pazienti non transitano mai da lì
+- la sincronizzazione è opt-in: senza creare un account, il comportamento resta quello di sempre, tutto locale
+- restano valide le normali cautele sulla gestione di dati clinici quando si usa qualunque servizio esterno — valuta la conformità alle policy della tua struttura prima di attivarla su dati di pazienti reali
