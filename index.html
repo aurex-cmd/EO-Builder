@@ -865,6 +865,184 @@
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:11px;
     padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
   }
+
+  /* ---------- ECG SIMULATOR (modale) ----------
+     Stesso principio degli altri: tool standalone dell'utente, integrato
+     come modale, richiamato scrivendo "/ECG" in Diari o dalla scheda App.
+     Variabili colore proprie scoperte SOLO dentro #ecgsim-modal (non in
+     :root), per non toccare --panel/--panel-2/--line del resto dell'app,
+     che altrimenti verrebbero sovrascritte ovunque */
+  #ecgsim-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #ecgsim-modal-overlay.show{ display:flex; }
+  #ecgsim-modal{
+    --bg:#090d0e; --panel:#12181a; --panel-2:#171f21; --line: rgba(255,255,255,0.07);
+    --screen:#03110b; --trace:#3be9a6; --trace-glow: rgba(59,233,166,0.55);
+    --accent:#2dd4ae; --text:#e8f2ee; --muted:#7d968f; --muted-2:#54706a;
+    --amber:#ffb454; --red:#ff5c66; --green:#3be9a6;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+    color:var(--text); font-family:var(--sans);
+  }
+  .ecgsim-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .ecgsim-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  .ecgsim-modal-header .sub{ font-size:11.5px; color:var(--muted); font-family:var(--mono); margin-top:2px; max-width:56ch; line-height:1.5; }
+  #ecgsim-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--muted);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #ecgsim-chiudi-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* MONITOR */
+  #ecgsim-modal .ecgsim-monitor{
+    position:relative;
+    background: linear-gradient(180deg,#161c1d,#0e1314);
+    border-radius:20px;
+    padding:14px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 40px -20px rgba(0,0,0,0.6);
+    border:1px solid var(--line);
+    margin:14px 0 16px;
+  }
+  #ecgsim-modal .ecgsim-screen-wrap{
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    background: var(--screen);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.75), inset 0 0 2px rgba(59,233,166,0.4);
+    transition: box-shadow .3s ease;
+  }
+  #ecgsim-modal .ecgsim-screen-wrap.ecgsim-morphing{
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.75), inset 0 0 2px rgba(59,233,166,0.4), 0 0 22px rgba(59,233,166,0.28);
+  }
+  #ecgsim-modal .ecgsim-screen-wrap::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(120% 90% at 50% 0%, transparent 40%, rgba(0,0,0,0.55) 100%);
+    pointer-events:none;
+  }
+  #ecgsim-modal canvas{display:block;width:100%;height:190px;}
+
+  #ecgsim-modal .ecgsim-readout{
+    position:absolute; top:10px; left:12px;
+    font-family:var(--mono);
+    z-index:2;
+  }
+  #ecgsim-modal .ecgsim-readout .ecgsim-label{font-size:9.5px;letter-spacing:.14em;color:var(--muted-2);text-transform:uppercase;}
+  #ecgsim-modal .ecgsim-readout .ecgsim-big{font-size:26px;font-weight:600;color:var(--trace);text-shadow:0 0 10px var(--trace-glow);line-height:1.05;}
+  #ecgsim-modal .ecgsim-readout .ecgsim-unit{font-size:11px;color:var(--muted);margin-left:3px;}
+  #ecgsim-modal .ecgsim-hr-block{position:absolute; top:10px; right:12px; text-align:right; z-index:2; font-family:var(--mono);}
+  #ecgsim-modal .ecgsim-hr-block .ecgsim-label{font-size:9.5px;letter-spacing:.14em;color:var(--muted-2);text-transform:uppercase;}
+  #ecgsim-modal .ecgsim-hr-block .ecgsim-big{font-size:22px;font-weight:600;color:#ffd166;text-shadow:0 0 8px rgba(255,209,102,0.5);}
+
+  #ecgsim-modal .ecgsim-severity-chip{
+    position:absolute; bottom:10px; left:12px; z-index:2;
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em;
+    padding:5px 10px; border-radius:20px;
+    background: rgba(0,0,0,0.4);
+    border:1px solid currentColor;
+  }
+
+  /* TABS */
+  #ecgsim-modal .ecgsim-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  #ecgsim-modal .ecgsim-tab{
+    flex:1;
+    min-width:0;
+    padding:11px 2px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:12px;
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition: all .18s ease;
+    text-align:center;
+  }
+  #ecgsim-modal .ecgsim-tab .ecgsim-sym{font-family:var(--mono);}
+  #ecgsim-modal .ecgsim-tab.ecgsim-active{
+    background: linear-gradient(180deg, rgba(45,212,174,0.32), rgba(45,212,174,0.14));
+    border-color: var(--accent);
+    color:var(--text);
+    box-shadow: 0 0 0 1px rgba(45,212,174,0.35) inset, 0 0 14px rgba(45,212,174,0.4);
+  }
+
+  /* CONTROL PANEL */
+  #ecgsim-modal .ecgsim-panel{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 18px 16px;
+    margin-bottom:14px;
+  }
+  #ecgsim-modal .ecgsim-slider-head{
+    display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;
+  }
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-name{font-weight:600;font-size:15px;}
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-value{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--accent);}
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-value .u{font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
+
+  #ecgsim-modal input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:6px;
+    border-radius:6px;
+    background: #232c2e;
+    outline:none;
+    margin: 6px 0 4px;
+    box-shadow:none;
+  }
+  #ecgsim-modal input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px;height:20px;border-radius:50%;
+    background: var(--accent);
+    border:3px solid #0d1414;
+    box-shadow:0 0 0 1px rgba(45,212,174,0.5), 0 2px 6px rgba(0,0,0,0.5);
+    cursor:pointer; margin-top:-7px;
+  }
+  #ecgsim-modal input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background: var(--accent); border:3px solid #0d1414;
+    box-shadow:0 0 0 1px rgba(45,212,174,0.5);
+    cursor:pointer;
+  }
+  #ecgsim-modal input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:#232c2e;}
+
+  #ecgsim-modal .ecgsim-range-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-bottom:14px;}
+  #ecgsim-modal .ecgsim-range-labels .ecgsim-norm{color:var(--muted);}
+
+  #ecgsim-modal .ecgsim-sex-toggle{display:flex;gap:6px;margin:2px 0 10px;}
+  #ecgsim-modal .ecgsim-sexBtn{
+    flex:1; padding:7px; border-radius:9px;
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    font-family:var(--mono); font-size:12px; cursor:pointer; transition:all .15s ease;
+  }
+  #ecgsim-modal .ecgsim-sexBtn.ecgsim-active{background:rgba(45,212,174,0.30);border-color:var(--accent);color:var(--text);box-shadow:0 0 10px rgba(45,212,174,0.35);}
+
+  #ecgsim-modal .ecgsim-status-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  #ecgsim-modal .ecgsim-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  #ecgsim-modal .ecgsim-status-title{font-weight:700;font-size:14.5px;}
+  #ecgsim-modal .ecgsim-status-desc{color:var(--muted);font-size:13px;line-height:1.55;margin:0;}
+
+  #ecgsim-modal details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;}
+  #ecgsim-modal summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);outline:none;}
+  #ecgsim-modal .ecgsim-ref-table{margin-top:10px;font-size:12.5px;line-height:1.9;color:var(--muted);}
+  #ecgsim-modal .ecgsim-ref-table b{color:var(--text);font-weight:600;}
+
+  #ecgsim-modal footer{text-align:center;color:var(--muted-2);font-size:11px;line-height:1.6;margin-top:18px;padding:0 10px;}
+
 </style>
 </head>
 <body>
@@ -990,6 +1168,9 @@
       </div>
       <div class="ric-lista-riga" onclick="apriAppVfg()">
         <span class="ric-lista-nome">VFG Calc (Cockcroft-Gault)</span>
+      </div>
+      <div class="ric-lista-riga" onclick="apriAppEcg()">
+        <span class="ric-lista-nome">ECG Simulator</span>
       </div>
       <div class="ric-lista-riga" onclick="toggleAppFarmaciSotto()">
         <span class="ric-lista-nome">Box farmaci</span>
@@ -4414,6 +4595,7 @@ function renderRiepilogo(){
       egaControllaTrigger(body.value, body, id);
       vfgControllaTrigger(body.value, body, id);
       farmacoControllaTrigger(body.value, body);
+      ecgsimControllaTrigger(body.value, body);
     });
 
     block.appendChild(titleRow);
@@ -7038,6 +7220,77 @@ try{
   </div>
 </div>
 
+<!-- ECG SIMULATOR: modale richiamato scrivendo "/ECG" in Diari, o dalla
+     scheda App. Contenuto adattato dal tool standalone dell'utente, stessa
+     logica di simulazione identica (fisiologia del battito, soglie per
+     K/Ca/Mg/digossina/QTc), solo id/classi con prefisso "ecgsim-" -->
+<div id="ecgsim-modal-overlay" onclick="if(event.target===this) chiudiAppEcg()">
+  <div id="ecgsim-modal">
+    <div class="ecgsim-modal-header">
+      <div>
+        <h2>ECG Simulator</h2>
+        <div class="sub">Simula in tempo reale l'effetto di elettroliti e farmaci sulla morfologia del battito.</div>
+      </div>
+      <button id="ecgsim-chiudi-btn" onclick="chiudiAppEcg()">✕</button>
+    </div>
+
+    <div class="ecgsim-monitor">
+      <div class="ecgsim-screen-wrap" id="ecgsim-screenWrap">
+        <canvas id="ecgsim-ecg"></canvas>
+        <div class="ecgsim-readout">
+          <div class="ecgsim-label" id="ecgsim-ionLabel">K⁺</div>
+          <div><span class="ecgsim-big" id="ecgsim-ionValue">4.2</span><span class="ecgsim-unit" id="ecgsim-ionUnit">mEq/L</span></div>
+        </div>
+        <div class="ecgsim-hr-block">
+          <div class="ecgsim-label">FC</div>
+          <div class="ecgsim-big" id="ecgsim-hrValue">75</div>
+        </div>
+        <div class="ecgsim-severity-chip" id="ecgsim-chip" style="color:#3be9a6;">Normale</div>
+      </div>
+    </div>
+
+    <div class="ecgsim-tabs">
+      <button class="ecgsim-tab ecgsim-active" data-ion="k">K⁺</button>
+      <button class="ecgsim-tab" data-ion="ca">Ca²⁺</button>
+      <button class="ecgsim-tab" data-ion="mg">Mg²⁺</button>
+      <button class="ecgsim-tab" data-ion="dig">Dig</button>
+      <button class="ecgsim-tab" data-ion="qt">QT</button>
+    </div>
+
+    <div class="ecgsim-panel">
+      <div class="ecgsim-slider-head">
+        <span class="ecgsim-ion-name" id="ecgsim-panelIonName">Potassio</span>
+        <span class="ecgsim-ion-value"><span id="ecgsim-panelValue">4.2</span><span class="u" id="ecgsim-panelUnit">mEq/L</span></span>
+      </div>
+      <input type="range" id="ecgsim-slider" min="2.0" max="9.0" step="0.1" value="4.2">
+      <div class="ecgsim-sex-toggle" id="ecgsim-sexToggle" style="display:none;">
+        <button class="ecgsim-sexBtn ecgsim-active" data-sex="M">Uomo</button>
+        <button class="ecgsim-sexBtn" data-sex="F">Donna</button>
+      </div>
+      <div class="ecgsim-range-labels">
+        <span id="ecgsim-lblMin">2.0</span>
+        <span class="ecgsim-norm" id="ecgsim-lblNorm">normale 3.5–5.0</span>
+        <span id="ecgsim-lblMax">9.0</span>
+      </div>
+
+      <div class="ecgsim-status-row">
+        <span class="ecgsim-status-dot" id="ecgsim-statusDot" style="background:#3be9a6;"></span>
+        <span class="ecgsim-status-title" id="ecgsim-statusTitle">Normale</span>
+      </div>
+      <p class="ecgsim-status-desc" id="ecgsim-statusDesc">Tracciato nei limiti della norma.</p>
+
+      <details>
+        <summary id="ecgsim-refSummary">Soglie di riferimento — Potassio</summary>
+        <div class="ecgsim-ref-table" id="ecgsim-refTable"></div>
+      </details>
+    </div>
+
+    <footer>
+      Strumento didattico con proporzioni semplificate, a scopo illustrativo — non calibrato su un ECG reale a 12 derivazioni e non utilizzabile a fini diagnostici.
+    </footer>
+  </div>
+</div>
+
 <!-- BOX FARMACI: box informativi (sola lettura) con dosaggi renali,
      richiamati scrivendo "/nomefarmaco" in Diari (es. /Arixtra, /Inhixa,
      /NAO, /DOAC). Il contenuto si costruisce dinamicamente in JS in base
@@ -7931,6 +8184,447 @@ function farmacoControllaTrigger(testoAttuale, elementoTextarea){
     elementoTextarea.dataset.farmacoAperto = chiave;
   } else if(!chiave){
     elementoTextarea.dataset.farmacoAperto = '';
+  }
+}
+
+</script>
+<script>
+
+(function(){
+  "use strict";
+
+  // ---------- ION CONFIG ----------
+  function bandFromRanges(value, bands){
+    for(const b of bands){ if(value>=b.lo && value<b.hi) return b; }
+    return bands[bands.length-1];
+  }
+
+  const ION = {
+    k: {
+      name:'Potassio', symbol:'K⁺', unit:'mEq/L',
+      min:2.0, max:9.0, step:0.1, def:4.2, normalMin:3.5, normalMax:5.0,
+      params(k){
+        const p = {Pamp:0.16, PRext:0, QRSwidth:90, QRSscale:1, Ramp:1.2, Tamp:0.30, Twidth:55, STlevel:0, STlen:80, Uamp:0, HR:75};
+        if(k>5.0){
+          const t = Math.min((k-5.0)/4.0,1);
+          p.Tamp = 0.30 + t*0.55;
+          p.Twidth = 55 - t*26;
+          if(k>6.0){ const t2=Math.min((k-6.0)/2.2,1); p.Pamp = 0.16*(1-t2); p.PRext = t2*55; }
+          if(k>6.5){ const t3=Math.min((k-6.5)/2.4,1); p.QRSwidth = 90+t3*110; p.QRSscale=1+t3*0.35; p.Ramp = 1.2 - t3*0.35; }
+          if(k>7.0){ const t4=Math.min((k-7.0)/2.0,1); p.STlen = Math.max(80 - t4*72,6); }
+          if(k>7.5){ const t5=Math.min((k-7.5)/1.5,1); p.HR = 75 - t5*35; }
+        } else if(k<3.5){
+          const t = Math.min((3.5-k)/2.0,1);
+          p.Tamp = 0.30 - t*0.24;
+          p.Twidth = 55 + t*45;
+          p.STlevel = -0.03 - t*0.07;
+          p.Uamp = t*0.17;
+        }
+        return p;
+      },
+      band(k){ return bandFromRanges(k,[
+        {lo:-99,hi:2.5, sev:'critica', title:'Ipokaliemia severa', color:'var(--red)', desc:'Onda U marcata, appiattimento o inversione della T, sottoslivellamento ST, elevato rischio di aritmie ventricolari.'},
+        {lo:2.5,hi:3.5, sev:'attenzione', title:'Ipokaliemia lieve-moderata', color:'var(--amber)', desc:'T appiattita, onda U più evidente, lieve sottoslivellamento ST.'},
+        {lo:3.5,hi:5.01, sev:'normale', title:'Normale', color:'var(--green)', desc:'Tracciato nei limiti della norma.'},
+        {lo:5.01,hi:6.0, sev:'attenzione', title:'Iperkaliemia lieve', color:'var(--amber)', desc:'T aguzze e simmetriche "a tenda", base stretta.'},
+        {lo:6.0,hi:7.0, sev:'attenzione', title:'Iperkaliemia moderata', color:'var(--amber)', desc:"Riduzione/scomparsa dell'onda P, allungamento del PR, T ancora più aguzze."},
+        {lo:7.0,hi:8.3, sev:'critica', title:'Iperkaliemia severa', color:'var(--red)', desc:'QRS slargato, onda P assente, ritmo sino-ventricolare.'},
+        {lo:8.3,hi:99, sev:'critica', title:'Iperkaliemia critica', color:'var(--red)', desc:'Complesso a onda sinusoidale — imminente rischio di arresto cardiaco.'},
+      ]); },
+      refHTML:`<b>&lt;2.5</b> onda U, T invertita, rischio aritmico · <b>2.5–3.5</b> T piatta, U evidente · <b>3.5–5.0</b> normale · <b>5.0–6.0</b> T aguzze "a tenda" · <b>6.0–7.0</b> P ridotta, PR lungo · <b>7.0–8.3</b> QRS largo, P assente · <b>&gt;8.3</b> onda sinusoidale, rischio arresto`
+    },
+    ca: {
+      name:'Calcio', symbol:'Ca²⁺', unit:'mg/dL',
+      min:4.0, max:16.0, step:0.1, def:9.5, normalMin:8.5, normalMax:10.5,
+      params(ca){
+        const p = {Pamp:0.16, PRext:0, QRSwidth:90, QRSscale:1, Ramp:1.2, Tamp:0.30, Twidth:55, STlevel:0, STlen:80, Uamp:0, HR:75};
+        if(ca<8.5){
+          const t = Math.min((8.5-ca)/4.5,1);
+          p.STlen = 80 + t*165;
+        } else if(ca>10.5){
+          const t = Math.min((ca-10.5)/5.5,1);
+          p.STlen = Math.max(80 - t*75,4);
+          if(ca>13){ const t2=Math.min((ca-13)/3,1); p.HR = 75 - t2*22; }
+        }
+        return p;
+      },
+      band(ca){ return bandFromRanges(ca,[
+        {lo:-99,hi:6.0, sev:'critica', title:'Ipocalcemia severa', color:'var(--red)', desc:'Marcato allungamento del tratto ST e del QT, rischio di aritmie e ridotta contrattilità.'},
+        {lo:6.0,hi:8.5, sev:'attenzione', title:'Ipocalcemia lieve-moderata', color:'var(--amber)', desc:'Tratto ST allungato con QT prolungato, morfologia T poco alterata.'},
+        {lo:8.5,hi:10.51, sev:'normale', title:'Normale', color:'var(--green)', desc:'Tracciato nei limiti della norma.'},
+        {lo:10.51,hi:12.0, sev:'attenzione', title:'Ipercalcemia lieve', color:'var(--amber)', desc:'Accorciamento del tratto ST, QT ai limiti inferiori.'},
+        {lo:12.0,hi:14.0, sev:'attenzione', title:'Ipercalcemia moderata', color:'var(--amber)', desc:'QT francamente accorciato.'},
+        {lo:14.0,hi:99, sev:'critica', title:'Ipercalcemia severa', color:'var(--red)', desc:'QT molto corto, rischio di bradiaritmie e blocco AV.'},
+      ]); },
+      refHTML:`<b>&lt;6.0</b> ST/QT molto lunghi · <b>6.0–8.5</b> ST/QT prolungati · <b>8.5–10.5</b> normale · <b>10.5–12.0</b> ST accorciato · <b>12.0–14.0</b> QT corto · <b>&gt;14.0</b> QT molto corto, rischio blocco AV`
+    },
+    mg: {
+      name:'Magnesio', symbol:'Mg²⁺', unit:'mEq/L',
+      min:0.5, max:12.0, step:0.1, def:2.0, normalMin:1.5, normalMax:2.5,
+      params(mg){
+        const p = {Pamp:0.16, PRext:0, QRSwidth:90, QRSscale:1, Ramp:1.2, Tamp:0.30, Twidth:55, STlevel:0, STlen:80, Uamp:0, HR:75};
+        if(mg<1.5){
+          const t = Math.min((1.5-mg)/1.0,1);
+          p.STlen = 80 + t*50;
+          p.Uamp = t*0.10;
+        } else if(mg>2.5){
+          const t = Math.min((mg-2.5)/9.5,1);
+          p.PRext = t*70;
+          if(mg>5){
+            const t2 = Math.min((mg-5)/7,1);
+            p.QRSwidth = 90 + t2*95;
+            p.QRSscale = 1 + t2*0.25;
+            p.HR = 75 - t2*35;
+          }
+        }
+        return p;
+      },
+      band(mg){ return bandFromRanges(mg,[
+        {lo:-99,hi:1.0, sev:'critica', title:'Ipomagnesiemia severa', color:'var(--red)', desc:'QT prolungato, rischio di torsione di punta, spesso associata a ipokaliemia/ipocalcemia.'},
+        {lo:1.0,hi:1.5, sev:'attenzione', title:'Ipomagnesiemia lieve-moderata', color:'var(--amber)', desc:'Lieve prolungamento del QT, possibile onda U.'},
+        {lo:1.5,hi:2.51, sev:'normale', title:'Normale', color:'var(--green)', desc:'Tracciato nei limiti della norma.'},
+        {lo:2.51,hi:5.0, sev:'attenzione', title:'Ipermagnesiemia lieve', color:'var(--amber)', desc:'Allungamento del PR.'},
+        {lo:5.0,hi:7.5, sev:'attenzione', title:'Ipermagnesiemia moderata', color:'var(--amber)', desc:'PR ulteriormente allungato, QRS in progressivo slargamento, tendenza alla bradicardia.'},
+        {lo:7.5,hi:99, sev:'critica', title:'Ipermagnesiemia severa', color:'var(--red)', desc:'QRS molto largo, bradicardia marcata, rischio di blocco AV completo/arresto.'},
+      ]); },
+      refHTML:`<b>&lt;1.0</b> QT lungo, rischio torsione di punta · <b>1.0–1.5</b> lieve QT lungo · <b>1.5–2.5</b> normale · <b>2.5–5.0</b> PR lungo · <b>5.0–7.5</b> QRS largo, bradicardia · <b>&gt;7.5</b> rischio blocco AV/arresto`
+    },
+    dig: {
+      name:'Digossina', symbol:'Dig', unit:'ng/mL',
+      min:0, max:5, step:0.1, def:1.2, normalMin:0.5, normalMax:2.0,
+      params(v){
+        const p = {Pamp:0.16, PRext:0, QRSwidth:90, QRSscale:1, Ramp:1.2, Tamp:0.30, Twidth:55, STlevel:0, STlen:80, Uamp:0, HR:75};
+        const s = 1-Math.exp(-v/1.3); // effetto digitalico: presente già a livelli terapeutici
+        p.STlevel = -0.02 - s*0.13;
+        p.STlen = 80 - s*38;
+        p.Tamp = 0.30 - s*0.46;
+        const tox = Math.max(0, v-1.8);
+        p.PRext = tox*22;
+        p.HR = 75 - tox*9;
+        return p;
+      },
+      band(v){ return bandFromRanges(v,[
+        {lo:-9,hi:0.5, sev:'normale', title:'Sottosoglia', color:'var(--green)', desc:'Livello sub-terapeutico: effetto elettrocardiografico minimo o assente.'},
+        {lo:0.5,hi:2.01, sev:'normale', title:'Range terapeutico', color:'var(--green)', desc:'Tipico "effetto digitalico": sottoslivellamento ST a scodella, T appiattita, QT accorciato — reperto atteso, non patologico.'},
+        {lo:2.01,hi:2.5, sev:'attenzione', title:'Possibile tossicità', color:'var(--amber)', desc:"Effetto digitalico più marcato; a questi livelli va sempre sospettata la tossicità, specie nell'anziano con funzione renale ridotta."},
+        {lo:2.5,hi:3.5, sev:'attenzione', title:'Tossicità digitalica', color:'var(--amber)', desc:'T sempre più invertita, PR in allungamento, tendenza alla bradicardia: quadro suggestivo di intossicazione.'},
+        {lo:3.5,hi:99, sev:'critica', title:'Tossicità severa', color:'var(--red)', desc:'Rischio elevato di blocco AV avanzato e bradiaritmie potenzialmente fatali.'},
+      ]); },
+      refHTML:`<b>&lt;0.5</b> nessun effetto evidente · <b>0.5–2.0</b> effetto digitalico tipico (terapeutico) · <b>2.0–2.5</b> possibile tossicità · <b>2.5–3.5</b> tossicità digitalica · <b>&gt;3.5</b> tossicità severa, rischio blocco AV`
+    },
+    qt: {
+      name:'Intervallo QTc', symbol:'QTc', unit:'ms',
+      min:340, max:600, step:5, def:400, normalMin:340, normalMax:430,
+      thresholds:{ M:{normal:430, borderline:450}, F:{normal:450, borderline:470} },
+      params(qtc){
+        const p = {Pamp:0.16, PRext:0, QRSwidth:90, QRSscale:1, Ramp:1.2, Tamp:0.30, Twidth:55, STlevel:0, STlen:80, Uamp:0, HR:60};
+        p.STlen = Math.max(qtc - 200, 10); // 200 = QRSwidth(90) + 2×Twidth(55), riferimento a QTc≈HR 60 (Bazett)
+        if(qtc>500){ const t=Math.min((qtc-500)/100,1); p.Uamp = t*0.14; }
+        return p;
+      },
+      band(qtc, sex){
+        const th = this.thresholds[sex||'M'];
+        const sexLabel = (sex==='F') ? 'sesso femminile' : 'sesso maschile';
+        if(qtc<th.normal) return {title:'QTc normale', color:'var(--green)', desc:`QTc nella norma per il ${sexLabel} (soglia ${th.normal} ms).`};
+        if(qtc<th.borderline) return {title:'QTc borderline', color:'var(--amber)', desc:`QTc ai limiti superiori (${th.normal}–${th.borderline} ms): monitorare elettroliti e farmaci concomitanti.`};
+        if(qtc<500) return {title:'QTc lungo', color:'var(--amber)', desc:`QTc oltre la soglia patologica per il ${sexLabel} (>${th.borderline} ms): rivalutare farmaci QT-prolungante ed elettroliti.`};
+        return {title:'QTc molto lungo — rischio critico', color:'var(--red)', desc:'QTc >500 ms: rischio elevato di torsione di punta, indipendentemente dal sesso.'};
+      },
+      refHTML(sex){
+        const th = this.thresholds[sex||'M'];
+        const other = this.thresholds[sex==='F'?'M':'F'];
+        const sexLbl = sex==='F'?'donna':'uomo';
+        const otherLbl = sex==='F'?'uomo':'donna';
+        return `<b>Soglie QTc — ${sexLbl}</b>: normale &lt;${th.normal} ms · borderline ${th.normal}–${th.borderline} ms · lungo &gt;${th.borderline} ms · rischio critico &gt;500 ms (entrambi i sessi)<br>
+        <span style="opacity:.7">Per ${otherLbl}: normale &lt;${other.normal} ms, lungo &gt;${other.borderline} ms.</span>
+        <br><br>
+        <b>Farmaci che allungano il QT, per classe</b><br>
+        <b>Antiaritmici IA/III</b>: chinidina, procainamide, disopiramide, amiodarone, sotalolo, dofetilide<br>
+        <b>Macrolidi</b>: eritromicina, claritromicina, azitromicina<br>
+        <b>Fluorochinoloni</b>: ciprofloxacina, levofloxacina, moxifloxacina<br>
+        <b>Antipsicotici</b>: aloperidolo, clorpromazina, quetiapina, risperidone, ziprasidone<br>
+        <b>Antidepressivi</b>: amitriptilina, citalopram, escitalopram, venlafaxina<br>
+        <b>Antiemetici</b>: ondansetron, domperidone<br>
+        <b>Antifungini azolici</b>: fluconazolo, voriconazolo<br>
+        <b>Oppioidi</b>: metadone`;
+      }
+    }
+  };
+
+  const values = { k: ION.k.def, ca: ION.ca.def, mg: ION.mg.def, dig: ION.dig.def, qt: ION.qt.def };
+  let currentIon = 'k';
+
+  // ---------- WAVEFORM MATH ----------
+  function smoothstep(x){ x=Math.min(Math.max(x,0),1); return x*x*(3-2*x); }
+  function bump(t, center, halfWidth, amp){
+    if(amp===0) return 0;
+    const d = t-center;
+    if(Math.abs(d) > halfWidth) return 0;
+    return amp * (0.5*(1+Math.cos(Math.PI*d/halfWidth)));
+  }
+  function qrsShape(t, qrsOnset, qrsW, p){
+    if(t<qrsOnset || t>qrsOnset+qrsW) return 0;
+    const x = (t-qrsOnset)/qrsW;
+    const pts = [[0,0],[0.15,-0.15*p.QRSscale],[0.45,p.Ramp],[0.75,-0.35*p.QRSscale],[1,0]];
+    for(let i=0;i<pts.length-1;i++){
+      if(x>=pts[i][0] && x<=pts[i+1][0]){
+        const t0=pts[i][0], t1=pts[i+1][0], v0=pts[i][1], v1=pts[i+1][1];
+        const f = (t1===t0)?0:(x-t0)/(t1-t0);
+        const fe = smoothstep(f);
+        return v0 + (v1-v0)*fe;
+      }
+    }
+    return 0;
+  }
+  function stPulse(t, qrsEnd, stEnd, level){
+    if(level===0) return 0;
+    const edge=15;
+    if(t<qrsEnd) return 0;
+    if(t<qrsEnd+edge) return level*smoothstep((t-qrsEnd)/edge);
+    if(t<stEnd) return level;
+    if(t<stEnd+edge) return level*(1-smoothstep((t-stEnd)/edge));
+    return 0;
+  }
+  function beatValue(t, p){
+    const Ponset=60, Phalf=25, Pcenter=Ponset+Phalf;
+    const qrsOnset = 150 + p.PRext;
+    const qrsEnd = qrsOnset + p.QRSwidth;
+    const stEnd = qrsEnd + p.STlen;
+    const Tcenter = stEnd + p.Twidth;
+    const Ucenter = Tcenter + p.Twidth + 55;
+    let v = 0;
+    v += bump(t, Pcenter, Phalf, p.Pamp);
+    v += qrsShape(t, qrsOnset, p.QRSwidth, p);
+    v += stPulse(t, qrsEnd, stEnd, p.STlevel);
+    v += bump(t, Tcenter, p.Twidth, p.Tamp);
+    if(p.Uamp>0) v += bump(t, Ucenter, 45, p.Uamp);
+    return v;
+  }
+
+  const PARAM_KEYS = ['Pamp','PRext','QRSwidth','QRSscale','Ramp','Tamp','Twidth','STlevel','STlen','Uamp','HR'];
+  function lerp(a,b,t){ return a+(b-a)*t; }
+
+  // ---------- CANVAS / STATIC MORPH ENGINE ----------
+  const canvas = document.getElementById('ecgsim-ecg');
+  const ctx = canvas.getContext('2d');
+  const screenWrap = document.getElementById('ecgsim-screenWrap');
+  let W=0,H=0,DPR=1;
+  let pxPerMs = 0.12;
+  const NOMINAL_BEAT_MS = 800; // 75 bpm reference
+  const BEATS_VISIBLE = 4;
+
+  let current = null;   // interpolated (displayed) params
+  let target = null;    // params matching the current slider value
+
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = Math.max(Math.floor(rect.width),200);
+    H = Math.max(Math.floor(rect.height),120);
+    canvas.width = W*DPR; canvas.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    pxPerMs = W/(NOMINAL_BEAT_MS*BEATS_VISIBLE);
+  }
+  window.addEventListener('resize', () => {
+    if(document.getElementById('ecgsim-modal-overlay').classList.contains('show')) resize();
+  });
+
+  function drawGrid(){
+    ctx.strokeStyle = 'rgba(59,233,166,0.07)';
+    ctx.lineWidth = 1;
+    const step = 22;
+    ctx.beginPath();
+    for(let x=0; x<W; x+=step){ ctx.moveTo(x+0.5,0); ctx.lineTo(x+0.5,H); }
+    for(let y=0; y<H; y+=step){ ctx.moveTo(0,y+0.5); ctx.lineTo(W,y+0.5); }
+    ctx.stroke();
+  }
+
+  function render(p){
+    ctx.clearRect(0,0,W,H);
+    drawGrid();
+    const midY = H*0.58;
+    const ampScale = H*0.34;
+    const beatDuration = 60000/p.HR;
+
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = getComputedStyle(document.getElementById('ecgsim-modal')).getPropertyValue('--trace').trim();
+    ctx.shadowColor = 'rgba(59,233,166,0.65)';
+    ctx.shadowBlur = 7;
+
+    ctx.beginPath();
+    let started = false;
+    const totalMs = W/pxPerMs;
+    for(let x=0; x<W; x++){
+      const tMs = x/pxPerMs;
+      const tInBeat = tMs % beatDuration;
+      const v = beatValue(tInBeat, p);
+      const y = midY - v*ampScale;
+      if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  let lastT = null;
+  let ecgsimAnimId = null;
+  function frame(ts){
+    if(lastT===null) lastT=ts;
+    let dt = ts-lastT; lastT=ts;
+    if(dt>80) dt=80;
+
+    target = ION[currentIon].params(values[currentIon]);
+    if(current===null) current = {...target};
+
+    const tau = 240; // ms — fluidity of the morph
+    const factor = 1-Math.exp(-dt/tau);
+    let maxDelta = 0;
+    for(const key of PARAM_KEYS){
+      const before = current[key];
+      current[key] = lerp(current[key], target[key], factor);
+      maxDelta = Math.max(maxDelta, Math.abs(current[key]-target[key]));
+    }
+    screenWrap.classList.toggle('ecgsim-morphing', maxDelta > 0.35);
+
+    render(current);
+    document.getElementById('ecgsim-hrValue').textContent = Math.round(current.HR);
+    ecgsimAnimId = requestAnimationFrame(frame);
+  }
+
+  // avvia/ferma il loop di animazione: si avvia solo quando il modale si
+  // apre (altrimenti girerebbe per sempre in background, anche a modale
+  // chiuso, sprecando CPU/batteria) e si ferma del tutto alla chiusura
+  function ecgsimAvvia(){
+    if(ecgsimAnimId !== null) return; // già in corso
+    resize(); // le dimensioni corrette si leggono solo a modale visibile
+    lastT = null;
+    ecgsimAnimId = requestAnimationFrame(frame);
+  }
+  function ecgsimFerma(){
+    if(ecgsimAnimId !== null){ cancelAnimationFrame(ecgsimAnimId); ecgsimAnimId = null; }
+  }
+
+  // ---------- UI WIRING ----------
+  const el = {
+    tabs: document.querySelectorAll('.ecgsim-tab'),
+    slider: document.getElementById('ecgsim-slider'),
+    ionLabel: document.getElementById('ecgsim-ionLabel'),
+    ionValue: document.getElementById('ecgsim-ionValue'),
+    ionUnit: document.getElementById('ecgsim-ionUnit'),
+    chip: document.getElementById('ecgsim-chip'),
+    panelIonName: document.getElementById('ecgsim-panelIonName'),
+    panelValue: document.getElementById('ecgsim-panelValue'),
+    panelUnit: document.getElementById('ecgsim-panelUnit'),
+    lblMin: document.getElementById('ecgsim-lblMin'),
+    lblMax: document.getElementById('ecgsim-lblMax'),
+    lblNorm: document.getElementById('ecgsim-lblNorm'),
+    statusDot: document.getElementById('ecgsim-statusDot'),
+    statusTitle: document.getElementById('ecgsim-statusTitle'),
+    statusDesc: document.getElementById('ecgsim-statusDesc'),
+    refTable: document.getElementById('ecgsim-refTable'),
+    refSummary: document.getElementById('ecgsim-refSummary'),
+    sexToggle: document.getElementById('ecgsim-sexToggle'),
+    sexBtns: document.querySelectorAll('.ecgsim-sexBtn'),
+  };
+
+  let currentSex = 'M';
+
+  function fmt(v){ return (Math.round(v*10)/10).toFixed(1); }
+
+  function updateSliderTrack(cfg){
+    let nMin = cfg.normalMin, nMax = cfg.normalMax;
+    if(currentIon==='qt'){ nMax = cfg.thresholds[currentSex].normal; }
+    const pct1 = ((nMin-cfg.min)/(cfg.max-cfg.min))*100;
+    const pct2 = ((nMax-cfg.min)/(cfg.max-cfg.min))*100;
+    el.slider.style.background = `linear-gradient(90deg, #232c2e ${pct1}%, rgba(59,233,166,0.30) ${pct1}%, rgba(59,233,166,0.30) ${pct2}%, #232c2e ${pct2}%)`;
+  }
+
+  function refreshUI(){
+    const cfg = ION[currentIon];
+    const val = values[currentIon];
+    const isQt = currentIon==='qt';
+    const b = isQt ? cfg.band(val, currentSex) : cfg.band(val);
+
+    el.ionLabel.textContent = cfg.symbol;
+    el.ionValue.textContent = fmt(val);
+    el.ionUnit.textContent = cfg.unit;
+
+    const colorVar = getComputedStyle(document.getElementById('ecgsim-modal')).getPropertyValue(b.color.match(/--[a-z]+/)[0]).trim();
+    el.chip.textContent = b.title;
+    el.chip.style.color = colorVar;
+
+    el.panelIonName.textContent = cfg.name;
+    el.panelValue.textContent = fmt(val);
+    el.panelUnit.textContent = cfg.unit;
+
+    el.lblMin.textContent = fmt(cfg.min);
+    el.lblMax.textContent = fmt(cfg.max);
+    el.lblNorm.textContent = isQt
+      ? `normale <${cfg.thresholds[currentSex].normal}`
+      : `normale ${fmt(cfg.normalMin)}–${fmt(cfg.normalMax)}`;
+
+    el.statusDot.style.background = colorVar;
+    el.statusTitle.textContent = b.title;
+    el.statusTitle.style.color = colorVar;
+    el.statusDesc.textContent = b.desc;
+
+    el.refTable.innerHTML = isQt ? cfg.refHTML(currentSex) : cfg.refHTML;
+    el.refSummary.textContent = `Soglie di riferimento — ${cfg.name}`;
+
+    el.sexToggle.style.display = isQt ? 'flex' : 'none';
+    el.sexBtns.forEach(btn=> btn.classList.toggle('ecgsim-active', btn.dataset.sex===currentSex));
+
+    updateSliderTrack(cfg);
+  }
+
+  function switchIon(ion){
+    currentIon = ion;
+    const cfg = ION[ion];
+    el.tabs.forEach(t=>t.classList.toggle('ecgsim-active', t.dataset.ion===ion));
+    el.slider.min = cfg.min; el.slider.max = cfg.max; el.slider.step = cfg.step;
+    el.slider.value = values[ion];
+    refreshUI();
+  }
+
+  el.tabs.forEach(t=> t.addEventListener('click', ()=> switchIon(t.dataset.ion)));
+  el.sexBtns.forEach(btn=> btn.addEventListener('click', ()=>{
+    currentSex = btn.dataset.sex;
+    refreshUI();
+  }));
+  el.slider.addEventListener('input', ()=>{
+    values[currentIon] = parseFloat(el.slider.value);
+    refreshUI();
+  });
+
+  // init: imposta subito lo stato dell'interfaccia (etichette, slider),
+  // ma NON avvia ancora il loop di animazione — parte solo quando il
+  // modale viene davvero aperto, vedi apriAppEcg qui sotto
+  switchIon('k');
+
+  // esposte all'esterno della IIFE, richiamate dal resto dell'app (dal
+  // trigger "/ECG" nei diari e dalla scheda App)
+  window.apriAppEcg = function(){
+    document.getElementById('ecgsim-modal-overlay').classList.add('show');
+    ecgsimAvvia();
+  };
+  window.chiudiAppEcg = function(){
+    document.getElementById('ecgsim-modal-overlay').classList.remove('show');
+    ecgsimFerma();
+  };
+})();
+
+// scritto "/ECG" nel diario (in Diari) -> apre il simulatore, stesso
+// principio (una volta sola per comparsa) di EGA/VFG/farmaci. Nessuna
+// scrittura automatica alla chiusura: è un tool puramente didattico/
+// interattivo, non produce un risultato testuale da riportare nel diario
+function ecgsimControllaTrigger(testoAttuale, elementoTextarea){
+  const contieneTrigger = /\/ecg\b/i.test(testoAttuale);
+  if(contieneTrigger && elementoTextarea.dataset.ecgsimAperto !== '1'){
+    apriAppEcg();
+    elementoTextarea.dataset.ecgsimAperto = '1';
+  } else if(!contieneTrigger){
+    elementoTextarea.dataset.ecgsimAperto = '0';
   }
 }
 
