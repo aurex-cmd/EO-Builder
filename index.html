@@ -1542,22 +1542,33 @@
 <div class="card" id="card-edemi">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2s6.3 7.3 6.3 11.5a6.3 6.3 0 01-12.6 0c0-4.2 6.3-11.5 6.3-11.5z"/></svg> Edemi</h2>
   <div class="group">
-    <div class="group-label">Assenti (esclude il resto)</div>
-    <div class="chips" id="edemi-base"></div>
+    <div class="group-label">Assenti</div>
+    <div class="chips" id="edemi-base-negativi"></div>
   </div>
   <div class="group">
+    <div class="group-label">Presenti (mutuamente esclusivi tra loro e con "Assenti")</div>
+    <div class="chips" id="edemi-base-positivi"></div>
+  </div>
+  <div class="group" id="edemi-grinza-gruppo" style="display:none;">
+    <div class="chips" id="edemi-grinza"></div>
+  </div>
+  <div class="group" id="edemi-succulenza-campi" style="display:none;">
+    <div class="group-label">Succulenza — sede e lato</div>
+    <div id="edemi-succulenza-inner"></div>
+  </div>
+  <div class="group" id="edemi-sede-gruppo">
     <div class="group-label">Sede (combinabili)</div>
     <div class="finding-list" id="edemi-sede"></div>
   </div>
-  <div class="group">
+  <div class="group" id="edemi-qualita-gruppo">
     <div class="group-label">Qualità</div>
     <div class="chips" id="edemi-qualita"></div>
   </div>
-  <div class="group">
+  <div class="group" id="edemi-aggiunte-gruppo">
     <div class="group-label">Aggiunte</div>
     <div class="finding-list" id="edemi-aggiunte"></div>
   </div>
-  <div class="group">
+  <div class="group" id="edemi-andamento-gruppo">
     <div class="group-label">Andamento</div>
     <div class="chips" id="edemi-andamento"></div>
   </div>
@@ -1674,7 +1685,7 @@ const state = {
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
-  edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, qualita:'', discrasici:false, grinza:false, scarico:false, succulenza:{attiva:false, sede:'', lato:''}, andamento:'', custom:'' },
+  edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
@@ -3716,27 +3727,49 @@ function applyStateObject(o){
     });
   }
 
-  // la succulenza era un semplice booleano; ora è {attiva, sede, lato}.
-  // questo helper accetta sia il vecchio booleano sia il nuovo oggetto,
-  // così le schede salvate prima di questa modifica continuano a funzionare
+  // la succulenza era un semplice booleano, poi un oggetto {attiva, sede,
+  // lato}; ora "attiva" non esiste più (la presenza è "base === succulenza"
+  // stesso), ma questo helper continua ad accettare tutti i formati vecchi
+  // così le schede salvate prima di questa modifica restano leggibili
   function normalizzaSucculenza(val){
-    if(val && typeof val === 'object') return { attiva: !!val.attiva, sede: val.sede || '', lato: val.lato || '' };
-    return { attiva: !!val, sede:'', lato:'' };
+    if(val && typeof val === 'object') return { sede: val.sede || '', lato: val.lato || '' };
+    return { sede:'', lato:'' };
   }
 
   if(o.edemi && o.edemi.sede !== undefined){
-    // già nel nuovo formato
-    state.edemi.base = o.edemi.base ?? '';
+    // già nel formato con sede/qualità/ecc. espliciti (prima o dopo questa
+    // modifica): quello che cambia è solo come si ricava "base"
     state.edemi.sede = new Set(o.edemi.sede || []);
     state.edemi.sedeLato = Object.assign({}, o.edemi.sedeLato || {});
+    state.edemi.sedeEstensione = Object.assign({}, o.edemi.sedeEstensione || {});
     state.edemi.qualita = o.edemi.qualita ?? '';
     state.edemi.discrasici = o.edemi.discrasici ?? false;
     state.edemi.grinza = o.edemi.grinza ?? false;
     state.edemi.scarico = o.edemi.scarico ?? false;
+    state.edemi.eczemaStasi = o.edemi.eczemaStasi ?? false;
     state.edemi.succulenza = normalizzaSucculenza(o.edemi.succulenza);
     state.edemi.andamento = o.edemi.andamento ?? '';
+
+    const vecchiaSuccAttiva = !!(o.edemi.succulenza && typeof o.edemi.succulenza === 'object' && o.edemi.succulenza.attiva);
+    const haDatiEdemaPositivi = state.edemi.sede.size > 0 || !!state.edemi.qualita ||
+      state.edemi.discrasici || state.edemi.scarico || !!state.edemi.andamento;
+    if(o.edemi.base === 'non_edemi' || o.edemi.base === 'non_declivi' ||
+       o.edemi.base === 'edemi' || o.edemi.base === 'edemi_declivi' || o.edemi.base === 'succulenza'){
+      // scheda già nel formato nuovo (5 opzioni): nessuna deduzione necessaria
+      state.edemi.base = o.edemi.base;
+    } else if(vecchiaSuccAttiva){
+      state.edemi.base = 'succulenza';
+    } else if(haDatiEdemaPositivi){
+      // scheda di una versione intermedia, con dati positivi ma senza un
+      // base esplicito tra i 5 nuovi valori: la presenza di dati basta a
+      // dedurre "edemi" (versione generica, non essendoci modo di sapere
+      // se l'utente li avrebbe etichettati "declivi")
+      state.edemi.base = 'edemi';
+    } else {
+      state.edemi.base = o.edemi.base ?? '';
+    }
   } else {
-    // migrazione dal vecchio preset unico "scelta"
+    // migrazione dal vecchio preset unico "scelta" (versione ancora precedente)
     const MIGRAZIONE_EDEMI = {
       non_edemi: { base:'non_edemi' },
       non_declivi: { base:'non_declivi' },
@@ -3751,15 +3784,25 @@ function applyStateObject(o){
       colonnari_diffusi: { sede:['aaii','aass','fianchi'], qualita:'colonnari', discrasici:true, andamento:'permangono' }
     };
     const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || (o.edemi ? {} : { base:'non_declivi' });
-    state.edemi.base = m.base ?? '';
     state.edemi.sede = new Set(m.sede || []);
     state.edemi.sedeLato = {};
+    state.edemi.sedeEstensione = {};
     state.edemi.qualita = m.qualita ?? '';
     state.edemi.discrasici = m.discrasici ?? false;
     state.edemi.grinza = m.grinza ?? false;
     state.edemi.scarico = m.scarico ?? false;
+    state.edemi.eczemaStasi = false;
     state.edemi.succulenza = normalizzaSucculenza(m.succulenza);
     state.edemi.andamento = m.andamento ?? '';
+    if(m.base){
+      state.edemi.base = m.base;
+    } else if(m.succulenza){
+      state.edemi.base = 'succulenza';
+    } else if(state.edemi.sede.size > 0 || state.edemi.qualita || state.edemi.discrasici || state.edemi.scarico || state.edemi.andamento){
+      state.edemi.base = 'edemi';
+    } else {
+      state.edemi.base = '';
+    }
   }
   state.edemi.custom = o.edemi?.custom ?? '';
 
@@ -4818,7 +4861,6 @@ function renderGruppoChipInline(container, label, options, getActive, onToggle){
     const b = document.createElement('div');
     const active = getActive(opt.value);
     b.className = 'chip' + (active ? ' active' : '');
-    b.style.cssText = 'font-size:12px; padding:5px 10px;';
     b.textContent = opt.label;
     b.onclick = (e) => { e.stopPropagation(); onToggle(opt.value, active); };
     container.appendChild(b);
@@ -5470,43 +5512,100 @@ function renderCuorePause(){
   el.appendChild(b2);
 }
 
-// "Assenti" (Non edemi / Non edemi declivi) esclude tutti gli assi positivi
-// e viceversa: attivare sede/qualità/aggiunte/andamento azzera la base
+// I 5 valori di "base" sono mutuamente esclusivi tra loro: le due opzioni
+// "Assenti" negano tutto, le tre "Presenti" (Edemi / Edemi declivi /
+// Succulenza) sono alternative diverse allo stesso quesito ("che aspetto
+// hanno?"), non cose che possono coesistere — da cui la richiesta di non
+// avere più "Succulenza" ed "Edemi" selezionabili insieme. Sede/Qualità/
+// Aggiunte/Andamento restano visibili solo per Edemi/Edemi declivi; la
+// Succulenza ha i suoi due soli campi (sede/lato) più l'Andamento condiviso.
 function renderEdemi(){
   const e = state.edemi;
 
   function clearPositivi(){
     e.sede.clear(); e.sedeLato = {}; e.qualita=''; e.discrasici=false;
-    e.scarico=false; e.succulenza = { attiva:false, sede:'', lato:'' }; e.andamento='';
+    e.scarico=false; e.succulenza = { sede:'', lato:'' }; e.andamento='';
     // 'grinza' NON viene azzerata qui: si combina sia con "non edemi declivi"
     // sia con un edema descritto (vedi composeEdemi)
   }
 
-  const elBase = document.getElementById('edemi-base');
-  elBase.innerHTML = '';
-  OPT.edemiBase.forEach(opt => {
+  function selezionaBase(valore){
+    const eraPositivo = (e.base === 'edemi' || e.base === 'edemi_declivi' || e.base === 'succulenza');
+    const diventaNegativoOVuoto = (valore === '' || valore === 'non_edemi' || valore === 'non_declivi');
+    e.base = valore;
+    // passando da uno stato positivo a "assente" (o deselezionando del
+    // tutto) si ripulisce; muovendosi invece tra i tre stati positivi
+    // (Edemi <-> Edemi declivi <-> Succulenza) i dati già inseriti
+    // restano, così cambiare idea non fa perdere il lavoro fatto
+    if(eraPositivo && diventaNegativoOVuoto) clearPositivi();
+    update();
+  }
+
+  function renderBaseGroup(containerId, opzioni){
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    opzioni.forEach(opt => {
+      const b = document.createElement('div');
+      const active = e.base === opt.value;
+      b.className = 'chip' + (active ? ' active' : '');
+      b.textContent = opt.label;
+      b.onclick = () => selezionaBase(active ? '' : opt.value);
+      el.appendChild(b);
+    });
+  }
+  renderBaseGroup('edemi-base-negativi', OPT.edemiBaseNegativi);
+  renderBaseGroup('edemi-base-positivi', OPT.edemiBasePositivi);
+
+  const isEdemiVeri = (e.base === 'edemi' || e.base === 'edemi_declivi');
+  const isSucculenza = (e.base === 'succulenza');
+
+  // "cute grinza" ha una riga propria: si combina sia con "Non edemi
+  // declivi" (edema risolto, pelle ancora "svuotata") sia con un edema
+  // vero descritto qui sotto — per questo non è tra le "Aggiunte"
+  // dell'edema (quelle sono specifiche di un edema presente)
+  const grinzaVisibile = (e.base === 'non_declivi' || isEdemiVeri);
+  document.getElementById('edemi-grinza-gruppo').style.display = grinzaVisibile ? '' : 'none';
+  const elGrinza = document.getElementById('edemi-grinza');
+  elGrinza.innerHTML = '';
+  if(grinzaVisibile){
     const b = document.createElement('div');
-    const active = e.base === opt.value;
-    b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = opt.label;
-    b.onclick = () => {
-      e.base = active ? '' : opt.value;
-      if(e.base) clearPositivi();
-      update();
-    };
-    elBase.appendChild(b);
-  });
+    b.className = 'chip' + (e.grinza ? ' active' : '');
+    b.textContent = 'Cute grinza';
+    b.onclick = () => { e.grinza = !e.grinza; update(); };
+    elGrinza.appendChild(b);
+  }
+
+  // Sede/Qualità/Aggiunte: solo per un edema vero (non per la succulenza,
+  // non per gli stati "assenti")
+  document.getElementById('edemi-sede-gruppo').style.display = isEdemiVeri ? '' : 'none';
+  document.getElementById('edemi-qualita-gruppo').style.display = isEdemiVeri ? '' : 'none';
+  document.getElementById('edemi-aggiunte-gruppo').style.display = isEdemiVeri ? '' : 'none';
+  // Andamento è condiviso: si applica sia a un edema vero sia alla succulenza
+  document.getElementById('edemi-andamento-gruppo').style.display = (isEdemiVeri || isSucculenza) ? '' : 'none';
+  // campi propri della succulenza (sede pretibiale/perimalleolare + lato)
+  document.getElementById('edemi-succulenza-campi').style.display = isSucculenza ? '' : 'none';
+
+  if(isSucculenza){
+    const inner = document.getElementById('edemi-succulenza-inner');
+    inner.innerHTML = '';
+    renderGruppoChipInline(inner, 'Sede (vuoto = AAII)', OPT.succulenzaSede,
+      v => e.succulenza.sede === v,
+      (v, vAttivo) => { e.succulenza.sede = vAttivo ? '' : v; update(); });
+    renderGruppoChipInline(inner, 'Lato (vuoto = bilaterale)', OPT.toraceLato,
+      v => e.succulenza.lato === v,
+      (v, vAttivo) => { e.succulenza.lato = vAttivo ? '' : v; update(); });
+  }
 
   // Sede: AAII e AASS aprono una tendina con il Lato (dx/sx); se non si
   // sceglie un lato si intende bilaterale. "Fianchi" resta senza lato.
   const elSede = document.getElementById('edemi-sede');
   elSede.innerHTML = '';
+  if(isEdemiVeri){
   OPT.edemiSede.forEach(opt => {
     const active = e.sede.has(opt.value);
     const onClickChip = () => {
-      if(active){ e.sede.delete(opt.value); delete e.sedeLato[opt.value]; }
+      if(active){ e.sede.delete(opt.value); delete e.sedeLato[opt.value]; delete e.sedeEstensione[opt.value]; }
       else{ e.sede.add(opt.value); }
-      e.base = '';
       update();
     };
     const haLato = (opt.value === 'aaii' || opt.value === 'aass');
@@ -5517,20 +5616,25 @@ function renderEdemi(){
           e.sedeLato[opt.value] = vAttivo ? '' : v;
           update();
         });
+      if(opt.value === 'aaii'){
+        renderGruppoChipInline(inner, null, [{value:'si', label:'Fino alla radice delle cosce'}],
+          () => !!e.sedeEstensione.aaii,
+          (v, vAttivo) => { e.sedeEstensione.aaii = !vAttivo; update(); });
+      }
     } : null;
     elSede.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
+  }
 
   const elQualita = document.getElementById('edemi-qualita');
   elQualita.innerHTML = '';
-  OPT.edemiQualita.forEach(opt => {
+  if(isEdemiVeri) OPT.edemiQualita.forEach(opt => {
     const b = document.createElement('div');
     const active = e.qualita === opt.value;
     b.className = 'chip' + (active ? ' active' : '');
     b.textContent = opt.label;
     b.onclick = () => {
       e.qualita = active ? '' : opt.value;
-      e.base = '';
       update();
     };
     elQualita.appendChild(b);
@@ -5538,10 +5642,10 @@ function renderEdemi(){
 
   const elAggiunte = document.getElementById('edemi-aggiunte');
   elAggiunte.innerHTML = '';
-  [
+  if(isEdemiVeri) [
     {key:'discrasici', label:'Discrasici'},
-    {key:'grinza', label:'Cute grinza'},
-    {key:'scarico', label:'Da porre in scarico'}
+    {key:'scarico', label:'Da porre in scarico'},
+    {key:'eczemaStasi', label:'Eczema da stasi'}
   ].forEach(a => {
     const b = document.createElement('div');
     const active = e[a.key];
@@ -5549,49 +5653,20 @@ function renderEdemi(){
     b.textContent = a.label;
     b.onclick = () => {
       e[a.key] = !active;
-      // "cute grinza" si aggiunge e basta, non implica di per sé un edema:
-      // non deve cancellare "non edemi declivi" già selezionato
-      if(e[a.key] && a.key !== 'grinza') e.base = '';
       update();
     };
     elAggiunte.appendChild(b);
   });
 
-  // Succulenza: tendina con Sede (Pretibiale/Perimalleolare, facoltativa) e
-  // Lato (dx/sx, vuoto = bilaterale). Attivandola si deseleziona "AAII" dalla
-  // sede degli edemi veri, per non ripetere due volte "AAII" nel referto.
-  const succAttiva = e.succulenza.attiva;
-  const succBuilder = (inner) => {
-    renderGruppoChipInline(inner, 'Sede (vuoto = AAII)', OPT.succulenzaSede,
-      v => e.succulenza.sede === v,
-      (v, vAttivo) => { e.succulenza.sede = vAttivo ? '' : v; update(); });
-    renderGruppoChipInline(inner, 'Lato (vuoto = bilaterale)', OPT.toraceLato,
-      v => e.succulenza.lato === v,
-      (v, vAttivo) => { e.succulenza.lato = vAttivo ? '' : v; update(); });
-  };
-  const succOnClick = () => {
-    if(succAttiva){
-      e.succulenza = { attiva:false, sede:'', lato:'' };
-    } else {
-      e.succulenza.attiva = true;
-      e.sede.delete('aaii');
-      delete e.sedeLato.aaii;
-      e.base = '';
-    }
-    update();
-  };
-  elAggiunte.appendChild(creaRigaConTendina('Succulenza', succAttiva, succOnClick, succAttiva ? succBuilder : null));
-
   const elAndamento = document.getElementById('edemi-andamento');
   elAndamento.innerHTML = '';
-  OPT.edemiAndamento.forEach(opt => {
+  if(isEdemiVeri || isSucculenza) OPT.edemiAndamento.forEach(opt => {
     const b = document.createElement('div');
     const active = e.andamento === opt.value;
     b.className = 'chip' + (active ? ' active' : '');
     b.textContent = opt.label;
     b.onclick = () => {
       e.andamento = active ? '' : opt.value;
-      e.base = '';
       update();
     };
     elAndamento.appendChild(b);
@@ -6024,9 +6099,14 @@ const OPT = {
     {value:'positivo', label:'Positivo'},
     {value:'debole', label:'Debolmente positivo'}
   ],
-  edemiBase: [
+  edemiBaseNegativi: [
     {value:'non_edemi', label:'Non edemi'},
     {value:'non_declivi', label:'Non edemi declivi'}
+  ],
+  edemiBasePositivi: [
+    {value:'edemi', label:'Edemi'},
+    {value:'edemi_declivi', label:'Edemi declivi'},
+    {value:'succulenza', label:'Succulenza'}
   ],
   edemiSede: [
     {value:'aaii', label:'AAII'},
@@ -6539,90 +6619,89 @@ function composeEdemi(){
   const custom = (e.custom || '').trim();
   if(custom) return custom.endsWith('.') ? custom : custom + '.';
 
-  // il campo "base" (Non edemi / Non edemi declivi) vale solo se non c'è
-  // NESSUN dato positivo selezionato: così, se per qualsiasi motivo "base"
-  // restasse impostato insieme a una sede/qualità/andamento già scelti,
-  // la selezione reale ha comunque sempre la priorità e non sparisce mai
-  const haDatiPositivi = e.sede.size > 0 || !!e.qualita || e.discrasici ||
-    e.scarico || !!e.andamento || (e.succulenza && e.succulenza.attiva);
-
-  if(!haDatiPositivi){
-    if(e.base === 'non_edemi') return 'Non edemi.';
-    if(e.base === 'non_declivi'){
-      let s = 'Non edemi declivi';
-      if(e.grinza) s += ', cute grinza agli AAII';
-      return s + '.';
-    }
+  if(e.base === 'non_edemi') return 'Non edemi.';
+  if(e.base === 'non_declivi'){
+    let s = 'Non edemi declivi';
+    if(e.grinza) s += ', cute grinza agli AAII';
+    return s + '.';
   }
 
-  const frasi = [];
-  const sedeSet = new Set(e.sede); // copia locale: la succulenza può "assorbire" AAII+extra da qui sotto
+  // Succulenza: sede (pretibiale/perimalleolare, opzionale, default "agli
+  // AAII") + lato (dx/sx, opzionale, default bilaterale) + andamento in
+  // coda, se scelto (es. "Succulenza pretibiale bilaterale, in riduzione.").
+  // Essendo ora mutuamente esclusiva con un edema vero, non serve più
+  // nessuna logica per "accorpare" le due frasi: non possono più coesistere
+  if(e.base === 'succulenza'){
+    const lato = e.succulenza.lato === 'dx' ? 'dx' : (e.succulenza.lato === 'sx' ? 'sx' : 'bilaterale');
+    let corpoSucc;
+    if(e.succulenza.sede === 'pretibiale') corpoSucc = `Succulenza pretibiale ${lato}`;
+    else if(e.succulenza.sede === 'perimalleolare') corpoSucc = `Succulenza perimalleolare ${lato}`;
+    else corpoSucc = `Succulenza agli AAII ${lato}`;
 
-  // qualità/andamento servono già qui per capire se il caso "si può
-  // accorpare alla succulenza" è pulito (nessun qualificatore in mezzo)
+    const andamentoSucculenza = { riduzione:'in riduzione', ripresentati:'ripresentatasi', permangono:'persistente' };
+    if(e.andamento && andamentoSucculenza[e.andamento]) corpoSucc += `, ${andamentoSucculenza[e.andamento]}`;
+
+    return corpoSucc + '.';
+  }
+
+  if(e.base !== 'edemi' && e.base !== 'edemi_declivi') return '';
+
+  // "Edemi declivi"/"edema declive" quando è quello lo stato scelto,
+  // altrimenti "Edemi"/"edema" semplice — stesse frasi di sempre, solo con
+  // la parola in più inserita al punto giusto in ciascun template
+  const declivo = (e.base === 'edemi_declivi');
+  const paroleP = declivo ? 'Edemi declivi' : 'Edemi';
+  const paroleS = declivo ? 'edema declive' : 'edema';
+  const paroleSCap = declivo ? 'Edema declive' : 'Edema';
+
   const qualitaMap = { improntabili:'improntabili', duri:'duri', colonnari:'colonnari' };
   const qualitaMapSing = { improntabili:'improntabile', duri:'duro', colonnari:'colonnare' };
   let qualitaText = e.qualita ? qualitaMap[e.qualita] : '';
   if(e.discrasici) qualitaText = qualitaText ? qualitaText + ' anche discrasici' : 'discrasici';
-
-  // succulenza: sede (pretibiale/perimalleolare, opzionale, default "agli AAII")
-  // + lato (dx/sx, opzionale, default bilaterale) + andamento in coda, se scelto
-  // (es. "Succulenza pretibiale bilaterale, in riduzione.")
-  if(e.succulenza && e.succulenza.attiva){
-    const lato = e.succulenza.lato === 'dx' ? 'dx' : (e.succulenza.lato === 'sx' ? 'sx' : 'bilaterale');
-
-    // se la succulenza è agli AAII bilaterale "pulita" (senza andamento) e
-    // gli edemi selezionati includono AAII bilaterale insieme ad altre sedi
-    // (es. fianchi) senza nessun altro qualificatore, le due frasi si
-    // accorpano in una sola: "Succulenza agli AAII e ai fianchi." invece di
-    // due frasi separate che ripetono entrambe "AAII"
-    const succuAAII = !e.succulenza.sede;
-    const aaiiPulitoNegliEdemi = sedeSet.has('aaii') && !e.sedeLato.aaii;
-    const sedeExtra = [...sedeSet].filter(v => v !== 'aaii');
-    const puoAccorpare = succuAAII && lato === 'bilaterale' && aaiiPulitoNegliEdemi
-      && !e.andamento && !qualitaText && !e.scarico && !e.grinza && sedeExtra.length > 0;
-
-    if(puoAccorpare){
-      const testoExtra = sedeExtra.map(v => v === 'fianchi' ? 'ai fianchi' : (v === 'aass' ? 'agli AASS' : v));
-      frasi.push(`Succulenza ${joinIt(['agli AAII', ...testoExtra])}.`);
-      sedeSet.delete('aaii');
-      sedeExtra.forEach(v => sedeSet.delete(v));
-    } else {
-      let corpoSucc;
-      if(e.succulenza.sede === 'pretibiale') corpoSucc = `Succulenza pretibiale ${lato}`;
-      else if(e.succulenza.sede === 'perimalleolare') corpoSucc = `Succulenza perimalleolare ${lato}`;
-      else corpoSucc = `Succulenza agli AAII ${lato}`;
-
-      const andamentoSucculenza = { riduzione:'in riduzione', ripresentati:'ripresentatasi', permangono:'persistente' };
-      if(e.andamento && andamentoSucculenza[e.andamento]) corpoSucc += `, ${andamentoSucculenza[e.andamento]}`;
-
-      frasi.push(corpoSucc + '.');
-    }
-  }
 
   // per ogni sede: dx/sx -> singolare ("arto inf./sup. dx/sx"), altrimenti
   // plurale bilaterale ("agli AAII"/"agli AASS")
   function fraseSedeLato(tipo){
     const lato = e.sedeLato[tipo] || '';
     if(tipo === 'aaii'){
-      if(lato === 'dx') return { tipo, singolare:true, testo:'arto inf. dx' };
-      if(lato === 'sx') return { tipo, singolare:true, testo:'arto inf. sx' };
-      return { tipo, singolare:false, testo:'agli AAII', bilaterale:true };
+      // "fino alla radice delle cosce": singolare quando lateralizzato
+      // (una gamba sola -> "della coscia"), plurale se bilaterale
+      const estensione = e.sedeEstensione.aaii;
+      if(lato === 'dx'){
+        const base = 'arto inf. dx' + (estensione ? ' fino alla radice della coscia' : '');
+        return { tipo, singolare:true, testo:base, testoConPreposizione:"all'" + base };
+      }
+      if(lato === 'sx'){
+        const base = 'arto inf. sx' + (estensione ? ' fino alla radice della coscia' : '');
+        return { tipo, singolare:true, testo:base, testoConPreposizione:"all'" + base };
+      }
+      return { tipo, singolare:false, testo:'agli AAII' + (estensione ? ' fino alla radice delle cosce' : ''), bilaterale:true };
     }
     if(tipo === 'aass'){
-      if(lato === 'dx') return { tipo, singolare:true, testo:'arto sup. dx' };
-      if(lato === 'sx') return { tipo, singolare:true, testo:'arto sup. sx' };
+      // "testoConPreposizione" serve solo quando l'arto compare in un
+      // elenco insieme ad altre sedi (es. "..., ai fianchi e all'arto sup.
+      // dx"): da solo in una frase propria resta "Edema arto sup. dx."
+      if(lato === 'dx') return { tipo, singolare:true, testo:'arto sup. dx', testoConPreposizione:"all'arto sup. dx" };
+      if(lato === 'sx') return { tipo, singolare:true, testo:'arto sup. sx', testoConPreposizione:"all'arto sup. sx" };
       return { tipo, singolare:false, testo:'agli AASS', bilaterale:false };
     }
     return { tipo, singolare:false, testo:'ai fianchi' };
   }
 
-  const sediSelezionate = ['aaii','aass','fianchi'].filter(v => sedeSet.has(v));
+  // AASS per ultimo: è l'unica sede a cui si applica realisticamente lo
+  // scarico, quindi deve restare adiacente a "da porre in scarico" invece
+  // di trovarsi in mezzo (es. "..., ai fianchi e all'arto sup. dx, da
+  // porre in scarico." invece di "..., arto sup. dx e ai fianchi da porre
+  // in scarico.", dove sembrava riferito ai fianchi)
+  const sediSelezionate = ['aaii','fianchi','aass'].filter(v => e.sede.has(v));
   const sediInfo = sediSelezionate.map(fraseSedeLato);
 
-  const hasQualifiche = !!(qualitaText || e.andamento || e.scarico);
+  // eczema da stasi è specifico degli AAII: si aggiunge solo se quella
+  // sede è tra quelle selezionate, indipendentemente dalle altre
+  const hasQualifiche = !!(qualitaText || e.andamento || e.scarico || (e.eczemaStasi && sediSelezionate.includes('aaii')));
   const unSoloArto = sediInfo.length === 1 && (sediInfo[0].tipo === 'aaii' || sediInfo[0].tipo === 'aass');
 
+  let corpo;
   if(unSoloArto && sediInfo[0].singolare){
     // un solo arto, lateralizzato (dx/sx): resta sempre singolare ("Edema..."),
     // con o senza qualità/andamento/scarico, accordando gli aggettivi al singolare
@@ -6631,38 +6710,38 @@ function composeEdemi(){
     if(e.discrasici) qualitaTextSing = qualitaTextSing ? qualitaTextSing + ' anche discrasico' : 'discrasico';
     const qs = qualitaTextSing ? ' ' + qualitaTextSing : '';
     const ss = ' ' + info.testo;
-    let corpo;
-    if(e.andamento === 'riduzione') corpo = `In riduzione l'edema${qs}${ss}`;
-    else if(e.andamento === 'ripresentati') corpo = `Ripresentatosi l'edema${qs}${ss}`;
-    else if(e.andamento === 'permangono') corpo = `Permane l'edema${qs}${ss}`;
-    else corpo = `Edema${qs}${ss}`;
-    if(e.scarico) corpo += ' da porre in scarico';
+    if(e.andamento === 'riduzione') corpo = `In riduzione l'${paroleS}${qs}${ss}`;
+    else if(e.andamento === 'ripresentati') corpo = `Ripresentatosi l'${paroleS}${qs}${ss}`;
+    else if(e.andamento === 'permangono') corpo = `Permane l'${paroleS}${qs}${ss}`;
+    else corpo = `${paroleSCap}${qs}${ss}`;
+    if(e.eczemaStasi && info.tipo === 'aaii') corpo += ' con eczema da stasi';
+    if(e.scarico) corpo += ', da porre in scarico';
     if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
-    frasi.push(corpo.trim() + '.');
   } else if(unSoloArto && !hasQualifiche){
     // caso semplice: un solo arto (AAII o AASS) bilaterale, senza qualità/andamento/scarico
     const info = sediInfo[0];
-    let corpo = info.bilaterale ? `Edemi ${info.testo} bilateralmente` : `Edemi ${info.testo}`;
+    corpo = info.bilaterale ? `${paroleP} ${info.testo} bilateralmente` : `${paroleP} ${info.testo}`;
     if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
-    frasi.push(corpo.trim() + '.');
-  } else if(sediInfo.length || qualitaText || e.scarico || (e.andamento && !(e.succulenza && e.succulenza.attiva))){
-    const sedeText = sediInfo.length ? joinIt(sediInfo.map(i => i.testo)) : '';
+  } else if(sediInfo.length || qualitaText || e.scarico || e.andamento || (e.eczemaStasi && sediSelezionate.includes('aaii'))){
+    const sedeText = sediInfo.length ? joinIt(sediInfo.map(i => i.testoConPreposizione || i.testo)) : '';
     const qs = qualitaText ? ' ' + qualitaText : '';
     const ss = sedeText ? ' ' + sedeText : '';
-    let corpo;
-    if(e.andamento === 'riduzione') corpo = `In riduzione gli edemi${qs}${ss}`;
-    else if(e.andamento === 'ripresentati') corpo = `Ripresentatisi gli edemi${qs}${ss}`;
-    else if(e.andamento === 'permangono') corpo = `Permangono edemi${qs}${ss}`;
-    else corpo = `Edemi${qs}${ss}`;
-    if(e.scarico) corpo += ' da porre in scarico';
+    if(e.andamento === 'riduzione') corpo = `In riduzione gli ${paroleP.toLowerCase()}${qs}${ss}`;
+    else if(e.andamento === 'ripresentati') corpo = `Ripresentatisi gli ${paroleP.toLowerCase()}${qs}${ss}`;
+    else if(e.andamento === 'permangono') corpo = `Permangono ${paroleP.toLowerCase()}${qs}${ss}`;
+    else corpo = `${paroleP}${qs}${ss}`;
+    if(e.eczemaStasi && sediSelezionate.includes('aaii')) corpo += ' con eczema da stasi';
+    if(e.scarico) corpo += ', da porre in scarico';
     if(e.grinza) corpo += sediSelezionate.includes('aaii') ? ', cute grinza' : ', cute grinza agli AAII';
-    frasi.push(corpo.trim() + '.');
   } else if(e.grinza){
-    // solo la cute grinza, senza nessun edema descritto
-    frasi.push('Cute grinza agli AAII.');
+    corpo = 'Cute grinza agli AAII';
+  } else {
+    // "Edemi"/"Edemi declivi" scelto esplicitamente ma senza aggiungere
+    // altro sotto: dichiarazione minima, senza sede/qualità/andamento
+    corpo = paroleP;
   }
 
-  return frasi.join(' ');
+  return corpo.trim() + '.';
 }
 
 function composeDiuresi(){
