@@ -8261,7 +8261,7 @@ const FARMACI_DB = {
           ? 'Anche in meningite, non superare 2 g/die vista la grave insufficienza renale — valutare consulenza infettivologica/nefrologica per bilanciare efficacia e rischio.'
           : 'Massimo 2 g/die in un\'unica somministrazione.' }
     ],
-    note: 'A differenza della maggior parte dei beta-lattamici, ceftriaxone ha un\'importante escrezione biliare oltre a quella renale: per questo l\'aggiustamento scatta solo nell\'insufficienza renale grave (o se coesiste danno epatico).'
+    note: 'A differenza della maggior parte dei beta-lattamici, ceftriaxone ha un\'importante escrezione biliare oltre a quella renale: per questo l\'aggiustamento scatta solo nell\'insufficienza renale grave (o se coesiste danno epatico). Funzione epatica: nell\'insufficienza epatica da lieve a moderata si può considerare la dose abituale; non ci sono informazioni specifiche sull\'insufficienza epatica grave.'
   },
   levofloxacina: {
     nome: 'Levofloxacina',
@@ -8310,29 +8310,38 @@ const FARMACI_DB = {
   metronidazolo: {
     nome: 'Metronidazolo',
     sottotitolo: 'nitroimidazolo · attivo su anaerobi',
-    fasce: [
-      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
-        dose: 'Nessun aggiustamento per insufficienza renale isolata: dose standard 500 mg EV/OS x3/die (ogni 8h).' }
+    opzioni: [
+      { chiave: 'childC', label: 'Cirrosi Child-Pugh C' }
     ],
-    note: 'L\'aggiustamento (riduzione di dose) si applica per insufficienza EPATICA severa (metabolismo prevalentemente epatico), non per quella renale. In emodialisi: somministrare dopo la seduta, poiché il farmaco è dializzabile.'
+    fasce: [
+      { min: 10, max: Infinity, label: '≥ 10',
+        dose: (opz) => opz.childC
+          ? 'Ridurre la dose del 50% per l\'epatopatia: 250 mg EV/OS x3/die (ogni 8h).'
+          : 'Nessuna variazione di dose: 500 mg EV/OS x3/die (ogni 8h).' },
+      { min: 0, max: 10, label: '< 10',
+        dose: (opz) => opz.childC
+          ? 'Ridurre la dose del 50% per l\'epatopatia (250 mg x3/die); considerare comunque, per la funzione renale, un\'ulteriore riduzione o un intervallo più lungo.'
+          : 'Può essere considerata una riduzione del 50% della dose (250 mg x3/die) oppure un prolungamento dell\'intervallo (es. 500 mg x2/die), a discrezione clinica.' }
+    ],
+    note: 'Funzione epatica: Child-Pugh A/B — nessuna variazione di dose, ma monitorare la comparsa di effetti collaterali. Child-Pugh C — vedi tag sopra (riduzione del 50%). In emodialisi: somministrare dopo la seduta, poiché il farmaco è dializzabile.'
   },
   meropenem: {
     nome: 'Meropenem',
-    sottotitolo: 'carbapenemico ad ampio spettro',
+    sottotitolo: 'carbapenemico ad ampio spettro · schema EUCAST',
     opzioni: [
-      { chiave: 'meningite', label: 'Meningite/infezione molto grave' }
+      { chiave: 'aumentato', label: 'Dose aumentata (germi a esposizione aumentata, I)' }
     ],
     fasce: [
-      { min: 50, max: Infinity, label: '≥ 50',
-        dose: (opz) => (opz.meningite ? '2 g' : '1 g') + ' EV ogni 8h. Nessun aggiustamento.' },
+      { min: 50, max: Infinity, label: '> 50',
+        dose: (opz) => (opz.aumentato ? '2 g' : '1 g') + ' EV ogni 8h. Nessun aggiustamento.' },
       { min: 26, max: 50, label: '26–50',
-        dose: (opz) => (opz.meningite ? '2 g' : '1 g') + ' EV ogni 12h (stessa dose, intervallo raddoppiato).' },
+        dose: (opz) => (opz.aumentato ? '2 g' : '1 g') + ' EV ogni 12h.' },
       { min: 10, max: 26, label: '10–25',
-        dose: (opz) => (opz.meningite ? '1 g' : '500 mg') + ' EV ogni 12h (metà dose).' },
+        dose: (opz) => (opz.aumentato ? '1 g' : '0,5 g') + ' EV ogni 12h.\nConsiderare una dose da carico di ' + (opz.aumentato ? '2 g' : '1 g') + '.' },
       { min: 0, max: 10, label: '< 10',
-        dose: (opz) => (opz.meningite ? '1 g' : '500 mg') + ' EV ogni 24h.' }
+        dose: (opz) => (opz.aumentato ? '1 g' : '0,5 g') + ' EV ogni 24h.\nConsiderare una dose da carico di ' + (opz.aumentato ? '2 g' : '1 g') + '.' }
     ],
-    note: 'Emodialisi: somministrare la dose dopo la seduta dialitica (il farmaco è ben dializzato).'
+    note: 'AKI sepsi-relata nel paziente settico: è ragionevole attendere 48h prima di ridurre la dose per il peggioramento renale, perché una rapida risoluzione dell\'AKI esporrebbe il paziente al rischio di sottodosaggio nel pieno della sepsi. Emodialisi: somministrare la dose dopo la seduta dialitica (il farmaco è ben dializzato).'
   },
   azitromicina: {
     nome: 'Azitromicina',
