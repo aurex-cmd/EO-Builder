@@ -495,6 +495,7 @@
   .ric-lista-riga:hover{ color:var(--signal); }
   .ric-lista-riga.attivo{ color:var(--signal); font-weight:600; }
   .ric-lista-nome{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .farmaco-bullet{ color:var(--signal); margin-right:7px; font-weight:700; }
   .ric-lista-del{
     width:24px; height:24px; border-radius:50%; flex-shrink:0;
     border:1px solid #7a3b33; background:var(--panel-2); color:#e2867e;
@@ -864,6 +865,7 @@
     font-family:var(--font-mono); font-size:12px; line-height:1.5; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:11px;
     padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
+    text-align:justify;
   }
   .farmaco-opzioni{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .farmaco-opzioni .chip{ font-size:12.5px; padding:7px 12px; }
@@ -1183,57 +1185,57 @@
           <span class="ric-lista-nome">Anticoagulanti</span>
           <span class="admit-chev" id="app-farmaci-chev-anticoagulanti">›</span>
         </div>
-        <div id="app-farmaci-sotto-anticoagulanti" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+        <div id="app-farmaci-sotto-anticoagulanti" style="display:none; padding-left:14px;">
           <div class="ric-lista-riga" onclick="apriAppFarmaco('arixtra')">
-            <span class="ric-lista-nome">Arixtra (fondaparinux)</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Arixtra (fondaparinux)</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('inhixa')">
-            <span class="ric-lista-nome">Inhixa (enoxaparina)</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Inhixa (enoxaparina)</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('nao')">
-            <span class="ric-lista-nome">NAO / DOAC</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>NAO / DOAC</span>
           </div>
         </div>
         <div class="ric-lista-riga" onclick="toggleAppFarmaciSottogruppo('antibiotici')">
           <span class="ric-lista-nome">Antibiotici</span>
           <span class="admit-chev" id="app-farmaci-chev-antibiotici">›</span>
         </div>
-        <div id="app-farmaci-sotto-antibiotici" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+        <div id="app-farmaci-sotto-antibiotici" style="display:none; padding-left:14px;">
           <div class="ric-lista-riga" onclick="apriAppFarmaco('tazocin')">
-            <span class="ric-lista-nome">Tazocin</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Tazocin</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('ceftriaxone')">
-            <span class="ric-lista-nome">Ceftriaxone</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Ceftriaxone</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('levofloxacina')">
-            <span class="ric-lista-nome">Levofloxacina</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Levofloxacina</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('ciprofloxacina')">
-            <span class="ric-lista-nome">Ciprofloxacina</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Ciprofloxacina</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('vancomicina')">
-            <span class="ric-lista-nome">Vancomicina</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Vancomicina</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('metronidazolo')">
-            <span class="ric-lista-nome">Metronidazolo</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Metronidazolo</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('meropenem')">
-            <span class="ric-lista-nome">Meropenem</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Meropenem</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('azitromicina')">
-            <span class="ric-lista-nome">Azitromicina</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Azitromicina</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('augmentin')">
-            <span class="ric-lista-nome">Amoxicillina/ac. clavulanico</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Amoxicillina/ac. clavulanico</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('linezolid')">
-            <span class="ric-lista-nome">Linezolid</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Linezolid</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('ampicillina')">
-            <span class="ric-lista-nome">Ampicillina</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Ampicillina</span>
           </div>
           <div class="ric-lista-riga" onclick="apriAppFarmaco('unasyn')">
-            <span class="ric-lista-nome">Ampicillina/sulbactam</span>
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Ampicillina/sulbactam</span>
           </div>
         </div>
       </div>
