@@ -394,7 +394,7 @@
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
-    width:100%; min-height:64px; resize:vertical;
+    width:100%; min-height:64px; resize:none; overflow-y:hidden;
     border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
     border-radius:12px; padding:10px 12px; font-family:var(--font-body);
     font-size:13px; line-height:1.55; box-shadow:var(--clay-in-sm);
@@ -2233,6 +2233,7 @@ function aggiungiAltroEsame(nome, testo){
   textareaTesto.className = 'altro-esame-testo';
   textareaTesto.placeholder = 'Referto…';
   textareaTesto.value = testo || '';
+  textareaTesto.addEventListener('input', () => autoResizeTextarea(textareaTesto));
 
   const delBtn = document.createElement('button');
   delBtn.type = 'button';
@@ -2245,6 +2246,8 @@ function aggiungiAltroEsame(nome, testo){
   row.appendChild(textareaTesto);
   row.appendChild(delBtn);
   container.appendChild(row);
+  // scrollHeight corretto si legge solo a elemento già nel DOM
+  autoResizeTextarea(textareaTesto);
 }
 
 // individua i marcatori "A:" (allergie), "P:" (anamnesi patologica remota) e
@@ -2304,6 +2307,7 @@ function smistaTestoPSInCampi(){
   showToast(trovati.length ? 'Smistato in: ' + trovati.map(k => ({
     prossima:'anamnesi prossima', allergie:'allergie', remota:'anamnesi remota', farmacologica:'terapia'
   })[k]).join(', ') : 'Nessun marcatore trovato: tutto in anamnesi prossima');
+  autoResizeTutteRicoveriTextarea();
 }
 
 function raccogliCampiForm(){
@@ -2332,6 +2336,16 @@ function raccogliCampiForm(){
     farmacologica: document.getElementById('admit-farmacologica').value,
     familiare: document.getElementById('admit-familiare').value
   };
+}
+
+// ridimensiona in blocco tutte le textarea della scheda Ricoveri (sia
+// quelle fisse sia le eventuali "altro esame" aggiunte a mano): serve nei
+// punti in cui il testo viene caricato via .value da una scheda salvata,
+// dato che impostare .value via JS non genera da solo l'evento 'input'
+// a cui è agganciato il ridimensionamento in tempo reale (vedi più sotto)
+function autoResizeTutteRicoveriTextarea(){
+  document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea')
+    .forEach(autoResizeTextarea);
 }
 
 function svuotaFormRicovero(){
@@ -2365,6 +2379,10 @@ function impostaAdmitFormCompatto(compatto){
     btn.style.display = compatto ? '' : 'none';
     btn.textContent = 'Modifica';
   }
+  // le altezze corrette si leggono solo a elemento visibile: qui copre sia
+  // "nuovo ricovero" (modulo aperto da subito) sia "Modifica" su un
+  // ricovero già caricato (modulo riaperto con testo già dentro)
+  if(!compatto) autoResizeTutteRicoveriTextarea();
 }
 function toggleAdmitFormCompatto(){
   const body = document.getElementById('admit-form-body');
@@ -7014,6 +7032,13 @@ function showToast(msg){
 }
 
 document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+
+// le textarea della scheda Ricoveri si ridimensionano da sole mentre si
+// scrive (stesso meccanismo già usato in Diari), così un testo lungo
+// incollato (es. il verbale di PS) si vede tutto subito, senza dover
+// scorrere o allargare a mano lo spazio
+document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea')
+  .forEach(el => el.addEventListener('input', () => autoResizeTextarea(el)));
 
 // la striscia vitali in alto è uno specchio dei campi già presenti più
 // sotto (SatO2/PA/FC/Temperatura): stesso dato, due punti dove inserirlo.
