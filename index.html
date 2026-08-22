@@ -4986,6 +4986,10 @@ function comporreSedeTorace(locSet, suTapParola){
       : '';
     if(soloBase && bilaterale){
       parts.push('alle basi bilateralmente' + asimmetria);
+    } else if(soloBase && !hasDx && !hasSx){
+      // "base" da sola, senza lato né bilaterale: "in base" sarebbe una
+      // frase tronca (la base è anatomicamente un concetto plurale/duale)
+      parts.push('alle basi' + asimmetria);
     } else {
       let lato = '';
       if(bilaterale) lato = 'bilaterale';
