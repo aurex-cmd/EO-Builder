@@ -865,6 +865,8 @@
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:11px;
     padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
   }
+  .farmaco-opzioni{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .farmaco-opzioni .chip{ font-size:12.5px; padding:7px 12px; }
 
   /* ---------- ECG SIMULATOR (modale) ----------
      Stesso principio degli altri: tool standalone dell'utente, integrato
@@ -1177,14 +1179,62 @@
         <span class="admit-chev" id="app-farmaci-chev">›</span>
       </div>
       <div id="app-farmaci-sotto" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
-        <div class="ric-lista-riga" onclick="apriAppFarmaco('arixtra')">
-          <span class="ric-lista-nome">Arixtra (fondaparinux)</span>
+        <div class="ric-lista-riga" onclick="toggleAppFarmaciSottogruppo('anticoagulanti')">
+          <span class="ric-lista-nome">Anticoagulanti</span>
+          <span class="admit-chev" id="app-farmaci-chev-anticoagulanti">›</span>
         </div>
-        <div class="ric-lista-riga" onclick="apriAppFarmaco('inhixa')">
-          <span class="ric-lista-nome">Inhixa (enoxaparina)</span>
+        <div id="app-farmaci-sotto-anticoagulanti" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('arixtra')">
+            <span class="ric-lista-nome">Arixtra (fondaparinux)</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('inhixa')">
+            <span class="ric-lista-nome">Inhixa (enoxaparina)</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('nao')">
+            <span class="ric-lista-nome">NAO / DOAC</span>
+          </div>
         </div>
-        <div class="ric-lista-riga" onclick="apriAppFarmaco('nao')">
-          <span class="ric-lista-nome">NAO / DOAC</span>
+        <div class="ric-lista-riga" onclick="toggleAppFarmaciSottogruppo('antibiotici')">
+          <span class="ric-lista-nome">Antibiotici</span>
+          <span class="admit-chev" id="app-farmaci-chev-antibiotici">›</span>
+        </div>
+        <div id="app-farmaci-sotto-antibiotici" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('tazocin')">
+            <span class="ric-lista-nome">Tazocin</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('ceftriaxone')">
+            <span class="ric-lista-nome">Ceftriaxone</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('levofloxacina')">
+            <span class="ric-lista-nome">Levofloxacina</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('ciprofloxacina')">
+            <span class="ric-lista-nome">Ciprofloxacina</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('vancomicina')">
+            <span class="ric-lista-nome">Vancomicina</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('metronidazolo')">
+            <span class="ric-lista-nome">Metronidazolo</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('meropenem')">
+            <span class="ric-lista-nome">Meropenem</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('azitromicina')">
+            <span class="ric-lista-nome">Azitromicina</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('augmentin')">
+            <span class="ric-lista-nome">Amoxicillina/ac. clavulanico</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('linezolid')">
+            <span class="ric-lista-nome">Linezolid</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('ampicillina')">
+            <span class="ric-lista-nome">Ampicillina</span>
+          </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('unasyn')">
+            <span class="ric-lista-nome">Ampicillina/sulbactam</span>
+          </div>
         </div>
       </div>
     </div>
@@ -4073,6 +4123,13 @@ function apriAppFarmaco(chiave){ apriFarmaco(chiave, ''); }
 function toggleAppFarmaciSotto(){
   const sotto = document.getElementById('app-farmaci-sotto');
   const chev = document.getElementById('app-farmaci-chev');
+  const aperto = sotto.style.display !== 'none';
+  sotto.style.display = aperto ? 'none' : '';
+  chev.classList.toggle('aperto', !aperto);
+}
+function toggleAppFarmaciSottogruppo(nome){
+  const sotto = document.getElementById('app-farmaci-sotto-' + nome);
+  const chev = document.getElementById('app-farmaci-chev-' + nome);
   const aperto = sotto.style.display !== 'none';
   sotto.style.display = aperto ? 'none' : '';
   chev.classList.toggle('aperto', !aperto);
@@ -8166,6 +8223,179 @@ const FARMACI_DB = {
       { min: 0, max: 15, label: '< 15', dose: 'Non raccomandato.' }
     ],
     note: 'Attenzione anche al limite superiore: con VFG molto alta (>95 mL/min) alcuni dati indicano minore efficacia a parità di dose — da valutare col centro TAO/cardiologia.'
+  },
+
+  // ---------- ANTIBIOTICI (dosaggi renali) ----------
+  tazocin: {
+    nome: 'Tazocin (piperacillina/tazobactam)',
+    sottotitolo: 'penicillina antipseudomonica + inibitore beta-lattamasi · schema EUCAST',
+    opzioni: [
+      { chiave: 'pseudomonas', label: 'Sospetta P. aeruginosa (dose aumentata)' },
+      { chiave: 'nosocomiale', label: 'Polmonite nosocomiale' }
+    ],
+    fasce: [
+      { min: 40, max: Infinity, label: '≥ 40',
+        dose: (opz) => opz.pseudomonas
+          ? 'Dose aumentata anti-Pseudomonas (germi I): 4,5 g ogni 6h in infusione prolungata (4h) — raccomandata in particolare nel paziente settico, obeso (BMI >30) o con clearance renale aumentata (eGFR >130).'
+          : 'Dose standard (germi S): 4,5 g ogni 6h se infusione intermittente, oppure 4,5 g ogni 8h SOLO se infusione prolungata (3-4h) — con infusione intermittente, EUCAST richiede ogni 6h anche per germi sensibili.\nNessun aggiustamento.' },
+      { min: 20, max: 40, label: '20–39',
+        dose: (opz) => 'Dose da carico: 4,5 g.\nMantenimento: ' + (opz.nosocomiale ? '3,375 g ogni 6h (polmonite nosocomiale).' : '2,25 g ogni 6h.') },
+      { min: 0, max: 20, label: '< 20',
+        dose: (opz) => 'Dose da carico: 4,5 g.\nMantenimento: ' + (opz.nosocomiale ? '2,25 g ogni 6h (polmonite nosocomiale).' : '2,25 g ogni 8h.') }
+    ],
+    note: 'AKI sepsi-relata nel paziente settico: è ragionevole attendere 48h prima di ridurre la dose per il peggioramento renale, perché una rapida risoluzione dell\'AKI esporrebbe il paziente al rischio di sottodosaggio nel pieno della sepsi. Emodialisi: considerare una dose supplementare dopo ogni seduta, poiché l\'emodialisi rimuove il 30-50% della piperacillina in 4 ore — adattare secondo il protocollo locale.'
+  },
+  ceftriaxone: {
+    nome: 'Ceftriaxone',
+    sottotitolo: 'cefalosporina di 3ª generazione · eliminazione mista renale/biliare',
+    opzioni: [
+      { chiave: 'meningite', label: 'Meningite' }
+    ],
+    fasce: [
+      { min: 10, max: Infinity, label: '≥ 10',
+        dose: (opz) => opz.meningite
+          ? '2 g ogni 12h (dose per meningite/infezioni gravi del SNC). Nessun aggiustamento.'
+          : 'Nessun aggiustamento: dose standard 1-2 g/die, indipendentemente dal grado di compromissione renale, salvo insufficienza epatica concomitante.' },
+      { min: 0, max: 10, label: '< 10',
+        dose: (opz) => opz.meningite
+          ? 'Anche in meningite, non superare 2 g/die vista la grave insufficienza renale — valutare consulenza infettivologica/nefrologica per bilanciare efficacia e rischio.'
+          : 'Massimo 2 g/die in un\'unica somministrazione.' }
+    ],
+    note: 'A differenza della maggior parte dei beta-lattamici, ceftriaxone ha un\'importante escrezione biliare oltre a quella renale: per questo l\'aggiustamento scatta solo nell\'insufficienza renale grave (o se coesiste danno epatico).'
+  },
+  levofloxacina: {
+    nome: 'Levofloxacina',
+    sottotitolo: 'fluorochinolone',
+    opzioni: [
+      { chiave: 'grave', label: 'Infezione grave (regime 750 mg)' }
+    ],
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        dose: (opz) => (opz.grave ? '750 mg' : '500 mg') + ' x1/die. Nessun aggiustamento.' },
+      { min: 20, max: 50, label: '20–49',
+        dose: (opz) => opz.grave
+          ? 'Dose da carico 750 mg, poi 750 mg ogni 48h.'
+          : 'Dose da carico 500 mg, poi 250 mg x1/die.' },
+      { min: 10, max: 20, label: '10–19',
+        dose: (opz) => opz.grave
+          ? 'Dose da carico 750 mg, poi 500 mg ogni 48h.'
+          : 'Dose da carico 500 mg, poi 250 mg ogni 48h.' },
+      { min: 0, max: 10, label: '< 10 (incl. HD/CAPD)',
+        dose: (opz) => opz.grave
+          ? 'Dose da carico 750 mg, poi 500 mg ogni 48h.'
+          : 'Dose da carico 500 mg, poi 125 mg x1/die.' }
+    ],
+    note: 'Nessun aggiustamento aggiuntivo per emodialisi/CAPD oltre alla dose ridotta di mantenimento indicata.'
+  },
+  ciprofloxacina: {
+    nome: 'Ciprofloxacina',
+    sottotitolo: 'fluorochinolone',
+    fasce: [
+      { min: 50, max: Infinity, label: '> 50', dose: 'Dose standard: 400 mg EV ogni 8-12h, o 500-750 mg OS ogni 12h secondo gravità. Nessun aggiustamento.' },
+      { min: 30, max: 50, label: '30–50', dose: 'OS: 250-500 mg ogni 12h.' },
+      { min: 5, max: 30, label: '5–29', dose: 'OS: 250-500 mg ogni 18h.\nEV: 200-400 mg ogni 18-24h.' },
+      { min: 0, max: 5, label: '< 5 o dialisi', dose: 'OS: 250-500 mg ogni 24h (dopo la seduta dialitica).' }
+    ],
+    note: 'Soglie da scheda tecnica FDA (ciprofloxacina). Allungamento QT, tendinopatia, numerose interazioni farmacologiche da controllare.'
+  },
+  vancomicina: {
+    nome: 'Vancomicina',
+    sottotitolo: 'glicopeptide · dose di mantenimento guidata dai livelli sierici, non da una tabella fissa',
+    fasce: [
+      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
+        dose: 'Dose da CARICO EV: 15-20 mg/kg (25-30 mg/kg nel paziente critico) — NON si riduce per insufficienza renale, nemmeno grave. Infondere in almeno 60 min (≤10 mg/min) per ridurre il rischio di reazioni infusionali.\nDose di MANTENIMENTO EV: da individualizzare in base alla funzione renale, guidata dalla concentrazione plasmatica di valle (trough): target 10-20 mg/L nella pratica comune, 15-20 mg/L nelle infezioni gravi (endocardite, batteriemia, polmonite, osteomielite).\n\nColite da C. difficile (via ORALE, tutt\'altra indicazione — la vancomicina EV non è efficace su C. difficile): 125 mg OS ogni 6h per 10 giorni, dose fissa, non guidata da VFG o livelli.' }
+    ],
+    note: 'Farmaco a finestra terapeutica stretta: qui trovi solo l\'impostazione generale, non un sostituto del monitoraggio dei livelli sierici (o del servizio di farmacocinetica clinica, se disponibile in ospedale).'
+  },
+  metronidazolo: {
+    nome: 'Metronidazolo',
+    sottotitolo: 'nitroimidazolo · attivo su anaerobi',
+    fasce: [
+      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
+        dose: 'Nessun aggiustamento per insufficienza renale isolata: dose standard 500 mg EV/OS x3/die (ogni 8h).' }
+    ],
+    note: 'L\'aggiustamento (riduzione di dose) si applica per insufficienza EPATICA severa (metabolismo prevalentemente epatico), non per quella renale. In emodialisi: somministrare dopo la seduta, poiché il farmaco è dializzabile.'
+  },
+  meropenem: {
+    nome: 'Meropenem',
+    sottotitolo: 'carbapenemico ad ampio spettro',
+    opzioni: [
+      { chiave: 'meningite', label: 'Meningite/infezione molto grave' }
+    ],
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        dose: (opz) => (opz.meningite ? '2 g' : '1 g') + ' EV ogni 8h. Nessun aggiustamento.' },
+      { min: 26, max: 50, label: '26–50',
+        dose: (opz) => (opz.meningite ? '2 g' : '1 g') + ' EV ogni 12h (stessa dose, intervallo raddoppiato).' },
+      { min: 10, max: 26, label: '10–25',
+        dose: (opz) => (opz.meningite ? '1 g' : '500 mg') + ' EV ogni 12h (metà dose).' },
+      { min: 0, max: 10, label: '< 10',
+        dose: (opz) => (opz.meningite ? '1 g' : '500 mg') + ' EV ogni 24h.' }
+    ],
+    note: 'Emodialisi: somministrare la dose dopo la seduta dialitica (il farmaco è ben dializzato).'
+  },
+  azitromicina: {
+    nome: 'Azitromicina',
+    sottotitolo: 'macrolide · eliminazione prevalentemente epatobiliare',
+    opzioni: [
+      { chiave: 'ricovero', label: 'Polmonite in ricovero (con beta-lattamico)' }
+    ],
+    fasce: [
+      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
+        dose: (opz) => opz.ricovero
+          ? 'Nessun aggiustamento a nessun grado di compromissione renale.\n500 mg EV/OS al giorno, in associazione a un beta-lattamico, per la durata stabilita dal quadro clinico.'
+          : 'Nessun aggiustamento a nessun grado di compromissione renale: dose standard 500 mg/die.\nDurata: 3 giorni (bronchite/sinusite/polmoniti lievi) o 5 giorni (polmoniti/infezioni un po\' più impegnative), secondo indicazione e gravità.' }
+    ],
+    note: 'Uno dei pochi antibiotici sistemici usati in reparto che non richiede aggiustamento per funzione renale, a nessun grado di compromissione — l\'eliminazione è quasi tutta epatobiliare. Allungamento del QT: attenzione in associazione con altri farmaci che lo prolungano.'
+  },
+  augmentin: {
+    nome: 'Amoxicillina/acido clavulanico',
+    sottotitolo: 'aminopenicillina + inibitore beta-lattamasi',
+    fasce: [
+      { min: 30, max: Infinity, label: '≥ 30',
+        dose: 'OS: 875/125 mg ogni 12h o 500/125 mg ogni 8h (infezioni gravi/vie respiratorie); 500/125 mg ogni 12h o 250/125 mg ogni 8h (infezioni meno gravi). Assumere a inizio pasto.\nEV: 1,2 g ogni 8h (ogni 6h se grave, fino a 2,2 g ogni 8h). Nessun aggiustamento.' },
+      { min: 10, max: 30, label: '10–29',
+        dose: 'OS: 500 mg ogni 12h.\nEV: 1,2 g ogni 12h.' },
+      { min: 0, max: 10, label: '< 10',
+        dose: 'OS: 500 mg ogni 24h.\nEV: dose da carico 1,2 g, poi 600 mg ogni 24h.' }
+    ],
+    note: 'Emodialisi: il farmaco è parzialmente dializzabile — dose aggiuntiva durante e al termine della seduta.'
+  },
+  linezolid: {
+    nome: 'Linezolid',
+    sottotitolo: 'oxazolidinone · attivo su Gram-positivi multiresistenti (MRSA, VRE)',
+    fasce: [
+      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
+        dose: 'Nessun aggiustamento: dose standard 600 mg EV/OS ogni 12h.\nDurata indicativa: 10-14 giorni (polmonite nosocomiale); 14-28 giorni (batteriemia, cute complicata, VRE).' }
+    ],
+    note: 'ATTENZIONE — è un inibitore MAO debole: rischio di sindrome serotoninergica in associazione a SSRI/SNRI, triciclici o altri serotoninergici (farmaci molto comuni nel paziente anziano — controllare sempre la terapia in corso). I due metaboliti (inattivi) si accumulano in insufficienza renale grave o dialisi: monitoraggio più attento in questi pazienti. Con uso >2 settimane: controllare l\'emocromo (mielosoppressione) e sorvegliare per neuropatia periferica/ottica e acidosi lattica. In emodialisi, il farmaco è parzialmente rimosso: se possibile, somministrare dopo la seduta.'
+  },
+  ampicillina: {
+    nome: 'Ampicillina',
+    sottotitolo: 'aminopenicillina',
+    opzioni: [
+      { chiave: 'grave', label: 'Meningite/endocardite (dosi elevate)' }
+    ],
+    fasce: [
+      { min: 50, max: Infinity, label: '≥ 50',
+        dose: (opz) => opz.grave
+          ? 'Fino a 2 g ogni 4h (12 g/die). Nessun aggiustamento.'
+          : '1-2 g EV ogni 4-6h secondo indicazione e gravità. Nessun aggiustamento.' },
+      { min: 10, max: 50, label: '10–50', dose: 'Stessa dose, intervallo allungato a ogni 6-12h.' },
+      { min: 0, max: 10, label: '< 10', dose: 'Stessa dose, intervallo allungato a ogni 12-24h.' }
+    ],
+    note: 'Emodialisi: somministrare dopo la seduta (il farmaco è dializzabile).'
+  },
+  unasyn: {
+    nome: 'Ampicillina/sulbactam (Unasyn)',
+    sottotitolo: 'aminopenicillina + inibitore beta-lattamasi',
+    fasce: [
+      { min: 30, max: Infinity, label: '≥ 30', dose: '1,5-3 g EV ogni 6-8h (dose standard). Nessun aggiustamento.' },
+      { min: 15, max: 30, label: '15–29', dose: '1,5-3 g EV ogni 12h.' },
+      { min: 5, max: 15, label: '5–14', dose: '1,5-3 g EV ogni 24h.' },
+      { min: 0, max: 5, label: '< 5 o dialisi', dose: '1,5-3 g EV ogni 24h; in emodialisi somministrare dopo la seduta.' }
+    ],
+    note: 'Non superare 4 g/die di sulbactam.'
   }
 };
 
@@ -8174,6 +8404,7 @@ const FARMACI_GRUPPI = {
   nao: ['apixaban', 'edoxaban', 'rivaroxaban', 'dabigatran'],
   doac: ['apixaban', 'edoxaban', 'rivaroxaban', 'dabigatran']
 };
+
 
 // cerca, nel testo del diario, l'ultima VFG scritta nel formato prodotto
 // dal calcolatore VFG ("VFG: 37 mL/min, ..."): serve per capire quale
@@ -8201,19 +8432,48 @@ function farmacoVfgMatch(vfg, fascia){
   return vfg !== null && vfg >= fascia.min && vfg < fascia.max;
 }
 
+// alcuni campi (dose/profilassi/terapeutico/note) possono essere una
+// stringa fissa OPPURE una funzione che riceve lo stato dei tag "condizione
+// clinica" del farmaco (es. {nosocomiale:true}) e restituisce il testo
+// giusto: è il meccanismo che rende i box interattivi (vedi farmacoOpzioniAttive)
+function farmacoRisolvi(valore, opzioni){
+  return typeof valore === 'function' ? valore(opzioni) : valore;
+}
+
+// stato dei tag attivi per ciascun farmaco aperto in questo momento (si
+// azzera a ogni apertura, vedi apriFarmaco) e contesto per poter
+// ridisegnare la scheda quando si tocca un tag, senza dover richiamare
+// apriFarmaco (che rilegge anche il testo del diario e la VFG da capo)
+let farmacoOpzioniAttive = {};
+let farmacoContestoCorrente = null;
+
+function farmacoToggleOpzione(chiave, opzioneChiave){
+  if(!farmacoOpzioniAttive[chiave]) farmacoOpzioniAttive[chiave] = {};
+  farmacoOpzioniAttive[chiave][opzioneChiave] = !farmacoOpzioniAttive[chiave][opzioneChiave];
+  farmacoRenderCorpo();
+}
+
+function farmacoRenderCorpo(){
+  if(!farmacoContestoCorrente) return;
+  const { chiavi, vfg } = farmacoContestoCorrente;
+  document.getElementById('farmaco-corpo').innerHTML =
+    chiavi.map(k => farmacoRenderCard(k, vfg, chiavi.length > 1)).join('');
+}
+
 // una fascia può avere un campo unico "dose" (es. i DOAC, dove non ha
 // senso distinguere profilassi/terapeutico) oppure due campi separati
 // "profilassi" e "terapeutico" (Arixtra, Inhixa), resi come righe distinte
 // cella "Terapeutico": se la fascia ha pesi diversi (es. Arixtra), li
 // mostra come piccola tabella annidata (peso | dose) invece che in riga
-function farmacoRenderCellaTerapeutico(fascia){
+function farmacoRenderCellaTerapeutico(fascia, opzioniStato){
   if(fascia.terapeuticoPesoBased){
     const righeSub = fascia.terapeuticoPesoBased.map(w =>
       '<tr><td>' + w.peso + '</td><td>' + w.dose + '</td></tr>'
     ).join('');
     return '<table class="farmaco-subtabella">' + righeSub + '</table>';
   }
-  if(fascia.terapeutico) return fascia.terapeutico.replace(/\n/g, '<br>');
+  const testo = farmacoRisolvi(fascia.terapeutico, opzioniStato);
+  if(testo) return testo.replace(/\n/g, '<br>');
   return '';
 }
 
@@ -8222,6 +8482,7 @@ function farmacoRenderCellaTerapeutico(fascia){
 function farmacoRenderCard(chiave, vfg, mostraTitolo){
   const f = FARMACI_DB[chiave];
   if(!f) return '';
+  const opzioniStato = farmacoOpzioniAttive[chiave] || {};
 
   const haProfTerap = f.fasce.some(fascia => fascia.profilassi !== undefined);
   const intestazione = haProfTerap
@@ -8231,21 +8492,33 @@ function farmacoRenderCard(chiave, vfg, mostraTitolo){
   const righe = f.fasce.map(fascia => {
     const attivo = farmacoVfgMatch(vfg, fascia);
     const classeRiga = attivo ? ' class="match"' : '';
-    if(fascia.dose && !fascia.profilassi){
+    const doseTesto = farmacoRisolvi(fascia.dose, opzioniStato);
+    if(doseTesto && !fascia.profilassi){
       const colspan = haProfTerap ? 2 : 1;
-      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td colspan="' + colspan + '">' + fascia.dose.replace(/\n/g, '<br>') + '</td></tr>';
+      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td colspan="' + colspan + '">' + doseTesto.replace(/\n/g, '<br>') + '</td></tr>';
     }
     if(haProfTerap){
-      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + (fascia.profilassi || '') + '</td><td>' + farmacoRenderCellaTerapeutico(fascia) + '</td></tr>';
+      const profTesto = farmacoRisolvi(fascia.profilassi, opzioniStato) || '';
+      return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + profTesto + '</td><td>' + farmacoRenderCellaTerapeutico(fascia, opzioniStato) + '</td></tr>';
     }
-    return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + fascia.dose.replace(/\n/g, '<br>') + '</td></tr>';
+    return '<tr' + classeRiga + '><td>' + fascia.label + '</td><td>' + doseTesto.replace(/\n/g, '<br>') + '</td></tr>';
   }).join('');
+
+  // righe di tag "condizione clinica" (es. "Polmonite nosocomiale"): se
+  // presenti, cambiano il testo delle fasce sopra tramite farmacoRisolvi
+  const opzioniHtml = (f.opzioni && f.opzioni.length)
+    ? '<div class="farmaco-opzioni">' + f.opzioni.map(opz => {
+        const attiva = !!opzioniStato[opz.chiave];
+        return '<div class="chip' + (attiva ? ' active' : '') + '" onclick="farmacoToggleOpzione(\'' + chiave + '\',\'' + opz.chiave + '\')">' + opz.label + '</div>';
+      }).join('') + '</div>'
+    : '';
 
   return '<div class="farmaco-scheda">'
     + (mostraTitolo ? '<div class="farmaco-titolo">' + f.nome + '</div>' : '')
     + '<div class="farmaco-sottotitolo">' + f.sottotitolo + '</div>'
+    + opzioniHtml
     + '<table class="farmaco-tabella">' + intestazione + righe + '</table>'
-    + (f.note ? '<div class="note-box">' + f.note + '</div>' : '')
+    + (f.note ? '<div class="note-box">' + farmacoRisolvi(f.note, opzioniStato) + '</div>' : '')
     + '</div>';
 }
 
@@ -8270,8 +8543,9 @@ function apriFarmaco(chiave, testoDiario){
     vfgInfoEl.textContent = '';
   }
 
-  document.getElementById('farmaco-corpo').innerHTML =
-    chiavi.map(k => farmacoRenderCard(k, vfg, gruppo)).join('');
+  farmacoOpzioniAttive = {};
+  farmacoContestoCorrente = { chiavi, vfg };
+  farmacoRenderCorpo();
 
   document.getElementById('farmaco-modal-overlay').classList.add('show');
 }
