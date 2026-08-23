@@ -870,6 +870,17 @@
   .farmaco-opzioni{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .farmaco-opzioni .chip{ font-size:12.5px; padding:7px 12px; }
 
+  .farmaco-calcolatore{ margin-top:12px; }
+  .farmaco-calcolatore label{
+    display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
+    color:var(--ink-dim); text-transform:uppercase; margin-bottom:6px;
+  }
+  .farmaco-calc-row{ display:flex; align-items:center; gap:10px; }
+  .farmaco-calc-row input[type=number]{ width:110px; flex-shrink:0; }
+  .farmaco-calc-risultato{ display:flex; flex-direction:column; gap:2px; }
+  .farmaco-calc-out{ font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--signal); }
+  .farmaco-calc-esempio{ font-family:var(--font-mono); font-size:11.5px; font-weight:500; color:var(--ink-dim); }
+
   /* ---------- ECG SIMULATOR (modale) ----------
      Stesso principio degli altri: tool standalone dell'utente, integrato
      come modale, richiamato scrivendo "/ECG" in Diari o dalla scheda App.
@@ -8303,9 +8314,31 @@ const FARMACI_DB = {
   vancomicina: {
     nome: 'Vancomicina',
     sottotitolo: 'glicopeptide · dose di mantenimento guidata dai livelli sierici, non da una tabella fissa',
+    opzioni: [
+      { chiave: 'critico', label: 'Paziente critico (dose da carico aumentata)' }
+    ],
+    calcolatorePeso: {
+      etichetta: 'Dose da carico EV (peso in kg)',
+      calcola: (peso, opz) => {
+        const min = opz.critico ? 25 : 15;
+        const max = opz.critico ? 30 : 20;
+        const minMg = Math.round(peso * min);
+        const maxMg = Math.round(peso * max);
+        // multiplo di 500 mg più basso che rientra ancora nel range:
+        // supera il minimo raccomandato senza superare il massimo, ed è
+        // una dose comoda da preparare/prescrivere rispetto a un numero
+        // qualsiasi calcolato a caso dentro l'intervallo
+        let esempio = Math.ceil(minMg / 500) * 500;
+        if(esempio > maxMg) esempio = null; // peso basso: nessun multiplo di 500 rientra nel range
+        return {
+          range: minMg + '–' + maxMg + ' mg',
+          esempio: esempio ? ('Esempio pratico: ' + esempio + ' mg') : ''
+        };
+      }
+    },
     fasce: [
       { min: 0, max: Infinity, label: 'Qualsiasi VFG',
-        dose: 'Dose da CARICO EV: 15-20 mg/kg (25-30 mg/kg nel paziente critico) — NON si riduce per insufficienza renale, nemmeno grave. Infondere in almeno 60 min (≤10 mg/min) per ridurre il rischio di reazioni infusionali.\nDose di MANTENIMENTO EV: da individualizzare in base alla funzione renale, guidata dalla concentrazione plasmatica di valle (trough): target 10-20 mg/L nella pratica comune, 15-20 mg/L nelle infezioni gravi (endocardite, batteriemia, polmonite, osteomielite).\n\nColite da C. difficile (via ORALE, tutt\'altra indicazione — la vancomicina EV non è efficace su C. difficile): 125 mg OS ogni 6h per 10 giorni, dose fissa, non guidata da VFG o livelli.' }
+        dose: (opz) => 'Dose da CARICO EV: ' + (opz.critico ? '25-30 mg/kg (paziente critico)' : '15-20 mg/kg') + ' — NON si riduce per insufficienza renale, nemmeno grave. Infondere in almeno 60 min (≤10 mg/min) per ridurre il rischio di reazioni infusionali.\nDose di MANTENIMENTO EV: da individualizzare in base alla funzione renale, guidata dalla concentrazione plasmatica di valle (trough): target 10-20 mg/L nella pratica comune, 15-20 mg/L nelle infezioni gravi (endocardite, batteriemia, polmonite, osteomielite).\n\nColite da C. difficile (via ORALE, tutt\'altra indicazione — la vancomicina EV non è efficace su C. difficile): 125 mg OS ogni 6h per 10 giorni, dose fissa, non guidata da VFG o livelli.' }
     ],
     note: 'Farmaco a finestra terapeutica stretta: qui trovi solo l\'impostazione generale, non un sostituto del monitoraggio dei livelli sierici (o del servizio di farmacocinetica clinica, se disponibile in ospedale).'
   },
@@ -8457,11 +8490,35 @@ function farmacoRisolvi(valore, opzioni){
 // apriFarmaco (che rilegge anche il testo del diario e la VFG da capo)
 let farmacoOpzioniAttive = {};
 let farmacoContestoCorrente = null;
+// peso digitato per ciascun farmaco col calcolatore, così sopravvive al
+// ridisegno completo della scheda quando si tocca un tag (vedi
+// farmacoRenderCorpo) invece di azzerarsi ogni volta
+let farmacoPesoAttivo = {};
 
 function farmacoToggleOpzione(chiave, opzioneChiave){
   if(!farmacoOpzioniAttive[chiave]) farmacoOpzioniAttive[chiave] = {};
   farmacoOpzioniAttive[chiave][opzioneChiave] = !farmacoOpzioniAttive[chiave][opzioneChiave];
   farmacoRenderCorpo();
+}
+
+// aggiorna solo il testo del risultato (non ridisegna tutta la scheda:
+// altrimenti l'input perderebbe il focus/cursore a ogni cifra digitata)
+function farmacoAggiornaPeso(chiave, valoreGrezzo){
+  farmacoPesoAttivo[chiave] = valoreGrezzo;
+  const f = FARMACI_DB[chiave];
+  const outRange = document.getElementById('farmaco-calc-out-' + chiave);
+  const outEsempio = document.getElementById('farmaco-calc-esempio-' + chiave);
+  if(!outRange || !f || !f.calcolatorePeso) return;
+  const peso = parseFloat(valoreGrezzo);
+  if(isNaN(peso) || peso <= 0){
+    outRange.textContent = '—';
+    if(outEsempio) outEsempio.textContent = '';
+    return;
+  }
+  const opzioniStato = farmacoOpzioniAttive[chiave] || {};
+  const risultato = f.calcolatorePeso.calcola(peso, opzioniStato);
+  outRange.textContent = risultato.range;
+  if(outEsempio) outEsempio.textContent = risultato.esempio || '';
 }
 
 function farmacoRenderCorpo(){
@@ -8524,11 +8581,36 @@ function farmacoRenderCard(chiave, vfg, mostraTitolo){
       }).join('') + '</div>'
     : '';
 
+  // calcolatore peso -> dose in mg (es. la dose da carico della
+  // vancomicina, mg/kg): input libero, il risultato si aggiorna scrivendo
+  // senza ridisegnare tutta la scheda (vedi farmacoAggiornaPeso), e tiene
+  // conto anche dei tag attivi (es. "paziente critico") se il calcolo li usa.
+  // calcola() restituisce {range, esempio}: il range mg/kg per esteso, e
+  // sotto un esempio pratico già arrotondato (multiplo di 500 mg più basso
+  // che rientra ancora nel range, quindi supera il minimo raccomandato)
+  let calcolatoreHtml = '';
+  if(f.calcolatorePeso){
+    const pesoAttuale = farmacoPesoAttivo[chiave] || '';
+    const pesoNum = parseFloat(pesoAttuale);
+    const risultatoIniziale = (!isNaN(pesoNum) && pesoNum > 0)
+      ? f.calcolatorePeso.calcola(pesoNum, opzioniStato)
+      : { range: '—', esempio: '' };
+    calcolatoreHtml = '<div class="farmaco-calcolatore">'
+      + '<label>' + f.calcolatorePeso.etichetta + '</label>'
+      + '<div class="farmaco-calc-row">'
+      + '<input type="number" inputmode="decimal" placeholder="peso in kg" value="' + pesoAttuale + '" oninput="farmacoAggiornaPeso(\'' + chiave + '\', this.value)">'
+      + '<div class="farmaco-calc-risultato">'
+      + '<span class="farmaco-calc-out" id="farmaco-calc-out-' + chiave + '">' + risultatoIniziale.range + '</span>'
+      + '<span class="farmaco-calc-esempio" id="farmaco-calc-esempio-' + chiave + '">' + (risultatoIniziale.esempio || '') + '</span>'
+      + '</div></div></div>';
+  }
+
   return '<div class="farmaco-scheda">'
     + (mostraTitolo ? '<div class="farmaco-titolo">' + f.nome + '</div>' : '')
     + '<div class="farmaco-sottotitolo">' + f.sottotitolo + '</div>'
     + opzioniHtml
     + '<table class="farmaco-tabella">' + intestazione + righe + '</table>'
+    + calcolatoreHtml
     + (f.note ? '<div class="note-box">' + farmacoRisolvi(f.note, opzioniStato) + '</div>' : '')
     + '</div>';
 }
