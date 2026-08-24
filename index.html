@@ -8280,7 +8280,7 @@ const FARMACI_DB = {
     nome: 'Levofloxacina',
     sottotitolo: 'fluorochinolone',
     opzioni: [
-      { chiave: 'grave', label: 'Infezione grave (regime 750 mg)' }
+      { chiave: 'grave', label: 'Dose aumentata (germi a esposizione aumentata, I)' }
     ],
     fasce: [
       { min: 50, max: Infinity, label: '≥ 50',
@@ -8298,18 +8298,25 @@ const FARMACI_DB = {
           ? 'Dose da carico 750 mg, poi 500 mg ogni 48h.'
           : 'Dose da carico 500 mg, poi 125 mg x1/die.' }
     ],
-    note: 'Nessun aggiustamento aggiuntivo per emodialisi/CAPD oltre alla dose ridotta di mantenimento indicata.'
+    note: 'Il dosaggio aumentato (750 mg) è raccomandato da EUCAST per infezioni da batteri sensibili ad esposizione aumentata (I), compresi Streptococcus spp. e Staphylococcus spp. Nessun aggiustamento aggiuntivo per emodialisi/CAPD oltre alla dose ridotta di mantenimento indicata.'
   },
   ciprofloxacina: {
     nome: 'Ciprofloxacina',
     sottotitolo: 'fluorochinolone',
-    fasce: [
-      { min: 50, max: Infinity, label: '> 50', dose: 'Dose standard: 400 mg EV ogni 8-12h, o 500-750 mg OS ogni 12h secondo gravità. Nessun aggiustamento.' },
-      { min: 30, max: 50, label: '30–50', dose: 'OS: 250-500 mg ogni 12h.' },
-      { min: 5, max: 30, label: '5–29', dose: 'OS: 250-500 mg ogni 18h.\nEV: 200-400 mg ogni 18-24h.' },
-      { min: 0, max: 5, label: '< 5 o dialisi', dose: 'OS: 250-500 mg ogni 24h (dopo la seduta dialitica).' }
+    opzioni: [
+      { chiave: 'aumentato', label: 'Dose aumentata (anti-Pseudomonas)' }
     ],
-    note: 'Soglie da scheda tecnica FDA (ciprofloxacina). Allungamento QT, tendinopatia, numerose interazioni farmacologiche da controllare.'
+    fasce: [
+      { min: 60, max: Infinity, label: '≥ 60',
+        dose: (opz) => opz.aumentato
+          ? 'OS: 750 mg ogni 12h.\nEV: 400 mg ogni 8h.\nNessun aggiustamento.'
+          : 'OS: 500 mg ogni 12h.\nEV: 400 mg ogni 12h.\nNessun aggiustamento.' },
+      { min: 30, max: 60, label: '30–59',
+        dose: 'OS: 250-500 mg ogni 12h.\nEV: nessuna variazione del dosaggio.' },
+      { min: 0, max: 30, label: '< 30',
+        dose: 'OS: 250-500 mg ogni 24h.\nEV: 200-400 mg ogni 24h.' }
+    ],
+    note: 'Effetti indesiderati da tenere a mente: allungamento del QT; tendinopatia/rischio di rottura tendinea (in particolare achillea), più frequente nell\'anziano e con uso concomitante di corticosteroidi; neuropatia periferica; effetti sul SNC (cefalea, confusione, abbassamento della soglia convulsivante nei pazienti predisposti); fotosensibilità; disglicemia. Interazioni: cationi bivalenti/trivalenti (calcio, ferro, magnesio, antiacidi, sucralfato) riducono l\'assorbimento orale se assunti insieme — distanziare le somministrazioni; potenzia warfarin e teofillina.'
   },
   vancomicina: {
     nome: 'Vancomicina',
