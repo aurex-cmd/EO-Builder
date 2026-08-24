@@ -8154,6 +8154,16 @@ document.getElementById('vfg-modal').addEventListener('keydown', (e) => {
 // FARMACI_GRUPPI con l'elenco delle chiavi da mostrare.
 // ============================================================
 
+// ampicillina: la dose (1g/2g) e l'intervallo di base (6h o 4h per la
+// meningite) dipendono dai tag; l'aggiustamento renale poi allunga QUELL'
+// intervallo, non un intervallo fisso — per questo serve una funzione
+// condivisa tra tutte le fasce invece di ripetere la logica in ognuna
+function ampicillinaRegime(opz){
+  if(opz.meningite) return { dose: '2 g', intervalloBase: 4 };
+  if(opz.aumentato) return { dose: '2 g', intervalloBase: 6 };
+  return { dose: '1 g', intervalloBase: 6 };
+}
+
 const FARMACI_DB = {
   arixtra: {
     nome: 'Arixtra (fondaparinux)',
@@ -8423,30 +8433,54 @@ const FARMACI_DB = {
   },
   ampicillina: {
     nome: 'Ampicillina',
-    sottotitolo: 'aminopenicillina',
+    sottotitolo: 'aminopenicillina · schema EUCAST',
     opzioni: [
-      { chiave: 'grave', label: 'Meningite/endocardite (dosi elevate)' }
+      { chiave: 'aumentato', label: 'Dose aumentata (germi a esposizione aumentata, I)' },
+      { chiave: 'meningite', label: 'Meningite' }
     ],
     fasce: [
       { min: 50, max: Infinity, label: '≥ 50',
-        dose: (opz) => opz.grave
-          ? 'Fino a 2 g ogni 4h (12 g/die). Nessun aggiustamento.'
-          : '1-2 g EV ogni 4-6h secondo indicazione e gravità. Nessun aggiustamento.' },
-      { min: 10, max: 50, label: '10–50', dose: 'Stessa dose, intervallo allungato a ogni 6-12h.' },
-      { min: 0, max: 10, label: '< 10', dose: 'Stessa dose, intervallo allungato a ogni 12-24h.' }
+        dose: (opz) => {
+          const r = ampicillinaRegime(opz);
+          return r.dose + ' EV ogni ' + r.intervalloBase + 'h. Nessun aggiustamento.'
+            + (opz.meningite ? ' Considerare l\'infusione prolungata o continua nel paziente settico, per ottimizzare l\'attività tempo-dipendente dei beta-lattamici.' : '');
+        } },
+      { min: 30, max: 50, label: '30–49',
+        dose: (opz) => {
+          const r = ampicillinaRegime(opz);
+          const nuovoIntervallo = r.intervalloBase === 6 ? 8 : 6;
+          return r.dose + ' EV ogni ' + nuovoIntervallo + 'h.';
+        } },
+      { min: 10, max: 30, label: '10–29',
+        dose: (opz) => {
+          const r = ampicillinaRegime(opz);
+          const nuovoIntervallo = r.intervalloBase === 6 ? 12 : 8;
+          return r.dose + ' EV ogni ' + nuovoIntervallo + 'h.';
+        } },
+      { min: 0, max: 10, label: '< 10',
+        dose: (opz) => {
+          const r = ampicillinaRegime(opz);
+          const nuovoIntervallo = r.intervalloBase === 6 ? 24 : 12;
+          return r.dose + ' EV ogni ' + nuovoIntervallo + 'h.';
+        } }
     ],
-    note: 'Emodialisi: somministrare dopo la seduta (il farmaco è dializzabile).'
+    note: 'Il dosaggio aumentato (2 g invece di 1 g, stesso intervallo di 6h) è raccomandato da EUCAST per infezioni da batteri sensibili a esposizione aumentata (I). Nella meningite: 2 g ogni 4h — con VFG ridotta, l\'aggiustamento allunga questo stesso intervallo di 4h (non quello di 6h). AKI sepsi-relata nel paziente settico: è ragionevole attendere 48h prima di ridurre la dose per il peggioramento renale, perché una rapida risoluzione dell\'AKI esporrebbe il paziente al rischio di sottodosaggio nel pieno della sepsi. Emodialisi: somministrare dopo la seduta (il farmaco è dializzabile).'
   },
   unasyn: {
     nome: 'Ampicillina/sulbactam (Unasyn)',
-    sottotitolo: 'aminopenicillina + inibitore beta-lattamasi',
-    fasce: [
-      { min: 30, max: Infinity, label: '≥ 30', dose: '1,5-3 g EV ogni 6-8h (dose standard). Nessun aggiustamento.' },
-      { min: 15, max: 30, label: '15–29', dose: '1,5-3 g EV ogni 12h.' },
-      { min: 5, max: 15, label: '5–14', dose: '1,5-3 g EV ogni 24h.' },
-      { min: 0, max: 5, label: '< 5 o dialisi', dose: '1,5-3 g EV ogni 24h; in emodialisi somministrare dopo la seduta.' }
+    sottotitolo: 'aminopenicillina + inibitore beta-lattamasi · schema EUCAST',
+    opzioni: [
+      { chiave: 'aumentato', label: 'Dose aumentata (A. baumannii)' }
     ],
-    note: 'Non superare 4 g/die di sulbactam.'
+    fasce: [
+      { min: 30, max: Infinity, label: '≥ 30',
+        dose: (opz) => (opz.aumentato ? '3 g (2 g/1 g)' : '1,5 g (1 g/500 mg)') + ' EV ogni 6h. Nessun aggiustamento.' },
+      { min: 15, max: 30, label: '15–29',
+        dose: (opz) => (opz.aumentato ? '3 g (2 g/1 g)' : '1,5 g (1 g/500 mg)') + ' EV ogni 12h.' },
+      { min: 0, max: 15, label: '< 15',
+        dose: (opz) => (opz.aumentato ? '3 g (2 g/1 g)' : '1,5 g (1 g/500 mg)') + ' EV ogni 24h.' }
+    ],
+    note: 'Il dosaggio aumentato (3 g invece di 1,5 g, stesso intervallo) è indicato per infezioni da A. baumannii. Non superare 4 g/die di sulbactam (con la dose aumentata, 3 g ogni 6h corrisponde già a 4 g/die di sulbactam: il tetto). AKI sepsi-relata nel paziente settico: è ragionevole attendere 48h prima di ridurre la dose per il peggioramento renale, perché una rapida risoluzione dell\'AKI esporrebbe il paziente al rischio di sottodosaggio nel pieno della sepsi.'
   }
 };
 
@@ -8456,6 +8490,12 @@ const FARMACI_GRUPPI = {
   doac: ['apixaban', 'edoxaban', 'rivaroxaban', 'dabigatran']
 };
 
+// nomi alternativi che aprono lo stesso farmaco della chiave "canonica"
+// (quella con cui è effettivamente indicizzato in FARMACI_DB)
+const FARMACI_ALIAS = {
+  amoxi: 'augmentin',
+  amoxicillina: 'augmentin'
+};
 
 // cerca, nel testo del diario, l'ultima VFG scritta nel formato prodotto
 // dal calcolatore VFG ("VFG: 37 mL/min, ..."): serve per capire quale
@@ -8467,13 +8507,14 @@ function farmacoEstraiVfg(testoCompleto){
 }
 
 // scandisce il testo cercando "/parola": ritorna l'ULTIMA parola (la più
-// recente digitata) che corrisponde a un farmaco o un gruppo noto,
-// ignorando qualunque altro uso dello slash (date, frazioni, ecc.) che
-// non corrisponde a nulla nel database
+// recente digitata) che corrisponde a un farmaco o un gruppo noto (o a un
+// suo alias, vedi FARMACI_ALIAS), ignorando qualunque altro uso dello
+// slash (date, frazioni, ecc.) che non corrisponde a nulla nel database
 function farmacoTrovaChiaveAttiva(testo){
   const matches = [...(testo || '').matchAll(/\/([a-z]+)/gi)];
   for(let i = matches.length - 1; i >= 0; i--){
-    const chiave = matches[i][1].toLowerCase();
+    let chiave = matches[i][1].toLowerCase();
+    if(FARMACI_ALIAS[chiave]) chiave = FARMACI_ALIAS[chiave];
     if(FARMACI_DB[chiave] || FARMACI_GRUPPI[chiave]) return chiave;
   }
   return null;
