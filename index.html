@@ -1062,6 +1062,69 @@
 
   #ecgsim-modal footer{text-align:center;color:var(--muted-2);font-size:11px;line-height:1.6;margin-top:18px;padding:0 10px;}
 
+  /* ---------- SOFFI CARDIACI (modale) ----------
+     box di consultazione (non un calcolatore): elenca le cause possibili
+     per tipo di soffio + focolaio, evidenziando la combinazione trovata
+     nel diario (letta dal testo che la scheda Cuore compone già da sola,
+     es. "soffio sistolico ... su focolaio aortico") */
+  #soffi-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #soffi-modal-overlay.show{ display:flex; }
+  #soffi-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .soffi-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .soffi-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  #soffi-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #soffi-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #soffi-info{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:14px;
+    padding:8px 11px; background:var(--panel-2); border-radius:10px; border:1px solid var(--clay-border);
+  }
+  #soffi-info.trovata{ color:var(--signal); border-color:var(--signal-dim); }
+
+  .soffi-focolaio{
+    padding:12px 13px; border-radius:14px; border:1px solid var(--clay-border);
+    background:var(--panel-2); margin-bottom:10px;
+  }
+  .soffi-focolaio:last-child{ margin-bottom:0; }
+  .soffi-focolaio-titolo{
+    font-family:var(--font-display); font-size:15px; font-weight:700;
+    color:var(--ink); margin-bottom:9px;
+  }
+  .soffi-tipo{
+    padding:8px 10px; border-radius:10px; margin-bottom:7px;
+    border:1px solid transparent;
+  }
+  .soffi-tipo:last-child{ margin-bottom:0; }
+  .soffi-tipo.match{
+    border-color:var(--signal); background:var(--panel);
+    box-shadow:0 0 0 1px var(--signal), var(--glow-signal);
+  }
+  .soffi-tipo-label{
+    font-weight:600; font-size:12.5px; letter-spacing:.02em;
+    color:var(--ink-dim); margin-bottom:4px; text-transform:uppercase;
+  }
+  .soffi-tipo.match .soffi-tipo-label{ color:var(--signal); }
+  .soffi-tipo ul{ margin:0; padding-left:18px; color:var(--ink-dim); font-size:13px; line-height:1.6; }
+  .soffi-tipo.match ul{ color:var(--ink); }
+
 </style>
 </head>
 <body>
@@ -1190,6 +1253,9 @@
       </div>
       <div class="ric-lista-riga" onclick="apriAppEcg()">
         <span class="ric-lista-nome">ECG Simulator</span>
+      </div>
+      <div class="ric-lista-riga" onclick="apriAppSoffi()">
+        <span class="ric-lista-nome">Soffi cardiaci</span>
       </div>
       <div class="ric-lista-riga" onclick="toggleAppFarmaciSotto()">
         <span class="ric-lista-nome">Box farmaci</span>
@@ -4731,6 +4797,7 @@ function renderRiepilogo(){
       vfgControllaTrigger(body.value, body, id);
       farmacoControllaTrigger(body.value, body);
       ecgsimControllaTrigger(body.value, body);
+      soffiControllaTrigger(body.value, body);
     });
 
     block.appendChild(titleRow);
@@ -7473,6 +7540,21 @@ try{
   </div>
 </div>
 
+<!-- SOFFI CARDIACI: box di consultazione richiamato scrivendo "/soffio" o
+     "/soffi" in Diari, o dalla scheda App. Legge il testo già composto
+     dalla scheda Cuore ("soffio sistolico ... su focolaio aortico") per
+     evidenziare la combinazione trovata -->
+<div id="soffi-modal-overlay" onclick="if(event.target===this) chiudiAppSoffi()">
+  <div id="soffi-modal">
+    <div class="soffi-modal-header">
+      <h2>Soffi cardiaci</h2>
+      <button id="soffi-chiudi-btn" onclick="chiudiAppSoffi()">✕</button>
+    </div>
+    <div id="soffi-info"></div>
+    <div id="soffi-corpo"></div>
+  </div>
+</div>
+
 <!-- BOX FARMACI: box informativi (sola lettura) con dosaggi renali,
      richiamati scrivendo "/nomefarmaco" in Diari (es. /Arixtra, /Inhixa,
      /NAO, /DOAC). Il contenuto si costruisce dinamicamente in JS in base
@@ -9152,6 +9234,119 @@ function ecgsimControllaTrigger(testoAttuale, elementoTextarea){
     elementoTextarea.dataset.ecgsimAperto = '1';
   } else if(!contieneTrigger){
     elementoTextarea.dataset.ecgsimAperto = '0';
+  }
+}
+
+</script>
+<script>
+// ============================================================
+// SOFFI CARDIACI — box di consultazione (non un calcolatore): elenca le
+// cause possibili per tipo di soffio + focolaio. Legge il testo che la
+// scheda Cuore compone già da sola nel diario ("soffio sistolico ... su
+// focolaio aortico" o "...in mesocardio") per capire quale combinazione
+// evidenziare, sullo stesso principio degli altri box (VFG per i farmaci).
+// ============================================================
+
+// chiave = tipo + '-' + focolaio, stessi value usati da OPT.cuoreSoffio e
+// OPT.cuoreFocolaio nella scheda Cuore, così il riconoscimento dal testo
+// e l'elenco qui sotto restano sempre coerenti tra loro
+const SOFFI_DB = {
+  aortico: {
+    titolo: 'Aortico',
+    tipi: [
+      { tipo: 'sistolico', cause: ['Stenosi aortica', 'Sclerosi aortica degenerativa (frequente nell\'anziano, spesso senza stenosi significativa)'] },
+      { tipo: 'diastolico', cause: ['Insufficienza aortica (spesso meglio udibile al focolaio di Erb, ma irradia qui)'] }
+    ]
+  },
+  mitralico: {
+    titolo: 'Mitralico',
+    tipi: [
+      { tipo: 'sistolico', cause: ['Insufficienza mitralica', 'Prolasso della valvola mitrale'] },
+      { tipo: 'diastolico', cause: ['Stenosi mitralica'] }
+    ]
+  },
+  'aorto-mitralico': {
+    titolo: 'Aorto-mitralico',
+    tipi: [
+      { tipo: 'sistolico', cause: ['Irradiazione di una stenosi aortica verso l\'apice', 'Coesistenza di patologia valvolare aortica e mitralica'] }
+    ]
+  },
+  mesocardio: {
+    titolo: 'Mesocardio',
+    tipi: [
+      { tipo: 'sistolico', cause: ['Cardiomiopatia ipertrofica ostruttiva', 'Difetto interventricolare (VSD)'] }
+    ]
+  },
+  tricuspidale: {
+    titolo: 'Tricuspidale',
+    tipi: [
+      { tipo: 'sistolico', cause: ['Insufficienza tricuspidale'] },
+      { tipo: 'diastolico', cause: ['Stenosi tricuspidale (rara)'] }
+    ]
+  }
+};
+
+// cerca nel testo il formato che la scheda Cuore compone da sola: "soffio
+// sistolico|diastolico N/6 sec. Levine su focolaio X" oppure "...in
+// mesocardio" — il punto di "sec." impedisce di usare un semplice "tutto
+// tranne un punto" come separatore, quindi il pattern ricalca la frase
+// per intero invece di una ricerca generica. Ritorna {focolaio, tipo} o null
+function soffiEstraiChiave(testoCompleto){
+  const m = (testoCompleto || '').match(/soffio\s+(sistolico|diastolico)\s+[\d_]+\s*\/\s*6\s+sec\.\s+levine\s+(?:su focolaio ([a-zà-ù-]+)|in (mesocardio))/i);
+  if(!m) return null;
+  const tipo = m[1].toLowerCase();
+  const focolaio = (m[2] || m[3] || '').toLowerCase();
+  if(!SOFFI_DB[focolaio]) return null;
+  const haTipo = SOFFI_DB[focolaio].tipi.some(t => t.tipo === tipo);
+  return haTipo ? { focolaio, tipo } : null;
+}
+
+function soffiRenderCorpo(trovato){
+  const corpo = document.getElementById('soffi-corpo');
+  corpo.innerHTML = Object.keys(SOFFI_DB).map(chiaveFocolaio => {
+    const f = SOFFI_DB[chiaveFocolaio];
+    const tipiHtml = f.tipi.map(t => {
+      const attivo = !!trovato && trovato.focolaio === chiaveFocolaio && trovato.tipo === t.tipo;
+      const etichetta = t.tipo.charAt(0).toUpperCase() + t.tipo.slice(1);
+      return '<div class="soffi-tipo' + (attivo ? ' match' : '') + '">'
+        + '<div class="soffi-tipo-label">' + etichetta + (attivo ? ' — trovato nel diario' : '') + '</div>'
+        + '<ul>' + t.cause.map(c => '<li>' + c + '</li>').join('') + '</ul>'
+        + '</div>';
+    }).join('');
+    return '<div class="soffi-focolaio">'
+      + '<div class="soffi-focolaio-titolo">' + f.titolo + '</div>'
+      + tipiHtml
+      + '</div>';
+  }).join('');
+}
+
+function apriAppSoffi(testoDiario){
+  const trovato = soffiEstraiChiave(testoDiario || '');
+  const infoEl = document.getElementById('soffi-info');
+  if(trovato){
+    infoEl.style.display = '';
+    infoEl.classList.add('trovata');
+    infoEl.textContent = 'Trovato nel diario: ' + trovato.tipo + ' — focolaio ' + trovato.focolaio;
+  } else {
+    infoEl.style.display = 'none';
+    infoEl.textContent = '';
+  }
+  soffiRenderCorpo(trovato);
+  document.getElementById('soffi-modal-overlay').classList.add('show');
+}
+function chiudiAppSoffi(){
+  document.getElementById('soffi-modal-overlay').classList.remove('show');
+}
+
+// scritto "/soffio" o "/soffi" nel diario (in Diari) -> apre il box, una
+// volta sola per comparsa, stesso principio degli altri trigger
+function soffiControllaTrigger(testoAttuale, elementoTextarea){
+  const contieneTrigger = /\/soffi(o)?\b/i.test(testoAttuale);
+  if(contieneTrigger && elementoTextarea.dataset.soffiAperto !== '1'){
+    apriAppSoffi(testoAttuale);
+    elementoTextarea.dataset.soffiAperto = '1';
+  } else if(!contieneTrigger){
+    elementoTextarea.dataset.soffiAperto = '0';
   }
 }
 
