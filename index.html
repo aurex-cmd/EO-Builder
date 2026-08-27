@@ -2380,6 +2380,10 @@ function aggiungiAltroEsame(nome, testo){
   textareaTesto.placeholder = 'Referto…';
   textareaTesto.value = testo || '';
   textareaTesto.addEventListener('input', () => autoResizeTextarea(textareaTesto));
+  textareaTesto.addEventListener('blur', () => {
+    const corretto = correggiItaliano(textareaTesto.value);
+    if(corretto !== textareaTesto.value){ textareaTesto.value = corretto; autoResizeTextarea(textareaTesto); }
+  });
 
   const delBtn = document.createElement('button');
   delBtn.type = 'button';
@@ -7261,6 +7265,61 @@ document.querySelectorAll('input').forEach(el => el.addEventListener('input', up
 // scorrere o allargare a mano lo spazio
 document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea')
   .forEach(el => el.addEventListener('input', () => autoResizeTextarea(el)));
+
+// correzioni automatiche di errori italiani frequenti E sempre sbagliati
+// nella grafia digitata (nessuna parola qui è ambigua: "nè"/"perchè" ecc.
+// non sono mai corrette in italiano standard, a differenza per esempio di
+// "un'altro" che dipende dal genere della parola dopo — per questo non è
+// nell'elenco). Si applicano quando si esce dal campo (blur), non mentre
+// si scrive, per non disturbare la digitazione in corso.
+// Nota: si usano lookaround invece di \b perché in JavaScript \b non
+// riconosce il confine dopo una lettera accentata (è/ò) senza il flag
+// Unicode — con \b, "nè", "perchè", "poichè" e "pò" non sarebbero mai
+// stati intercettati, proprio gli errori più frequenti.
+const CONFINE_PRE = "(?<![a-zA-ZÀ-ÿ'])";
+const CONFINE_POST = "(?![a-zA-ZÀ-ÿ])";
+function reConCon(testoPattern, flag){
+  return new RegExp(CONFINE_PRE + testoPattern + CONFINE_POST, flag);
+}
+const CORREZIONI_ITALIANO = [
+  { pattern: reConCon("perch[èe]", 'gi'), sostituzione: () => 'perché' },
+  { pattern: reConCon("poich[èe]", 'gi'), sostituzione: () => 'poiché' },
+  { pattern: reConCon("affinch[èe]", 'gi'), sostituzione: () => 'affinché' },
+  { pattern: reConCon("nonch[èe]", 'gi'), sostituzione: () => 'nonché' },
+  { pattern: reConCon("sicch[èe]", 'gi'), sostituzione: () => 'sicché' },
+  { pattern: reConCon("cosicch[èe]", 'gi'), sostituzione: () => 'cosicché' },
+  { pattern: reConCon("finch[èe]", 'gi'), sostituzione: () => 'finché' },
+  { pattern: reConCon("nè", 'g'), sostituzione: () => 'né' },
+  { pattern: reConCon("sè", 'g'), sostituzione: () => 'sé' },
+  { pattern: reConCon("pò", 'g'), sostituzione: () => "po'" },
+  { pattern: reConCon("piu", 'gi'), sostituzione: () => 'più' },
+  { pattern: reConCon("puo", 'gi'), sostituzione: () => 'può' },
+  { pattern: reConCon("cioe", 'gi'), sostituzione: () => 'cioè' },
+  { pattern: reConCon("sopratutto", 'gi'), sostituzione: () => 'soprattutto' },
+  { pattern: reConCon("qual'(è|e|era|erano)", 'gi'), sostituzione: (m, g1) => 'qual ' + (g1.toLowerCase() === 'e' ? 'è' : g1) }
+];
+
+function correggiItaliano(testo){
+  if(!testo) return testo;
+  let risultato = testo;
+  CORREZIONI_ITALIANO.forEach(({ pattern, sostituzione }) => {
+    risultato = risultato.replace(pattern, (match, ...resto) => {
+      const gruppi = resto.slice(0, -2); // toglie offset e stringa originale che replace() passa in coda
+      let sost = sostituzione(match, ...gruppi);
+      // mantiene l'iniziale maiuscola se la parola originale la aveva (es. "Perche" a inizio frase)
+      if(/[A-ZÀ-Ú]/.test(match[0])) sost = sost.charAt(0).toUpperCase() + sost.slice(1);
+      return sost;
+    });
+  });
+  return risultato;
+}
+
+document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea').forEach(el => {
+  el.addEventListener('blur', () => {
+    const corretto = correggiItaliano(el.value);
+    if(corretto !== el.value){ el.value = corretto; autoResizeTextarea(el); }
+  });
+});
 
 // la striscia vitali in alto è uno specchio dei campi già presenti più
 // sotto (SatO2/PA/FC/Temperatura): stesso dato, due punti dove inserirlo.
