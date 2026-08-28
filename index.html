@@ -8227,7 +8227,7 @@ function vfgResetForm(){
 // modale si apre semplicemente vuoto
 function vfgEstraiRiga(testoCompleto){
   const linee = (testoCompleto || '').split('\n');
-  return linee.find(l => /cockroft|cockcroft|\bvfg\b/i.test(l)) || '';
+  return linee.find(l => /cockroft|cockcroft|vfg/i.test(l)) || '';
 }
 
 function vfgParseValori(riga){
@@ -8300,7 +8300,7 @@ function chiudiVfgCalc(){
       // sostituisce dal trigger (Cockroft/Cockcroft/VFG) fino a fine riga,
       // lasciando intatto il resto del diario prima e dopo — stesso
       // meccanismo di chiudiEgaAnalyzer
-      const nuovoTesto = textareaEl.value.replace(/(?:cockroft|cockcroft|\bvfg\b).*/i, () => nuovaRiga);
+      const nuovoTesto = textareaEl.value.replace(/(?:cockroft|cockcroft|vfg).*/i, () => nuovaRiga);
       textareaEl.value = nuovoTesto;
       aggiornaDiarioTesto(patientId, nuovoTesto);
       autoResizeTextarea(textareaEl);
@@ -8315,7 +8315,20 @@ function chiudiVfgCalc(){
 // egaControllaTrigger): chiuderlo e continuare a scrivere non lo riapre,
 // si riapre solo cancellando e riscrivendo il trigger
 function vfgControllaTrigger(testoAttuale, elementoTextarea, patientId){
-  const contieneTrigger = /cockroft|cockcroft|\bvfg\b/i.test(testoAttuale);
+  // NB: niente \b attorno a "vfg" (a differenza di come si potrebbe scrivere
+  // d'istinto): la riga di risultato generata alla chiusura (vedi
+  // vfgComponiRigaFinale) comincia anch'essa con "VFG: ...", ed è proprio
+  // questa a dover continuare a "soddisfare" il trigger per sempre (così
+  // chiudere e continuare a scrivere non riapre il box, vedi commento sotto).
+  // Con \bvfg\b bastava che un'altra parola/trigger scritto subito
+  // appiccicato (senza spazio) a quella riga rompesse il confine di parola
+  // per far "sparire" il match: il flag vfgAperto si azzerava in silenzio, e
+  // la modifica successiva che ripristinava il confine (es. cancellare un
+  // carattere lì vicino, come in /Inhixa) riapriva il box da solo, anche se
+  // l'utente non aveva più toccato "Cockroft"/"VFG". Un controllo per
+  // sottostringa, senza \b — la stessa impostazione già usata per "EGA:" in
+  // egaControllaTrigger — non ha questo problema.
+  const contieneTrigger = /cockroft|cockcroft|vfg/i.test(testoAttuale);
   if(contieneTrigger && elementoTextarea.dataset.vfgAperto !== '1'){
     apriVfgCalc(testoAttuale, elementoTextarea, patientId);
     elementoTextarea.dataset.vfgAperto = '1';
