@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
-<head><meta name="google-site-verification" content="aG2cVS7oSuildZk8gJHe_jc10AB177Te9mGMtOQnZj0" />
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>E.O. Builder</title>
@@ -1191,6 +1191,7 @@
       <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
     </div>
     <div id="sync-logged-out">
+      <div class="group-label" style="margin-bottom:8px;">Accedi al tuo account personale per sincronizzare i dati clinici (schede, diari, ricoveri) tra i tuoi dispositivi. Facoltativo: senza login l'app funziona comunque, salvando tutto solo su questo dispositivo.</div>
       <div class="inline-fields">
         <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
         <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
@@ -1205,6 +1206,10 @@
       <div class="group-label" id="sync-logged-in-text"></div>
       <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
     </div>
+  </div>
+
+  <div class="group" id="app-info-box" style="font-size:12px; opacity:.7; line-height:1.5;">
+    <strong>E.O. Builder</strong> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.
   </div>
 </div>
 
