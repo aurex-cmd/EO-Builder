@@ -7103,6 +7103,11 @@ function composeReferto(){
 // senza che l'utente tocchi nulla, e un confronto "al volo" scambierebbe
 // per errore l'intero paragrafo vecchio per testo scritto a mano
 let outputAutoUltimo = '';
+// stessa idea, ma solo per la frase di composeRespiro() (tipo di respiro +
+// parametri vitali): serve a aggiornaVitale() più sotto per individuare ED
+// SOSTITUIRE solo quel pezzo dentro un eventuale testo modificato a mano,
+// senza toccare il resto della modifica manuale — vedi lì per il perché
+let outputRespiroUltimo = '';
 // discardManuale=true (default): "ho toccato un tag", quindi la parte
 // generata torna quella vera, scartando un'eventuale modifica manuale
 // fatta prima della riga vuota. discardManuale=false: sto solo
@@ -7113,12 +7118,51 @@ function refreshUI(discardManuale = true){
   renderAll();
   const autoText = composeReferto();
   outputAutoUltimo = autoText;
+  outputRespiroUltimo = composeRespiro();
   if(discardManuale) state.outputEsameManuale = '';
   const esameText = state.outputEsameManuale || autoText;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
   renderVitalsStrip();
 }
+
+// variante di refreshUI() dedicata SOLO ai parametri vitali (SpO2, PA, FC,
+// TC — striscia in alto e relativi campi duplicati più sotto): a differenza
+// di un tag qualunque dell'esame obiettivo, inserire/correggere un
+// parametro vitale non deve MAI far perdere un'eventuale modifica manuale
+// al resto del testo. Invece di rigenerare tutto da capo, si individua la
+// vecchia frase di composeRespiro() dentro il testo mostrato (manuale o
+// automatico che sia) e si sostituisce solo quella, lasciando intatto il
+// resto — comprese eventuali modifiche manuali fatte altrove.
+function aggiornaVitale(){
+  syncInputsToState();
+  renderAll();
+  const nuovoAuto = composeReferto();
+  const nuovoRespiro = composeRespiro();
+
+  if(state.outputEsameManuale){
+    if(state.outputEsameManuale.includes(outputRespiroUltimo)){
+      const patched = state.outputEsameManuale.replace(outputRespiroUltimo, nuovoRespiro);
+      // se il "rammendo" fa combaciare di nuovo tutto col testo generato,
+      // non c'è più nessuna modifica manuale da ricordare
+      state.outputEsameManuale = (patched === nuovoAuto) ? '' : patched;
+    }
+    // se la vecchia frase non si trova più (perché era stata riscritta a
+    // mano anche quella), il testo manuale resta com'è: il valore digitato
+    // ora è comunque salvato in state.respiro e visibile nella striscia
+    // vitali, semplicemente non proviamo a indovinare dove infilarlo nel
+    // testo per non rischiare di rovinare il resto della modifica manuale
+  }
+
+  outputAutoUltimo = nuovoAuto;
+  outputRespiroUltimo = nuovoRespiro;
+  const esameText = state.outputEsameManuale || nuovoAuto;
+  const extra = (state.outputExtra || '').trim();
+  document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
+  renderVitalsStrip();
+  autosaveCurrentPatient();
+}
+
 
 // striscia vitali fissa in cima alla scheda clinica: legge/scrive
 // direttamente su state.respiro, sempre visibile anche scorrendo giù nelle
@@ -7269,7 +7313,17 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
 }
 
-document.querySelectorAll('input').forEach(el => el.addEventListener('input', update));
+// SpO2/PA sist./PA diast./FC/TC: i "veri" parametri vitali, sia nella
+// striscia in alto sia nei campi duplicati più sotto (vs-* e v-*/temp-valore
+// vedi blocco poco più sotto) — questi NON passano dal listener generico
+// qui sotto: hanno un proprio listener collegato a aggiornaVitale() invece
+// che a update(), per non scartare un'eventuale modifica manuale al resto
+// dell'esame obiettivo (vedi aggiornaVitale più sopra)
+const CAMPI_VITALI_IDS = ['vs-sat','vs-pas','vs-pad','vs-fc','vs-temp','v-sat','v-pas','v-pad','v-fc','temp-valore'];
+document.querySelectorAll('input').forEach(el => {
+  if(CAMPI_VITALI_IDS.includes(el.id)) return;
+  el.addEventListener('input', update);
+});
 
 // le textarea della scheda Ricoveri si ridimensionano da sole mentre si
 // scrive (stesso meccanismo già usato in Diari), così un testo lungo
@@ -7354,8 +7408,13 @@ document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view texta
   alto.addEventListener('input', () => {
     basso.value = alto.value;
     state.respiro[campo] = alto.value;
-    update();
+    aggiornaVitale();
   });
+  // il campo duplicato più sotto non ha il listener generico (vedi
+  // CAMPI_VITALI_IDS più sopra): serve collegarlo qui esplicitamente,
+  // il percorso "sotto -> aggiorna sopra" resta coperto da
+  // renderVitalsStrip() dentro aggiornaVitale()
+  basso.addEventListener('input', aggiornaVitale);
 });
 
 // Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
