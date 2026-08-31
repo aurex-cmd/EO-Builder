@@ -5177,6 +5177,11 @@ function comporreSedeTorace(locSet, suTapParola){
     else parts.push(emiDx && emiSx ? 'bilateralmente' : 'in emitorace ' + (emiDx ? 'dx' : 'sx'));
   }
 
+  // "alle alte vie" va prima della zona (anatomicamente più in alto), stessa
+  // preposizione locativa di "alle basi" — così, combinata con una zona,
+  // legge "alle alte vie e in base dx" invece di un elenco con la virgola
+  if(locSet.has('delle_alte_vie')) parts.push('alle alte vie');
+
   const hasApice = locSet.has('apice'), hasMedio = locSet.has('medio'), hasBase = locSet.has('base');
   let zoneText = '', soloBase = false;
   if(hasApice && hasMedio && hasBase){ zoneText = 'diffusamente su tutto l\'ambito'; }
@@ -5213,9 +5218,11 @@ function comporreSedeTorace(locSet, suTapParola){
   }
 
   if(locSet.has('sparsi')) parts.push('sparsi');
-  if(locSet.has('delle_alte_vie')) parts.push('delle alte vie');
 
-  return parts.join(', ');
+  // join "all'italiana" (virgola tra i pezzi, "e" prima dell'ultimo) invece
+  // di un elenco piatto con la virgola dappertutto — stesso stile già usato
+  // altrove (vedi joinIt), così due sedi diventano "X e Y" e non "X, Y"
+  return joinIt(parts);
 }
 
 // compone il testo per più blocchi sede indipendenti (usata solo per MV):
@@ -6186,7 +6193,7 @@ const OPT = {
   ],
   toraceReperteExtra: [
     {value:'sparsi', label:'Sparsi'},
-    {value:'delle_alte_vie', label:'delle alte vie'},
+    {value:'delle_alte_vie', label:'alle alte vie'},
     {value:'dx_maggiore', label:'Dx > Sx'},
     {value:'sx_maggiore', label:'Sx > Dx'}
   ],
