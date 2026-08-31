@@ -4488,13 +4488,16 @@ function aggiornaVitaleLetto(nome, campo, valore){
   if(entry && entry[0] === currentPatientId){
     // il campo "gemello" nella scheda clinica classica (in questo momento
     // nascosta, ma ancora presente nel DOM) va aggiornato anche lui:
-    // update() richiama syncInputsToState(), che rilegge quell'input e,
-    // se lo trova col valore vecchio, cancellerebbe quello appena scritto qui
+    // aggiornaVitale() richiama syncInputsToState(), che rilegge quell'input
+    // e, se lo trova col valore vecchio, cancellerebbe quello appena scritto qui
     const idClassico = CAMPO_VITALE_ID_CLASSICO[campo];
     const inputClassico = idClassico && document.getElementById(idClassico);
     if(inputClassico) inputClassico.value = valore;
     state.respiro[campo] = valore;
-    update(false);
+    // aggiornaVitale() (non update(false)): innesta il nuovo valore dentro
+    // un eventuale testo del Diario già modificato a mano, invece di
+    // limitarsi a ri-mostrare quello vecchio senza il valore appena scritto
+    aggiornaVitale();
     return;
   }
 
@@ -4511,7 +4514,25 @@ function aggiornaVitaleLetto(nome, campo, valore){
     entry[1].state.outputEsameManuale = '';
   }
   entry[1].state.respiro = entry[1].state.respiro || {};
-  entry[1].state.respiro[campo] = valore;
+
+  // questo letto NON è la scheda clinica aperta ora: se ha comunque un
+  // testo scritto a mano salvato (outputEsameManuale), proviamo a
+  // innestarci dentro il nuovo valore con lo stesso "rammendo" di
+  // aggiornaVitale(), così non resta indietro finché non si riapre la
+  // scheda — vecchioRespiro va calcolato PRIMA di scrivere il valore nuovo
+  if(entry[1].state.outputEsameManuale){
+    const vecchioRespiro = composeRespiro(entry[1].state.respiro);
+    entry[1].state.respiro[campo] = valore;
+    const nuovoRespiro = composeRespiro(entry[1].state.respiro);
+    if(entry[1].state.outputEsameManuale.includes(vecchioRespiro)){
+      entry[1].state.outputEsameManuale = entry[1].state.outputEsameManuale.replace(vecchioRespiro, nuovoRespiro);
+    }
+    // se non la troviamo più (era stata riscritta a mano anche quella),
+    // lasciamo il testo manuale com'è, come in aggiornaVitale()
+  } else {
+    entry[1].state.respiro[campo] = valore;
+  }
+
   entry[1].savedAt = Date.now();
   savePatients(patients);
 }
@@ -6568,8 +6589,12 @@ function composeCoscienza(){
   return s;
 }
 
-function composeRespiro(){
-  const r = state.respiro;
+// r opzionale: di norma legge lo stato del paziente aperto ora
+// (state.respiro), ma può ricevere l'oggetto "respiro" di UN ALTRO
+// paziente (vedi aggiornaVitaleLetto) per ricomporre la sua frase senza
+// dover aprire la sua scheda clinica
+function composeRespiro(r){
+  r = r || state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
   const tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
   let o2text;
