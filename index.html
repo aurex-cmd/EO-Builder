@@ -2363,10 +2363,22 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.onclick = () => {
         chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
+        aggiornaRicoveroDalForm();
       };
     });
   }
+
+  // ogni campo del form che entra in uno dei 6 testi generati (vedi
+  // costruisciDiario/Prossima/Remota/Farmacologica/Familiare/Allergie):
+  // "admit-letto", "admit-reparto" e "admit-smista-testo" restano fuori,
+  // non compaiono in nessuno dei box sottostanti
+  ['admit-cognome','admit-nome','admit-eta','admit-diagnosi','admit-allergie','admit-prossima','admit-provvedimenti',
+   'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
+   'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', aggiornaRicoveroDalForm);
+  });
 });
+
 
 // aggiunge una riga "altro esame" (es. ECG) dentro Esami strumentali: nome
 // libero + referto libero, con pulsante per rimuoverla
@@ -2380,15 +2392,16 @@ function aggiungiAltroEsame(nome, testo){
   inputNome.className = 'altro-esame-nome';
   inputNome.placeholder = 'es. ECG';
   inputNome.value = nome || '';
+  inputNome.addEventListener('input', aggiornaRicoveroDalForm);
 
   const textareaTesto = document.createElement('textarea');
   textareaTesto.className = 'altro-esame-testo';
   textareaTesto.placeholder = 'Referto…';
   textareaTesto.value = testo || '';
-  textareaTesto.addEventListener('input', () => autoResizeTextarea(textareaTesto));
+  textareaTesto.addEventListener('input', () => { autoResizeTextarea(textareaTesto); aggiornaRicoveroDalForm(); });
   textareaTesto.addEventListener('blur', () => {
     const corretto = correggiItaliano(textareaTesto.value);
-    if(corretto !== textareaTesto.value){ textareaTesto.value = corretto; autoResizeTextarea(textareaTesto); }
+    if(corretto !== textareaTesto.value){ textareaTesto.value = corretto; autoResizeTextarea(textareaTesto); aggiornaRicoveroDalForm(); }
   });
 
   const delBtn = document.createElement('button');
@@ -2396,7 +2409,7 @@ function aggiungiAltroEsame(nome, testo){
   delBtn.className = 'altro-esame-del';
   delBtn.textContent = '×';
   delBtn.title = 'Rimuovi esame';
-  delBtn.onclick = () => row.remove();
+  delBtn.onclick = () => { row.remove(); aggiornaRicoveroDalForm(); };
 
   row.appendChild(inputNome);
   row.appendChild(textareaTesto);
@@ -2464,6 +2477,11 @@ function smistaTestoPSInCampi(){
     prossima:'anamnesi prossima', allergie:'allergie', remota:'anamnesi remota', farmacologica:'terapia'
   })[k]).join(', ') : 'Nessun marcatore trovato: tutto in anamnesi prossima');
   autoResizeTutteRicoveriTextarea();
+  // i campi sopra sono stati riempiti via .value da JS, che non genera da
+  // solo l'evento 'input': l'aggiornamento del box va quindi richiamato
+  // esplicitamente qui, altrimenti resterebbe indietro fino al prossimo
+  // tasto premuto a mano in un campo qualsiasi
+  aggiornaRicoveroDalForm();
 }
 
 function raccogliCampiForm(){
@@ -2559,6 +2577,93 @@ function apriNuovoRicoveroSingolo(){
   mostraVista('ricovero-singolo');
 }
 
+// vedi il commento dentro renderRicoveroSingoloBox() per il significato
+let ricoveroAutoUltimo = {};
+let debounceSalvataggioRicoveroForm = null;
+let pendingSalvataggioRicoveroForm = null; // {campi, campiVergini}
+
+function eseguiSalvataggioRicoveroForm(){
+  clearTimeout(debounceSalvataggioRicoveroForm);
+  if(!pendingSalvataggioRicoveroForm) return;
+  const { campi, campiVergini } = pendingSalvataggioRicoveroForm;
+  pendingSalvataggioRicoveroForm = null;
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === currentRicoveroId);
+  if(idx === -1) return;
+  const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || list[idx].label;
+  list[idx].campi = campi;
+  list[idx].label = label;
+  Object.keys(campiVergini).forEach(campo => { list[idx][campo] = campiVergini[campo]; });
+  saveRicoveri(list);
+}
+
+// richiamata a ogni modifica di un campo del form "Nuovo ricovero"/
+// "Aggiorna ricovero" (Cognome, Nome, Età, Diagnosi, Allergie, Anamnesi
+// prossima/remota/farmacologica/familiare, Provvedimenti, Esami — vedi
+// wiring più sotto): se un ricovero è già stato generato, aggiorna SUBITO
+// (senza dover premere "Aggiorna ricovero") i soli box sottostanti che non
+// sono ancora stati toccati a mano, lasciando intatto tutto il resto —
+// stessa filosofia di aggiornaVitale() per l'esame obiettivo
+function aggiornaRicoveroDalForm(){
+  if(!currentRicoveroId) return;
+  const box = document.getElementById('ricovero-singolo-box');
+  if(!box || !box.querySelector('.admit-block')) return;
+
+  const campi = raccogliCampiForm();
+  const nuovi = {
+    diario: costruisciDiario(campi),
+    prossima: costruisciProssima(campi),
+    remota: costruisciRemota(campi),
+    farmacologica: costruisciFarmacologica(campi),
+    familiare: costruisciFamiliare(campi),
+    allergie: costruisciAllergie(campi)
+  };
+  const baseline = ricoveroAutoUltimo[currentRicoveroId] || {};
+  const cambiatiVergini = {};
+  // un campo appena comparso/scomparso (era vuoto e ora ha testo, o
+  // viceversa) fa comparire/sparire l'intero box: in quel caso serve un
+  // render completo, non basta aggiornare un testContent già a schermo
+  let serveRenderCompleto = false;
+
+  Object.keys(nuovi).forEach(campo => {
+    const el = box.querySelector(`[data-campo="${campo}"]`);
+    const eraVergine = !el || baseline[campo] === undefined || el.textContent === baseline[campo];
+    if(!eraVergine) return; // modificato a mano nel box: non lo tocchiamo
+
+    cambiatiVergini[campo] = nuovi[campo];
+    const nuovoVuoto = !nuovi[campo].trim();
+    if(!el){
+      if(!nuovoVuoto) serveRenderCompleto = true;
+    } else if(nuovoVuoto && campo !== 'problemi'){
+      serveRenderCompleto = true;
+    } else if(el.textContent !== nuovi[campo]){
+      el.textContent = nuovi[campo];
+      // stesso "sporca il badge copiato" fatto dal listener del box stesso
+      const sub = el.closest('.admit-sub');
+      sub?.classList.remove('copiato');
+      sub?.querySelector('.admit-sub-copiato-badge')?.remove();
+    }
+  });
+
+  ricoveroAutoUltimo[currentRicoveroId] = nuovi;
+  pendingSalvataggioRicoveroForm = {
+    campi,
+    campiVergini: { ...(pendingSalvataggioRicoveroForm ? pendingSalvataggioRicoveroForm.campiVergini : null), ...cambiatiVergini }
+  };
+
+  if(serveRenderCompleto){
+    eseguiSalvataggioRicoveroForm();
+    renderRicoveroSingoloBox();
+    return;
+  }
+  // il salvataggio vero e proprio (localStorage + sync cloud) è più
+  // pesante: lo rimandiamo a quando l'utente smette di scrivere per un
+  // attimo, stessa ragione/stesso ritardo già usato per il box stesso
+  // (vedi salvaSubito dentro renderRicoveroSingoloBox)
+  clearTimeout(debounceSalvataggioRicoveroForm);
+  debounceSalvataggioRicoveroForm = setTimeout(eseguiSalvataggioRicoveroForm, 500);
+}
+
 function generaRicovero(){
   const campi = raccogliCampiForm();
 
@@ -2582,7 +2687,17 @@ function generaRicovero(){
     if(idx !== -1){
       // "problemi" non fa parte del form: si scrive solo a mano nel box del
       // ricovero già generato, quindi qui non va toccato/sovrascritto
-      list[idx] = { ...list[idx], campi, label, diario, prossima, remota, farmacologica, familiare, allergie };
+      const nuoviCampi = { diario, prossima, remota, farmacologica, familiare, allergie };
+      const baseline = ricoveroAutoUltimo[currentRicoveroId] || {};
+      Object.keys(nuoviCampi).forEach(campo => {
+        const eraVergine = baseline[campo] === undefined || list[idx][campo] === baseline[campo];
+        // stessa regola dell'aggiornamento automatico dal form: un campo
+        // già modificato a mano nel box non viene sovrascritto nemmeno
+        // premendo "Aggiorna ricovero"
+        if(eraVergine) list[idx][campo] = nuoviCampi[campo];
+      });
+      list[idx] = { ...list[idx], campi, label };
+      ricoveroAutoUltimo[currentRicoveroId] = nuoviCampi;
       saveRicoveri(list);
       ricoveriAperti.add(currentRicoveroId);
       renderRicoveroSingoloBox();
@@ -2608,6 +2723,7 @@ function generaRicovero(){
     problemi: ''
   };
   list.push(record);
+  ricoveroAutoUltimo[record.id] = { diario, prossima, remota, farmacologica, familiare, allergie };
   saveRicoveri(list);
   currentRicoveroId = record.id;
   ricoveriAperti.add(record.id);
@@ -2972,6 +3088,20 @@ function renderRicoveroSingoloBox(){
   const rec = loadRicoveri().find(r => r.id === currentRicoveroId);
   if(!rec) return;
 
+  // tiene traccia, per questo ricovero, dell'ultimo valore "generato dal
+  // form" per ciascuno dei 6 campi derivati: la prima volta che lo
+  // incontriamo in questa sessione assumiamo che il box mostri ancora
+  // esattamente quel valore (nessuna modifica a mano nota) — le volte
+  // successive questo tracciamento viene aggiornato solo da
+  // aggiornaRicoveroDalForm()/generaRicovero(), MAI qui, altrimenti un
+  // semplice ri-render "dimenticherebbe" una modifica a mano già fatta
+  if(ricoveroAutoUltimo[rec.id] === undefined){
+    ricoveroAutoUltimo[rec.id] = {
+      diario: rec.diario || '', prossima: rec.prossima || '', remota: rec.remota || '',
+      farmacologica: rec.farmacologica || '', familiare: rec.familiare || '', allergie: rec.allergie || ''
+    };
+  }
+
   const block = document.createElement('details');
   block.className = 'admit-block';
   block.open = ricoveriAperti.has(rec.id);
@@ -3070,6 +3200,7 @@ function renderRicoveroSingoloBox(){
     const editable = document.createElement('div');
     editable.className = 'admit-editable';
     editable.contentEditable = 'true';
+    editable.dataset.campo = campo;
     editable.textContent = rec[campo] || '';
     if(campo === 'problemi'){
       editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
@@ -4176,7 +4307,14 @@ function schedaHaDati(patientState){
 }
 
 // gestione delle 3 "pagine": clinica (form EO), mappa reparto, riepilogo referti
+// ricorda la posizione di scroll della vista Diari quando si esce, così
+// saltando su un'altra sezione (es. Ricoveri) e tornando indietro si
+// ritrova lo stesso punto della lista invece di ripartire sempre dall'alto
+let riepilogoScrollY = 0;
 function mostraVista(v){
+  if(document.getElementById('riepilogo-view').style.display !== 'none'){
+    riepilogoScrollY = window.scrollY;
+  }
   wardMapOpen = (v === 'wardmap');
   document.getElementById('clinical-view').style.display = (v === 'clinical') ? '' : 'none';
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
@@ -4186,7 +4324,13 @@ function mostraVista(v){
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
   if(v === 'wardmap') renderWardMap();
-  if(v === 'riepilogo') renderRiepilogo();
+  if(v === 'riepilogo'){
+    renderRiepilogo();
+    // la lista viene ricostruita da capo (innerHTML=''), quindi il ripristino
+    // va fatto dopo che il browser ha ricalcolato l'altezza della pagina,
+    // altrimenti scrollTo arriverebbe prima che ci sia spazio per scrollare
+    requestAnimationFrame(() => window.scrollTo(0, riepilogoScrollY));
+  }
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
 
