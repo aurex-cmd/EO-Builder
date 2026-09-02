@@ -248,6 +248,11 @@
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
   }
+  .diario-esami-badge{
+    width:18px; height:18px; border-radius:50%; background:#d9695f;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
 
   /* ---------- CARDS ---------- */
   .card{
@@ -1370,12 +1375,6 @@
     </div>
     <div class="admit-form-body" id="admit-form-body">
 
-    <div class="admit-field" style="background:var(--bg-soft, rgba(255,255,255,0.03)); border:1px dashed var(--line); border-radius:10px; padding:10px;">
-      <div class="field-label">Incolla qui il verbale del PS (opzionale)</div>
-      <textarea id="admit-smista-testo" placeholder="Incolla il testo intero del verbale: se contiene i marcatori A: / P: / TP: viene smistato automaticamente nei campi sottostanti (allergie, anamnesi remota, terapia). Il testo prima del primo marcatore diventa anamnesi prossima."></textarea>
-      <button type="button" class="btn" style="margin-top:8px;" onclick="smistaTestoPSInCampi()">Smista nei campi</button>
-    </div>
-
     <div class="group admit-field">
       <div class="field-label">Sesso</div>
       <div class="chips admit-sesso-chips" id="admit-sesso-chips">
@@ -1395,24 +1394,17 @@
       </div>
     </div>
 
-    <div class="admit-grid">
-      <div class="admit-field">
-        <div class="field-label">Letto</div>
-        <input type="text" id="admit-letto" placeholder="es. 4.1">
-      </div>
-      <div class="admit-field">
-        <div class="field-label">Reparto di ricovero</div>
-        <select id="admit-reparto">
-          <option value="GERIATRIA">GERIATRIA</option>
-          <option value="MED C2">MED C2</option>
-          <option value="MED C1">MED C1</option>
-        </select>
-      </div>
-    </div>
-
     <div class="admit-field">
       <div class="field-label">Età (in anni)</div>
       <input type="number" id="admit-eta" placeholder="es. 84">
+    </div>
+
+    <div class="group-label" style="margin-top:6px;">Dalla cartella del PS</div>
+
+    <div class="admit-field" style="background:var(--bg-soft, rgba(255,255,255,0.03)); border:1px dashed var(--line); border-radius:10px; padding:10px;">
+      <div class="field-label">Incolla qui il verbale del PS (opzionale)</div>
+      <textarea id="admit-smista-testo" placeholder="Incolla il testo intero del verbale: se contiene i marcatori A: / P: o APR: / TP: o TD: viene smistato automaticamente nei campi sottostanti (allergie, anamnesi remota, terapia). Il testo prima del primo marcatore trovato diventa anamnesi prossima."></textarea>
+      <button type="button" class="btn" style="margin-top:8px;" onclick="smistaTestoPSInCampi()">Smista nei campi</button>
     </div>
 
     <div class="admit-field">
@@ -1421,19 +1413,21 @@
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Allergie</div>
-      <input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine">
-    </div>
-
-    <div class="admit-field">
       <div class="field-label">Anamnesi patologica prossima</div>
       <textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea>
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Provvedimenti in PS</div>
-      <textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea>
+      <div class="field-label">Anamnesi patologica remota (prima bozza dal PS, si affina dopo)</div>
+      <textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia"></textarea>
     </div>
+
+    <div class="admit-field">
+      <div class="field-label">Allergie</div>
+      <input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine">
+    </div>
+
+    <div class="group-label" style="margin-top:6px;">Esami eseguiti</div>
 
     <div class="admit-field">
       <div class="field-label">Esami ematochimici</div>
@@ -1468,22 +1462,41 @@
         </div>
       </details>
       <div id="admit-altri-esami"></div>
-      <button type="button" class="admit-add-btn" onclick="aggiungiAltroEsame()">+ Aggiungi esame (es. ECG)</button>
+      <button type="button" class="admit-add-btn" onclick="aggiungiAltroEsame()">+ Aggiungi esame (es. ECG, EGA, visite)</button>
     </div>
 
     <div class="admit-field">
-      <div class="field-label">Anamnesi patologica remota</div>
-      <textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia"></textarea>
+      <div class="field-label">Provvedimenti in PS</div>
+      <textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea>
     </div>
 
+    <div class="group-label" style="margin-top:6px;">Dalla visita (esame obiettivo qui sotto, dopo aver generato) e dai parenti</div>
+
     <div class="admit-field">
-      <div class="field-label">Anamnesi farmacologica</div>
+      <div class="field-label">Anamnesi farmacologica (in dettaglio)</div>
       <textarea id="admit-farmacologica" placeholder="Terapia domiciliare…"></textarea>
     </div>
 
     <div class="admit-field">
       <div class="field-label">Anamnesi familiare e fisiologica</div>
       <textarea id="admit-familiare" placeholder="…"></textarea>
+    </div>
+
+    <div class="group-label" style="margin-top:6px;">Destinazione</div>
+
+    <div class="admit-grid">
+      <div class="admit-field">
+        <div class="field-label">Letto</div>
+        <input type="text" id="admit-letto" placeholder="es. 4.1">
+      </div>
+      <div class="admit-field">
+        <div class="field-label">Reparto di ricovero</div>
+        <select id="admit-reparto">
+          <option value="GERIATRIA">GERIATRIA</option>
+          <option value="MED C2">MED C2</option>
+          <option value="MED C1">MED C1</option>
+        </select>
+      </div>
     </div>
 
     <div class="row">
@@ -1494,6 +1507,12 @@
   </div>
 
   <div id="ricovero-singolo-box"></div>
+
+  <div id="ricovero-eo-inline" style="display:none; margin-top:14px;">
+    <div class="group" style="display:flex; justify-content:flex-end; margin:0 0 8px;">
+      <button class="btn" onclick="chiudiEsameObiettivoInline()">✕ Chiudi esame obiettivo</button>
+    </div>
+  </div>
 </div>
 
 <div id="clinical-view">
@@ -1760,8 +1779,8 @@
 </div>
 
 <div class="vitals-strip inline-fields" id="vitals-strip">
-  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
   <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
   <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
   <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
 </div>
@@ -2368,15 +2387,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ogni campo del form che entra in uno dei 6 testi generati (vedi
-  // costruisciDiario/Prossima/Remota/Farmacologica/Familiare/Allergie):
-  // "admit-letto", "admit-reparto" e "admit-smista-testo" restano fuori,
-  // non compaiono in nessuno dei box sottostanti
-  ['admit-cognome','admit-nome','admit-eta','admit-diagnosi','admit-allergie','admit-prossima','admit-provvedimenti',
+  // ogni campo del form: o entra in uno dei 6 testi generati (vedi
+  // costruisciDiario/Prossima/Remota/Farmacologica/Familiare/Allergie), o
+  // comunque va salvato appena scritto (letto/reparto) — l'unico escluso è
+  // "admit-smista-testo", che ha già il suo pulsante dedicato più sotto
+  ['admit-cognome','admit-nome','admit-letto','admit-eta','admit-diagnosi','admit-allergie','admit-prossima','admit-provvedimenti',
    'admit-ematochimici','admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale',
    'admit-remota','admit-farmacologica','admit-familiare'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', aggiornaRicoveroDalForm);
   });
+  document.getElementById('admit-reparto')?.addEventListener('change', aggiornaRicoveroDalForm);
 });
 
 
@@ -2425,11 +2445,17 @@ function aggiungiAltroEsame(nome, testo){
 // marcatore deve essere preceduto da inizio testo, spazio o punto (per non
 // confonderlo con lettere dentro altre parole, es. la "P" di "PA" o la "A"
 // di "Almarytm"), e seguito da uno o più spazi.
+// marcatori riconosciuti in un verbale di PS incollato per intero: A: per
+// le allergie, P: o APR: (anamnesi patologica remota) per l'anamnesi
+// patologica remota, TP: o TD: (terapia domiciliare) per l'anamnesi
+// farmacologica. Non c'è un marcatore per l'anamnesi patologica prossima:
+// tutto il testo prima del primo marcatore trovato diventa comunque
+// anamnesi prossima (vedi smistaTestoPS più sotto).
 function trovaMarcatoriPS(testo){
   const specs = [
-    { campo:'farmacologica', regex:/(?:^|[\s.])TP:\s*/g },
+    { campo:'farmacologica', regex:/(?:^|[\s.])(?:TP|TD):\s*/g },
     { campo:'allergie', regex:/(?:^|[\s.])A:\s*/g },
-    { campo:'remota', regex:/(?:^|[\s.])P:\s*/g }
+    { campo:'remota', regex:/(?:^|[\s.])(?:P|APR):\s*/g }
   ];
   const marcatori = [];
   specs.forEach(spec => {
@@ -2577,6 +2603,46 @@ function apriNuovoRicoveroSingolo(){
   mostraVista('ricovero-singolo');
 }
 
+// crea SUBITO un ricovero (bozza) al primo carattere scritto nel modulo,
+// prima ancora di premere "Genera ricovero" — così compare da subito
+// nell'elenco Ricoveri e non c'è più bisogno di generare presto solo per
+// non perdere quello che si è scritto. "Genera ricovero"/"Aggiorna
+// ricovero" restano comunque utili per ricalcolare tutto a comando e
+// compattare il modulo quando si è pronti.
+function creaBozzaRicovero(){
+  const campi = raccogliCampiForm();
+  const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || 'Ricovero';
+  const diario = costruisciDiario(campi);
+  const prossima = costruisciProssima(campi);
+  const remota = costruisciRemota(campi);
+  const farmacologica = costruisciFarmacologica(campi);
+  const familiare = costruisciFamiliare(campi);
+  const allergie = costruisciAllergie(campi);
+
+  const list = loadRicoveri();
+  const record = {
+    id: 'ric_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    seq: nextRicoveroSeq(),
+    creatoIl: Date.now(),
+    selezionato: true,
+    label, campi, diario, prossima, remota, farmacologica, familiare, allergie,
+    problemi: ''
+  };
+  list.push(record);
+  ricoveroAutoUltimo[record.id] = { diario, prossima, remota, farmacologica, familiare, allergie };
+  saveRicoveri(list);
+
+  currentRicoveroId = record.id;
+  ricoveriAperti.add(record.id);
+  renderRicoveroSingoloBox();
+  document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
+  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
+  document.getElementById('admit-nuovo-btn').style.display = '';
+  // così, se in quel momento si è anche sull'elenco Ricoveri (altra scheda/
+  // finestra) o sulle tab del giorno qui sopra, la bozza compare subito
+  renderRicoveriTabs();
+}
+
 // vedi il commento dentro renderRicoveroSingoloBox() per il significato
 let ricoveroAutoUltimo = {};
 let debounceSalvataggioRicoveroForm = null;
@@ -2600,12 +2666,13 @@ function eseguiSalvataggioRicoveroForm(){
 // richiamata a ogni modifica di un campo del form "Nuovo ricovero"/
 // "Aggiorna ricovero" (Cognome, Nome, Età, Diagnosi, Allergie, Anamnesi
 // prossima/remota/farmacologica/familiare, Provvedimenti, Esami — vedi
-// wiring più sotto): se un ricovero è già stato generato, aggiorna SUBITO
-// (senza dover premere "Aggiorna ricovero") i soli box sottostanti che non
-// sono ancora stati toccati a mano, lasciando intatto tutto il resto —
-// stessa filosofia di aggiornaVitale() per l'esame obiettivo
+// wiring più sotto): se non esiste ancora un ricovero, lo crea subito
+// (vedi creaBozzaRicovero); se esiste già, aggiorna SUBITO (senza dover
+// premere "Aggiorna ricovero") i soli box sottostanti che non sono ancora
+// stati toccati a mano, lasciando intatto tutto il resto — stessa
+// filosofia di aggiornaVitale() per l'esame obiettivo
 function aggiornaRicoveroDalForm(){
-  if(!currentRicoveroId) return;
+  if(!currentRicoveroId){ creaBozzaRicovero(); return; }
   const box = document.getElementById('ricovero-singolo-box');
   if(!box || !box.querySelector('.admit-block')) return;
 
@@ -2667,7 +2734,12 @@ function aggiornaRicoveroDalForm(){
 function generaRicovero(){
   const campi = raccogliCampiForm();
 
-  if(!campi.cognome.trim() && !campi.nome.trim()){
+  // se non c'è già una bozza (currentRicoveroId), qui stiamo per crearne
+  // una nuova ex-novo: serve almeno un nome. Se invece currentRicoveroId
+  // esiste già (la bozza è nata da sola al primo carattere scritto, vedi
+  // creaBozzaRicovero), non blocchiamo l'aggiornamento anche se nel
+  // frattempo cognome/nome sono rimasti vuoti: il ricovero esiste comunque
+  if(!currentRicoveroId && !campi.cognome.trim() && !campi.nome.trim()){
     showToast('Inserisci almeno il nome del paziente');
     return;
   }
@@ -2922,6 +2994,81 @@ function collegaEsameObiettivo(id){
   showToast('Esame obiettivo "' + nome + '" pronto in Appoggi');
 }
 
+// riquadro "Esame obiettivo" incorporato in Ricovero, senza cambiare
+// pagina: sposta letteralmente il div #clinical-view (la stessa identica
+// scheda di Reparto — un solo pezzo di UI, non un doppione) dentro
+// Ricovero mentre è aperto. Alla chiusura #clinical-view torna al suo
+// posto originale e viene ripristinato il paziente/letto che era attivo
+// prima, così Reparto non resta "agganciato" al paziente dell'esame
+// obiettivo appena chiuso.
+let esameObiettivoInlineAperto = false;
+let ricoveroIdEsameObiettivoInline = null;
+let patientIdPrimaInline; // undefined = non salvato; null = nessun paziente attivo prima di aprire
+
+function apriEsameObiettivoInline(ricoveroId){
+  collegaEsameObiettivo(ricoveroId); // crea/aggancia il paziente "appoggio", come già faceva il pulsante
+  const rec = loadRicoveri().find(r => r.id === ricoveroId);
+  if(!rec || !rec.esameObiettivoPatientId) return; // collegaEsameObiettivo ha già avvisato del perché
+  const p = loadPatients()[rec.esameObiettivoPatientId];
+  if(!p) return;
+
+  if(!esameObiettivoInlineAperto) patientIdPrimaInline = currentPatientId;
+  ricoveroIdEsameObiettivoInline = ricoveroId;
+
+  currentPatientId = rec.esameObiettivoPatientId;
+  setLocalAndCloud(LAST_PATIENT_KEY, currentPatientId);
+  applyStateObject(p.state);
+  // stesso azzeramento automatico di selezionaPaziente(): parametri vitali
+  // di un giorno diverso da oggi vanno ripuliti all'apertura
+  if(p.savedAt && !isOggi(p.savedAt)){
+    Object.assign(state.respiro, respiroVuotoDiOggi());
+    state.outputEsameManuale = '';
+  }
+  populateInputsFromState();
+  update(false); // solo apertura, non un tocco di tag: non scartare un eventuale testo manuale salvato
+
+  const contenitore = document.getElementById('ricovero-eo-inline');
+  const clinical = document.getElementById('clinical-view');
+  contenitore.appendChild(clinical);
+  clinical.style.display = '';
+  contenitore.style.display = '';
+  esameObiettivoInlineAperto = true;
+  contenitore.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function chiudiEsameObiettivoInline(){
+  if(!esameObiettivoInlineAperto) return;
+  const clinical = document.getElementById('clinical-view');
+  // rimette #clinical-view esattamente al suo posto originale nell'HTML
+  // (subito dopo #ricovero-singolo-view), nascosto
+  document.getElementById('ricovero-singolo-view').after(clinical);
+  clinical.style.display = 'none';
+  document.getElementById('ricovero-eo-inline').style.display = 'none';
+  esameObiettivoInlineAperto = false;
+
+  // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
+  // già il pulsante "Aggiorna esame obiettivo") con le modifiche appena fatte
+  if(ricoveroIdEsameObiettivoInline) collegaEsameObiettivo(ricoveroIdEsameObiettivoInline);
+  ricoveroIdEsameObiettivoInline = null;
+
+  if(patientIdPrimaInline){
+    const p = loadPatients()[patientIdPrimaInline];
+    if(p){
+      currentPatientId = patientIdPrimaInline;
+      setLocalAndCloud(LAST_PATIENT_KEY, patientIdPrimaInline);
+      applyStateObject(p.state);
+      populateInputsFromState();
+      update(false);
+    }
+  } else if(patientIdPrimaInline === null){
+    currentPatientId = null;
+    try{ localStorage.removeItem(LAST_PATIENT_KEY); } catch(e){}
+    resetFormToDefaults();
+    refreshUI();
+  }
+  patientIdPrimaInline = undefined;
+}
+
 // segna un singolo box del ricovero come "copiato": stesso trattamento
 // visivo (contorno acceso + spunta verde) usato per l'esame obiettivo
 // copiato in Reparto, così da confermare che quel pezzo è stato incollato
@@ -3136,11 +3283,9 @@ function renderRicoveroSingoloBox(){
   actions.className = 'admit-block-actions';
   const linkEOBtn = document.createElement('button');
   linkEOBtn.className = 'admit-copy-btn';
-  linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Aggiorna esame obiettivo' : '+ Esame obiettivo';
-  linkEOBtn.title = rec.esameObiettivoPatientId
-    ? 'Rilegge lo stato attuale di questo esame obiettivo (in Appoggi)'
-    : 'Crea un nuovo esame obiettivo vuoto, intestato a questo paziente, tra gli Appoggi in Reparto';
-  linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); collegaEsameObiettivo(rec.id); };
+  linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Apri esame obiettivo' : '+ Esame obiettivo';
+  linkEOBtn.title = 'Apre/modifica l\'esame obiettivo di questo paziente qui sotto, senza cambiare pagina';
+  linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); apriEsameObiettivoInline(rec.id); };
   const copiaConsegnaBtn = document.createElement('button');
   copiaConsegnaBtn.className = 'admit-copy-btn';
   copiaConsegnaBtn.textContent = 'Copia consegna';
@@ -3213,6 +3358,12 @@ function renderRicoveroSingoloBox(){
       if(idx !== -1){
         list2[idx][campo] = rec[campo];
         list2[idx].copiati = rec.copiati;
+        // stessa corrispondenza box -> form di poco sopra: salviamo anche
+        // dentro "campi" (l'istantanea del modulo), altrimenti riaprendo
+        // più tardi questo ricovero il modulo mostrerebbe di nuovo il
+        // vecchio testo, prima della modifica fatta qui nel box
+        const chiaveCampiCorrispondente = { remota:'remota', farmacologica:'farmacologica', familiare:'familiare', allergie:'allergie' }[campo];
+        if(chiaveCampiCorrispondente && list2[idx].campi) list2[idx].campi[chiaveCampiCorrispondente] = rec[campo];
         saveRicoveri(list2);
       }
     };
@@ -3225,6 +3376,17 @@ function renderRicoveroSingoloBox(){
         rec.copiati[campo] = false;
         sub.classList.remove('copiato');
         sub.querySelector('.admit-sub-copiato-badge')?.remove();
+      }
+      // e viceversa: una modifica fatta QUI nel box, per i campi che hanno
+      // una corrispondenza diretta e univoca nel modulo sopra (non
+      // "diario"/"prossima", che sono composti anche da altri campi — es.
+      // esami, provvedimenti — e quindi non si potrebbero "invertire" senza
+      // rischiare di duplicare quella roba), compare subito anche lì, come
+      // già succede tra Diari ed Esame obiettivo
+      const idFormCorrispondente = { remota:'admit-remota', farmacologica:'admit-farmacologica', familiare:'admit-familiare', allergie:'admit-allergie' }[campo];
+      if(idFormCorrispondente){
+        const campoForm = document.getElementById(idFormCorrispondente);
+        if(campoForm && campoForm.value !== rec[campo]) campoForm.value = rec[campo];
       }
       // il salvataggio vero e proprio (rilettura/riscrittura di tutto
       // l'elenco ricoveri + sincronizzazione cloud) è più pesante: lo
@@ -4312,6 +4474,14 @@ function schedaHaDati(patientState){
 // ritrova lo stesso punto della lista invece di ripartire sempre dall'alto
 let riepilogoScrollY = 0;
 function mostraVista(v){
+  // se il riquadro inline dell'esame obiettivo è aperto e si sta per
+  // uscire da Ricovero, richiudiamolo prima: #clinical-view va rimesso al
+  // suo posto originale, altrimenti mostraVista('clinical') altrove non lo
+  // troverebbe più dove se lo aspetta (resterebbe "intrappolato" e
+  // invisibile dentro Ricovero, anche se nascosto)
+  if(esameObiettivoInlineAperto && v !== 'ricovero-singolo'){
+    chiudiEsameObiettivoInline();
+  }
   if(document.getElementById('riepilogo-view').style.display !== 'none'){
     riepilogoScrollY = window.scrollY;
   }
@@ -4600,15 +4770,15 @@ function renderVitaliSettore(){
     campi.className = 'vitals-strip inline-fields';
     const idPrefix = 'vitset-' + n.replace(/\./g,'_');
     campi.innerHTML = `
-      <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="${idPrefix}-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
       <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="${idPrefix}-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="${idPrefix}-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
+      <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="${idPrefix}-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
       <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="${idPrefix}-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
       <div class="v tc"><label>TC</label><input type="number" id="${idPrefix}-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
     `;
     riga.appendChild(campi);
     lista.appendChild(riga);
 
-    [['sat','sat'], ['pas','pas'], ['pad','pad'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
+    [['pas','pas'], ['pad','pad'], ['sat','sat'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
       const input = document.getElementById(`${idPrefix}-${suffix}`);
       input.value = respiro[campo] || '';
       input.classList.toggle('filled', !!respiro[campo]);
@@ -4924,6 +5094,8 @@ function renderRiepilogo(){
 
   entries.forEach(([id, p]) => {
     const testo = getRefertoFor(p.state);
+    const sepIdx = testo.indexOf('\n\n');
+    const soloExtra = sepIdx === -1 ? '' : testo.slice(sepIdx + 2).replace(/^\s+/, '');
 
     const block = document.createElement('div');
     block.className = 'referto-block' + (p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '');
@@ -4962,12 +5134,37 @@ function renderRiepilogo(){
     };
 
     titleRow.appendChild(titleWrap);
-    titleRow.appendChild(copiaBtn);
+    // stesso pallino "E" già usato sui letti in Reparto: stessa condizione
+    // (haEsamiDomani), qui posizionato in alto a destra del blocco insieme
+    // al pulsante Copia — se questo è il paziente aperto ora nella scheda
+    // clinica, leggiamo lo stato live invece della copia su disco (che
+    // potrebbe non essere ancora stata aggiornata dall'ultimo autosave)
+    const rightWrap = document.createElement('div');
+    rightWrap.style.cssText = 'display:flex; align-items:center; gap:8px; flex-shrink:0;';
+    const extraTestoBadge = (id === currentPatientId) ? state.outputExtra : p.state.outputExtra;
+    if(haEsamiDomani(extraTestoBadge)){
+      const esamiBadge = document.createElement('div');
+      esamiBadge.className = 'diario-esami-badge';
+      esamiBadge.title = 'Esami di controllo programmati per domani';
+      esamiBadge.textContent = 'E';
+      rightWrap.appendChild(esamiBadge);
+    }
+    rightWrap.appendChild(copiaBtn);
+    titleRow.appendChild(rightWrap);
 
     const body = document.createElement('textarea');
     body.className = 'bed-text';
-    body.value = testo;
+    body.value = diariSoloConsegneAttivo ? soloExtra : testo;
+    body.placeholder = diariSoloConsegneAttivo ? '(nessuna aggiunta oltre l\'esame obiettivo)' : '';
     body.addEventListener('input', () => {
+      if(diariSoloConsegneAttivo){
+        // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
+        // tasto premuto aggiorna SOLO quella, senza toccare né rischiare
+        // di corrompere l'esame obiettivo nascosto in questo momento
+        aggiornaDiarioSoloExtra(id, body.value);
+        autoResizeTextarea(body);
+        return;
+      }
       aggiornaDiarioTesto(id, body.value);
       autoResizeTextarea(body);
       egaControllaTrigger(body.value, body, id);
@@ -4984,6 +5181,47 @@ function renderRiepilogo(){
     // (serve scrollHeight), quindi dopo l'appendChild qui sopra
     autoResizeTextarea(body);
   });
+
+  // pulsante in fondo, solo se c'è almeno un diario scritto (il caso
+  // "entries.length === 0" è già intercettato dal return più sopra, quindi
+  // qui ci sono sempre entries.length >= 1): nasconde/rimostra l'esame
+  // obiettivo di TUTTI i diari del giorno, lasciando solo le aggiunte dopo
+  // la riga vuota — comodo per scorrere solo i provvedimenti quando si
+  // aggiornano le consegne
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'btn';
+  toggleBtn.style.cssText = 'display:block; width:100%; margin-top:14px;';
+  toggleBtn.textContent = diariSoloConsegneAttivo ? 'Mostra E.O.' : 'Nascondi E.O.';
+  toggleBtn.onclick = toggleDiariSoloConsegne;
+  container.appendChild(toggleBtn);
+}
+
+// vedi il pulsante in fondo a renderRiepilogo()
+let diariSoloConsegneAttivo = false;
+function toggleDiariSoloConsegne(){
+  diariSoloConsegneAttivo = !diariSoloConsegneAttivo;
+  renderRiepilogo();
+}
+
+// variante di aggiornaDiarioTesto() per quando in Diari è attiva la
+// modalità "solo aggiunte" (vedi sopra): il box mostra SOLO la parte dopo
+// la riga vuota, quindi un tasto premuto va scritto solo lì, senza toccare
+// outputEsameManuale (che in quel momento non è nemmeno visibile a schermo)
+function aggiornaDiarioSoloExtra(patientId, nuovoExtra){
+  const patients = loadPatients();
+  const p = patients[patientId];
+  if(!p) return;
+  p.state.outputExtra = nuovoExtra;
+  p.savedAt = Date.now();
+  if(patientId === currentPatientId){
+    state.outputExtra = nuovoExtra;
+    const outputEl = document.getElementById('output');
+    if(outputEl){
+      const esameText = state.outputEsameManuale || outputAutoUltimo;
+      outputEl.value = nuovoExtra ? esameText + '\n\n' + nuovoExtra : esameText;
+    }
+  }
+  savePatients(patients);
 }
 
 // altezza della textarea = altezza esatta del contenuto (niente scrollbar
