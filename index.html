@@ -1915,6 +1915,24 @@ const supabaseClient = (window.supabase && window.supabase.createClient)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
+// timestamp (in millisecondi) dell'ultima scrittura LOCALE per ciascuna
+// chiave sincronizzata: serve a cloudPullAll più sotto per non sovrascrivere
+// per sbaglio una modifica locale più recente con una (più vecchia)
+// trovata sul cloud — puo capitare se un invio precedente non fosse mai
+// arrivato a destinazione (vedi cloudPush, che finora falliva in silenzio
+// in caso di rete assente/momentanea, senza nessun avviso per l'utente)
+function segnaScrittaLocale(key){
+  try{ localStorage.setItem(key + '__ts', String(Date.now())); } catch(e){}
+}
+function leggiTimestampLocale(key){
+  try{ const v = localStorage.getItem(key + '__ts'); return v ? parseInt(v, 10) : 0; } catch(e){ return 0; }
+}
+
+// true se l'ultimo invio al cloud non è andato a buon fine: mostrato come
+// avviso nella scheda di sincronizzazione (vedi aggiornaStatoSync), invece
+// di restare un fallimento invisibile come prima
+let ultimoPushFallito = false;
+
 // invia (in background, senza bloccare l'interfaccia) il valore grezzo di
 // una chiave di localStorage al database cloud dell'utente connesso.
 // Gli invii sono messe in coda uno dopo l'altro (non in parallelo): così
@@ -1924,6 +1942,7 @@ const supabaseClient = (window.supabase && window.supabase.createClient)
 // in locale un parametro appena digitato ma non ancora inviato.
 let codaCloudPush = Promise.resolve();
 function cloudPush(key, rawValue){
+  segnaScrittaLocale(key);
   if(!supabaseClient) return codaCloudPush;
   const invio = async () => {
     try{
@@ -1936,7 +1955,18 @@ function cloudPush(key, rawValue){
         value: rawValue,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,key' });
-    } catch(e){ /* resta comunque salvato in locale, silenzioso */ }
+      if(ultimoPushFallito){ ultimoPushFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+    } catch(e){
+      // resta comunque salvato in locale: non è una perdita di dati, ma
+      // finché questo invio non riesce, un altro dispositivo non vedrà
+      // questa modifica — va segnalato, non lasciato silenzioso come prima
+      ultimoPushFallito = true;
+      if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+      // e va ritentato da solo, invece di aspettare passivamente il
+      // prossimo salvataggio dell'utente (che potrebbe non arrivare per
+      // minuti, se nel frattempo sta solo leggendo/guardando la scheda)
+      setTimeout(() => cloudPush(key, rawValue), 20000);
+    }
   };
   codaCloudPush = codaCloudPush.then(invio, invio);
   return codaCloudPush;
@@ -1957,9 +1987,11 @@ function setLocalAndCloud(key, rawValue){
 const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1'];
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
-// ha già (sovrascrivendo il locale), e CARICA nel cloud quelle che invece
-// esistono già solo in locale (es. dati creati prima di collegare
-// l'account, o su un dispositivo che non aveva ancora fatto login) —
+// ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
+// di quello che il cloud ha davvero ricevuto — vedi i timestamp sopra), e
+// CARICA nel cloud quelle che invece esistono già solo in locale (es. dati
+// creati prima di collegare l'account, o su un dispositivo che non aveva
+// ancora fatto login, o un invio precedente mai arrivato a destinazione) —
 // altrimenti quei dati resterebbero invisibili su ogni altro dispositivo
 async function cloudPullAll(){
   if(!supabaseClient) return;
@@ -1967,15 +1999,26 @@ async function cloudPullAll(){
     const { data: userData } = await supabaseClient.auth.getUser();
     const user = userData && userData.user;
     if(!user) return;
-    const { data, error } = await supabaseClient.from('eo_data').select('key,value').eq('user_id', user.id);
+    const { data, error } = await supabaseClient.from('eo_data').select('key,value,updated_at').eq('user_id', user.id);
     const chiaviNelCloud = new Set();
     if(!error && data){
-      data.forEach(row => {
+      for(const row of data){
         chiaviNelCloud.add(row.key);
-        if(typeof row.value === 'string'){
-          try{ localStorage.setItem(row.key, row.value); } catch(e){}
+        if(typeof row.value !== 'string') continue;
+        const tsCloud = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+        const tsLocale = leggiTimestampLocale(row.key);
+        if(tsLocale > tsCloud){
+          // il locale è più recente di quanto il cloud abbia davvero
+          // ricevuto: probabile invio precedente non riuscito. Invece di
+          // sovrascrivere la modifica locale con quella (più vecchia) del
+          // cloud, la rimandiamo di nuovo
+          let valoreLocale = null;
+          try{ valoreLocale = localStorage.getItem(row.key); } catch(e){}
+          if(valoreLocale !== null) await cloudPush(row.key, valoreLocale);
+          continue;
         }
-      });
+        try{ localStorage.setItem(row.key, row.value); segnaScrittaLocale(row.key); } catch(e){}
+      }
     }
     for(const key of CHIAVI_SINCRONIZZATE){
       if(chiaviNelCloud.has(key)) continue;
@@ -2034,7 +2077,16 @@ async function aggiornaStatoSync(){
     outEl.style.display = 'none';
     inEl.style.display = '';
     if(badge) badge.style.display = '';
-    document.getElementById('sync-logged-in-text').textContent = 'Connesso come ' + user.email;
+    const testoLogin = document.getElementById('sync-logged-in-text');
+    // avviso visibile se l'ultimo salvataggio sul cloud non è riuscito
+    // (prima restava un fallimento silenzioso, vedi cloudPush): finché non
+    // va a buon fine, questo dispositivo ha modifiche che gli altri non
+    // vedono ancora — ci riprova da solo al prossimo salvataggio o alla
+    // prossima sincronizzazione, ma intanto è giusto saperlo
+    testoLogin.textContent = ultimoPushFallito
+      ? '⚠️ Connesso come ' + user.email + ' — ultimo salvataggio sul cloud non riuscito, riprovo automaticamente'
+      : 'Connesso come ' + user.email;
+    testoLogin.style.color = ultimoPushFallito ? '#d9695f' : '';
   } else {
     outEl.style.display = '';
     inEl.style.display = 'none';
