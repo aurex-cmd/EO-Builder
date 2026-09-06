@@ -2289,7 +2289,17 @@ const DIZ_EMATOCHIMICI = {
   'vitamina d':{label:'vitamina D', unit:'ng/mL'},
   'pth':{label:'PTH', unit:'pg/mL'},
   'nt probnp':{label:'NT-proBNP', unit:'ng/L'},
-  'probnp':{label:'NT-proBNP', unit:'ng/L'}
+  'probnp':{label:'NT-proBNP', unit:'ng/L'},
+  // EGA (emogasanalisi)
+  'ph':{label:'pH', unit:''},
+  'po2':{label:'pO2', unit:'mmHg'},
+  'pco2':{label:'pCO2', unit:'mmHg'},
+  'hco3':{label:'HCO3', unit:'mmol/L'},
+  'bicarbonati':{label:'HCO3', unit:'mmol/L'},
+  'lac':{label:'Lac', unit:'mmol/L'},
+  'lattati':{label:'Lac', unit:'mmol/L'},
+  'be':{label:'BE', unit:'mmol/L'},
+  'eccesso di basi':{label:'BE', unit:'mmol/L'}
 };
 
 // converte l'elenco grezzo di esami (es. "Hb 90, Na 127, creatinina 1.28")
@@ -2300,7 +2310,7 @@ function formattaEsamiEmatochimici(raw){
     .map(seg => seg.trim())
     .filter(Boolean)
     .map(seg => {
-      const m = seg.match(/^(.*?)\s*([<>]?\s*\d+(?:[.,]\d+)?)\s*$/);
+      const m = seg.match(/^(.*?)\s*([<>]?\s*-?\d+(?:[.,]\d+)?)\s*$/);
       if(!m) return seg;
       const nomeGrezzo = m[1].trim();
       const valore = m[2].trim().replace(',', '.');
@@ -2333,7 +2343,7 @@ function aggiungiUnitaMancantiTesto(testo){
     const voce = DIZ_EMATOCHIMICI[chiave];
     if(!voce.unit) return;
     const nomeEsc = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
-    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*\\d+(?:[.,]\\d+)?)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
       return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
     });
