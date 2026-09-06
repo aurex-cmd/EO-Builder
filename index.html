@@ -2312,6 +2312,35 @@ function formattaEsamiEmatochimici(raw){
     .join(', ');
 }
 
+// come sopra, ma per un pezzo di testo libero (non un elenco pulito
+// separato da virgole, come in Diari o nell'esame obiettivo): scansiona
+// tutto il testo e aggiunge l'unità di misura solo dove sembra davvero un
+// valore di laboratorio scritto di seguito (nome esame + numero) SENZA
+// unità già presente. Per essere prudenti ed evitare falsi positivi in
+// mezzo a una frase, si applica solo se il numero è seguito da un
+// separatore di elenco (virgola, punto, punto e virgola, a capo, o fine
+// del testo) — se dopo il numero c'è già una parola (es. "mmol/L", o
+// anche solo un aggettivo), si lascia stare, sia perché l'unità potrebbe
+// già esserci, sia per non spezzare una frase scritta normalmente.
+// Diversamente da formattaEsamiEmatochimici, qui NON si rinomina il nome
+// dell'esame (resta esattamente come scritto): in mezzo a una frase
+// sostituire "sodio" con "Na" risulterebbe strano, mentre aggiungere solo
+// l'unità mancante no.
+function aggiungiUnitaMancantiTesto(testo){
+  if(!testo) return testo;
+  let risultato = testo;
+  Object.keys(DIZ_EMATOCHIMICI).forEach(chiave => {
+    const voce = DIZ_EMATOCHIMICI[chiave];
+    if(!voce.unit) return;
+    const nomeEsc = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*\\d+(?:[.,]\\d+)?)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
+      return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
+    });
+  });
+  return risultato;
+}
+
 // appiattisce un referto strumentale (eventualmente su più righe) su un'unica riga
 function formattaStrumentale(testo){
   if(!testo) return '';
@@ -2464,12 +2493,17 @@ function aggiungiAltroEsame(nome, testo){
   inputNome.className = 'altro-esame-nome';
   inputNome.placeholder = 'es. ECG';
   inputNome.value = nome || '';
+  inputNome.setAttribute('spellcheck', 'true');
+  inputNome.setAttribute('autocorrect', 'on');
   inputNome.addEventListener('input', aggiornaRicoveroDalForm);
 
   const textareaTesto = document.createElement('textarea');
   textareaTesto.className = 'altro-esame-testo';
   textareaTesto.placeholder = 'Referto…';
   textareaTesto.value = testo || '';
+  textareaTesto.setAttribute('spellcheck', 'true');
+  textareaTesto.setAttribute('autocorrect', 'on');
+  textareaTesto.setAttribute('autocapitalize', 'sentences');
   textareaTesto.addEventListener('input', () => { autoResizeTextarea(textareaTesto); aggiornaRicoveroDalForm(); });
   textareaTesto.addEventListener('blur', () => {
     const corretto = correggiItaliano(textareaTesto.value);
@@ -3397,6 +3431,9 @@ function renderRicoveroSingoloBox(){
     const editable = document.createElement('div');
     editable.className = 'admit-editable';
     editable.contentEditable = 'true';
+    editable.setAttribute('spellcheck', 'true');
+    editable.setAttribute('autocorrect', 'on');
+    editable.setAttribute('autocapitalize', 'sentences');
     editable.dataset.campo = campo;
     editable.textContent = rec[campo] || '';
     if(campo === 'problemi'){
@@ -5206,6 +5243,9 @@ function renderRiepilogo(){
 
     const body = document.createElement('textarea');
     body.className = 'bed-text';
+    body.setAttribute('spellcheck', 'true');
+    body.setAttribute('autocorrect', 'on');
+    body.setAttribute('autocapitalize', 'sentences');
     body.value = diariSoloConsegneAttivo ? soloExtra : testo;
     body.placeholder = diariSoloConsegneAttivo ? '(nessuna aggiunta oltre l\'esame obiettivo)' : '';
     body.addEventListener('input', () => {
@@ -5224,6 +5264,15 @@ function renderRiepilogo(){
       farmacoControllaTrigger(body.value, body);
       ecgsimControllaTrigger(body.value, body);
       soffiControllaTrigger(body.value, body);
+    });
+    body.addEventListener('blur', () => {
+      let corretto = correggiItaliano(body.value);
+      corretto = aggiungiUnitaMancantiTesto(corretto);
+      if(corretto !== body.value){
+        body.value = corretto;
+        autoResizeTextarea(body);
+        body.dispatchEvent(new Event('input', { bubbles:true }));
+      }
     });
 
     block.appendChild(titleRow);
@@ -7815,11 +7864,15 @@ const CORREZIONI_ITALIANO = [
   { pattern: reConCon("sicch[èe]", 'gi'), sostituzione: () => 'sicché' },
   { pattern: reConCon("cosicch[èe]", 'gi'), sostituzione: () => 'cosicché' },
   { pattern: reConCon("finch[èe]", 'gi'), sostituzione: () => 'finché' },
+  { pattern: reConCon("bench[èe]", 'gi'), sostituzione: () => 'benché' },
+  { pattern: reConCon("purch[èe]", 'gi'), sostituzione: () => 'purché' },
   { pattern: reConCon("nè", 'g'), sostituzione: () => 'né' },
   { pattern: reConCon("sè", 'g'), sostituzione: () => 'sé' },
   { pattern: reConCon("pò", 'g'), sostituzione: () => "po'" },
   { pattern: reConCon("piu", 'gi'), sostituzione: () => 'più' },
   { pattern: reConCon("puo", 'gi'), sostituzione: () => 'può' },
+  { pattern: reConCon("gia", 'gi'), sostituzione: () => 'già' },
+  { pattern: reConCon("cosi", 'gi'), sostituzione: () => 'così' },
   { pattern: reConCon("cioe", 'gi'), sostituzione: () => 'cioè' },
   { pattern: reConCon("sopratutto", 'gi'), sostituzione: () => 'soprattutto' },
   { pattern: reConCon("qual'(è|e|era|erano)", 'gi'), sostituzione: (m, g1) => 'qual ' + (g1.toLowerCase() === 'e' ? 'è' : g1) }
@@ -7840,11 +7893,53 @@ function correggiItaliano(testo){
   return risultato;
 }
 
-document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea').forEach(el => {
+// oltre a questa correzione "mirata" (accenti/apostrofi tipici italiani),
+// tutti i campi di testo libero hanno anche il correttore/tastiera del
+// telefono/computer attivo (vedi spellcheck/autocorrect più sotto, dove
+// vengono impostati su tutti i campi con contenuto libero) — quello si
+// occupa degli errori di battitura veri e propri, questo qui delle
+// convenzioni ortografiche italiane che l'autocorrect di sistema spesso
+// non conosce (né/perché/più/già con l'accento giusto, "un po'" con
+// l'apostrofo, ecc.)
+document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea, #output').forEach(el => {
   el.addEventListener('blur', () => {
     const corretto = correggiItaliano(el.value);
-    if(corretto !== el.value){ el.value = corretto; autoResizeTextarea(el); }
+    if(corretto !== el.value){
+      el.value = corretto;
+      autoResizeTextarea(el);
+      // altrimenti la correzione fatta qui sopra non arriverebbe mai allo
+      // stato salvato (aggiornaRicoveroDalForm/update si aspettano un
+      // evento 'input', non solo un cambio diretto di .value)
+      el.dispatchEvent(new Event('input', { bubbles:true }));
+    }
   });
+});
+
+// attiva il correttore/tastiera nativo del dispositivo (lo stesso di
+// qualsiasi altra app, con sottolineatura ondulata e suggerimenti) su
+// tutti i campi di testo libero dell'app — non sui numeri (SpO2, PA, FC,
+// età...), dove non avrebbe senso. Fatto qui in JS su tutti i campi in
+// blocco, invece che uno per uno nell'HTML, così vale anche per i campi
+// creati dinamicamente (es. box del ricovero, "altri esami")
+document.querySelectorAll('textarea, input[type="text"], input:not([type]), [contenteditable="true"]').forEach(el => {
+  el.setAttribute('spellcheck', 'true');
+  el.setAttribute('autocorrect', 'on');
+  if(el.tagName !== 'INPUT') el.setAttribute('autocapitalize', 'sentences');
+});
+
+// aggiunge in automatico l'unità di misura corretta agli esami
+// ematochimici scritti senza (es. "Hb 90, Na 127" -> "Hb 90 g/L, Na 127
+// mmol/L"): stessa funzione già usata per comporre l'anamnesi prossima
+// (vedi formattaEsamiEmatochimici/DIZ_EMATOCHIMICI), qui applicata anche
+// visibilmente nel campo stesso appena si esce da lì, così si vede subito
+// cosa lo strumento ha riconosciuto
+document.getElementById('admit-ematochimici')?.addEventListener('blur', function(){
+  const corretto = formattaEsamiEmatochimici(this.value);
+  if(corretto && corretto !== this.value){
+    this.value = corretto;
+    autoResizeTextarea(this);
+    this.dispatchEvent(new Event('input', { bubbles:true }));
+  }
 });
 
 // la striscia vitali in alto è uno specchio dei campi già presenti più
