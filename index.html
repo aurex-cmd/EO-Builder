@@ -591,8 +591,6 @@
   .admit-altri-radio-summary::-webkit-details-marker{ display:none; }
   .admit-altri-radio-summary::before{ content:'+ '; }
   .admit-altri-radio[open] .admit-altri-radio-summary::before{ content:'– '; }
-  #elimina-paziente-btn{ border-color:#7a3b33; color:#e2867e; }
-  #elimina-paziente-btn:hover{ border-color:#d9695f; }
   .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
     outline:2px solid var(--signal); outline-offset:2px;
   }
@@ -1183,13 +1181,31 @@
 <div class="card" id="wardmap-view" style="display:none; background:var(--panel-2);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
-  <div class="group" id="scheda-attiva-info" style="display:none;">
-    <div class="group-label">Scheda attiva: <strong id="scheda-attiva-nome"></strong></div>
-    <button class="btn" id="elimina-paziente-btn" onclick="eliminaPazienteAttivo()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/><path d="M6 7l1 13a1.5 1.5 0 001.5 1.4h7a1.5 1.5 0 001.5-1.4l1-13"/><path d="M10 11v6M14 11v6"/></svg>Elimina scheda attiva</button>
+  <div class="group sync-box" id="sync-group">
+    <div class="sync-header-row">
+      <div class="sync-title"><svg class="hicon" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Sincronizzazione tra dispositivi</div>
+      <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
+    </div>
+    <div id="sync-logged-out">
+      <div class="group-label" style="margin-bottom:8px;">Accedi al tuo account personale per sincronizzare i dati clinici (schede, diari, ricoveri) tra i tuoi dispositivi. Facoltativo: senza login l'app funziona comunque, salvando tutto solo su questo dispositivo.</div>
+      <div class="inline-fields">
+        <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
+        <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
+      </div>
+      <div class="row">
+        <button class="btn primary" onclick="syncLogin()">Accedi</button>
+        <button class="btn" onclick="syncSignup()">Crea account</button>
+      </div>
+      <div class="group-label" id="sync-status" style="margin-top:8px;"></div>
+    </div>
+    <div id="sync-logged-in" style="display:none;">
+      <div class="group-label" id="sync-logged-in-text"></div>
+      <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
+    </div>
   </div>
 
   <div class="group">
-    <div class="group-label">Settore</div>
+    <div class="group-label">Settori</div>
     <div class="settore-dots" id="settore-tabs"></div>
   </div>
   <div class="group">
@@ -1213,29 +1229,6 @@
   <div class="group" id="altre-schede-group" style="display:none;">
     <div class="group-label">Appoggi (schede fuori settore)</div>
     <div class="ric-lista-minimale" id="altre-schede-lista"></div>
-  </div>
-
-  <div class="group sync-box" id="sync-group">
-    <div class="sync-header-row">
-      <div class="sync-title"><svg class="hicon" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Sincronizzazione tra dispositivi</div>
-      <span class="sync-badge" id="sync-connesso-badge" style="display:none;"><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.5 9"/></svg>Connesso</span>
-    </div>
-    <div id="sync-logged-out">
-      <div class="group-label" style="margin-bottom:8px;">Accedi al tuo account personale per sincronizzare i dati clinici (schede, diari, ricoveri) tra i tuoi dispositivi. Facoltativo: senza login l'app funziona comunque, salvando tutto solo su questo dispositivo.</div>
-      <div class="inline-fields">
-        <input type="email" id="sync-email" class="wide" style="max-width:220px;" placeholder="email" autocomplete="username">
-        <input type="password" id="sync-password" style="max-width:160px;" placeholder="password" autocomplete="current-password">
-      </div>
-      <div class="row">
-        <button class="btn primary" onclick="syncLogin()">Accedi</button>
-        <button class="btn" onclick="syncSignup()">Crea account</button>
-      </div>
-      <div class="group-label" id="sync-status" style="margin-top:8px;"></div>
-    </div>
-    <div id="sync-logged-in" style="display:none;">
-      <div class="group-label" id="sync-logged-in-text"></div>
-      <button class="btn" onclick="syncLogout()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3"/><path d="M15 16l4-4-4-4"/><path d="M19 12H8"/></svg>Disconnetti</button>
-    </div>
   </div>
 
   <div class="group" id="app-info-box" style="font-size:8px; opacity:.7; line-height:1.5; text-align:justify;">
@@ -2176,8 +2169,6 @@ document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSyn
 const PATIENTS_KEY = 'eo_builder_patients_v1';
 const LAST_PATIENT_KEY = 'eo_builder_last_patient_v1';
 let currentPatientId = null;
-let eliminaArmed = false;
-let eliminaTimer;
 
 function loadPatients(){
   try{ return JSON.parse(localStorage.getItem(PATIENTS_KEY) || '{}'); }
@@ -4875,16 +4866,6 @@ function renderWardMap(){
     gridEl.appendChild(tile);
   });
 
-  // scheda attiva + elimina
-  const info = document.getElementById('scheda-attiva-info');
-  const active = patients[currentPatientId];
-  if(active){
-    info.style.display = '';
-    document.getElementById('scheda-attiva-nome').textContent = active.name;
-  } else {
-    info.style.display = 'none';
-  }
-
   // form "Scheda libera" per crearne una nuova: visibile solo nel settore E
   const formLibera = document.getElementById('scheda-libera-group');
   if(formLibera) formLibera.style.display = inExtra ? '' : 'none';
@@ -5133,8 +5114,8 @@ function chiudiPaziente(){
 }
 
 // elimina la scheda direttamente dal riquadro del letto in Reparto, senza
-// doverla prima aprire. Conferma a due click sul pulsantino stesso (stessa
-// logica di eliminaPazienteAttivo), niente popup nativi.
+// doverla prima aprire. Conferma a due click sul pulsantino stesso,
+// niente popup nativi.
 let eliminaLettoArmatoId = null;
 let eliminaLettoTimer = null;
 function eliminaSchedaDaLetto(id){
@@ -5160,32 +5141,6 @@ function eliminaSchedaDaLetto(id){
     renderWardMap();
   }
   showToast('Scheda "' + nome + '" eliminata');
-}
-
-// elimina solo la scheda attiva (per eliminarne un'altra, aprila prima).
-// conferma a due click sul pulsante stesso, niente popup nativi.
-function eliminaPazienteAttivo(){
-  const btn = document.getElementById('elimina-paziente-btn');
-  const iconCestino = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/><path d="M6 7l1 13a1.5 1.5 0 001.5 1.4h7a1.5 1.5 0 001.5-1.4l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
-  if(!currentPatientId) return;
-  if(!eliminaArmed){
-    eliminaArmed = true;
-    btn.innerHTML = iconCestino + 'Confermi? Clicca di nuovo';
-    clearTimeout(eliminaTimer);
-    eliminaTimer = setTimeout(() => {
-      eliminaArmed = false;
-      btn.innerHTML = iconCestino + 'Elimina scheda attiva';
-    }, 3000);
-    return;
-  }
-  clearTimeout(eliminaTimer);
-  eliminaArmed = false;
-  btn.innerHTML = iconCestino + 'Elimina scheda attiva';
-  const patients = loadPatients();
-  delete patients[currentPatientId];
-  savePatients(patients);
-  chiudiPaziente();
-  renderWardMap();
 }
 
 /* ============================================================
