@@ -2312,6 +2312,19 @@ function formattaEsamiEmatochimici(raw){
     .map(seg => seg.trim())
     .filter(Boolean)
     .map(seg => {
+      // andamento (es. "K 3.1 -> 4.2"): l'unità va dopo il SECONDO valore
+      const mTrend = seg.match(/^(.*?)\s*(-?\d+(?:[.,]\d+)?)(\s*(?:->|-->|→)\s*)(-?\d+(?:[.,]\d+)?)\s*\.?\s*$/);
+      if(mTrend){
+        const nomeGrezzo = mTrend[1].trim();
+        const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+        const voce = DIZ_EMATOCHIMICI[chiave];
+        if(voce){
+          const v1 = mTrend[2].trim().replace(',', '.');
+          const v2 = mTrend[4].trim().replace(',', '.');
+          const testoAndamento = `${v1}${mTrend[3]}${v2}`;
+          return voce.unit ? `${voce.label} ${testoAndamento} ${voce.unit}` : `${voce.label} ${testoAndamento}`;
+        }
+      }
       const m = seg.match(/^(.*?)\s*([<>]?\s*-?\d+(?:[.,]\d+)?)\s*\.?\s*$/);
       if(!m) return seg;
       const nomeGrezzo = m[1].trim();
@@ -2345,7 +2358,15 @@ function aggiungiUnitaMancantiTesto(testo){
     const voce = DIZ_EMATOCHIMICI[chiave];
     if(!voce.unit) return;
     const nomeEsc = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
-    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    // andamento (es. "K 3.1 -> 4.2"): l'unità va dopo il SECONDO valore.
+    // Va provato PRIMA della regex del valore singolo qui sotto, altrimenti
+    // quella si fermerebbe (giustamente prudente) al primo valore, senza
+    // mai arrivare a riconoscere l'andamento nel suo insieme
+    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?)(\\s*(?:->|-->|→)\\s*)(-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, v1, freccia, v2) => {
+      return `${nomeMatch}${spazio}${v1}${freccia}${v2} ${voce.unit}`;
+    });
+    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
       return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
     });
@@ -4152,23 +4173,29 @@ function applyStateObject(o){
   state.torace.reperteLocPerTipo = {};
   if(o.torace?.reperteLocPerTipo){
     Object.keys(o.torace.reperteLocPerTipo).forEach(k => {
-      state.torace.reperteLocPerTipo[k] = convertiSedeTorace(o.torace.reperteLocPerTipo[k] || []);
+      const salvato = o.torace.reperteLocPerTipo[k] || [];
+      // nuovo formato: array di "blocchi sede" indipendenti (ciascuno un
+      // array di atomi) — vecchio formato: un unico array piatto di atomi
+      // (una sola sede condivisa per quel reperto, come prima di oggi)
+      state.torace.reperteLocPerTipo[k] = Array.isArray(salvato[0])
+        ? salvato.map(blocco => convertiSedeTorace(blocco))
+        : [convertiSedeTorace(salvato)];
     });
   } else if(o.torace?.reperteLoc && o.torace.reperteLoc.length){
     // migrazione dal vecchio modello (sede unica condivisa tra tutti i reperti):
     // applica la stessa sede salvata a ciascun reperto con sede che era attivo
     (o.torace?.reperti || []).forEach(rv => {
       const opt = OPT.toraceReperti.find(x => x.value === rv);
-      if(opt && opt.hasLoc) state.torace.reperteLocPerTipo[rv] = convertiSedeTorace(o.torace.reperteLoc);
+      if(opt && opt.hasLoc) state.torace.reperteLocPerTipo[rv] = [convertiSedeTorace(o.torace.reperteLoc)];
     });
   }
   if(sibiliMigrati){
-    const set = getLocSet(state.torace.reperteLocPerTipo, 'sibili_fischi_gemiti');
-    sibiliMigrati.forEach(a => set.add(a));
+    const arr = getLocSetArray(state.torace.reperteLocPerTipo, 'sibili_fischi_gemiti');
+    sibiliMigrati.forEach(a => arr[0].add(a));
   }
   if(state.torace.reperteLocPerTipo['crepitii_fini']){
-    const destSet = getLocSet(state.torace.reperteLocPerTipo, 'crepitii');
-    state.torace.reperteLocPerTipo['crepitii_fini'].forEach(a => destSet.add(a));
+    const destArr = getLocSetArray(state.torace.reperteLocPerTipo, 'crepitii');
+    (state.torace.reperteLocPerTipo['crepitii_fini'][0] || new Set()).forEach(a => destArr[0].add(a));
     delete state.torace.reperteLocPerTipo['crepitii_fini'];
   }
   state.torace.reperteSottotipi = {};
@@ -5193,6 +5220,15 @@ function renderRiepilogo(){
     return;
   }
 
+  // le altezze di tutte le textarea vengono calcolate in un secondo
+  // giro, DOPO aver costruito l'intero elenco (vedi sotto): calcolarle
+  // una per una dentro questo forEach, subito dopo ciascun appendChild,
+  // esponeva a un bug del browser — nel punto in cui compariva la barra di
+  // scorrimento della pagina (tipicamente al secondo diario), la larghezza
+  // disponibile cambiava a metà giro e l'ultima riga restava tagliata
+  // finché non si toccava di nuovo il campo
+  const areeTesto = [];
+
   entries.forEach(([id, p]) => {
     const testo = getRefertoFor(p.state);
     const sepIdx = testo.indexOf('\n\n');
@@ -5290,10 +5326,13 @@ function renderRiepilogo(){
     block.appendChild(titleRow);
     block.appendChild(body);
     container.appendChild(block);
-    // l'altezza esatta si può calcolare solo a elemento già nel DOM
-    // (serve scrollHeight), quindi dopo l'appendChild qui sopra
-    autoResizeTextarea(body);
+    areeTesto.push(body);
   });
+
+  // ora che l'intero elenco è stato costruito e la pagina si è assestata
+  // (scrollbar compresa), si può calcolare in sicurezza l'altezza di ogni
+  // singola textarea — vedi il commento più sopra
+  areeTesto.forEach(autoResizeTextarea);
 
   // pulsante in fondo, solo se c'è almeno un diario scritto (il caso
   // "entries.length === 0" è già intercettato dal return più sopra, quindi
@@ -6032,6 +6071,15 @@ function getLocSet(mappa, chiave){
   return mappa[chiave];
 }
 
+// come sopra, ma per i reperti del torace (crepitii/ronchi/rantoli/ecc.),
+// che possono avere PIÙ sedi indipendenti contemporaneamente (es. "rantoli
+// medio-basali dx e in base sx") — stesso meccanismo già usato per il
+// murmure vescicolare (mvLoc), vedi costruisciSedeToraciceMulti
+function getLocSetArray(mappa, chiave){
+  if(!mappa[chiave] || !mappa[chiave].length) mappa[chiave] = [new Set()];
+  return mappa[chiave];
+}
+
 function renderToraceMv(){
   const el = document.getElementById('torace-mv');
   el.innerHTML = '';
@@ -6062,7 +6110,7 @@ function renderToraceReperti(){
     };
     let builder = null;
     if(opt.hasLoc){
-      const locSet = getLocSet(state.torace.reperteLocPerTipo, opt.value);
+      const locSetArray = getLocSetArray(state.torace.reperteLocPerTipo, opt.value);
       const sottotipiSet = ['sibili_fischi_gemiti','crepitii','rantoli'].includes(opt.value)
         ? getLocSet(state.torace.reperteSottotipi, opt.value)
         : null;
@@ -6080,7 +6128,7 @@ function renderToraceReperti(){
             v => sottotipiSet.has(v),
             (v, sAttivo) => { sottotipiSet.clear(); if(!sAttivo) sottotipiSet.add(v); update(); });
         }
-        costruisciSedeToracica(inner, locSet, OPT.toraceReperteExtra);
+        costruisciSedeToraciceMulti(inner, locSetArray, OPT.toraceReperteExtra);
       };
     }
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
@@ -7165,7 +7213,7 @@ function composeToraceClean(){
       const scelta = sotto && ['piccole','medie','grandi'].find(v => sotto.has(v));
       if(scelta) frag = `rantoli a ${scelta} bolle`;
     }
-    const loc = o.hasLoc ? comporreSedeTorace(t.reperteLocPerTipo[o.value], o.diffusoParola) : '';
+    const loc = o.hasLoc ? comporreSedeToraceMulti(t.reperteLocPerTipo[o.value], o.diffusoParola) : '';
     return { frag, loc, text: loc ? `${frag} ${loc}` : frag };
   });
 
