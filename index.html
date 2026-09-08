@@ -1915,17 +1915,31 @@ const supabaseClient = (window.supabase && window.supabase.createClient)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
-// timestamp (in millisecondi) dell'ultima scrittura LOCALE per ciascuna
-// chiave sincronizzata: serve a cloudPullAll più sotto per non sovrascrivere
-// per sbaglio una modifica locale più recente con una (più vecchia)
-// trovata sul cloud — puo capitare se un invio precedente non fosse mai
-// arrivato a destinazione (vedi cloudPush, che finora falliva in silenzio
-// in caso di rete assente/momentanea, senza nessun avviso per l'utente)
-function segnaScrittaLocale(key){
+// timestamp (in millisecondi) dell'ultima scrittura LOCALE con contenuto
+// EFFETTIVAMENTE diverso dall'ultimo valore che sappiamo sincronizzato,
+// per ciascuna chiave — serve a cloudPullAll più sotto per non
+// sovrascrivere per sbaglio una modifica locale più recente con una (più
+// vecchia) trovata sul cloud. Il confronto è appositamente con l'ultimo
+// valore SINCRONIZZATO (non con "l'ultima volta che ho salvato qualcosa"):
+// l'avvio dell'app può ri-salvare dati invariati (es. riaprendo l'ultimo
+// paziente), e se bastasse quello a "far sembrare" il locale più recente,
+// un aggiornamento arrivato nel frattempo da un altro dispositivo verrebbe
+// scartato per sbaglio proprio al momento di scaricarlo.
+function segnaScrittaLocale(key, rawValue){
+  if(rawValue === leggiValoreSincronizzato(key)) return;
   try{ localStorage.setItem(key + '__ts', String(Date.now())); } catch(e){}
 }
 function leggiTimestampLocale(key){
   try{ const v = localStorage.getItem(key + '__ts'); return v ? parseInt(v, 10) : 0; } catch(e){ return 0; }
+}
+// ultimo valore di questa chiave che sappiamo per certo essere allineato
+// col cloud (o perché l'abbiamo appena scaricato da lì, o perché un invio
+// verso il cloud è appena andato a buon fine)
+function segnaValoreSincronizzato(key, rawValue){
+  try{ localStorage.setItem(key + '__synced', rawValue); } catch(e){}
+}
+function leggiValoreSincronizzato(key){
+  try{ return localStorage.getItem(key + '__synced'); } catch(e){ return null; }
 }
 
 // true se l'ultimo invio al cloud non è andato a buon fine: mostrato come
@@ -1942,8 +1956,16 @@ let ultimoPushFallito = false;
 // in locale un parametro appena digitato ma non ancora inviato.
 let codaCloudPush = Promise.resolve();
 function cloudPush(key, rawValue){
-  segnaScrittaLocale(key);
-  if(!supabaseClient) return codaCloudPush;
+  // se il contenuto è IDENTICO all'ultimo che sappiamo sincronizzato, non
+  // c'è nulla di nuovo da inviare: e soprattutto NON bisogna inviarlo lo
+  // stesso, perché l'invio prenderebbe "adesso" come timestamp anche se i
+  // dati sono vecchi, rischiando di sovrascrivere sul cloud un
+  // aggiornamento più recente arrivato nel frattempo da un altro
+  // dispositivo (l'unico timestamp che conta per la freschezza dei dati è
+  // quello di un vero cambiamento, non quello di un salvataggio qualsiasi)
+  const inalterato = (rawValue === leggiValoreSincronizzato(key));
+  segnaScrittaLocale(key, rawValue);
+  if(inalterato || !supabaseClient) return codaCloudPush;
   const invio = async () => {
     try{
       const { data } = await supabaseClient.auth.getUser();
@@ -1955,6 +1977,7 @@ function cloudPush(key, rawValue){
         value: rawValue,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,key' });
+      segnaValoreSincronizzato(key, rawValue);
       if(ultimoPushFallito){ ultimoPushFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
     } catch(e){
       // resta comunque salvato in locale: non è una perdita di dati, ma
@@ -2017,7 +2040,10 @@ async function cloudPullAll(){
           if(valoreLocale !== null) await cloudPush(row.key, valoreLocale);
           continue;
         }
-        try{ localStorage.setItem(row.key, row.value); segnaScrittaLocale(row.key); } catch(e){}
+        try{
+          localStorage.setItem(row.key, row.value);
+          segnaValoreSincronizzato(row.key, row.value);
+        } catch(e){}
       }
     }
     for(const key of CHIAVI_SINCRONIZZATE){
@@ -5179,7 +5205,9 @@ const FRASI_ESAMI_DOMANI = [
   'esami domani',
   'esami per domani',
   'esami di controllo per domani',
-  'esami di controllo programmati per domani'
+  'esami di controllo programmati per domani',
+  'esami ematochimici per domani',
+  'esami ematochimici di controllo per domani'
 ];
 const MESI_ITALIANI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 // "09:15, 19 agosto" — usata in Diari per mostrare quando è stato
@@ -7226,7 +7254,19 @@ function composeToraceClean(){
   if(mvOpt && mvLoc){
     const idx = repItems.findIndex(r => r.loc && r.loc === mvLoc);
     if(idx !== -1){
-      const fuso = `${mvText} con ${repItems[idx].frag}`;
+      // "bilateralmente" è un avverbio riferito a tutto il reperto fuso,
+      // non solo alla sede citata subito dopo "MV [aggettivo]": si legge
+      // meglio spostato in fondo alla frase fusa ("MV ridotto alle basi
+      // con fini crepitii bilateralmente") invece che incastrato in mezzo
+      // ("MV ridotto alle basi bilateralmente con fini crepitii")
+      let locCondivisa = mvLoc;
+      let suffissoFinale = '';
+      if(/\bbilateralmente\b/.test(locCondivisa)){
+        locCondivisa = locCondivisa.replace(/\s*bilateralmente\b/, '').trim();
+        suffissoFinale = ' bilateralmente';
+      }
+      const mvTextFuso = mvOpt.noLoc || !locCondivisa ? mvOpt.frag : `${mvOpt.frag} ${locCondivisa}`;
+      const fuso = `${mvTextFuso} con ${repItems[idx].frag}${suffissoFinale}`;
       const resto = repItems.filter((_, i) => i !== idx).map(r => r.text);
       corpoParti = [fuso, ...resto].filter(Boolean);
     }
