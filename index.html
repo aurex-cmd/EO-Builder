@@ -100,6 +100,15 @@
     align-self:flex-start; flex-shrink:0;
     max-width:38vw; overflow:hidden; text-overflow:ellipsis;
   }
+  .sync-status-dot{
+    width:11px; height:11px; border-radius:50%; flex-shrink:0; cursor:pointer;
+    background:#3ea86e; /* verde: tutto sincronizzato */
+    box-shadow:0 0 0 2px rgba(255,255,255,.06);
+    align-self:flex-start; margin-top:3px;
+  }
+  .sync-status-dot.non-sincronizzato{
+    background:#d9695f; /* rosso: ultimo invio non riuscito, in ritentativo */
+  }
   .header-nav{ display:flex; align-items:flex-end; gap:0; width:100%; margin-top:14px; border-bottom:1px solid var(--page-line); }
   .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .nav-diari-col .topnav-btn{ width:auto; }
@@ -875,6 +884,17 @@
     padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
     text-align:justify;
   }
+  .farmaco-tev-box{
+    font-family:var(--font-mono); font-size:12px; line-height:1.5; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--folder); border-radius:11px;
+    padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
+    text-align:justify;
+  }
+  .farmaco-tev-titolo{
+    font-weight:700; color:var(--folder); margin-bottom:6px; text-transform:none;
+    font-size:12.5px;
+  }
+  .farmaco-tev-studio{ font-weight:400; opacity:.75; }
   .farmaco-opzioni{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .farmaco-opzioni .chip{ font-size:12.5px; padding:7px 12px; }
 
@@ -1142,7 +1162,10 @@
       <h1>E.O. Builder</h1>
       <span class="sub">esame obiettivo · click-to-compose</span>
     </div>
-    <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span class="sync-status-dot" id="sync-status-dot" style="display:none;" onclick="apriAppTools()" title="Sincronizzazione"></span>
+      <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
+    </div>
   </div>
   <div class="header-nav">
     <div class="nav-diari-col">
@@ -2098,6 +2121,7 @@ async function aggiornaStatoSync(){
   const outEl = document.getElementById('sync-logged-out');
   const inEl = document.getElementById('sync-logged-in');
   const badge = document.getElementById('sync-connesso-badge');
+  const dot = document.getElementById('sync-status-dot');
   if(!outEl || !inEl) return;
   if(user){
     outEl.style.display = 'none';
@@ -2113,10 +2137,21 @@ async function aggiornaStatoSync(){
       ? '⚠️ Connesso come ' + user.email + ' — ultimo salvataggio sul cloud non riuscito, riprovo automaticamente'
       : 'Connesso come ' + user.email;
     testoLogin.style.color = ultimoPushFallito ? '#d9695f' : '';
+    // stesso segnale, ma come pallino sempre visibile in alto (non solo
+    // dentro la scheda "App"): verde tutto ok, rosso ultimo invio non
+    // riuscito (si rimette verde da solo appena il ritentativo va a buon fine)
+    if(dot){
+      dot.style.display = '';
+      dot.classList.toggle('non-sincronizzato', ultimoPushFallito);
+      dot.title = ultimoPushFallito
+        ? 'Ultimo salvataggio sul cloud non riuscito — riprovo automaticamente'
+        : 'Sincronizzato';
+    }
   } else {
     outEl.style.display = '';
     inEl.style.display = 'none';
     if(badge) badge.style.display = 'none';
+    if(dot) dot.style.display = 'none';
   }
 }
 
@@ -3170,7 +3205,10 @@ function apriEsameObiettivoInline(ricoveroId){
     state.outputEsameManuale = '';
   }
   populateInputsFromState();
-  update(false); // solo apertura, non un tocco di tag: non scartare un eventuale testo manuale salvato
+  // refreshUI(false), NON update(false): anche qui aprire per sola
+  // lettura/modifica non deve contare come un salvataggio finché non si
+  // tocca davvero qualcosa — stessa ragione di selezionaPaziente()
+  refreshUI(false);
 
   const contenitore = document.getElementById('ricovero-eo-inline');
   const clinical = document.getElementById('clinical-view');
@@ -3203,7 +3241,9 @@ function chiudiEsameObiettivoInline(){
       setLocalAndCloud(LAST_PATIENT_KEY, patientIdPrimaInline);
       applyStateObject(p.state);
       populateInputsFromState();
-      update(false);
+      // refreshUI(false): stiamo solo ripristinando la vista di prima, non
+      // salvando nulla di nuovo
+      refreshUI(false);
     }
   } else if(patientIdPrimaInline === null){
     currentPatientId = null;
@@ -5036,7 +5076,14 @@ function selezionaPaziente(id){
     state.outputEsameManuale = '';
   }
   populateInputsFromState();
-  update(false); // solo apertura, non un tocco di tag: non scartare un eventuale testo manuale salvato
+  // refreshUI(false), NON update(false): aprire una scheda vecchia per
+  // sola lettura non deve MAI contare come un aggiornamento — altrimenti
+  // basterebbe aprirla, senza toccare nulla, per farle guadagnare un
+  // savedAt di oggi (facendola comparire come "aggiornata oggi" in Diari e
+  // compagnia) e per farla ripartire verso il cloud con un timestamp
+  // fresco, capace di scavalcare per sbaglio una versione più recente
+  // arrivata nel frattempo da un altro dispositivo
+  refreshUI(false);
   chiudiWardMap();
   showToast('Scheda di ' + p.name + ' caricata');
 }
@@ -9154,7 +9201,11 @@ const FARMACI_DB = {
       { min: 0, max: 30, label: '< 30',
         dose: 'CONTROINDICATO.' }
     ],
-    note: 'Il DOAC più sensibile alla funzione renale: unico ad eliminazione prevalentemente renale (~80%). A differenza degli altri DOAC qui elencati, tra 30 e 49 mL/min la dose standard resta raccomandata: non c\'è una fascia intermedia con dose automaticamente dimezzata.'
+    note: 'Il DOAC più sensibile alla funzione renale: unico ad eliminazione prevalentemente renale (~80%). A differenza degli altri DOAC qui elencati, tra 30 e 49 mL/min la dose standard resta raccomandata: non c\'è una fascia intermedia con dose automaticamente dimezzata.',
+    tev: {
+      studio: 'RE-COVER I e II, >3.500 pazienti',
+      schema: 'Almeno 5 giorni di eparina, seguiti da:\nDabigatran 150 mg 1 cp x 2 al dì.\nA discrezione del medico prescrittore: Dabigatran 110 mg 1 cp x 2 al dì se criteri di riduzione.'
+    }
   },
   rivaroxaban: {
     nome: 'Rivaroxaban (Xarelto)',
@@ -9164,7 +9215,11 @@ const FARMACI_DB = {
       { min: 15, max: 50, label: '15–49', dose: '15 mg x1/die, con il pasto.' },
       { min: 0, max: 15, label: '< 15', dose: 'Non raccomandato.' }
     ],
-    note: ''
+    note: '',
+    tev: {
+      studio: 'EINSTEIN-DVT, EINSTEIN-PE, >7.000 pazienti',
+      schema: 'Subito: Rivaroxaban 15 mg 1 cp x 2 al dì per 21 giorni, poi 20 mg 1 cp al dì.\nA discrezione del medico prescrittore, la dose sarà ridotta a 15 mg al giorno in caso di alto rischio di sanguinamento.'
+    }
   },
   apixaban: {
     nome: 'Apixaban (Eliquis)',
@@ -9177,7 +9232,11 @@ const FARMACI_DB = {
       { min: 0, max: 15, label: '< 15 o dialisi',
         dose: 'Non raccomandato.' }
     ],
-    note: 'Unico DOAC il cui criterio di riduzione NON dipende solo dalla VFG: verificare sempre anche età e peso corporeo.'
+    note: 'Unico DOAC il cui criterio di riduzione NON dipende solo dalla VFG: verificare sempre anche età e peso corporeo.',
+    tev: {
+      studio: 'AMPLIFY e AMPLIFY EXT, >5.000 pazienti',
+      schema: 'Subito: Apixaban 10 mg 1 cp x 2 per 7 giorni, poi 5 mg 1 cp x 2 (senza riduzione della dose).\nDopo i primi 6 mesi: 2,5 mg 1 cp x 2 per la prevenzione delle recidive.'
+    }
   },
   edoxaban: {
     nome: 'Edoxaban (Lixiana)',
@@ -9188,7 +9247,11 @@ const FARMACI_DB = {
       { min: 15, max: 50, label: '15–49', dose: '30 mg x1/die (ridotta).' },
       { min: 0, max: 15, label: '< 15', dose: 'Non raccomandato.' }
     ],
-    note: 'Attenzione anche al limite superiore: con VFG molto alta (>95 mL/min) alcuni dati indicano minore efficacia a parità di dose — da valutare col centro TAO/cardiologia.'
+    note: 'Attenzione anche al limite superiore: con VFG molto alta (>95 mL/min) alcuni dati indicano minore efficacia a parità di dose — da valutare col centro TAO/cardiologia.',
+    tev: {
+      studio: 'HOKUSAI-VTE, >8.000 pazienti',
+      schema: 'Almeno 5 giorni di eparina, seguiti da:\nEdoxaban 60 mg 1 cp al dì.\nEdoxaban 30 mg 1 cp al dì se: CrCl 30–50 mL/min, peso ≤60 kg, oppure uso concomitante di inibitori della glicoproteina P (P-gp): ciclosporina, dronedarone, eritromicina, ketoconazolo.'
+    }
   },
 
   // ---------- ANTIBIOTICI (dosaggi renali) ----------
@@ -9437,7 +9500,13 @@ const FARMACI_GRUPPI = {
 // (quella con cui è effettivamente indicizzato in FARMACI_DB)
 const FARMACI_ALIAS = {
   amoxi: 'augmentin',
-  amoxicillina: 'augmentin'
+  amoxicillina: 'augmentin',
+  // nomi commerciali dei singoli NAO/DOAC: aprono la scheda del singolo
+  // farmaco (la scheda cumulativa "/nao" o "/doac" resta com'era, invariata)
+  eliquis: 'apixaban',
+  xarelto: 'rivaroxaban',
+  pradaxa: 'dabigatran',
+  lixiana: 'edoxaban'
 };
 
 // cerca, nel testo del diario, l'ultima VFG scritta nel formato prodotto
@@ -9603,6 +9672,9 @@ function farmacoRenderCard(chiave, vfg, mostraTitolo){
     + '<table class="farmaco-tabella">' + intestazione + righe + '</table>'
     + calcolatoreHtml
     + (f.note ? '<div class="note-box">' + farmacoRisolvi(f.note, opzioniStato) + '</div>' : '')
+    + (f.tev ? '<div class="farmaco-tev-box"><div class="farmaco-tev-titolo">Dosaggio per TEV (tromboembolismo venoso)'
+        + (f.tev.studio ? ' <span class="farmaco-tev-studio">— ' + f.tev.studio + '</span>' : '')
+        + '</div>' + f.tev.schema.replace(/\n/g, '<br>') + '</div>' : '')
     + '</div>';
 }
 
