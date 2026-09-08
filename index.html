@@ -237,6 +237,10 @@
     background:var(--violet-dim); border-color:var(--violet); color:var(--violet); font-weight:700;
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--violet);
   }
+  .bed-tile.occupied-vecchio{
+    background:var(--line-soft); border-color:var(--ink-faint); color:var(--ink-dim); font-weight:700;
+    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--ink-faint);
+  }
   .bed-tile-del{
     position:absolute; top:-7px; right:-7px; width:20px; height:20px;
     border-radius:50%; border:1px solid var(--line); background:var(--panel);
@@ -1258,9 +1262,10 @@
 <div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="1.5"/><rect x="9" y="2.3" width="6" height="3" rx="1"/><line x1="9" y1="10.5" x2="15" y2="10.5"/><line x1="9" y1="13.8" x2="15" y2="13.8"/><line x1="9" y1="17.1" x2="13" y2="17.1"/></svg> Diari</h2>
   <div class="group">
-    <div class="inline-fields">
-      <button class="btn primary" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
-      <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
+    <div class="inline-fields" style="flex-wrap:nowrap;">
+      <button class="btn primary" style="flex:1;" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
+      <button class="btn" style="flex:1;" id="diari-toggle-giorno-btn" onclick="toggleDiariGiorno()">Diari di ieri</button>
+      <button class="btn" style="flex:1;" onclick="chiudiWardMap()" title="Torna alla scheda" aria-label="Torna alla scheda">Indietro ←</button>
     </div>
   </div>
   <div class="group" id="riepilogo-lista"></div>
@@ -1363,14 +1368,13 @@
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricoveri</h2>
 
   <div class="group">
-    <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
+    <div class="inline-fields" style="flex-wrap:nowrap;">
+      <button class="btn primary" style="flex:1;" onclick="apriNuovoRicoveroSingolo()">+ Nuovo ricovero</button>
+      <button class="btn" style="flex:1;" onclick="chiudiWardMap()">← Torna alla scheda</button>
+    </div>
   </div>
 
   <div id="ricoveri-calendario"></div>
-
-  <div class="group">
-    <button class="btn primary" onclick="apriNuovoRicoveroSingolo()">+ Nuovo ricovero</button>
-  </div>
 
   <div class="group" id="ricoveri-tabs-group" style="display:none;">
     <div class="group-label" id="ricoveri-tabs-label"></div>
@@ -4818,12 +4822,17 @@ function renderWardMap(){
     const occupato = entry && schedaHaDati(entry[1].state);
     // verde solo se la scheda clinica vera e propria è stata salvata oggi
     // (esameAggiornatoIl): un tocco ai soli parametri vitali dalla pagina
-    // "Parametri vitali" NON la fa diventare verde, resta viola — vedi
-    // aggiornaVitaleLetto, che aggiorna savedAt ma non esameAggiornatoIl
+    // "Parametri vitali" NON la fa diventare verde, resta viola/grigio —
+    // vedi aggiornaVitaleLetto, che aggiorna savedAt ma non esameAggiornatoIl
     const diOggi = occupato && isOggi(entry[1].esameAggiornatoIl);
+    // oltre i 3 giorni di distanza da quando è stato scritto, il viola
+    // diventa grigio chiaro: scritto lunedì, letto entro giovedì (3 giorni
+    // di distanza) resta viola; letto da venerdì in poi (4+ giorni) grigio
+    const giorniFa = occupato ? giorniDiDifferenza(entry[1].esameAggiornatoIl) : null;
+    const classeStato = !occupato ? '' : diOggi ? ' occupied' : (giorniFa !== null && giorniFa > 3) ? ' occupied-vecchio' : ' occupied-old';
     const tile = document.createElement('div');
     tile.className = 'bed-tile'
-      + (occupato ? (diOggi ? ' occupied' : ' occupied-old') : '')
+      + classeStato
       + (entry && entry[0] === currentPatientId ? ' active' : '');
     tile.onclick = () => apriLetto(nome);
 
@@ -5220,8 +5229,15 @@ function getRefertoFor(patientState){
 }
 
 function schedeConDati(){
+  return schedeConDatiPerGiorno(false);
+}
+
+// come sopra, ma per il giorno scelto: oggi (default, usato ovunque nel
+// resto dell'app) oppure ieri (vedi il pulsante "Diari di ieri" in Diari)
+function schedeConDatiPerGiorno(mostraIeri){
   const patients = loadPatients();
-  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && isOggi(p.savedAt));
+  const filtroGiorno = mostraIeri ? isIeri : isOggi;
+  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && filtroGiorno(p.savedAt));
   return ordinaPazientiPerLetto(entries);
 }
 
@@ -5280,15 +5296,54 @@ function isOggi(timestamp){
     d.getDate() === oggi.getDate();
 }
 
+function isIeri(timestamp){
+  if(!timestamp) return false;
+  const d = new Date(timestamp);
+  const ieri = new Date();
+  ieri.setDate(ieri.getDate() - 1);
+  return d.getFullYear() === ieri.getFullYear() &&
+    d.getMonth() === ieri.getMonth() &&
+    d.getDate() === ieri.getDate();
+}
+
+// numero di giorni di calendario tra oggi e il timestamp dato (0 = oggi,
+// 1 = ieri, ecc.) — non ore trascorse: mezzanotte a mezzanotte, così
+// "scritto lunedì sera" e "letto martedì mattina" contano 1 giorno di
+// differenza, non zero. Usata per il colore dei letti in Reparto (vedi
+// renderWardMap): oltre i 3 giorni di distanza il viola diventa grigio.
+function giorniDiDifferenza(timestamp){
+  if(!timestamp) return Infinity;
+  const d = new Date(timestamp);
+  const oggi = new Date();
+  const dMezzanotte = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const oggiMezzanotte = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+  return Math.round((oggiMezzanotte - dMezzanotte) / 86400000);
+}
+
+// vedi il pulsante "Diari di ieri"/"Diari di oggi" in cima all'elenco
+let diariMostraIeri = false;
+function toggleDiariGiorno(){
+  diariMostraIeri = !diariMostraIeri;
+  renderRiepilogo();
+}
+
 function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
-  const entries = schedeConDati();
+  const entries = schedeConDatiPerGiorno(diariMostraIeri);
+
+  // il pulsante per passare da oggi a ieri e viceversa ora è fisso in alto
+  // (stessa riga di "Esporta"/"Torna alla scheda", vedi HTML): qui si
+  // aggiorna solo il testo, non se ne crea uno nuovo a ogni render
+  const toggleGiornoBtn = document.getElementById('diari-toggle-giorno-btn');
+  if(toggleGiornoBtn) toggleGiornoBtn.textContent = diariMostraIeri ? 'Diari di oggi' : 'Diari di ieri';
 
   if(entries.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
-    vuoto.textContent = 'Nessuna scheda con dati salvati per ora.';
+    vuoto.textContent = diariMostraIeri
+      ? 'Nessuna scheda con dati salvati ieri.'
+      : 'Nessuna scheda con dati salvati per ora.';
     container.appendChild(vuoto);
     return;
   }
