@@ -101,14 +101,15 @@
     max-width:38vw; overflow:hidden; text-overflow:ellipsis;
   }
   .sync-status-dot{
-    width:11px; height:11px; border-radius:50%; flex-shrink:0; cursor:pointer;
+    width:8px; height:8px; border-radius:50%; flex-shrink:0; cursor:pointer;
     background:#3ea86e; /* verde: tutto sincronizzato */
-    box-shadow:0 0 0 2px rgba(255,255,255,.06);
-    align-self:flex-start; margin-top:3px;
+    box-shadow:0 0 0 2px var(--page);
+    position:absolute; top:-2px; right:-9px;
   }
   .sync-status-dot.non-sincronizzato{
     background:#d9695f; /* rosso: ultimo invio non riuscito, in ritentativo */
   }
+  .titolo-r-wrap{ position:relative; display:inline-block; }
   .header-nav{ display:flex; align-items:flex-end; gap:0; width:100%; margin-top:14px; border-bottom:1px solid var(--page-line); }
   .nav-diari-col{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .nav-diari-col .topnav-btn{ width:auto; }
@@ -1159,13 +1160,10 @@
 <header>
   <div class="header-top">
     <div>
-      <h1>E.O. Builder</h1>
+      <h1>E.O. Builde<span class="titolo-r-wrap">r<span class="sync-status-dot" id="sync-status-dot" style="display:none;" onclick="apriAppTools()" title="Sincronizzazione"></span></span></h1>
       <span class="sub">esame obiettivo · click-to-compose</span>
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span class="sync-status-dot" id="sync-status-dot" style="display:none;" onclick="apriAppTools()" title="Sincronizzazione"></span>
-      <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
-    </div>
+    <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
   </div>
   <div class="header-nav">
     <div class="nav-diari-col">
