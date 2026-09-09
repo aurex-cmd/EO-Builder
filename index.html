@@ -1252,6 +1252,15 @@
     <button class="btn primary" style="width:100%;" onclick="apriVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Parametri vitali</button>
   </div>
 
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <button class="btn" onclick="riduciZoom()" title="Riduci" aria-label="Riduci dimensione">－</button>
+      <div class="group-label" id="zoom-livello-testo" style="min-width:48px; text-align:center; font-family:var(--font-mono);">100%</div>
+      <button class="btn" onclick="aumentaZoom()" title="Aumenta" aria-label="Aumenta dimensione">＋</button>
+    </div>
+  </div>
+
   <div class="group" id="scheda-libera-group" style="display:none;">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
     <div class="inline-fields">
@@ -4684,6 +4693,30 @@ let wardMapOpen = false;
 // renderWardMap(), così ricaricando la pagina resta sul settore giusto
 // invece di ripartire sempre dal settore A
 const LAST_SETTORE_KEY = 'eo_builder_last_settore_v1';
+
+// dimensione del testo (e di conseguenza di tutto il resto, dato che le
+// misure dell'app sono in px, non in unità relative): solo locale, come le
+// altre preferenze di questo dispositivo qui sopra. Uso zoom invece di
+// scalare i font uno per uno perché ridimensiona per davvero il layout
+// (spaziature comprese), non solo il testo — supportato su Chrome/Safari/
+// Edge (quindi su iPhone e sulla stragrande maggioranza dei desktop), non
+// ancora su tutte le versioni di Firefox.
+const ZOOM_KEY = 'eo_builder_zoom_v1';
+const ZOOM_MIN = 80, ZOOM_MAX = 150, ZOOM_STEP = 10;
+let zoomAttuale = (() => {
+  let v = 100;
+  try{ v = parseInt(localStorage.getItem(ZOOM_KEY), 10) || 100; } catch(e){}
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
+})();
+function applicaZoom(){
+  document.body.style.zoom = (zoomAttuale / 100);
+  try{ localStorage.setItem(ZOOM_KEY, String(zoomAttuale)); } catch(e){}
+  const etichetta = document.getElementById('zoom-livello-testo');
+  if(etichetta) etichetta.textContent = zoomAttuale + '%';
+}
+function aumentaZoom(){ zoomAttuale = Math.min(ZOOM_MAX, zoomAttuale + ZOOM_STEP); applicaZoom(); }
+function riduciZoom(){ zoomAttuale = Math.max(ZOOM_MIN, zoomAttuale - ZOOM_STEP); applicaZoom(); }
+document.addEventListener('DOMContentLoaded', applicaZoom);
 let settoreAttivo = (() => {
   try{
     const salvato = localStorage.getItem(LAST_SETTORE_KEY);
