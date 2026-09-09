@@ -2390,17 +2390,17 @@ function formattaEsamiEmatochimici(raw){
     .map(seg => seg.trim())
     .filter(Boolean)
     .map(seg => {
-      // andamento (es. "K 3.1 -> 4.2"): l'unità va dopo il SECONDO valore
-      const mTrend = seg.match(/^(.*?)\s*(-?\d+(?:[.,]\d+)?)(\s*(?:->|-->|→)\s*)(-?\d+(?:[.,]\d+)?)\s*\.?\s*$/);
+      // andamento (es. "procalcitonina 4.48 -> 0.7 -> 0.11"): l'unità va
+      // dopo l'ULTIMO valore della catena, quanti che siano (anche solo 2,
+      // o 4-5 se si segue un valore nel tempo)
+      const mTrend = seg.match(/^(.*?)\s*(-?\d+(?:[.,]\d+)?(?:\s*(?:->|-->|→)\s*-?\d+(?:[.,]\d+)?)+)\s*\.?\s*$/);
       if(mTrend){
         const nomeGrezzo = mTrend[1].trim();
         const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
         const voce = DIZ_EMATOCHIMICI[chiave];
         if(voce){
-          const v1 = mTrend[2].trim().replace(',', '.');
-          const v2 = mTrend[4].trim().replace(',', '.');
-          const testoAndamento = `${v1}${mTrend[3]}${v2}`;
-          return voce.unit ? `${voce.label} ${testoAndamento} ${voce.unit}` : `${voce.label} ${testoAndamento}`;
+          const catena = mTrend[2].trim();
+          return voce.unit ? `${voce.label} ${catena} ${voce.unit}` : `${voce.label} ${catena}`;
         }
       }
       const m = seg.match(/^(.*?)\s*([<>]?\s*-?\d+(?:[.,]\d+)?)\s*\.?\s*$/);
@@ -2436,13 +2436,14 @@ function aggiungiUnitaMancantiTesto(testo){
     const voce = DIZ_EMATOCHIMICI[chiave];
     if(!voce.unit) return;
     const nomeEsc = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
-    // andamento (es. "K 3.1 -> 4.2"): l'unità va dopo il SECONDO valore.
-    // Va provato PRIMA della regex del valore singolo qui sotto, altrimenti
-    // quella si fermerebbe (giustamente prudente) al primo valore, senza
-    // mai arrivare a riconoscere l'andamento nel suo insieme
-    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?)(\\s*(?:->|-->|→)\\s*)(-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
-    risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, v1, freccia, v2) => {
-      return `${nomeMatch}${spazio}${v1}${freccia}${v2} ${voce.unit}`;
+    // andamento (es. "procalcitonina 4.48 -> 0.7 -> 0.11"): l'unità va
+    // dopo l'ULTIMO valore della catena, quanti che siano. Va provato
+    // PRIMA della regex del valore singolo qui sotto, altrimenti quella si
+    // fermerebbe (giustamente prudente) al primo valore, senza mai
+    // arrivare a riconoscere l'andamento nel suo insieme
+    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, catena) => {
+      return `${nomeMatch}${spazio}${catena} ${voce.unit}`;
     });
     const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
@@ -4662,7 +4663,19 @@ const SETTORE_EXTRA = 'Settore E';
 function bedName(n){ return 'Letto ' + n; }
 
 let wardMapOpen = false;
-let settoreAttivo = SETTORI[0];
+// solo locale (niente sincronizzazione cloud): è una preferenza di
+// navigazione di questo dispositivo, non un dato clinico — stesso motivo
+// di LAST_VIEW_KEY. Ripristinato subito sotto, prima del primo
+// renderWardMap(), così ricaricando la pagina resta sul settore giusto
+// invece di ripartire sempre dal settore A
+const LAST_SETTORE_KEY = 'eo_builder_last_settore_v1';
+let settoreAttivo = (() => {
+  try{
+    const salvato = localStorage.getItem(LAST_SETTORE_KEY);
+    if(salvato && (SETTORI.includes(salvato) || salvato === SETTORE_EXTRA)) return salvato;
+  } catch(e){}
+  return SETTORI[0];
+})();
 
 // istantanea di uno stato completamente "vuoto" (di default), calcolata una
 // sola volta all'avvio, usata per capire se una scheda ha davvero dei dati
@@ -4815,7 +4828,7 @@ function renderWardMap(){
     tab.style.setProperty('--dc-on', col.on);
     tab.textContent = s.replace('Settore ', '');
     tab.title = s;
-    tab.onclick = () => { settoreAttivo = s; renderWardMap(); };
+    tab.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderWardMap(); };
     tabsEl.appendChild(tab);
   });
   const separatore = document.createElement('div');
@@ -4830,7 +4843,7 @@ function renderWardMap(){
   tabExtra.style.setProperty('--dc-on', colExtra.on);
   tabExtra.textContent = 'E';
   tabExtra.title = SETTORE_EXTRA + ' (appoggi/ricoveri fuori mappa)';
-  tabExtra.onclick = () => { settoreAttivo = SETTORE_EXTRA; renderWardMap(); };
+  tabExtra.onclick = () => { settoreAttivo = SETTORE_EXTRA; try{ localStorage.setItem(LAST_SETTORE_KEY, SETTORE_EXTRA); }catch(e){} renderWardMap(); };
   tabsEl.appendChild(tabExtra);
 
   const inExtra = settoreAttivo === SETTORE_EXTRA;
@@ -8981,10 +8994,14 @@ const EGA_DIAGNOSI_BREVE = {
   'Alcalosi respiratoria + acidosi metabolica (disturbo misto)': 'alcalosi respiratoria + acidosi metabolica'
 };
 
-// "acidosi metabolica compensata (pH 7.21, pCO2 38, HCO3 21, Lac 2.5)" —
-// forma abbreviata della diagnosi (la versione per esteso resta invariata
-// nel modale) più i soli valori effettivamente compilati, senza unità di
-// misura per restare compatta
+// "acidosi metabolica compensata (pH 7.21, pCO2 38 mmHg, HCO3 21 mmol/L,
+// Lac 2.5 mmol/L)" — forma abbreviata della diagnosi (la versione per
+// esteso resta invariata nel modale) più i soli valori effettivamente
+// compilati, con l'unità di misura di ciascuno (il pH non ne ha).
+// Non c'è un campo pO2 in questo calcolatore (si occupa solo
+// dell'equilibrio acido-base): se lo scrivi a mano nel diario, riceve
+// comunque l'unità in automatico tramite il dizionario generale — vedi
+// aggiungiUnitaMancantiTesto/DIZ_EMATOCHIMICI.
 function egaComponiRigaFinale(){
   const diagnosi = document.getElementById('ega-diagnosisText').textContent.trim();
   if(!diagnosi) return null;
@@ -8996,9 +9013,9 @@ function egaComponiRigaFinale(){
   const hco3 = document.getElementById('ega-hco3').value;
   const lac = document.getElementById('ega-lac').value;
   if(ph) pezzi.push('pH ' + ph);
-  if(pco2) pezzi.push('pCO2 ' + pco2);
-  if(hco3) pezzi.push('HCO3 ' + hco3);
-  if(lac) pezzi.push('Lac ' + lac);
+  if(pco2) pezzi.push('pCO2 ' + pco2 + ' mmHg');
+  if(hco3) pezzi.push('HCO3 ' + hco3 + ' mmol/L');
+  if(lac) pezzi.push('Lac ' + lac + ' mmol/L');
 
   return 'EGA: ' + diagnosiBreve + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
 }
