@@ -609,6 +609,19 @@
   }
   input[type=number]{ width:70px; }
   input[type=text].wide{ width:100%; }
+  /* bordo teal quando un campo di testo libero dell'esame obiettivo ha
+     qualcosa scritto dentro — così il giorno dopo si vede subito, senza
+     dover aprire ogni tendina, dove c'era una nota (es. Stato di
+     coscienza, Cute/ernie/cicatrici, e qualunque altro campo simile).
+     :not(:placeholder-shown) fa scattare la regola solo quando il campo
+     NON sta mostrando il proprio placeholder, cioè contiene del testo
+     vero: niente JS da mantenere, funziona anche sui campi aggiunti in
+     futuro, basta che abbiano un placeholder. */
+  #clinical-view input[type=text]:not(:placeholder-shown),
+  #clinical-view textarea:not(#output):not(:placeholder-shown){
+    border-color:var(--signal);
+    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
+  }
   select{
     background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
     border-radius:10px; padding:8px 10px; font-size:13px;
@@ -1703,6 +1716,10 @@
     <div class="group-label">Manovre</div>
     <div class="finding-list" id="addome-manovre"></div>
   </div>
+  <div class="group">
+    <div class="group-label">Nota libera (aggiunta subito dopo la frase sull'addome)</div>
+    <input type="text" class="wide" id="addome-extra" placeholder="es. Strie rubre">
+  </div>
 </div>
 
 <!-- 7. CUTE / ERNIE -->
@@ -1862,7 +1879,7 @@ const state = {
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
-  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{} },
+  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
@@ -1896,7 +1913,8 @@ const TEXT_FIELD_MAP = [
   ['edemi-custom',    ['edemi','custom']],
   ['diuresi-volume',  ['diuresi','volume']],
   ['diuresi-note',    ['diuresi','note']],
-  ['cute-note',       ['cute','note']]
+  ['cute-note',       ['cute','note']],
+  ['addome-extra',    ['addome','extra']]
 ];
 function syncInputsToState(){
   TEXT_FIELD_MAP.forEach(([id, path]) => {
@@ -4330,6 +4348,7 @@ function applyStateObject(o){
     });
   });
   state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
+  state.addome.extra = o.addome?.extra ?? '';
   if(o.addome && o.addome.manovreAttive !== undefined){
     state.addome.manovreAttive = new Set(o.addome.manovreAttive || []);
     state.addome.manovreEsito = Object.assign({}, o.addome.manovreEsito || {});
@@ -7414,6 +7433,11 @@ function composeAddome(){
     parts.push(joinIt(frasiDol));
   }
   let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
+  // nota libera: aggiunta subito dopo il punto della frase base, PRIMA
+  // delle eventuali manovre (Murphy/Blumberg/ecc.) — mai al posto della
+  // frase generata dai tag, solo in coda a quella
+  const extra = (a.extra || '').trim();
+  if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
   const manoviAttive = OPT.addomeManovreTest.filter(opt => a.manovreAttive.has(opt.value));
   let manovreFrasi;
   const esiti = manoviAttive.map(opt => a.manovreEsito[opt.value] || 'no');
