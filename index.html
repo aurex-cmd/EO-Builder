@@ -267,6 +267,28 @@
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
     font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
   }
+  .bed-tile-dimissione-badge{
+    position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
+    border-radius:50%; background:#4a9fd9; border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center; z-index:1;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  /* se compaiono insieme, la D si sovrappone un po' alla E (stessa
+     posizione, spostata leggermente più a destra) invece di stare esatta-
+     mente sopra — vale solo quando la D segue davvero una E nel tile,
+     non quando compare da sola (nel qual caso resta dove sta di solito
+     la E, in basso a destra) */
+  .bed-tile-esami-badge + .bed-tile-dimissione-badge{ right:-16px; }
+  .diario-dimissione-badge{
+    width:18px; height:18px; border-radius:50%; background:#4a9fd9;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  /* se compaiono insieme, la D si sovrappone un po' alla E (stessa
+     posizione, spostata leggermente a destra) invece di stare in fila
+     con lo spazio normale tra i due pallini — vale solo quando la D segue
+     davvero una E, non quando compare da sola */
+  .diario-esami-badge + .diario-dimissione-badge{ margin-left:-9px; z-index:1; }
 
   /* ---------- CARDS ---------- */
   .card{
@@ -4896,6 +4918,15 @@ function renderWardMap(){
       esamiBadge.textContent = 'E';
       tile.appendChild(esamiBadge);
     }
+    // pallino azzurro "D": stessa idea, ma per una dimissione programmata
+    // per il giorno dopo (vedi haDimissioneDomani)
+    if(entry && haDimissioneDomani(extraTesto)){
+      const dimissioneBadge = document.createElement('div');
+      dimissioneBadge.className = 'bed-tile-dimissione-badge';
+      dimissioneBadge.title = 'Dimissione programmata per domani';
+      dimissioneBadge.textContent = 'D';
+      tile.appendChild(dimissioneBadge);
+    }
 
     // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
     // prima aprire: doppio click di conferma (come "Elimina scheda attiva")
@@ -5282,15 +5313,24 @@ function formattaDataOra(timestamp){
 // di controllo il giorno dopo. Volutamente solo queste 4 varianti esatte
 // (a meno di maiuscole/spazi), non un riconoscimento più largo/fuzzy: così
 // non scatta per errore su frasi solo simili
-const FRASI_ESAMI_DOMANI = [
+const FRASI_ESAMI_DOMANI_BASE = [
   'domani esami',
   'esami domani',
   'esami per domani',
   'esami di controllo per domani',
-  'esami di controllo programmati per domani',
-  'esami ematochimici per domani',
-  'esami ematochimici di controllo per domani'
+  'esami di controllo programmati per domani'
 ];
+// stesse frasi di sopra, ma con "ematochimici"/"ematici" subito dopo
+// "esami" (es. "esami ematochimici di controllo per domani"): generate
+// automaticamente per non dover mantenere a mano il doppio dei casi, e
+// perché una frase aggiunta in futuro alla lista base erediti da sola
+// anche le sue due varianti
+const FRASI_ESAMI_DOMANI = FRASI_ESAMI_DOMANI_BASE.concat(
+  FRASI_ESAMI_DOMANI_BASE.flatMap(f => [
+    f.replace(/\besami\b/, 'esami ematochimici'),
+    f.replace(/\besami\b/, 'esami ematici')
+  ])
+);
 const MESI_ITALIANI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 // "09:15, 19 agosto" — usata in Diari per mostrare quando è stato
 // compilato inizialmente l'esame (non l'ultimo tocco, il primo di oggi)
@@ -5306,6 +5346,20 @@ function haEsamiDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
   return FRASI_ESAMI_DOMANI.some(frase => normalizzato.includes(frase));
+}
+
+// stesso meccanismo di haEsamiDomani/FRASI_ESAMI_DOMANI, ma per il pallino
+// azzurro "D" (dimissione programmata per domani)
+const FRASI_DIMISSIONE_DOMANI = [
+  'domani dimessa',
+  'domani dimesso',
+  'dimissione programmata per domani',
+  'programmate dimissioni per domani'
+];
+function haDimissioneDomani(testoExtra){
+  if(!testoExtra) return false;
+  const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
+  return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase));
 }
 
 function isOggi(timestamp){
@@ -5479,6 +5533,15 @@ function renderRiepilogo(){
       esamiBadge.title = 'Esami di controllo programmati per domani';
       esamiBadge.textContent = 'E';
       rightWrap.appendChild(esamiBadge);
+    }
+    // stesso meccanismo, per il pallino azzurro "D" (dimissione
+    // programmata per domani, vedi haDimissioneDomani)
+    if(haDimissioneDomani(extraTestoBadge)){
+      const dimissioneBadge = document.createElement('div');
+      dimissioneBadge.className = 'diario-dimissione-badge';
+      dimissioneBadge.title = 'Dimissione programmata per domani';
+      dimissioneBadge.textContent = 'D';
+      rightWrap.appendChild(dimissioneBadge);
     }
     rightWrap.appendChild(copiaBtn);
     titleRow.appendChild(rightWrap);
