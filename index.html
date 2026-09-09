@@ -154,17 +154,17 @@
   .input-con-icona .hicon{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-dim); pointer-events:none; }
   .input-con-icona input{ padding-left:33px !important; width:100%; }
   .settore-dot{
-    width:48px; height:48px; border-radius:50%; flex-shrink:0;
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-mono); font-weight:700; font-size:15px;
-    border:2px solid var(--dc); background:var(--dc-dim); color:var(--dc);
-    cursor:pointer; user-select:none; transition:.15s;
-    box-shadow:var(--clay-out-sm);
+    font-family:var(--font-mono); font-weight:700; font-size:14px;
+    border:1.5px solid var(--signal); background:var(--panel-2); color:var(--ink-dim);
+    cursor:pointer; user-select:none;
+    transition:border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
   }
-  .settore-dot:hover{ transform:translateY(-1px); }
+  .settore-dot:hover{ border-color:var(--signal); color:var(--ink); }
   .settore-dot.active{
-    background:var(--dc); color:var(--dc-on);
-    box-shadow:var(--clay-in-sm), 0 0 0 3px var(--dc-dim);
+    border-color:var(--signal); background:var(--signal); color:var(--on-signal);
+    box-shadow:0 0 0 3px var(--signal-soft), var(--glow-signal), 0 0 16px rgba(53,208,174,.5);
   }
   .bed-tile{
     font-family:var(--font-mono); font-weight:600; font-size:13.5px;
@@ -4670,13 +4670,6 @@ const WARD_MAP = {
 };
 const SETTORI = Object.keys(WARD_MAP);
 // un colore diverso per ciascun settore, usato per il pallino selettore
-const SETTORE_COLORI = {
-  'Settore A': { c:'#35d0ae', dim:'#0f3832', on:'#06231d' },
-  'Settore B': { c:'#dba94a', dim:'#3c2f14', on:'#221a08' },
-  'Settore C': { c:'#7c93f0', dim:'#1c2140', on:'#0b0e22' },
-  'Settore D': { c:'#e08cc0', dim:'#3a1f30', on:'#1f0f18' },
-  'Settore E': { c:'#9aa0ac', dim:'#2c2f36', on:'#1a1c21' }
-};
 // "Settore E" non è un vero settore con letti fissi: raccoglie le schede
 // extra (appoggi, ricoveri fuori mappa). Per questo non sta in WARD_MAP,
 // ma viene mostrato come pallino a parte nella barra dei settori, separato
@@ -4837,17 +4830,15 @@ function renderHeaderBadge(){
 function renderWardMap(){
   const patients = loadPatients();
 
-  // pallini dei settori, un colore diverso per ciascuno, con "E" (schede
-  // extra: appoggi/ricoveri fuori mappa) separato dagli altri da un trattino
+  // pallini dei settori (tutti dello stesso colore teal, coerente col
+  // resto dell'app: acceso quando attivo, spento quando no — vedi
+  // .settore-dot/.settore-dot.active), con "E" (schede extra: appoggi/
+  // ricoveri fuori mappa) separato dagli altri da un trattino
   const tabsEl = document.getElementById('settore-tabs');
   tabsEl.innerHTML = '';
   SETTORI.forEach(s => {
-    const col = SETTORE_COLORI[s] || SETTORE_COLORI[SETTORI[0]];
     const tab = document.createElement('div');
     tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
-    tab.style.setProperty('--dc', col.c);
-    tab.style.setProperty('--dc-dim', col.dim);
-    tab.style.setProperty('--dc-on', col.on);
     tab.textContent = s.replace('Settore ', '');
     tab.title = s;
     tab.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderWardMap(); };
@@ -4857,12 +4848,8 @@ function renderWardMap(){
   separatore.className = 'settore-dot-sep';
   separatore.textContent = '–';
   tabsEl.appendChild(separatore);
-  const colExtra = SETTORE_COLORI[SETTORE_EXTRA];
   const tabExtra = document.createElement('div');
   tabExtra.className = 'settore-dot' + (settoreAttivo === SETTORE_EXTRA ? ' active' : '');
-  tabExtra.style.setProperty('--dc', colExtra.c);
-  tabExtra.style.setProperty('--dc-dim', colExtra.dim);
-  tabExtra.style.setProperty('--dc-on', colExtra.on);
   tabExtra.textContent = 'E';
   tabExtra.title = SETTORE_EXTRA + ' (appoggi/ricoveri fuori mappa)';
   tabExtra.onclick = () => { settoreAttivo = SETTORE_EXTRA; try{ localStorage.setItem(LAST_SETTORE_KEY, SETTORE_EXTRA); }catch(e){} renderWardMap(); };
