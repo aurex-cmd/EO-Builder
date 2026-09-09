@@ -345,10 +345,12 @@
     transition:max-height .22s ease, opacity .18s ease, margin-top .22s ease;
   }
   .finding-drawer.open{ flex-basis:100%; width:auto; max-height:260px; opacity:1; margin-top:2px; }
-  /* MV può avere più blocchi sede (vedi costruisciSedeToraciceMulti): il tetto
-     fisso di 260px basterebbe per un solo blocco ma taglia il secondo/terzo,
-     quindi qui alziamo il limite solo per la tendina di MV */
-  #torace-mv .finding-drawer.open{ max-height:700px; }
+  /* MV e reperti (crepitii/ronchi/rantoli/ecc.) possono avere più blocchi
+     sede ciascuno (vedi costruisciSedeToraciceMulti): il tetto fisso di
+     260px basterebbe per un solo blocco ma taglia il secondo/terzo, oltre
+     a bolle/sottotipi/pulsante "+ Aggiungi sede" — quindi qui alziamo il
+     limite per entrambe le tendine, non solo per quella di MV */
+  #torace-mv .finding-drawer.open, #torace-reperti .finding-drawer.open{ max-height:700px; }
   .finding-drawer-inner{
     display:flex; flex-wrap:wrap; gap:6px;
     padding:2px 0 2px 12px;
@@ -2186,6 +2188,10 @@ document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSyn
 
 const PATIENTS_KEY = 'eo_builder_patients_v1';
 const LAST_PATIENT_KEY = 'eo_builder_last_patient_v1';
+// solo locale (niente sincronizzazione cloud): è una preferenza di
+// navigazione di questo dispositivo, non un dato clinico da condividere
+// tra i dispositivi — vedi mostraVista() e il bootstrap in fondo al file
+const LAST_VIEW_KEY = 'eo_builder_last_view_v1';
 let currentPatientId = null;
 
 function loadPatients(){
@@ -3211,6 +3217,7 @@ function apriEsameObiettivoInline(ricoveroId){
   applyStateObject(p.state);
   // stesso azzeramento automatico di selezionaPaziente(): parametri vitali
   // di un giorno diverso da oggi vanno ripuliti all'apertura
+  archiviaGiornoSeNecessario(rec.esameObiettivoPatientId, p);
   if(p.savedAt && !isOggi(p.savedAt)){
     Object.assign(state.respiro, respiroVuotoDiOggi());
     state.outputEsameManuale = '';
@@ -4680,6 +4687,13 @@ function schedaHaDati(patientState){
 // ritrova lo stesso punto della lista invece di ripartire sempre dall'alto
 let riepilogoScrollY = 0;
 function mostraVista(v){
+  // ricordata (solo su questo dispositivo, non sincronizzata: è una
+  // preferenza di navigazione, non un dato clinico) per poter ripristinare
+  // la stessa pagina al prossimo avvio/ricarica dell'app — vedi il
+  // bootstrap in fondo al file, che altrimenti finiva sempre sulla scheda
+  // clinica dell'ultimo paziente, anche se ci si trovava altrove (Diari,
+  // Ricoveri, App) prima di ricaricare
+  try{ localStorage.setItem(LAST_VIEW_KEY, v); } catch(e){}
   // se il riquadro inline dell'esame obiettivo è aperto e si sta per
   // uscire da Ricovero, richiudiamolo prima: #clinical-view va rimesso al
   // suo posto originale, altrimenti mostraVista('clinical') altrove non lo
@@ -5026,6 +5040,7 @@ function aggiornaVitaleLetto(nome, campo, valore){
     // salvataggio di questo letto è di un giorno diverso, quindi i vecchi
     // parametri vitali (e un eventuale testo manuale che li citava) vanno
     // ripuliti prima di scrivere il valore appena digitato
+    archiviaGiornoSeNecessario(entry[0], entry[1]);
     entry[1].state.respiro = respiroVuotoDiOggi();
     entry[1].state.outputEsameManuale = '';
   }
@@ -5075,6 +5090,7 @@ function selezionaPaziente(id){
   // obiettivo (torace, addome, ecc.) resta invariato, come comodo modello
   // di partenza.
   if(p.savedAt && !isOggi(p.savedAt)){
+    archiviaGiornoSeNecessario(id, p);
     Object.assign(state.respiro, respiroVuotoDiOggi());
     // se il giorno prima avevi migliorato a mano il testo (vedi
     // outputEsameManuale), conteneva probabilmente i vecchi parametri
@@ -5207,12 +5223,30 @@ function schedeConDati(){
 }
 
 // come sopra, ma per il giorno scelto: oggi (default, usato ovunque nel
-// resto dell'app) oppure ieri (vedi il pulsante "Diari di ieri" in Diari)
+// resto dell'app, sempre lo stato live) oppure ieri (vedi il pulsante
+// "Diari di ieri" in Diari). Per ieri, un paziente può comparire in due
+// modi diversi: se è stato riscritto oggi, il diario di ieri sopravvive
+// solo nello scatto archiviato (vedi archiviaGiornoSeNecessario); se
+// invece non lo si è più toccato, il suo stato attuale è ANCORA quello di
+// ieri, e si mostra direttamente quello, senza bisogno di uno scatto.
 function schedeConDatiPerGiorno(mostraIeri){
   const patients = loadPatients();
-  const filtroGiorno = mostraIeri ? isIeri : isOggi;
-  const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && filtroGiorno(p.savedAt));
-  return ordinaPazientiPerLetto(entries);
+  if(!mostraIeri){
+    const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && isOggi(p.savedAt));
+    return ordinaPazientiPerLetto(entries);
+  }
+  const chiaveIeri = chiaveGiorno(Date.now() - 86400000);
+  const risultato = [];
+  Object.entries(patients).forEach(([id, p]) => {
+    if(p.storico && p.storico[chiaveIeri] !== undefined){
+      // riscritto oggi: il diario di ieri è "congelato" nello scatto
+      risultato.push([id, { name: p.name, testo: p.storico[chiaveIeri], archiviato: true }]);
+    } else if(schedaHaDati(p.state) && isIeri(p.savedAt)){
+      // mai più toccato da ieri: lo stato attuale è ancora quello di ieri
+      risultato.push([id, { name: p.name, testo: getRefertoFor(p.state), archiviato: false }]);
+    }
+  });
+  return ordinaPazientiPerLetto(risultato);
 }
 
 // formatta un timestamp (es. p.savedAt) come "gg/mm/aaaa, hh:mm" in italiano,
@@ -5280,6 +5314,37 @@ function isIeri(timestamp){
     d.getDate() === ieri.getDate();
 }
 
+// "2026-09-08" — chiave stabile per un giorno di calendario, usata per
+// archiviare uno scatto del diario per data (vedi archiviaGiornoSeNecessario)
+function chiaveGiorno(timestamp){
+  const d = new Date(timestamp);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// da chiamare ogni volta che si apre/tocca un paziente il cui ultimo
+// salvataggio risale a un giorno diverso da oggi, PRIMA di azzerare i
+// parametri vitali per ripartire con la giornata nuova: salva uno scatto
+// del diario così com'era rimasto quel giorno (p.storico[chiave]), perché
+// da questo momento in poi lo stato in memoria comincia a cambiare per
+// oggi e quella versione andrebbe altrimenti persa non appena si scrive
+// qualcosa — vedi il pulsante "Diari di ieri", che legge proprio da qui.
+// Non sovrascrive mai uno scatto già archiviato per quella data.
+function archiviaGiornoSeNecessario(patientId, p){
+  if(!p.savedAt || isOggi(p.savedAt)) return;
+  const chiave = chiaveGiorno(p.savedAt);
+  p.storico = p.storico || {};
+  if(p.storico[chiave] !== undefined) return;
+  p.storico[chiave] = getRefertoFor(p.state);
+  const patients = loadPatients();
+  if(patients[patientId]){
+    patients[patientId].storico = patients[patientId].storico || {};
+    if(patients[patientId].storico[chiave] === undefined){
+      patients[patientId].storico[chiave] = p.storico[chiave];
+      savePatients(patients);
+    }
+  }
+}
+
 // numero di giorni di calendario tra oggi e il timestamp dato (0 = oggi,
 // 1 = ieri, ecc.) — non ore trascorse: mezzanotte a mezzanotte, così
 // "scritto lunedì sera" e "letto martedì mattina" contano 1 giorno di
@@ -5332,12 +5397,16 @@ function renderRiepilogo(){
   const areeTesto = [];
 
   entries.forEach(([id, p]) => {
-    const testo = getRefertoFor(p.state);
+    // "oggi": p è il paziente vero e proprio (serve lo stato live per i
+    // pulsanti Copia/badge se è quello aperto ora). "ieri": p è invece
+    // {name, testo, archiviato} già pronto da schedeConDatiPerGiorno —
+    // niente stato da leggere, il testo c'è già
+    const testo = diariMostraIeri ? p.testo : getRefertoFor(p.state);
     const sepIdx = testo.indexOf('\n\n');
     const soloExtra = sepIdx === -1 ? '' : testo.slice(sepIdx + 2).replace(/^\s+/, '');
 
     const block = document.createElement('div');
-    block.className = 'referto-block' + (p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '');
+    block.className = 'referto-block' + (!diariMostraIeri && p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '');
 
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
@@ -5354,13 +5423,22 @@ function renderRiepilogo(){
 
     // orario del PRIMO salvataggio dell'esame di oggi (non l'ultimo tocco):
     // per schede più vecchie di quando esiste questo campo, si torna
-    // sull'ultimo aggiornamento noto, per non lasciare la data vuota
-    const orarioCompilazione = formattaOrarioData(p.esameIniziatoOggiIl || p.esameAggiornatoIl || p.savedAt);
-    if(orarioCompilazione){
+    // sull'ultimo aggiornamento noto, per non lasciare la data vuota — non
+    // ha senso per "ieri" (il testo può venire da uno scatto archiviato,
+    // senza un proprio orario), quindi lì si mostra solo un'etichetta fissa
+    if(diariMostraIeri){
       const dateEl = document.createElement('div');
       dateEl.className = 'bed-date';
-      dateEl.textContent = orarioCompilazione;
+      dateEl.textContent = p.archiviato ? 'versione di ieri' : 'ieri';
       titleWrap.appendChild(dateEl);
+    } else {
+      const orarioCompilazione = formattaOrarioData(p.esameIniziatoOggiIl || p.esameAggiornatoIl || p.savedAt);
+      if(orarioCompilazione){
+        const dateEl = document.createElement('div');
+        dateEl.className = 'bed-date';
+        dateEl.textContent = orarioCompilazione;
+        titleWrap.appendChild(dateEl);
+      }
     }
 
     const copiaBtn = document.createElement('button');
@@ -5368,8 +5446,7 @@ function renderRiepilogo(){
     copiaBtn.textContent = 'Copia';
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
-      segnaRefertoCopiato(id);
-      block.classList.add('copiato');
+      if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); }
     };
 
     titleRow.appendChild(titleWrap);
@@ -5377,10 +5454,12 @@ function renderRiepilogo(){
     // (haEsamiDomani), qui posizionato in alto a destra del blocco insieme
     // al pulsante Copia — se questo è il paziente aperto ora nella scheda
     // clinica, leggiamo lo stato live invece della copia su disco (che
-    // potrebbe non essere ancora stata aggiornata dall'ultimo autosave)
+    // potrebbe non essere ancora stata aggiornata dall'ultimo autosave).
+    // Per "ieri" si ricava dal testo stesso (extra dopo la riga vuota),
+    // dato che lì non c'è uno "stato" vero da consultare
     const rightWrap = document.createElement('div');
     rightWrap.style.cssText = 'display:flex; align-items:center; gap:8px; flex-shrink:0;';
-    const extraTestoBadge = (id === currentPatientId) ? state.outputExtra : p.state.outputExtra;
+    const extraTestoBadge = diariMostraIeri ? soloExtra : ((id === currentPatientId) ? state.outputExtra : p.state.outputExtra);
     if(haEsamiDomani(extraTestoBadge)){
       const esamiBadge = document.createElement('div');
       esamiBadge.className = 'diario-esami-badge';
@@ -5396,8 +5475,19 @@ function renderRiepilogo(){
     body.setAttribute('spellcheck', 'true');
     body.setAttribute('autocorrect', 'on');
     body.setAttribute('autocapitalize', 'sentences');
-    body.value = diariSoloConsegneAttivo ? soloExtra : testo;
-    body.placeholder = diariSoloConsegneAttivo ? '(nessuna aggiunta oltre l\'esame obiettivo)' : '';
+    body.value = diariMostraIeri ? testo : (diariSoloConsegneAttivo ? soloExtra : testo);
+    body.placeholder = (!diariMostraIeri && diariSoloConsegneAttivo) ? '(nessuna aggiunta oltre l\'esame obiettivo)' : '';
+    if(diariMostraIeri){
+      // sola lettura: è la versione di ieri (uno scatto archiviato, o lo
+      // stato di un paziente mai più toccato da allora) — modificarla qui
+      // non avrebbe un posto sensato dove essere salvata
+      body.readOnly = true;
+      block.appendChild(titleRow);
+      block.appendChild(body);
+      container.appendChild(block);
+      areeTesto.push(body);
+      return;
+    }
     body.addEventListener('input', () => {
       if(diariSoloConsegneAttivo){
         // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
@@ -8181,12 +8271,37 @@ try{
   let lastId = null;
   try{ lastId = localStorage.getItem(LAST_PATIENT_KEY); } catch(e){}
   if(lastId && loadPatients()[lastId]){
-    selezionaPaziente(lastId);
+    // carica i dati dell'ultimo paziente in memoria, MA senza usare
+    // selezionaPaziente() qui: quella chiama anche chiudiWardMap(), che
+    // forzerebbe sempre la scheda clinica, anche se ci si trovava altrove
+    // (Diari, Ricoveri, App) prima di ricaricare la pagina — vedi sotto,
+    // dove si ripristina invece la vista in cui ci si trovava davvero
+    const p = loadPatients()[lastId];
+    currentPatientId = lastId;
+    applyStateObject(p.state);
+    if(p.savedAt && !isOggi(p.savedAt)){
+      archiviaGiornoSeNecessario(lastId, p);
+      Object.assign(state.respiro, respiroVuotoDiOggi());
+      state.outputEsameManuale = '';
+    }
+    populateInputsFromState();
+    refreshUI(false);
   } else {
     renderAll();
     update();
   }
   appInitialized = true;
+
+  // ripristina la pagina in cui ci si trovava prima di ricaricare, invece
+  // di finire sempre sulla scheda clinica dell'ultimo paziente. Per le due
+  // sotto-viste che dipendono da uno stato non ricostruibile al riavvio
+  // (quale ricovero era aperto, quale letto per i vitali) si torna al loro
+  // "genitore" naturale piuttosto che mostrarle vuote o incoerenti
+  let lastView = null;
+  try{ lastView = localStorage.getItem(LAST_VIEW_KEY); } catch(e){}
+  if(lastView === 'ricovero-singolo') lastView = 'ricoveri';
+  if(lastView === 'vitali') lastView = 'wardmap';
+  mostraVista(lastView || 'wardmap');
 } catch(err){
   mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
 }
