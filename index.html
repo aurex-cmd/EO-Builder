@@ -7438,10 +7438,8 @@ function composeCoscienza(){
 function composeRespiro(r){
   r = r || state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
-  let tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
-  if(r.tipo === 'tachipnoico' && r.tachipnoicoBilancia){
-    tipoText += ', in bilancia toraco-addominale per utilizzo della muscolatura accessoria della ventilazione';
-  }
+  const bilanciaAttiva = (r.tipo === 'tachipnoico' && r.tachipnoicoBilancia);
+  const tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
   let o2text;
   if(r.o2 === 'AA') o2text = 'in AA';
   else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
@@ -7450,12 +7448,21 @@ function composeRespiro(r){
   else if(r.o2 === 'MV') o2text = `in MV FiO2 ${r.fio2 || '_'}%`;
   else o2text = (r.altro || 'in ossigenoterapia');
   let s = `${tipoText} ${o2text}`;
+  // "in bilancia...ventilazione" va dopo il tipo di O2, non subito dopo
+  // "Tachipnoico": la frase descrive un meccanismo respiratorio a sé, che
+  // legge meglio come suo inciso separato piuttosto che incastrato prima
+  // di "in AA"/"in NC..."
+  if(bilanciaAttiva){
+    s += ', in bilancia toraco-addominale per utilizzo della muscolatura accessoria della ventilazione';
+  }
 
   const vitali = [];
   if(r.sat) vitali.push(`SatO2 ${r.sat}%`);
   if(r.pas || r.pad) vitali.push(`PA ${r.pas || '_'}/${r.pad || '_'} mmHg`);
   if(r.fc) vitali.push(`FC ${r.fc} bpm`);
-  if(vitali.length) s += ' con ' + vitali.join(', ');
+  // con la frase sulla bilancia già di mezzo, un'altra "con" di fila
+  // suonerebbe ripetuta: lì i parametri vitali proseguono con la virgola
+  if(vitali.length) s += (bilanciaAttiva ? ', ' : ' con ') + vitali.join(', ');
   s += '.';
 
   const tempOpt = OPT.temp.find(o => o.value === r.temp) || OPT.temp.find(o => o.value === 'apiretico');
