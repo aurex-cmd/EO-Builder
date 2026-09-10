@@ -1909,7 +1909,7 @@ const state = {
   // parte generata torna quella vera (vedi refreshUI/update più in basso)
   outputEsameManuale: '',
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
-  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{}, extra:'' },
@@ -4222,7 +4222,7 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:'eupnoico', dispnoicoRiferita:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+    { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
@@ -6226,13 +6226,23 @@ function renderRespiroTipo(){
     const onClickChip = () => {
       state.respiro.tipo = active ? '' : opt.value;
       if(!active && opt.value !== 'dispnoico') state.respiro.dispnoicoRiferita = false;
+      if(!active && opt.value !== 'tachipnoico') state.respiro.tachipnoicoBilancia = false;
       update();
     };
-    const builder = opt.hasLoc ? (inner) => {
-      renderGruppoChipInline(inner, null, [{value:'riferita', label:'Riferita'}],
-        v => state.respiro.dispnoicoRiferita,
-        (v, vAttivo) => { state.respiro.dispnoicoRiferita = !vAttivo; update(); });
-    } : null;
+    let builder = null;
+    if(opt.value === 'dispnoico'){
+      builder = (inner) => {
+        renderGruppoChipInline(inner, null, [{value:'riferita', label:'Riferita'}],
+          v => state.respiro.dispnoicoRiferita,
+          (v, vAttivo) => { state.respiro.dispnoicoRiferita = !vAttivo; update(); });
+      };
+    } else if(opt.value === 'tachipnoico'){
+      builder = (inner) => {
+        renderGruppoChipInline(inner, null, [{value:'bilancia', label:'In bilancia'}],
+          v => state.respiro.tachipnoicoBilancia,
+          (v, vAttivo) => { state.respiro.tachipnoicoBilancia = !vAttivo; update(); });
+      };
+    }
     el.appendChild(creaRigaConTendina(g(opt), active, onClickChip, builder));
   });
 }
@@ -6983,7 +6993,7 @@ const OPT = {
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
     {value:'dispnoico', m:'Dispnoico', f:'Dispnoica', hasLoc:true},
-    {value:'tachipnoico', m:'Tachipnoico', f:'Tachipnoica'}
+    {value:'tachipnoico', m:'Tachipnoico', f:'Tachipnoica', hasLoc:true}
   ],
   respiroO2: [
     {value:'AA', label:'in AA'},
@@ -7428,7 +7438,10 @@ function composeCoscienza(){
 function composeRespiro(r){
   r = r || state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
-  const tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
+  let tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
+  if(r.tipo === 'tachipnoico' && r.tachipnoicoBilancia){
+    tipoText += ', in bilancia toraco-addominale per utilizzo della muscolatura accessoria della ventilazione';
+  }
   let o2text;
   if(r.o2 === 'AA') o2text = 'in AA';
   else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
@@ -7756,7 +7769,15 @@ function composeEdemi(){
     corpo = info.bilaterale ? `${paroleP} ${info.testo} bilateralmente` : `${paroleP} ${info.testo}`;
     if(e.grinza) corpo += info.tipo === 'aaii' ? ', cute grinza' : ', cute grinza agli AAII';
   } else if(sediInfo.length || qualitaText || e.scarico || e.andamento || (e.eczemaStasi && sediSelezionate.includes('aaii'))){
-    const sedeText = sediInfo.length ? joinIt(sediInfo.map(i => i.testoConPreposizione || i.testo)) : '';
+    // AAII + AASS bilaterali insieme (senza fianchi): "ai quattro arti"
+    // invece di "agli AAII e agli AASS" — vale sempre, qualità presente o
+    // no (quindi anche se non sono improntabili/duri/colonnari)
+    const entrambiArtiBilaterali = sediSelezionate.length === 2
+      && sediSelezionate.includes('aaii') && sediSelezionate.includes('aass')
+      && sediInfo.every(i => !i.singolare);
+    const sedeText = entrambiArtiBilaterali
+      ? 'ai quattro arti'
+      : (sediInfo.length ? joinIt(sediInfo.map(i => i.testoConPreposizione || i.testo)) : '');
     const qs = qualitaText ? ' ' + qualitaText : '';
     const ss = sedeText ? ' ' + sedeText : '';
     if(e.andamento === 'riduzione') corpo = `In riduzione gli ${paroleP.toLowerCase()}${qs}${ss}`;
