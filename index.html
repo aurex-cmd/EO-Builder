@@ -267,6 +267,18 @@
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
     font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
   }
+  .lettera-toggle{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim);
+    font-family:var(--font-mono); font-weight:700; font-size:12px;
+    transition:border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .lettera-toggle:hover{ border-color:var(--signal); color:var(--ink); }
+  .lettera-toggle.attivo{
+    border-color:var(--signal); background:var(--signal); color:var(--on-signal);
+    box-shadow:var(--glow-signal);
+  }
   .bed-tile-dimissione-badge{
     position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
     border-radius:50%; background:#4a9fd9; border:2px solid var(--panel-2);
@@ -1423,7 +1435,6 @@
     <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
   </div>
   <div class="group">
-    <div class="group-label" style="opacity:.8;">Ricavato dalle aggiunte scritte nei diari dell'ultimo giorno in cui hai scritto qualcosa (es. "dimesso lunedì", "dimissione prevista per venerdì") — se oggi non hai ancora scritto nessun diario, resta quello di ieri, così non sparisce nel vuoto. Se una frase è vecchia e la dimissione è slittata senza aggiornare il diario, qui compare comunque riferita al prossimo giorno con quel nome — controlla sempre col diario stesso in caso di dubbio.</div>
     <div id="dimissioni-lista"></div>
   </div>
 </div>
@@ -5605,7 +5616,8 @@ function estraiDimissioniProgrammate(testoExtra){
 // scandisce comunque tutto lo storico dei pazienti mai avuti in cura, che
 // farebbe comparire anche dimissioni di schede vecchie non più toccate da
 // giorni. Costruisce l'elenco {data, nome, id}, una riga per ciascuna
-// dimissione riconosciuta, ordinato dalla più vicina alla più lontana.
+// dimissione riconosciuta: prima per data, poi (a parità di data) per
+// ordine di letto (stesso ordine di Diari/Reparto).
 function calcolaCalendarioDimissioni(){
   const patients = loadPatients();
 
@@ -5627,8 +5639,28 @@ function calcolaCalendarioDimissioni(){
       risultati.push({ id, nome: p.name, data });
     });
   });
-  risultati.sort((a, b) => a.data - b.data);
+
+  const ordineLetti = ordinaPazientiPerLetto(Object.entries(patients)).map(([id]) => id);
+  risultati.sort((a, b) => {
+    const diffData = a.data - b.data;
+    if(diffData !== 0) return diffData;
+    return ordineLetti.indexOf(a.id) - ordineLetti.indexOf(b.id);
+  });
   return risultati;
+}
+
+// stato del pallino "L" (lettera di dimissione già scritta): tenuto sulla
+// scheda del paziente stesso, una voce per data di dimissione (così, se la
+// data annotata nel diario cambia, il pallino riparte spento per quella
+// nuova data, invece di restare "acceso" per errore)
+function toggleLetteraDimissione(patientId, chiaveGiornoData){
+  const patients = loadPatients();
+  const p = patients[patientId];
+  if(!p) return;
+  p.dimissioneLettere = p.dimissioneLettere || {};
+  p.dimissioneLettere[chiaveGiornoData] = !p.dimissioneLettere[chiaveGiornoData];
+  savePatients(patients);
+  renderCalendarioDimissioni();
 }
 
 function renderCalendarioDimissioni(){
@@ -5660,11 +5692,22 @@ function renderCalendarioDimissioni(){
     }
     const riga = document.createElement('div');
     riga.className = 'ric-lista-riga';
-    riga.onclick = () => apriLetto(r.nome);
     const nome = document.createElement('span');
     nome.className = 'ric-lista-nome';
     nome.textContent = r.nome;
+    nome.onclick = () => apriLetto(r.nome);
     riga.appendChild(nome);
+
+    const patients = loadPatients();
+    const lettereScritte = (patients[r.id] && patients[r.id].dimissioneLettere) || {};
+    const scritta = !!lettereScritte[chiave];
+    const toggle = document.createElement('div');
+    toggle.className = 'lettera-toggle' + (scritta ? ' attivo' : '');
+    toggle.textContent = 'L';
+    toggle.title = scritta ? 'Lettera di dimissione scritta' : 'Lettera di dimissione non ancora scritta';
+    toggle.onclick = (e) => { e.stopPropagation(); toggleLetteraDimissione(r.id, chiave); };
+    riga.appendChild(toggle);
+
     container.appendChild(riga);
   });
 }
