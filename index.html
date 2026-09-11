@@ -1423,7 +1423,7 @@
     <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
   </div>
   <div class="group">
-    <div class="group-label" style="opacity:.8;">Ricavato dalle aggiunte scritte nei diari (es. "dimesso lunedì", "dimissione prevista per venerdì"). Se una frase è vecchia e la dimissione è slittata senza aggiornare il diario, qui compare comunque riferita al prossimo giorno con quel nome — controlla sempre col diario stesso in caso di dubbio.</div>
+    <div class="group-label" style="opacity:.8;">Ricavato dalle aggiunte scritte nei diari dell'ultimo giorno in cui hai scritto qualcosa (es. "dimesso lunedì", "dimissione prevista per venerdì") — se oggi non hai ancora scritto nessun diario, resta quello di ieri, così non sparisce nel vuoto. Se una frase è vecchia e la dimissione è slittata senza aggiornare il diario, qui compare comunque riferita al prossimo giorno con quel nome — controlla sempre col diario stesso in caso di dubbio.</div>
     <div id="dimissioni-lista"></div>
   </div>
 </div>
@@ -5598,18 +5598,29 @@ function estraiDimissioniProgrammate(testoExtra){
   return risultati;
 }
 
-// scandisce tutte le schede con dati (di qualunque giorno, non solo oggi:
-// una dimissione può essere stata annotata anche qualche giorno fa) e
-// costruisce l'elenco {data, nome, id}, una riga per ciascuna dimissione
-// riconosciuta, ordinato dalla più vicina alla più lontana. Le date già
-// passate (comprese quelle di oggi) restano incluse: è più utile vedere
-// "doveva uscire ieri" per accorgersi che una lettera è rimasta indietro,
-// piuttosto che farla sparire in silenzio.
+// scandisce solo le schede dell'ULTIMO giorno per cui esiste almeno un
+// diario scritto (di solito oggi — ma se oggi non hai ancora scritto
+// nulla, resta quello di ieri o dell'ultimo giorno disponibile, così
+// l'elenco non sparisce nel vuoto finché non riprendi a scrivere). Non
+// scandisce comunque tutto lo storico dei pazienti mai avuti in cura, che
+// farebbe comparire anche dimissioni di schede vecchie non più toccate da
+// giorni. Costruisce l'elenco {data, nome, id}, una riga per ciascuna
+// dimissione riconosciuta, ordinato dalla più vicina alla più lontana.
 function calcolaCalendarioDimissioni(){
   const patients = loadPatients();
+
+  let ultimoSavedAt = null;
+  Object.values(patients).forEach(p => {
+    if(!schedaHaDati(p.state) || !p.savedAt) return;
+    if(ultimoSavedAt === null || p.savedAt > ultimoSavedAt) ultimoSavedAt = p.savedAt;
+  });
+  if(ultimoSavedAt === null) return [];
+  const chiaveRiferimento = chiaveGiorno(ultimoSavedAt);
+
   const risultati = [];
   Object.entries(patients).forEach(([id, p]) => {
-    if(!schedaHaDati(p.state)) return;
+    if(!schedaHaDati(p.state) || !p.savedAt) return;
+    if(chiaveGiorno(p.savedAt) !== chiaveRiferimento) return;
     const extra = (p.state.outputExtra || '').trim();
     if(!extra) return;
     estraiDimissioniProgrammate(extra).forEach(data => {
