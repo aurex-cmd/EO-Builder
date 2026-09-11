@@ -1323,6 +1323,9 @@
   </div>
   <div class="group">
     <div class="ric-lista-minimale">
+      <div class="ric-lista-riga" onclick="mostraVista('dimissioni')">
+        <span class="ric-lista-nome">Calendario dimissioni</span>
+      </div>
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
       </div>
@@ -1405,6 +1408,23 @@
     <div class="group-label">Backup automatico</div>
     <div class="group-label" style="margin-bottom:10px; opacity:.8;">Ogni tanto (al massimo una volta ogni 15 minuti) l'app tiene da parte una copia di tutte le schede pazienti, qui sotto — solo su questo dispositivo. Serve come rete di sicurezza: se mai qualcosa andasse storto (un bug, un salvataggio finito male), da qui puoi tornare a una versione precedente.</div>
     <div id="backup-lista"></div>
+  </div>
+</div>
+
+<!-- CALENDARIO DIMISSIONI: ricavato scandendo le aggiunte dei diari alla
+     ricerca di frasi tipo "dimesso/a lunedì" o "dimissione ... venerdì"
+     (vedi haDimissioneDomani/FRASI_DIMISSIONE_DOMANI per il pallino "D",
+     stesso spirito ma qui con qualunque giorno della settimana, non solo
+     "domani") — utile per organizzarsi con le lettere di dimissione senza
+     dover riaprire ogni singolo diario -->
+<div class="card" id="dimissioni-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/></svg> Calendario dimissioni</h2>
+  <div class="group">
+    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
+  </div>
+  <div class="group">
+    <div class="group-label" style="opacity:.8;">Ricavato dalle aggiunte scritte nei diari (es. "dimesso lunedì", "dimissione prevista per venerdì"). Se una frase è vecchia e la dimissione è slittata senza aggiornare il diario, qui compare comunque riferita al prossimo giorno con quel nome — controlla sempre col diario stesso in caso di dubbio.</div>
+    <div id="dimissioni-lista"></div>
   </div>
 </div>
 
@@ -4916,6 +4936,7 @@ function mostraVista(v){
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
+  document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
@@ -4930,6 +4951,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'app') renderBackupLista();
+  if(v === 'dimissioni') renderCalendarioDimissioni();
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
@@ -5526,6 +5548,114 @@ function haDimissioneDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
   return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase));
+}
+
+// per il Calendario dimissioni: a differenza di haDimissioneDomani (che si
+// limita a un sì/no per "domani"), qui si cerca un GIORNO DELLA SETTIMANA
+// specifico dopo "dimesso/a" o "dimission-" (es. "dimesso lunedì",
+// "dimissione prevista per venerdì") e lo si traduce nella prossima data
+// di calendario con quel nome — indice 0=domenica...6=sabato, come
+// Date.getDay(), per poterli confrontare direttamente
+const NOMI_GIORNI_SETTIMANA = ['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
+
+// la prossima data (oggi compreso) che cade in quel giorno della settimana
+function prossimaDataPerGiorno(nomeGiorno, daData){
+  const idx = NOMI_GIORNI_SETTIMANA.indexOf(nomeGiorno.toLowerCase());
+  if(idx === -1) return null;
+  const base = daData ? new Date(daData) : new Date();
+  base.setHours(0,0,0,0);
+  const diff = (idx - base.getDay() + 7) % 7;
+  const d = new Date(base);
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+// estrae dal testo (le sole aggiunte del diario, non l'esame obiettivo)
+// tutte le date di dimissione programmata che riesce a riconoscere:
+// "domani dimesso/a"/"dimesso/a domani" -> data di domani; "dimesso/a
+// <giorno>" o "dimission(e/i) ... <giorno>" (fino a una trentina di
+// caratteri di distanza, per tollerare "dimissione prevista per lunedì")
+// -> la prossima data con quel nome. Un solo testo può contenere più date
+// (raro ma possibile se il diario viene riscritto più volte).
+function estraiDimissioniProgrammate(testoExtra){
+  if(!testoExtra) return [];
+  const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ');
+  const risultati = [];
+
+  if(/\bdomani\s+dimess[oa]\b/.test(normalizzato) || /\bdimess[oa]\s+domani\b/.test(normalizzato)){
+    const domani = new Date();
+    domani.setDate(domani.getDate() + 1);
+    domani.setHours(0,0,0,0);
+    risultati.push(domani);
+  }
+
+  const reGiorno = /(?:dimess[oa]|dimission[ei])[^.,;\n]{0,30}?\b(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-zà-ù])/g;
+  let m;
+  while((m = reGiorno.exec(normalizzato))){
+    const d = prossimaDataPerGiorno(m[1]);
+    if(d) risultati.push(d);
+  }
+  return risultati;
+}
+
+// scandisce tutte le schede con dati (di qualunque giorno, non solo oggi:
+// una dimissione può essere stata annotata anche qualche giorno fa) e
+// costruisce l'elenco {data, nome, id}, una riga per ciascuna dimissione
+// riconosciuta, ordinato dalla più vicina alla più lontana. Le date già
+// passate (comprese quelle di oggi) restano incluse: è più utile vedere
+// "doveva uscire ieri" per accorgersi che una lettera è rimasta indietro,
+// piuttosto che farla sparire in silenzio.
+function calcolaCalendarioDimissioni(){
+  const patients = loadPatients();
+  const risultati = [];
+  Object.entries(patients).forEach(([id, p]) => {
+    if(!schedaHaDati(p.state)) return;
+    const extra = (p.state.outputExtra || '').trim();
+    if(!extra) return;
+    estraiDimissioniProgrammate(extra).forEach(data => {
+      risultati.push({ id, nome: p.name, data });
+    });
+  });
+  risultati.sort((a, b) => a.data - b.data);
+  return risultati;
+}
+
+function renderCalendarioDimissioni(){
+  const container = document.getElementById('dimissioni-lista');
+  if(!container) return;
+  container.innerHTML = '';
+  const righe = calcolaCalendarioDimissioni();
+  if(!righe.length){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.textContent = 'Nessuna dimissione programmata trovata nei diari al momento.';
+    container.appendChild(vuoto);
+    return;
+  }
+
+  const oggiChiave = chiaveGiorno(Date.now());
+  let ultimaChiaveGiorno = null;
+  righe.forEach(r => {
+    const chiave = chiaveGiorno(r.data.getTime());
+    if(chiave !== ultimaChiaveGiorno){
+      ultimaChiaveGiorno = chiave;
+      const intestazione = document.createElement('div');
+      intestazione.className = 'group-label';
+      intestazione.style.cssText = 'margin-top:14px; font-weight:700; color:var(--folder);';
+      const nomeGiorno = NOMI_GIORNI_SETTIMANA[r.data.getDay()];
+      const testoData = `${cap(nomeGiorno)} ${r.data.getDate()} ${MESI_ITALIANI[r.data.getMonth()]}`;
+      intestazione.textContent = chiave === oggiChiave ? `Oggi — ${testoData}` : testoData;
+      container.appendChild(intestazione);
+    }
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga';
+    riga.onclick = () => apriLetto(r.nome);
+    const nome = document.createElement('span');
+    nome.className = 'ric-lista-nome';
+    nome.textContent = r.nome;
+    riga.appendChild(nome);
+    container.appendChild(riga);
+  });
 }
 
 function isOggi(timestamp){
