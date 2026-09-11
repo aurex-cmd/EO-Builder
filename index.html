@@ -1400,6 +1400,12 @@
       </div>
     </div>
   </div>
+
+  <div class="group">
+    <div class="group-label">Backup automatico</div>
+    <div class="group-label" style="margin-bottom:10px; opacity:.8;">Ogni tanto (al massimo una volta ogni 15 minuti) l'app tiene da parte una copia di tutte le schede pazienti, qui sotto — solo su questo dispositivo. Serve come rete di sicurezza: se mai qualcosa andasse storto (un bug, un salvataggio finito male), da qui puoi tornare a una versione precedente.</div>
+    <div id="backup-lista"></div>
+  </div>
 </div>
 
 <!-- RICOVERI -->
@@ -2253,11 +2259,126 @@ function loadPatients(){
   try{ return JSON.parse(localStorage.getItem(PATIENTS_KEY) || '{}'); }
   catch(e){ return {}; }
 }
+// backup locale automatico: qualche versione precedente dei dati pazienti,
+// distanziate nel tempo, così anche in caso di un guaio (bug, invio andato
+// storto, tocco sbagliato) resta una via per tornare indietro — vedi
+// aggiornaBackupLocale più sotto e la sezione "Backup" nella scheda App
+const BACKUP_KEY = 'eo_builder_backup_patients_v1';
+const BACKUP_INTERVALLO_MS = 15 * 60 * 1000; // una nuova copia al massimo ogni 15 minuti...
+const BACKUP_MAX = 8;                        // ...tenendo le ultime 8 (circa 2 ore di storico)
+
+function aggiornaBackupLocale(rawValue){
+  try{
+    let backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+    const ultimo = backups[backups.length - 1];
+    const ora = Date.now();
+    // se il contenuto è identico all'ultima copia salvata non serve una
+    // nuova voce (capita spesso: molti salvataggi non cambiano i dati
+    // pazienti, es. un tocco ai soli parametri vitali di un altro letto)
+    if(ultimo && ultimo.data === rawValue) return;
+    if(!ultimo || (ora - ultimo.ts) >= BACKUP_INTERVALLO_MS){
+      backups.push({ ts: ora, data: rawValue });
+      if(backups.length > BACKUP_MAX) backups = backups.slice(backups.length - BACKUP_MAX);
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+    }
+  } catch(e){
+    // il backup è un extra: se fallisce (es. spazio pieno) non deve
+    // bloccare il salvataggio vero, che è già andato a buon fine sopra
+  }
+}
+
 function savePatients(patients){
   const raw = JSON.stringify(patients);
   try{ localStorage.setItem(PATIENTS_KEY, raw); }
   catch(e){ showToast('Salvataggio locale non disponibile'); }
+  aggiornaBackupLocale(raw);
   cloudPush(PATIENTS_KEY, raw);
+}
+
+// elenco dei backup disponibili, dal più recente al più vecchio, con un
+// pulsante "Ripristina" a due click (stessa conferma già usata altrove,
+// es. eliminaSchedaDaLetto) per ciascuno
+let backupArmatoTs = null;
+let backupArmatoTimer = null;
+
+function renderBackupLista(){
+  const container = document.getElementById('backup-lista');
+  if(!container) return;
+  container.innerHTML = '';
+  let backups = [];
+  try{ backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); } catch(e){}
+  if(!backups.length){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.textContent = 'Ancora nessun backup salvato (il primo compare 15 minuti dopo la prima modifica).';
+    container.appendChild(vuoto);
+    return;
+  }
+  backups.slice().reverse().forEach(b => {
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga';
+    const nome = document.createElement('span');
+    nome.className = 'ric-lista-nome';
+    nome.textContent = formattaOrarioData(b.ts);
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.flexShrink = '0';
+    btn.textContent = (backupArmatoTs === b.ts) ? 'Confermi? Clicca di nuovo' : 'Ripristina';
+    btn.onclick = (e) => { e.stopPropagation(); ripristinaBackup(b.ts); };
+    riga.appendChild(nome);
+    riga.appendChild(btn);
+    container.appendChild(riga);
+  });
+}
+
+function ripristinaBackup(ts){
+  if(backupArmatoTs !== ts){
+    backupArmatoTs = ts;
+    clearTimeout(backupArmatoTimer);
+    backupArmatoTimer = setTimeout(() => { backupArmatoTs = null; renderBackupLista(); }, 4000);
+    renderBackupLista();
+    return;
+  }
+  clearTimeout(backupArmatoTimer);
+  backupArmatoTs = null;
+
+  let backups = [];
+  try{ backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); } catch(e){ showToast('Ripristino non riuscito'); return; }
+  const scelto = backups.find(b => b.ts === ts);
+  if(!scelto) return;
+
+  // prima di ripristinare, mettiamo comunque da parte la situazione
+  // ATTUALE (che altrimenti non sarebbe mai stata salvata come backup,
+  // essendo la più recente): così, scegliendo la versione sbagliata per
+  // errore, si può tornare anche a questa
+  try{
+    const attuale = localStorage.getItem(PATIENTS_KEY);
+    if(attuale && attuale !== scelto.data){
+      let backupsAggiornati = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+      backupsAggiornati.push({ ts: Date.now(), data: attuale });
+      if(backupsAggiornati.length > BACKUP_MAX) backupsAggiornati = backupsAggiornati.slice(backupsAggiornati.length - BACKUP_MAX);
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(backupsAggiornati));
+    }
+  } catch(e){}
+
+  try{ localStorage.setItem(PATIENTS_KEY, scelto.data); }
+  catch(e){ showToast('Ripristino non riuscito'); return; }
+  cloudPush(PATIENTS_KEY, scelto.data);
+
+  // se in questo momento è aperta una scheda clinica, va ricaricata subito
+  // con i dati appena ripristinati — stessa ragione della correzione fatta
+  // per il download dal cloud, altrimenti il primo tocco la sovrascrive
+  if(currentPatientId){
+    const pRipristinato = loadPatients()[currentPatientId];
+    if(pRipristinato){
+      applyStateObject(pRipristinato.state);
+      populateInputsFromState();
+      refreshUI(false);
+    }
+  }
+  renderWardMap();
+  renderBackupLista();
+  showToast('Versione delle ' + formattaOrarioData(ts) + ' ripristinata');
 }
 
 /* ============================================================
@@ -4808,6 +4929,7 @@ function mostraVista(v){
   }
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
+  if(v === 'app') renderBackupLista();
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
