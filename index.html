@@ -2211,8 +2211,31 @@ async function aggiornaStatoSync(){
   const user = data && data.user;
   if(!user) return;
   await cloudPullAll();
+  // BUG SERIO risolto qui: cloudPullAll() aggiorna solo il localStorage
+  // grezzo, non lo stato già caricato in memoria (state/currentPatientId) —
+  // che a questo punto può già riflettere una versione VECCHIA, letta
+  // all'avvio della pagina PRIMA che questo pull finisse (il pull parte in
+  // parallelo all'avvio, non lo blocca). Senza ricaricare esplicitamente lo
+  // stato del paziente eventualmente già aperto, qualunque salvataggio
+  // successivo (anche solo toccare un tag) avrebbe ri-scritto quella
+  // versione vecchia sopra a quella appena scaricata — cancellando per
+  // davvero le modifiche più recenti fatte da un altro dispositivo, non
+  // solo mostrandole in ritardo.
+  if(typeof currentPatientId !== 'undefined' && currentPatientId && typeof loadPatients === 'function'){
+    const pAggiornato = loadPatients()[currentPatientId];
+    if(pAggiornato){
+      applyStateObject(pAggiornato.state);
+      if(pAggiornato.savedAt && !isOggi(pAggiornato.savedAt)){
+        archiviaGiornoSeNecessario(currentPatientId, pAggiornato);
+        Object.assign(state.respiro, respiroVuotoDiOggi());
+        state.outputEsameManuale = '';
+      }
+      if(typeof populateInputsFromState === 'function') populateInputsFromState();
+    }
+  }
   if(typeof refreshUI === 'function') refreshUI(false);
   if(typeof renderWardMap === 'function') renderWardMap();
+  if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
   if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
 })();
 document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); });
