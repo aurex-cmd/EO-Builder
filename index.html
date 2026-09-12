@@ -1338,6 +1338,9 @@
       <div class="ric-lista-riga" onclick="mostraVista('dimissioni')">
         <span class="ric-lista-nome">Calendario dimissioni</span>
       </div>
+      <div class="ric-lista-riga" onclick="mostraVista('backup')">
+        <span class="ric-lista-nome">Backup</span>
+      </div>
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
       </div>
@@ -1415,9 +1418,17 @@
       </div>
     </div>
   </div>
+</div>
 
+<!-- BACKUP: come Calendario dimissioni, prima era sempre visibile dentro
+     App — spostato in una vista a sé, aperta solo a richiesta, per non
+     appesantire la pagina App con qualcosa che si guarda raramente -->
+<div class="card" id="backup-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg> Backup</h2>
   <div class="group">
-    <div class="group-label">Backup automatico</div>
+    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
+  </div>
+  <div class="group">
     <div class="group-label" style="margin-bottom:10px; opacity:.8;">Ogni tanto (al massimo una volta ogni 15 minuti) l'app tiene da parte una copia di tutte le schede pazienti, qui sotto — solo su questo dispositivo. Serve come rete di sicurezza: se mai qualcosa andasse storto (un bug, un salvataggio finito male), da qui puoi tornare a una versione precedente.</div>
     <div id="backup-lista"></div>
   </div>
@@ -2296,7 +2307,7 @@ function loadPatients(){
 // aggiornaBackupLocale più sotto e la sezione "Backup" nella scheda App
 const BACKUP_KEY = 'eo_builder_backup_patients_v1';
 const BACKUP_INTERVALLO_MS = 15 * 60 * 1000; // una nuova copia al massimo ogni 15 minuti...
-const BACKUP_MAX = 8;                        // ...tenendo le ultime 8 (circa 2 ore di storico)
+const BACKUP_MAX = 3;                        // ...tenendo le ultime 3
 
 function aggiornaBackupLocale(rawValue){
   try{
@@ -4947,6 +4958,7 @@ function mostraVista(v){
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
+  document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
   document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
@@ -4961,7 +4973,7 @@ function mostraVista(v){
   }
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
-  if(v === 'app') renderBackupLista();
+  if(v === 'backup') renderBackupLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
