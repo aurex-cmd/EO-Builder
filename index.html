@@ -1359,7 +1359,7 @@
         <span class="ric-lista-nome">Calendario dimissioni</span>
       </div>
       <div class="ric-lista-riga" onclick="mostraVista('consegne')">
-        <span class="ric-lista-nome">Consegne (V/E/S)</span>
+        <span class="ric-lista-nome">Consegne WE</span>
       </div>
       <div class="ric-lista-riga" onclick="mostraVista('backup')">
         <span class="ric-lista-nome">Backup</span>
@@ -1464,7 +1464,7 @@
      un'interpretazione perfetta (il linguaggio delle consegne è molto
      abbreviato e personale), solo un aiuto per orientarsi in fretta. -->
 <div class="card" id="consegne-view" style="display:none; background:var(--panel-3);">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> Consegne (V/E/S)</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> Consegne WE</h2>
   <div class="group">
     <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
   </div>
@@ -6072,8 +6072,6 @@ function renderConsegneLista(){
   if(!container) return;
   container.innerHTML = '';
   const consegne = loadConsegne();
-  const patients = loadPatients();
-  const nomiConDati = new Set(Object.values(patients).map(p => p.name));
 
   const nomi = Object.keys(consegne).sort(confrontaNomiLetto);
 
@@ -6091,7 +6089,7 @@ function renderConsegneLista(){
     riga.className = 'ric-lista-riga';
     const nome = document.createElement('span');
     nome.className = 'ric-lista-nome';
-    nome.textContent = nomeLetto + (nomiConDati.has(nomeLetto) ? '' : ' (nessuna scheda aperta)');
+    nome.textContent = nomeLetto;
     nome.style.cursor = 'pointer';
     nome.onclick = () => toggleTestoConsegnaVisibile(nomeLetto);
     riga.appendChild(nome);
