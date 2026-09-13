@@ -5779,6 +5779,22 @@ function toggleLetteraDimissione(patientId, chiaveGiornoData){
 // CONSEGNE (V/E/S) — vedi il commento sopra la vista HTML per la filosofia
 const CONSEGNE_KEY = 'eo_builder_consegne_v1';
 
+// confronto numerico vero per nomi tipo "Letto 9.1"/"Letto 10.2": un
+// confronto alfabetico normale metterebbe "Letto 10.1" prima di "Letto
+// 9.1" (perché "1" < "9" come primo carattere) — qui si estraggono i due
+// numeri (letto e sotto-letto) e si confrontano come numeri, non come testo
+function confrontaNomiLetto(a, b){
+  const parse = (nome) => {
+    const m = nome.match(/(\d+)(?:\.(\d+))?/);
+    return m ? [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0] : [Infinity, 0];
+  };
+  const [a1, a2] = parse(a);
+  const [b1, b2] = parse(b);
+  if(a1 !== b1) return a1 - b1;
+  if(a2 !== b2) return a2 - b2;
+  return a.localeCompare(b);
+}
+
 // carica una libreria esterna (da CDN) una sola volta, solo quando serve
 // davvero (si allega un file), invece di appesantire l'avvio dell'app per
 // una funzione usata di rado
@@ -5989,15 +6005,8 @@ function renderConsegneLista(){
   const consegne = loadConsegne();
   const patients = loadPatients();
   const nomiConDati = new Set(Object.values(patients).map(p => p.name));
-  const ordineLetti = ordinaPazientiPerLetto(Object.entries(patients)).map(([, p]) => p.name);
 
-  const nomi = Object.keys(consegne).sort((a, b) => {
-    const ia = ordineLetti.indexOf(a), ib = ordineLetti.indexOf(b);
-    if(ia === -1 && ib === -1) return a.localeCompare(b);
-    if(ia === -1) return 1;
-    if(ib === -1) return -1;
-    return ia - ib;
-  });
+  const nomi = Object.keys(consegne).sort(confrontaNomiLetto);
 
   if(!nomi.length){
     const vuoto = document.createElement('div');
