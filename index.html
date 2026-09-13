@@ -5221,23 +5221,22 @@ function renderWardMap(){
       tile.appendChild(dimissioneBadge);
     }
 
-    // pallini V/E/S: dalle consegne incollate/analizzate in App → Consegne
-    // (vedi analizzaConsegne) — solo le lettere ancora DA FARE, quelle già
-    // spuntate come fatte non compaiono più qui. Il tile stesso si
-    // illumina in azzurro se resta almeno una lettera da fare.
+    // pallini V/E/S/C: dalle consegne incollate/analizzate in App →
+    // Consegne (vedi analizzaConsegne) — solo le lettere ancora DA FARE,
+    // quelle già spuntate come fatte non compaiono più qui. Il tile si
+    // illumina in azzurro se il letto è segnalato, anche quando non si
+    // riconosce nessuna lettera specifica (vedi haQualcosaDaSegnalareOggi)
     const consegnaLetto = consegneCorrenti[nome];
     if(consegnaLetto){
+      tile.classList.add('ha-consegne');
       const daFare = ['V','E','S','C'].filter(l => consegnaLetto[l] && !consegnaLetto['fatto' + l]);
-      if(daFare.length){
-        tile.classList.add('ha-consegne');
-        daFare.forEach(lettera => {
-          const badge = document.createElement('div');
-          badge.className = `bed-tile-consegna-badge ${lettera.toLowerCase()}`;
-          badge.textContent = lettera;
-          badge.title = `Consegna: ${lettera} da fare`;
-          tile.appendChild(badge);
-        });
-      }
+      daFare.forEach(lettera => {
+        const badge = document.createElement('div');
+        badge.className = `bed-tile-consegna-badge ${lettera.toLowerCase()}`;
+        badge.textContent = lettera;
+        badge.title = `Consegna: ${lettera} da fare`;
+        tile.appendChild(badge);
+      });
     }
 
     // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
@@ -5778,6 +5777,13 @@ function toggleLetteraDimissione(patientId, chiaveGiornoData){
 
 // CONSEGNE (V/E/S) — vedi il commento sopra la vista HTML per la filosofia
 const CONSEGNE_KEY = 'eo_builder_consegne_v1';
+// quale letto ha il testo della consegna aperto in questo momento nella
+// lista (uno alla volta, come una tendina): null = nessuno
+let consegneTestoVisibile = null;
+function toggleTestoConsegnaVisibile(nomeLetto){
+  consegneTestoVisibile = (consegneTestoVisibile === nomeLetto) ? null : nomeLetto;
+  renderConsegneLista();
+}
 
 // confronto numerico vero per nomi tipo "Letto 9.1"/"Letto 10.2": un
 // confronto alfabetico normale metterebbe "Letto 10.1" prima di "Letto
@@ -5900,13 +5906,24 @@ function dataPiuVicinaPerGiorno(nomeGiorno, daData){
 
 function trovaMarcatoriGiorno(testo){
   const marcatori = [];
-  const re = /\b(sab(?:ato)?|dom(?:enica)?)\b|\b(\d{1,2})[\/.](\d{1,2})\b/gi;
+  const re = /\b(lun(?:edì)?|mar(?:tedì)?|mer(?:coledì)?|gio(?:vedì)?|ven(?:erdì)?|sab(?:ato)?|dom(?:enica)?)(?![a-zà-ù])|\b(\d{1,2})[\/.](\d{1,2})\b/gi;
+  const ABBREVIAZIONE_A_NOME = { lun:'lunedì', mar:'martedì', mer:'mercoledì', gio:'giovedì', ven:'venerdì', sab:'sabato', dom:'domenica' };
   let m;
   while((m = re.exec(testo))){
+    // un giorno citato subito dopo "ok"/"ok per ora"/una freccia (">"/"→")
+    // è quasi sempre un aggiornamento retrospettivo scritto quel giorno
+    // ("ok per ora sab" = "andava bene, controllato sabato"), non
+    // un'istruzione DA FARE quel giorno preciso: non lo consideriamo un
+    // vincolo di data, altrimenti il resto della frase (spesso valido più
+    // di un giorno) sparirebbe appena il giorno cambia
+    const primaDelGiorno = testo.slice(Math.max(0, m.index - 20), m.index);
+    if(/(?:>|→|\bok\b)\s*(?:per\s*ora\s*)?$/i.test(primaDelGiorno)) continue;
+
     let data = null;
     if(m[1]){
-      const nomeCompleto = m[1].toLowerCase().startsWith('sab') ? 'sabato' : 'domenica';
-      data = dataPiuVicinaPerGiorno(nomeCompleto);
+      const chiave3 = m[1].toLowerCase().slice(0, 3);
+      const nomeCompleto = ABBREVIAZIONE_A_NOME[chiave3];
+      if(nomeCompleto) data = dataPiuVicinaPerGiorno(nomeCompleto);
     } else if(m[2] && m[3]){
       const oggi = new Date();
       data = new Date(oggi.getFullYear(), parseInt(m[3], 10) - 1, parseInt(m[2], 10));
@@ -5941,21 +5958,66 @@ function categoriaValidaOggi(testo, sorgenteRegex){
   return trovata;
 }
 
+// come categoriaValidaOggi, ma per l'intero testo invece che per una
+// singola parola chiave: assegna OGNI porzione di testo al marcatore di
+// giorno più vicino (dividendo a metà strada tra un marcatore e il
+// successivo, non necessariamente a chi lo precede — così "EE lunedì",
+// dove il marcatore viene DOPO la parola, funziona lo stesso), e tiene
+// solo le porzioni il cui marcatore è oggi. Se non c'è nessun marcatore,
+// il testo resta tutto rilevante — non c'è modo di sapere a che giorno si
+// riferisce.
+function testoRilevanteOggi(testo){
+  const marcatori = trovaMarcatoriGiorno(testo).slice().sort((a, b) => a.pos - b.pos);
+  if(!marcatori.length) return testo;
+  const oggiChiave = chiaveGiorno(Date.now());
+  let risultato = '';
+  let inizioSegmento = 0;
+  for(let i = 0; i < marcatori.length; i++){
+    const fineSegmento = (i + 1 < marcatori.length)
+      ? Math.floor((marcatori[i].pos + marcatori[i + 1].pos) / 2)
+      : testo.length;
+    if(chiaveGiorno(marcatori[i].data.getTime()) === oggiChiave){
+      risultato += testo.slice(inizioSegmento, fineSegmento);
+    }
+    inizioSegmento = fineSegmento;
+  }
+  return risultato;
+}
+
+// il letto va segnalato se, tolto il testo di giorni non in corso e le
+// frasi di puro riempimento ("su chiamata" e simili), resta comunque
+// qualcosa scritto — anche quando non si riesce a riconoscere nessuna
+// lettera specifica: meglio segnalare "c'è scritto qualcosa, controlla tu"
+// piuttosto che nascondere per sbaglio una consegna che lo strumento non
+// sa classificare
+function haQualcosaDaSegnalareOggi(testoConsegna){
+  const rilevante = testoRilevanteOggi(testoConsegna).trim();
+  if(!rilevante) return false;
+  const ripulito = rilevante
+    .replace(/\bsu\s+chiamata\b/gi, '')
+    .replace(/[.,;:\-–>]/g, '')
+    .trim();
+  return ripulito.length > 0;
+}
+
 // parole chiave per ciascuna lettera — non è un'interpretazione perfetta
 // (il linguaggio delle consegne è molto abbreviato e personale), solo le
 // espressioni più ricorrenti e riconoscibili. "emo"/"uro"/"colturali" ecc.
 // vanno sotto C (colture): nell'uso reale si riferiscono quasi sempre a
 // emocoltura/urinocoltura/antibiogramma, non a esami ematochimici di
-// routine (quelli restano EE/EEC/EGA/PCR, sotto E). Ogni categoria viene
-// mostrata solo se il riferimento di giorno più vicino a quella parola
-// (sab/dom/data, vedi trovaMarcatoriGiorno) è oggi, o se non c'è nessun
-// riferimento di giorno nel testo.
+// routine (quelli restano EE/EEC/EGA/PCR, sotto E). "controllo clinico"/
+// "ob. addome"/"ob. torace"/"obiettività clinica" contano anche come V,
+// non solo "visitare": in pratica indicano lo stesso bisogno di rivedere
+// il paziente di persona. Ogni categoria viene mostrata solo se il
+// riferimento di giorno più vicino a quella parola (sab/dom/data, vedi
+// trovaMarcatoriGiorno) è oggi, o se non c'è nessun riferimento di giorno
+// nel testo.
 function classificaConsegna(testo){
   return {
-    V: categoriaValidaOggi(testo, '\\bvisit\\w*'),
-    E: categoriaValidaOggi(testo, '\\b(ee|eec|ega|pcr|procalcitonina)\\b'),
+    V: categoriaValidaOggi(testo, '\\bvisit\\w*|controllo\\s+clinico|ob\\.?\\s*addome|ob\\.?\\s*torace|obiettivit[àa]\\s+clinica|se\\s+agitat[oa]'),
+    E: categoriaValidaOggi(testo, '\\b(ee|eec|ega|pcr|procalcitonina|emocromo)\\b'),
     S: categoriaValidaOggi(testo, '\\b(rx|tc|eco\\w*|rmn|risonanza\\w*)\\b'),
-    C: categoriaValidaOggi(testo, '\\b(emo\\w*|uro\\w*|antibiogramma\\w*|atb)\\b|colt\\w*')
+    C: categoriaValidaOggi(testo, '\\bemo(?!cromo)\\w*|\\buro\\w*|\\bantibiogramma\\w*|\\batb\\b|colt\\w*')
   };
 }
 
@@ -5968,16 +6030,23 @@ function analizzaConsegne(){
   const perLetto = estraiConsegnePerLetto(testo);
   const nuovoElenco = {};
   Object.keys(perLetto).forEach(nomeLetto => {
-    const classi = classificaConsegna(perLetto[nomeLetto]);
-    if(classi.V || classi.E || classi.S || classi.C){
-      nuovoElenco[nomeLetto] = { V: classi.V, E: classi.E, S: classi.S, C: classi.C, fattoV: false, fattoE: false, fattoS: false, fattoC: false };
-    }
+    const testoConsegna = perLetto[nomeLetto];
+    // niente da segnalare oggi: consegna vuota, "su chiamata" senz'altro,
+    // o tutto riferito a un giorno diverso da oggi (es. "EE lunedì" letto
+    // di martedì) — vedi haQualcosaDaSegnalareOggi
+    if(!haQualcosaDaSegnalareOggi(testoConsegna)) return;
+    const classi = classificaConsegna(testoConsegna);
+    nuovoElenco[nomeLetto] = {
+      V: classi.V, E: classi.E, S: classi.S, C: classi.C,
+      fattoV: false, fattoE: false, fattoS: false, fattoC: false,
+      testo: testoConsegna
+    };
   });
   saveConsegne(nuovoElenco);
   renderConsegneLista();
   renderWardMap();
   const nLetti = Object.keys(nuovoElenco).length;
-  showToast(nLetti ? `Trovate consegne per ${nLetti} letti` : 'Nessuna parola chiave riconosciuta nel testo incollato');
+  showToast(nLetti ? `Trovate consegne per ${nLetti} letti` : 'Nessuna consegna da segnalare per oggi nel testo incollato');
 }
 
 function cancellaTutteConsegne(){
@@ -6023,7 +6092,8 @@ function renderConsegneLista(){
     const nome = document.createElement('span');
     nome.className = 'ric-lista-nome';
     nome.textContent = nomeLetto + (nomiConDati.has(nomeLetto) ? '' : ' (nessuna scheda aperta)');
-    if(nomiConDati.has(nomeLetto)) nome.onclick = () => apriLetto(nomeLetto);
+    nome.style.cursor = 'pointer';
+    nome.onclick = () => toggleTestoConsegnaVisibile(nomeLetto);
     riga.appendChild(nome);
 
     const toggles = document.createElement('div');
@@ -6040,6 +6110,14 @@ function renderConsegneLista(){
     });
     riga.appendChild(toggles);
     container.appendChild(riga);
+
+    if(consegneTestoVisibile === nomeLetto){
+      const testoBox = document.createElement('div');
+      testoBox.className = 'note-box';
+      testoBox.style.cssText = 'margin:-4px 0 8px; white-space:pre-wrap;';
+      testoBox.textContent = voce.testo || '';
+      container.appendChild(testoBox);
+    }
   });
 }
 
