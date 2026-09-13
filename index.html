@@ -2364,6 +2364,7 @@ async function aggiornaStatoSync(){
   if(typeof refreshUI === 'function') refreshUI(false);
   if(typeof renderWardMap === 'function') renderWardMap();
   if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
+  if(typeof renderConsegneLista === 'function' && document.getElementById('consegne-view')?.style.display !== 'none') renderConsegneLista();
   if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
 })();
 document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); });
