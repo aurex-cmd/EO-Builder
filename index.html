@@ -2181,7 +2181,7 @@ function setLocalAndCloud(key, rawValue){
 }
 
 // le chiavi che l'app tiene in memoria e sincronizza col cloud
-const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1'];
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1'];
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -5857,7 +5857,10 @@ function loadConsegne(){
   try{ return JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}'); } catch(e){ return {}; }
 }
 function saveConsegne(consegne){
-  try{ localStorage.setItem(CONSEGNE_KEY, JSON.stringify(consegne)); } catch(e){}
+  // come le altre chiavi cliniche: sincronizzata col cloud, non solo
+  // salvata in locale — altrimenti analizzare le consegne sul telefono
+  // non le farebbe comparire anche sul PC (e viceversa)
+  setLocalAndCloud(CONSEGNE_KEY, JSON.stringify(consegne));
 }
 
 // divide il testo incollato in blocchi, uno per ciascun "Letto X.X" trovato
