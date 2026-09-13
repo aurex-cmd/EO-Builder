@@ -279,6 +279,26 @@
     border-color:var(--signal); background:var(--signal); color:var(--on-signal);
     box-shadow:var(--glow-signal);
   }
+  .lettera-toggle.toggle-v{ border-color:#dba94a; color:#dba94a; }
+  .lettera-toggle.toggle-v.attivo{ background:#dba94a; border-color:#dba94a; color:#221a08; box-shadow:0 0 10px rgba(219,169,74,.4); }
+  .lettera-toggle.toggle-e{ border-color:#b18cf0; color:#b18cf0; }
+  .lettera-toggle.toggle-e.attivo{ background:#b18cf0; border-color:#b18cf0; color:#1c1233; box-shadow:0 0 10px rgba(177,140,240,.4); }
+  .lettera-toggle.toggle-s{ border-color:#4dd0e1; color:#4dd0e1; }
+  .lettera-toggle.toggle-s.attivo{ background:#4dd0e1; border-color:#4dd0e1; color:#062226; box-shadow:0 0 10px rgba(77,208,225,.4); }
+  .lettera-toggle.toggle-c{ border-color:#e08cc0; color:#e08cc0; }
+  .lettera-toggle.toggle-c.attivo{ background:#e08cc0; border-color:#e08cc0; color:#2a0f1f; box-shadow:0 0 10px rgba(224,140,192,.4); }
+  .bed-tile-consegna-badge{
+    width:15px; height:15px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; z-index:1;
+    font-family:var(--font-mono); font-size:8.5px; font-weight:800; color:#06131a;
+    border:1.5px solid var(--panel-2);
+    position:absolute; top:-6px;
+  }
+  .bed-tile-consegna-badge.v{ background:#dba94a; left:-6px; }
+  .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
+  .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
+  .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
+  .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.4); }
   .bed-tile-dimissione-badge{
     position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
     border-radius:50%; background:#4a9fd9; border:2px solid var(--panel-2);
@@ -1338,6 +1358,9 @@
       <div class="ric-lista-riga" onclick="mostraVista('dimissioni')">
         <span class="ric-lista-nome">Calendario dimissioni</span>
       </div>
+      <div class="ric-lista-riga" onclick="mostraVista('consegne')">
+        <span class="ric-lista-nome">Consegne (V/E/S)</span>
+      </div>
       <div class="ric-lista-riga" onclick="mostraVista('backup')">
         <span class="ric-lista-nome">Backup</span>
       </div>
@@ -1431,6 +1454,35 @@
   <div class="group">
     <div class="group-label" style="margin-bottom:10px; opacity:.8;">Ogni tanto (al massimo una volta ogni 15 minuti) l'app tiene da parte una copia di tutte le schede pazienti, qui sotto — solo su questo dispositivo. Serve come rete di sicurezza: se mai qualcosa andasse storto (un bug, un salvataggio finito male), da qui puoi tornare a una versione precedente.</div>
     <div id="backup-lista"></div>
+  </div>
+</div>
+
+<!-- CONSEGNE (V/E/S): si incolla il testo delle consegne del reparto (da
+     Word, copia/incolla) e lo strumento lo divide per letto cercando, solo
+     dentro la riga "Consegne:" di ciascuno, parole chiave per Visita/Esami/
+     Strumentali — vedi estraiConsegnePerLetto/classificaConsegna. Non è
+     un'interpretazione perfetta (il linguaggio delle consegne è molto
+     abbreviato e personale), solo un aiuto per orientarsi in fretta. -->
+<div class="card" id="consegne-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> Consegne (V/E/S)</h2>
+  <div class="group">
+    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
+  </div>
+  <div class="group">
+    <div class="group-label" style="opacity:.8; margin-bottom:8px;">Incolla qui sotto tutto il testo delle consegne (copiato da Word), oppure allega direttamente il file qui sotto. Lo strumento cerca, nella riga "Consegne:" di ciascun letto, parole come "visitare" (V), "EE"/"EEC"/"EGA"/"PCR" (E), "RX"/"TC"/"ecografia"/"RMN" (S), "emo"/"uro"/"colturali"/"antibiogramma"/"ATB" (C) — e riconosce anche "sab"/"dom" o una data (es. 13/09): se una parola è legata a un giorno diverso da oggi, non compare. Non è infallibile: controlla sempre col testo originale in caso di dubbio.</div>
+    <div class="inline-fields" style="margin-bottom:8px;">
+      <input type="file" id="consegne-file-input" accept=".docx,.pdf" onchange="caricaFileConsegne(this.files[0])">
+    </div>
+    <div class="group-label" id="consegne-file-stato" style="min-height:16px; opacity:.75;"></div>
+    <textarea id="consegne-testo-incollato" placeholder="Incolla qui il testo delle consegne…" style="min-height:140px;"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" onclick="analizzaConsegne()">Analizza consegne</button>
+      <button class="btn" onclick="cancellaTutteConsegne()">Cancella tutte le consegne</button>
+    </div>
+  </div>
+  <div class="group">
+    <div class="group-label">Riepilogo per letto</div>
+    <div id="consegne-lista"></div>
   </div>
 </div>
 
@@ -2063,6 +2115,11 @@ function leggiValoreSincronizzato(key){
 // avviso nella scheda di sincronizzazione (vedi aggiornaStatoSync), invece
 // di restare un fallimento invisibile come prima
 let ultimoPushFallito = false;
+// stesso concetto, ma per lo SCARICAMENTO dal cloud (cloudPullAll): prima
+// un errore qui (sessione scaduta, rete assente, permessi) veniva
+// ignorato in silenzio — ricaricare la pagina più volte non serviva a
+// niente perché l'errore si ripeteva sempre senza nessun avviso
+let ultimoPullFallito = false;
 
 // invia (in background, senza bloccare l'interfaccia) il valore grezzo di
 // una chiave di localStorage al database cloud dell'utente connesso.
@@ -2133,15 +2190,23 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
 // creati prima di collegare l'account, o su un dispositivo che non aveva
 // ancora fatto login, o un invio precedente mai arrivato a destinazione) —
 // altrimenti quei dati resterebbero invisibili su ogni altro dispositivo
+let ritentativoPullTimer = null;
 async function cloudPullAll(){
   if(!supabaseClient) return;
   try{
-    const { data: userData } = await supabaseClient.auth.getUser();
+    const { data: userData, error: erroreUtente } = await supabaseClient.auth.getUser();
     const user = userData && userData.user;
-    if(!user) return;
+    if(erroreUtente || !user){
+      // sessione scaduta/non valida: NON è un "non sono loggato" innocuo,
+      // è un errore vero da segnalare e da ritentare, altrimenti resta
+      // silenziosamente indietro finché l'utente non fa logout/login da
+      // solo per intuito, senza che l'app gliel'abbia mai detto
+      throw new Error('sessione non valida');
+    }
     const { data, error } = await supabaseClient.from('eo_data').select('key,value,updated_at').eq('user_id', user.id);
+    if(error) throw error;
     const chiaviNelCloud = new Set();
-    if(!error && data){
+    if(data){
       for(const row of data){
         chiaviNelCloud.add(row.key);
         if(typeof row.value !== 'string') continue;
@@ -2170,6 +2235,8 @@ async function cloudPullAll(){
       if(valoreLocale !== null) await cloudPush(key, valoreLocale);
     }
 
+    if(ultimoPullFallito){ ultimoPullFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+
     // fatto QUI dentro (non in ognuno dei punti che chiamano
     // cloudPullAll), una volta per tutte: questa funzione aggiorna solo il
     // localStorage grezzo, ma se in questo momento è già aperta una scheda
@@ -2192,7 +2259,18 @@ async function cloudPullAll(){
         if(typeof refreshUI === 'function') refreshUI(false);
       }
     }
-  } catch(e){}
+  } catch(e){
+    // prima restava un fallimento invisibile: ricaricare la pagina più
+    // volte non serviva a niente perché l'errore (sessione scaduta, rete
+    // assente) si ripeteva sempre senza nessun avviso, finché non si
+    // faceva logout/login per intuito, riattivando la sessione da capo.
+    // Ora si vede (stesso pallino/avviso già usato per un invio fallito)
+    // e viene ritentato da solo, senza bisogno di quell'intuito.
+    ultimoPullFallito = true;
+    if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+    clearTimeout(ritentativoPullTimer);
+    ritentativoPullTimer = setTimeout(() => { cloudPullAll(); }, 20000);
+  }
 }
 
 async function syncSignup(){
@@ -2245,23 +2323,24 @@ async function aggiornaStatoSync(){
     inEl.style.display = '';
     if(badge) badge.style.display = '';
     const testoLogin = document.getElementById('sync-logged-in-text');
-    // avviso visibile se l'ultimo salvataggio sul cloud non è riuscito
-    // (prima restava un fallimento silenzioso, vedi cloudPush): finché non
-    // va a buon fine, questo dispositivo ha modifiche che gli altri non
-    // vedono ancora — ci riprova da solo al prossimo salvataggio o alla
-    // prossima sincronizzazione, ma intanto è giusto saperlo
-    testoLogin.textContent = ultimoPushFallito
-      ? '⚠️ Connesso come ' + user.email + ' — ultimo salvataggio sul cloud non riuscito, riprovo automaticamente'
+    // avviso visibile se l'ultimo invio O scaricamento non è riuscito
+    // (prima entrambi restavano silenziosi, vedi cloudPush/cloudPullAll):
+    // finché non va a buon fine, questo dispositivo può avere dati non
+    // condivisi con gli altri, o non vedere ancora le loro modifiche — ci
+    // riprova da solo, ma intanto è giusto saperlo
+    const problemaSync = ultimoPushFallito || ultimoPullFallito;
+    testoLogin.textContent = problemaSync
+      ? '⚠️ Connesso come ' + user.email + ' — ' + (ultimoPullFallito ? 'ultimo scaricamento dal cloud non riuscito' : 'ultimo salvataggio sul cloud non riuscito') + ', riprovo automaticamente'
       : 'Connesso come ' + user.email;
-    testoLogin.style.color = ultimoPushFallito ? '#d9695f' : '';
+    testoLogin.style.color = problemaSync ? '#d9695f' : '';
     // stesso segnale, ma come pallino sempre visibile in alto (non solo
-    // dentro la scheda "App"): verde tutto ok, rosso ultimo invio non
-    // riuscito (si rimette verde da solo appena il ritentativo va a buon fine)
+    // dentro la scheda "App"): verde tutto ok, rosso ultimo invio/scarico
+    // non riuscito (si rimette verde da solo appena il ritentativo va a buon fine)
     if(dot){
       dot.style.display = '';
-      dot.classList.toggle('non-sincronizzato', ultimoPushFallito);
-      dot.title = ultimoPushFallito
-        ? 'Ultimo salvataggio sul cloud non riuscito — riprovo automaticamente'
+      dot.classList.toggle('non-sincronizzato', problemaSync);
+      dot.title = problemaSync
+        ? (ultimoPullFallito ? 'Ultimo scaricamento dal cloud non riuscito' : 'Ultimo salvataggio sul cloud non riuscito') + ' — riprovo automaticamente'
         : 'Sincronizzato';
     }
   } else {
@@ -4960,6 +5039,7 @@ function mostraVista(v){
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
   document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
+  document.getElementById('consegne-view').style.display = (v === 'consegne') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
@@ -4974,6 +5054,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
+  if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
@@ -5053,6 +5134,7 @@ function renderHeaderBadge(){
 
 function renderWardMap(){
   const patients = loadPatients();
+  const consegneCorrenti = loadConsegne();
 
   // pallini dei settori (tutti dello stesso colore teal, coerente col
   // resto dell'app: acceso quando attivo, spento quando no — vedi
@@ -5137,6 +5219,25 @@ function renderWardMap(){
       dimissioneBadge.title = 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       tile.appendChild(dimissioneBadge);
+    }
+
+    // pallini V/E/S: dalle consegne incollate/analizzate in App → Consegne
+    // (vedi analizzaConsegne) — solo le lettere ancora DA FARE, quelle già
+    // spuntate come fatte non compaiono più qui. Il tile stesso si
+    // illumina in azzurro se resta almeno una lettera da fare.
+    const consegnaLetto = consegneCorrenti[nome];
+    if(consegnaLetto){
+      const daFare = ['V','E','S','C'].filter(l => consegnaLetto[l] && !consegnaLetto['fatto' + l]);
+      if(daFare.length){
+        tile.classList.add('ha-consegne');
+        daFare.forEach(lettera => {
+          const badge = document.createElement('div');
+          badge.className = `bed-tile-consegna-badge ${lettera.toLowerCase()}`;
+          badge.textContent = lettera;
+          badge.title = `Consegna: ${lettera} da fare`;
+          tile.appendChild(badge);
+        });
+      }
     }
 
     // pulsante per eliminare la scheda direttamente dal letto, senza doverlo
@@ -5673,6 +5774,264 @@ function toggleLetteraDimissione(patientId, chiaveGiornoData){
   p.dimissioneLettere[chiaveGiornoData] = !p.dimissioneLettere[chiaveGiornoData];
   savePatients(patients);
   renderCalendarioDimissioni();
+}
+
+// CONSEGNE (V/E/S) — vedi il commento sopra la vista HTML per la filosofia
+const CONSEGNE_KEY = 'eo_builder_consegne_v1';
+
+// carica una libreria esterna (da CDN) una sola volta, solo quando serve
+// davvero (si allega un file), invece di appesantire l'avvio dell'app per
+// una funzione usata di rado
+function caricaScriptEsterno(src, nomeGlobale){
+  return new Promise((resolve, reject) => {
+    if(window[nomeGlobale]){ resolve(window[nomeGlobale]); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve(window[nomeGlobale]);
+    s.onerror = () => reject(new Error('impossibile caricare ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+// legge il file allegato (.docx o .pdf), ne estrae il testo e lo mette
+// nella casella qui sopra — così resta comunque visibile e modificabile
+// prima di premere "Analizza consegne", dato che l'estrazione automatica
+// (soprattutto da PDF) non è sempre perfetta
+async function caricaFileConsegne(file){
+  if(!file) return;
+  const stato = document.getElementById('consegne-file-stato');
+  const casella = document.getElementById('consegne-testo-incollato');
+  const estensione = file.name.split('.').pop().toLowerCase();
+  if(stato) stato.textContent = 'Leggo il file…';
+  try{
+    if(estensione === 'docx'){
+      const mammoth = await caricaScriptEsterno('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js', 'mammoth');
+      const arrayBuffer = await file.arrayBuffer();
+      const risultato = await mammoth.extractRawText({ arrayBuffer });
+      casella.value = risultato.value;
+      if(stato) stato.textContent = 'Testo estratto da "' + file.name + '". Controllalo e poi premi "Analizza consegne".';
+    } else if(estensione === 'pdf'){
+      const pdfjsLib = await caricaScriptEsterno('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', 'pdfjsLib');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let testoCompleto = '';
+      for(let pagina = 1; pagina <= pdf.numPages; pagina++){
+        const page = await pdf.getPage(pagina);
+        const contenuto = await page.getTextContent();
+        testoCompleto += contenuto.items.map(item => item.str).join(' ') + '\n\n';
+      }
+      casella.value = testoCompleto;
+      if(stato) stato.textContent = 'Testo estratto da "' + file.name + '". Controllalo e poi premi "Analizza consegne" — da PDF l\'ordine del testo a volte esce meno pulito che da un .docx.';
+    } else {
+      if(stato) stato.textContent = 'Formato non riconosciuto: allega un file .docx o .pdf.';
+    }
+  } catch(e){
+    if(stato) stato.textContent = 'Non sono riuscito a leggere il file (' + (e.message || 'errore sconosciuto') + '). Puoi comunque incollare il testo a mano qui sopra.';
+  }
+}
+
+function loadConsegne(){
+  try{ return JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}'); } catch(e){ return {}; }
+}
+function saveConsegne(consegne){
+  try{ localStorage.setItem(CONSEGNE_KEY, JSON.stringify(consegne)); } catch(e){}
+}
+
+// divide il testo incollato in blocchi, uno per ciascun "Letto X.X" trovato
+// (dall'inizio di quel marcatore fino al prossimo, o alla fine del testo),
+// e dentro ogni blocco isola solo la parte dopo "Consegne:" fino al campo
+// successivo noto ("Familiari:"/"Data colloquio:"/"Data agg:") o alla fine
+// del blocco — le altre righe (Diagnosi/Comorbidità/Programma) non vengono
+// considerate, per non prendere parole chiave fuori contesto
+function estraiConsegnePerLetto(testoCompleto){
+  const risultato = {};
+  const reLetto = /Letto\s+(\d+(?:\.\d+)?)/gi;
+  const marcatori = [];
+  let m;
+  while((m = reLetto.exec(testoCompleto))){
+    marcatori.push({ pos: m.index, nome: 'Letto ' + m[1] });
+  }
+  marcatori.forEach((mk, i) => {
+    const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].pos : testoCompleto.length;
+    const blocco = testoCompleto.slice(mk.pos, fine);
+    const mConsegne = blocco.match(/Consegne\s*:([\s\S]*?)(?:Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
+    if(mConsegne){
+      const testoConsegne = mConsegne[1].trim();
+      if(testoConsegne) risultato[mk.nome] = testoConsegne;
+    }
+  });
+  return risultato;
+}
+
+// riconosce nel testo un riferimento a un giorno: "sab"/"sabato",
+// "dom"/"domenica", oppure una data esplicita "13/09" o "13.09" (anno
+// corrente). Per sab/dom si cerca l'occorrenza più VICINA a oggi, sia
+// prima sia dopo (non solo la prossima in avanti): una consegna scritta
+// venerdì che dice "sabato" si riferisce quasi sempre al sabato appena
+// passato o imminente, non a quello della settimana dopo.
+function dataPiuVicinaPerGiorno(nomeGiorno, daData){
+  const idx = NOMI_GIORNI_SETTIMANA.indexOf(nomeGiorno);
+  if(idx === -1) return null;
+  const base = daData ? new Date(daData) : new Date();
+  base.setHours(0,0,0,0);
+  let diff = (idx - base.getDay() + 7) % 7; // 0..6, sempre in avanti
+  if(diff > 3) diff -= 7;                   // riportato nel range -3..+3: l'occorrenza più vicina
+  const d = new Date(base);
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function trovaMarcatoriGiorno(testo){
+  const marcatori = [];
+  const re = /\b(sab(?:ato)?|dom(?:enica)?)\b|\b(\d{1,2})[\/.](\d{1,2})\b/gi;
+  let m;
+  while((m = re.exec(testo))){
+    let data = null;
+    if(m[1]){
+      const nomeCompleto = m[1].toLowerCase().startsWith('sab') ? 'sabato' : 'domenica';
+      data = dataPiuVicinaPerGiorno(nomeCompleto);
+    } else if(m[2] && m[3]){
+      const oggi = new Date();
+      data = new Date(oggi.getFullYear(), parseInt(m[3], 10) - 1, parseInt(m[2], 10));
+      data.setHours(0, 0, 0, 0);
+    }
+    if(data) marcatori.push({ pos: m.index, data });
+  }
+  return marcatori;
+}
+
+// vera solo se ALMENO UNA occorrenza della categoria è presente E il
+// riferimento di giorno più vicino a quella specifica occorrenza (per
+// posizione nel testo, prima o dopo) è proprio oggi. Se nel testo non c'è
+// nessun riferimento di giorno, la occorrenza resta valida comunque
+// (meglio mostrarla sempre che rischiare di nasconderla per sbaglio).
+function categoriaValidaOggi(testo, sorgenteRegex){
+  const marcatoriGiorno = trovaMarcatoriGiorno(testo);
+  const oggiChiave = chiaveGiorno(Date.now());
+  const re = new RegExp(sorgenteRegex, 'gi');
+  let trovata = false;
+  let m;
+  while((m = re.exec(testo))){
+    if(!marcatoriGiorno.length){ trovata = true; continue; }
+    let piuVicino = marcatoriGiorno[0];
+    let distMin = Math.abs(marcatoriGiorno[0].pos - m.index);
+    marcatoriGiorno.forEach(mk => {
+      const d = Math.abs(mk.pos - m.index);
+      if(d < distMin){ distMin = d; piuVicino = mk; }
+    });
+    if(chiaveGiorno(piuVicino.data.getTime()) === oggiChiave) trovata = true;
+  }
+  return trovata;
+}
+
+// parole chiave per ciascuna lettera — non è un'interpretazione perfetta
+// (il linguaggio delle consegne è molto abbreviato e personale), solo le
+// espressioni più ricorrenti e riconoscibili. "emo"/"uro"/"colturali" ecc.
+// vanno sotto C (colture): nell'uso reale si riferiscono quasi sempre a
+// emocoltura/urinocoltura/antibiogramma, non a esami ematochimici di
+// routine (quelli restano EE/EEC/EGA/PCR, sotto E). Ogni categoria viene
+// mostrata solo se il riferimento di giorno più vicino a quella parola
+// (sab/dom/data, vedi trovaMarcatoriGiorno) è oggi, o se non c'è nessun
+// riferimento di giorno nel testo.
+function classificaConsegna(testo){
+  return {
+    V: categoriaValidaOggi(testo, '\\bvisit\\w*'),
+    E: categoriaValidaOggi(testo, '\\b(ee|eec|ega|pcr|procalcitonina)\\b'),
+    S: categoriaValidaOggi(testo, '\\b(rx|tc|eco\\w*|rmn|risonanza\\w*)\\b'),
+    C: categoriaValidaOggi(testo, '\\b(emo\\w*|uro\\w*|antibiogramma\\w*|atb)\\b|colt\\w*')
+  };
+}
+
+// "Analizza consegne": sostituisce del tutto l'elenco precedente (ogni
+// spunta "fatto" riparte da capo) — le consegne sono per definizione quelle
+// di oggi, non un archivio da accumulare turno dopo turno
+function analizzaConsegne(){
+  const testo = document.getElementById('consegne-testo-incollato').value;
+  if(!testo.trim()){ showToast('Incolla prima il testo delle consegne'); return; }
+  const perLetto = estraiConsegnePerLetto(testo);
+  const nuovoElenco = {};
+  Object.keys(perLetto).forEach(nomeLetto => {
+    const classi = classificaConsegna(perLetto[nomeLetto]);
+    if(classi.V || classi.E || classi.S || classi.C){
+      nuovoElenco[nomeLetto] = { V: classi.V, E: classi.E, S: classi.S, C: classi.C, fattoV: false, fattoE: false, fattoS: false, fattoC: false };
+    }
+  });
+  saveConsegne(nuovoElenco);
+  renderConsegneLista();
+  renderWardMap();
+  const nLetti = Object.keys(nuovoElenco).length;
+  showToast(nLetti ? `Trovate consegne per ${nLetti} letti` : 'Nessuna parola chiave riconosciuta nel testo incollato');
+}
+
+function cancellaTutteConsegne(){
+  saveConsegne({});
+  renderConsegneLista();
+  renderWardMap();
+  showToast('Consegne cancellate');
+}
+
+function toggleConsegnaFatto(nomeLetto, lettera){
+  const consegne = loadConsegne();
+  const voce = consegne[nomeLetto];
+  if(!voce) return;
+  const chiave = 'fatto' + lettera;
+  voce[chiave] = !voce[chiave];
+  saveConsegne(consegne);
+  renderConsegneLista();
+  renderWardMap();
+}
+
+function renderConsegneLista(){
+  const container = document.getElementById('consegne-lista');
+  if(!container) return;
+  container.innerHTML = '';
+  const consegne = loadConsegne();
+  const patients = loadPatients();
+  const nomiConDati = new Set(Object.values(patients).map(p => p.name));
+  const ordineLetti = ordinaPazientiPerLetto(Object.entries(patients)).map(([, p]) => p.name);
+
+  const nomi = Object.keys(consegne).sort((a, b) => {
+    const ia = ordineLetti.indexOf(a), ib = ordineLetti.indexOf(b);
+    if(ia === -1 && ib === -1) return a.localeCompare(b);
+    if(ia === -1) return 1;
+    if(ib === -1) return -1;
+    return ia - ib;
+  });
+
+  if(!nomi.length){
+    const vuoto = document.createElement('div');
+    vuoto.className = 'group-label';
+    vuoto.textContent = 'Nessuna consegna analizzata al momento.';
+    container.appendChild(vuoto);
+    return;
+  }
+
+  nomi.forEach(nomeLetto => {
+    const voce = consegne[nomeLetto];
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga';
+    const nome = document.createElement('span');
+    nome.className = 'ric-lista-nome';
+    nome.textContent = nomeLetto + (nomiConDati.has(nomeLetto) ? '' : ' (nessuna scheda aperta)');
+    if(nomiConDati.has(nomeLetto)) nome.onclick = () => apriLetto(nomeLetto);
+    riga.appendChild(nome);
+
+    const toggles = document.createElement('div');
+    toggles.style.cssText = 'display:flex; gap:6px; flex-shrink:0;';
+    ['V','E','S','C'].forEach(lettera => {
+      if(!voce[lettera]) return;
+      const fatto = voce['fatto' + lettera];
+      const btn = document.createElement('div');
+      btn.className = `lettera-toggle toggle-${lettera.toLowerCase()}` + (fatto ? ' attivo' : '');
+      btn.textContent = lettera;
+      btn.title = fatto ? `${lettera}: fatto` : `${lettera}: da fare`;
+      btn.onclick = (e) => { e.stopPropagation(); toggleConsegnaFatto(nomeLetto, lettera); };
+      toggles.appendChild(btn);
+    });
+    riga.appendChild(toggles);
+    container.appendChild(riga);
+  });
 }
 
 function renderCalendarioDimissioni(){
