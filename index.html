@@ -5877,7 +5877,7 @@ function estraiConsegnePerLetto(testoCompleto){
   marcatori.forEach((mk, i) => {
     const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].pos : testoCompleto.length;
     const blocco = testoCompleto.slice(mk.pos, fine);
-    const mConsegne = blocco.match(/Consegne\s*:([\s\S]*?)(?:Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
+    const mConsegne = blocco.match(/Consegne\s*:([\s\S]*?)(?:(?:Tel\s*)?Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
     if(mConsegne){
       const testoConsegne = mConsegne[1].trim();
       if(testoConsegne) risultato[mk.nome] = testoConsegne;
