@@ -1284,15 +1284,6 @@
     <button class="btn primary" style="width:100%;" onclick="apriVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Parametri vitali</button>
   </div>
 
-  <div class="group">
-    <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
-    <div class="inline-fields" style="align-items:center; justify-content:center;">
-      <button class="btn" onclick="riduciZoom()" title="Riduci" aria-label="Riduci dimensione">－</button>
-      <div class="group-label" id="zoom-livello-testo" style="min-width:48px; text-align:center; font-family:var(--font-mono);">100%</div>
-      <button class="btn" onclick="aumentaZoom()" title="Aumenta" aria-label="Aumenta dimensione">＋</button>
-    </div>
-  </div>
-
   <div class="group" id="scheda-libera-group" style="display:none;">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
     <div class="inline-fields">
@@ -1363,6 +1354,9 @@
       </div>
       <div class="ric-lista-riga" onclick="mostraVista('backup')">
         <span class="ric-lista-nome">Backup</span>
+      </div>
+      <div class="ric-lista-riga" onclick="mostraVista('impostazioni')">
+        <span class="ric-lista-nome">Impostazioni</span>
       </div>
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
@@ -1439,6 +1433,34 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPOSTAZIONI: preferenze di questo dispositivo (non cliniche, non
+     sincronizzate) — dimensione testo e tag di normalità già attivi su un
+     esame nuovo. Spostate qui da Reparto perché sono impostazioni
+     dell'app, non della mappa reparto. -->
+<div class="card" id="impostazioni-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2.5a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2.5a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21.5a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Impostazioni</h2>
+  <div class="group">
+    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
+  </div>
+
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <button class="btn" onclick="riduciZoom()" title="Riduci" aria-label="Riduci dimensione">－</button>
+      <div class="group-label" id="zoom-livello-testo" style="min-width:48px; text-align:center; font-family:var(--font-mono);">100%</div>
+      <button class="btn" onclick="aumentaZoom()" title="Aumenta" aria-label="Aumenta dimensione">＋</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Tag normali già selezionati in un esame nuovo</div>
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <div class="chip" id="impostazioni-tagnormale-si" onclick="impostaTagNormale(true)">Sì</div>
+      <div class="chip" id="impostazioni-tagnormale-no" onclick="impostaTagNormale(false)">No</div>
     </div>
   </div>
 </div>
@@ -4478,10 +4500,10 @@ function applyStateObject(o){
     state.outputExtra = '';
   }
   state.outputEsameManuale = o.outputEsameManuale ?? '';
-  state.coscienza.primary = o.coscienza?.primary ?? 'vigile';
+  state.coscienza.primary = o.coscienza?.primary ?? (tagNormaleAttivo() ? 'vigile' : '');
   state.coscienza.soporosoRisvegliabile = o.coscienza?.soporosoRisvegliabile ?? '';
   state.coscienza.soporosoStimolo = o.coscienza?.soporosoStimolo ?? '';
-  state.coscienza.descrittori = new Set(o.coscienza?.descrittori || ['orientato','collaborante']);
+  state.coscienza.descrittori = new Set(o.coscienza?.descrittori || (tagNormaleAttivo() ? ['orientato','collaborante'] : []));
   const uSalvato = o.coscienza?.umore;
   state.coscienza.umore = (uSalvato && typeof uSalvato === 'object')
     ? { attiva: !!uSalvato.attiva, valore: uSalvato.valore || '' }
@@ -4489,7 +4511,7 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'' },
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
@@ -4499,13 +4521,13 @@ function applyStateObject(o){
     state.respiro.dispnoicoRiferita = true;
   }
 
-  state.cuore.ritmo = o.cuore?.ritmo ?? 'ritmici';
+  state.cuore.ritmo = o.cuore?.ritmo ?? (tagNormaleAttivo() ? 'ritmici' : '');
   state.cuore.extrasistoli = o.cuore?.extrasistoli ?? false;
   state.cuore.pauseLibere = o.cuore?.pauseLibere ?? false;
   state.cuore.pauseMalValutabili = o.cuore?.pauseMalValutabili ?? false;
   // "a target per FA" era un valore dentro freq (esclusivo con tachi/bradicardici);
   // ora è un tag indipendente, combinabile: le schede vecchie vengono migrate
-  const freqSalvato = o.cuore?.freq ?? 'normofrequenti';
+  const freqSalvato = o.cuore?.freq ?? (tagNormaleAttivo() ? 'normofrequenti' : '');
   if(freqSalvato === 'a target per FA'){
     state.cuore.freq = '';
     state.cuore.targetFA = true;
@@ -4514,11 +4536,11 @@ function applyStateObject(o){
     state.cuore.targetFA = o.cuore?.targetFA ?? false;
   }
   state.cuore.qualita = new Set(o.cuore?.qualita || []);
-  state.cuore.soffio = o.cuore?.soffio ?? 'nessuno';
+  state.cuore.soffio = o.cuore?.soffio ?? (tagNormaleAttivo() ? 'nessuno' : '');
   state.cuore.grado = o.cuore?.grado ?? '';
   state.cuore.focolaio = o.cuore?.focolaio ?? '';
 
-  state.torace.mv = o.torace?.mv ?? 'presente';
+  state.torace.mv = o.torace?.mv ?? (tagNormaleAttivo() ? 'presente' : '');
   // mvLoc ora è un array di "blocchi sede" (uno per ciascuna combinazione
   // zona+lato), per poter esprimere lateralità diverse sulla stessa riga
   // di MV (es. "in medio-basale sinistro e in base destra"). Le schede
@@ -4533,7 +4555,7 @@ function applyStateObject(o){
       state.torace.mvLoc = [convertiSedeTorace(raw || [])];
     }
   }
-  state.torace.reperti = new Set(o.torace?.reperti || ['non_rumori']);
+  state.torace.reperti = new Set(o.torace?.reperti || (tagNormaleAttivo() ? ['non_rumori'] : []));
   // migrazione: le vecchie voci sibili separate confluiscono nell'unica
   // "sibili/fischi/gemiti" con sede, riportando la sfumatura come atomo
   const VECCHI_SIBILI = { sibili:null, qualche_sibilo_tap:'su_tap', qualche_sibilo_sparso:'sparsi' };
@@ -4594,8 +4616,8 @@ function applyStateObject(o){
 
   state.addome.forma = o.addome?.forma ?? '';
   state.addome.meteorico = o.addome?.meteorico ?? false;
-  state.addome.consistenza = new Set(o.addome?.consistenza || ['trattabile']);
-  state.addome.dolorabilita = new Set(o.addome?.dolorabilita || ['non_dolente']);
+  state.addome.consistenza = new Set(o.addome?.consistenza || (tagNormaleAttivo() ? ['trattabile'] : []));
+  state.addome.dolorabilita = new Set(o.addome?.dolorabilita || (tagNormaleAttivo() ? ['non_dolente'] : []));
   state.addome.doloreLocPerTipo = {};
   if(o.addome?.doloreLocPerTipo){
     Object.keys(o.addome.doloreLocPerTipo).forEach(k => {
@@ -4653,7 +4675,7 @@ function applyStateObject(o){
       }
     });
   });
-  state.addome.peristalsi = o.addome?.peristalsi ?? 'presente';
+  state.addome.peristalsi = o.addome?.peristalsi ?? (tagNormaleAttivo() ? 'presente' : '');
   state.addome.extra = o.addome?.extra ?? '';
   if(o.addome && o.addome.manovreAttive !== undefined){
     state.addome.manovreAttive = new Set(o.addome.manovreAttive || []);
@@ -4733,7 +4755,7 @@ function applyStateObject(o){
       ripresentati_aaii: { sede:['aaii'], andamento:'ripresentati' },
       colonnari_diffusi: { sede:['aaii','aass','fianchi'], qualita:'colonnari', discrasici:true, andamento:'permangono' }
     };
-    const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || (o.edemi ? {} : { base:'non_declivi' });
+    const m = MIGRAZIONE_EDEMI[o.edemi?.scelta] || (o.edemi ? {} : (tagNormaleAttivo() ? { base:'non_declivi' } : {}));
     state.edemi.sede = new Set(m.sede || []);
     state.edemi.sedeLato = {};
     state.edemi.sedeEstensione = {};
@@ -4756,7 +4778,7 @@ function applyStateObject(o){
   }
   state.edemi.custom = o.edemi?.custom ?? '';
 
-  state.diuresi.modalita = o.diuresi?.modalita ?? 'sacca';
+  state.diuresi.modalita = o.diuresi?.modalita ?? (tagNormaleAttivo() ? 'sacca' : '');
   state.diuresi.volume = o.diuresi?.volume ?? '';
   state.diuresi.urine = o.diuresi?.urine ?? '';
   state.diuresi.note = o.diuresi?.note ?? '';
@@ -4961,6 +4983,41 @@ let wardMapOpen = false;
 // invece di ripartire sempre dal settore A
 const LAST_SETTORE_KEY = 'eo_builder_last_settore_v1';
 
+// IMPOSTAZIONI: tag di normalità già attivi su un esame nuovo/vuoto (es.
+// vigile, orientato e collaborante, eupnoico in aria ambiente, apiretico,
+// cuore ritmico normofrequente senza soffi, murmore vescicolare presente
+// senza rumori aggiunti, addome trattabile non dolente con peristalsi
+// presente, non edemi declivi, diuresi da sacca). Preferenza di questo
+// dispositivo (non clinica, non sincronizzata), come ZOOM_KEY/LAST_SETTORE_KEY
+// qui sotto: di default resta il comportamento storico (tag già attivi);
+// chi preferisce partire da una scheda del tutto vuota può disattivarli da
+// Reparto → Impostazioni.
+const TAG_NORMALE_KEY = 'eo_builder_tag_normale_default_v1';
+function tagNormaleAttivo(){
+  try{
+    const v = localStorage.getItem(TAG_NORMALE_KEY);
+    return v === null ? true : v === '1';
+  } catch(e){ return true; }
+}
+function impostaTagNormale(attivo){
+  try{ localStorage.setItem(TAG_NORMALE_KEY, attivo ? '1' : '0'); } catch(e){}
+  // il "vuoto di riferimento" usato per capire se una scheda ha dati veri
+  // (bed verde in mappa) dipende anche lui da questa impostazione: va
+  // ricalcolato subito, altrimenti userebbe ancora il vecchio criterio
+  // finché non si ricarica la pagina
+  if(typeof computeDefaultSnapshot === 'function'){
+    DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
+  }
+  renderImpostazioniTagNormale();
+}
+function renderImpostazioniTagNormale(){
+  const attivo = tagNormaleAttivo();
+  const btnSi = document.getElementById('impostazioni-tagnormale-si');
+  const btnNo = document.getElementById('impostazioni-tagnormale-no');
+  if(btnSi) btnSi.classList.toggle('active', attivo);
+  if(btnNo) btnNo.classList.toggle('active', !attivo);
+}
+
 // dimensione del testo (e di conseguenza di tutto il resto, dato che le
 // misure dell'app sono in px, non in unità relative): solo locale, come le
 // altre preferenze di questo dispositivo qui sopra. Uso zoom invece di
@@ -5039,6 +5096,7 @@ function mostraVista(v){
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
+  document.getElementById('impostazioni-view').style.display = (v === 'impostazioni') ? '' : 'none';
   document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
   document.getElementById('consegne-view').style.display = (v === 'consegne') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
@@ -5055,12 +5113,13 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
+  if(v === 'impostazioni') renderImpostazioniTagNormale();
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
-  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
@@ -8217,7 +8276,21 @@ function composeCoscienza(){
   else if(state.coscienza.umore.valore === 'in_asse') s += (s ? ' ' : '') + 'Umore in asse.';
 
   const extra = (state.coscienza.extra || '').trim();
-  if(extra) s += (s ? ' ' : '') + cap(extra) + (extra.endsWith('.') ? '' : '.');
+  if(extra){
+    // l'iniziale di quello che scrivi decide come si attacca alla frase
+    // base: maiuscola = nuova frase (il punto della base resta, poi la
+    // tua frase); minuscola = continua la stessa frase (il punto della
+    // base diventa una virgola)
+    const iniziaMaiuscola = /^[A-ZÀ-Ý]/.test(extra);
+    if(!s){
+      s = cap(extra) + (extra.endsWith('.') ? '' : '.');
+    } else if(iniziaMaiuscola){
+      s += ' ' + extra + (extra.endsWith('.') ? '' : '.');
+    } else {
+      if(s.endsWith('.')) s = s.slice(0, -1);
+      s += ', ' + extra + (extra.endsWith('.') ? '' : '.');
+    }
+  }
 
   return s;
 }
@@ -8432,9 +8505,19 @@ function composeAddome(){
   let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
   // nota libera: aggiunta subito dopo il punto della frase base, PRIMA
   // delle eventuali manovre (Murphy/Blumberg/ecc.) — mai al posto della
-  // frase generata dai tag, solo in coda a quella
+  // frase generata dai tag, solo in coda a quella. Stessa regola di
+  // composeCoscienza: iniziale maiuscola = nuova frase (resta il punto),
+  // minuscola = continua la stessa frase (il punto diventa virgola)
   const extra = (a.extra || '').trim();
-  if(extra) s += ' ' + cap(extra) + (extra.endsWith('.') ? '' : '.');
+  if(extra){
+    const iniziaMaiuscola = /^[A-ZÀ-Ý]/.test(extra);
+    if(iniziaMaiuscola){
+      s += ' ' + extra + (extra.endsWith('.') ? '' : '.');
+    } else {
+      if(s.endsWith('.')) s = s.slice(0, -1);
+      s += ', ' + extra + (extra.endsWith('.') ? '' : '.');
+    }
+  }
   const manoviAttive = OPT.addomeManovreTest.filter(opt => a.manovreAttive.has(opt.value));
   let manovreFrasi;
   const esiti = manoviAttive.map(opt => a.manovreEsito[opt.value] || 'no');
@@ -8694,7 +8777,17 @@ function composeCuteSenzaDiscromie(){
   const note = (c.note || '').trim();
   const all = [];
   if(frasi.length) all.push(cap(joinIt(frasi)));
-  if(note) all.push(cap(note));
+  // stessa regola di composeCoscienza/composeAddome: iniziale maiuscola =
+  // nuova frase (a sé, unita con un punto a quello che precede), minuscola
+  // = continua l'ultima frase già composta, con la virgola al posto del punto
+  if(note){
+    const iniziaMaiuscola = /^[A-ZÀ-Ý]/.test(note);
+    if(all.length && !iniziaMaiuscola){
+      all[all.length - 1] += ', ' + note;
+    } else {
+      all.push(iniziaMaiuscola ? note : cap(note));
+    }
+  }
   return all.length ? all.join('. ') + '.' : '';
 }
 
@@ -9182,6 +9275,7 @@ document.addEventListener('keydown', (e) => {
 
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
+  renderImpostazioniTagNormale();
   renderWardMap();
   let lastId = null;
   try{ lastId = localStorage.getItem(LAST_PATIENT_KEY); } catch(e){}
@@ -9202,6 +9296,8 @@ try{
     populateInputsFromState();
     refreshUI(false);
   } else {
+    applyStateObject({});
+    populateInputsFromState();
     renderAll();
     update();
   }
