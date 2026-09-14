@@ -8303,21 +8303,24 @@ function composeRespiro(r){
   r = r || state.respiro;
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
   const bilanciaAttiva = (r.tipo === 'tachipnoico' && r.tachipnoicoBilancia);
-  const tipoText = (r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt);
-  let o2text;
+  const tipoText = r.tipo ? ((r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt)) : '';
+  let o2text = '';
   if(r.o2 === 'AA') o2text = 'in AA';
   else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
   else if(r.o2 === 'MS') o2text = 'in MS';
   else if(r.o2 === 'MR') o2text = 'in MR';
   else if(r.o2 === 'MV') o2text = `in MV FiO2 ${r.fio2 || '_'}%`;
-  else o2text = (r.altro || 'in ossigenoterapia');
-  let s = `${tipoText} ${o2text}`;
+  else if(r.o2 === 'ALTRO') o2text = (r.altro || 'in ossigenoterapia');
+  // r.o2 === '' (nessuna modalità selezionata): o2text resta vuota, non si
+  // inventa più "in ossigenoterapia" di default
+
+  let s = [tipoText, o2text].filter(Boolean).join(' ');
   // "in bilancia...ventilazione" va dopo il tipo di O2, non subito dopo
   // "Tachipnoico": la frase descrive un meccanismo respiratorio a sé, che
   // legge meglio come suo inciso separato piuttosto che incastrato prima
   // di "in AA"/"in NC..."
   if(bilanciaAttiva){
-    s += ', in bilancia toraco-addominale per utilizzo della muscolatura accessoria della ventilazione';
+    s += (s ? ', ' : '') + 'in bilancia toraco-addominale per utilizzo della muscolatura accessoria della ventilazione';
   }
 
   const vitali = [];
@@ -8326,14 +8329,19 @@ function composeRespiro(r){
   if(r.fc) vitali.push(`FC ${r.fc} bpm`);
   // con la frase sulla bilancia già di mezzo, un'altra "con" di fila
   // suonerebbe ripetuta: lì i parametri vitali proseguono con la virgola
-  if(vitali.length) s += (bilanciaAttiva ? ', ' : ' con ') + vitali.join(', ');
-  s += '.';
+  if(vitali.length){
+    s += s ? (bilanciaAttiva ? ', ' : ' con ') + vitali.join(', ') : vitali.join(', ');
+  }
+  if(s) s += '.';
 
-  const tempOpt = OPT.temp.find(o => o.value === r.temp) || OPT.temp.find(o => o.value === 'apiretico');
-  s += r.temp === 'febbrile' ? ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.` : ` ${g(tempOpt)}.`;
+  const tempOpt = OPT.temp.find(o => o.value === r.temp);
+  if(tempOpt){
+    s += r.temp === 'febbrile' ? ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.` : ` ${g(tempOpt)}.`;
+  }
   const storico = (r.tempStorico || '').trim();
-  if(storico) s += ' ' + cap(storico) + (storico.endsWith('.') ? '' : '.');
-  return s;
+  if(storico) s += (s ? ' ' : '') + cap(storico) + (storico.endsWith('.') ? '' : '.');
+  // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
+  return s.trim();
 }
 
 function composeCuore(){
@@ -8351,13 +8359,19 @@ function composeCuore(){
   if(c.pauseLibere) parts.push('pause apparentemente libere');
   else if(c.pauseMalValutabili) parts.push('pause mal valutabili');
 
-  let s = 'Toni ' + parts.join(', ');
-  if(c.soffio !== 'nessuno'){
+  const soffioAttivo = !!(c.soffio && c.soffio !== 'nessuno');
+  let soffioFrag = '';
+  if(soffioAttivo){
     const foc = c.focolaio || 'non specificato';
     const focText = foc === 'mesocardio' ? 'in mesocardio' : `su focolaio ${foc}`;
-    s += `, soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine ${focText}`;
+    soffioFrag = `soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine ${focText}`;
   }
-  return s + '.';
+
+  // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
+  if(parts.length === 0 && !soffioFrag) return '';
+
+  const corpo = [parts.join(', '), soffioFrag].filter(Boolean).join(', ');
+  return 'Toni ' + corpo + '.';
 }
 
 function composeToraceClean(){
@@ -8502,16 +8516,27 @@ function composeAddome(){
   if(frasiDol.length){
     parts.push(joinIt(frasiDol));
   }
-  let s = 'Addome ' + parts.join(', ') + ', peristalsi ' + a.peristalsi + '.';
+  // se non c'è nessun tag su forma/consistenza/dolorabilità né la peristalsi,
+  // la frase base "Addome..." va omessa del tutto (non "Addome , peristalsi .")
+  let s = '';
+  if(parts.length || a.peristalsi){
+    s = 'Addome';
+    if(parts.length) s += ' ' + parts.join(', ');
+    if(a.peristalsi) s += (parts.length ? ', ' : ' ') + 'peristalsi ' + a.peristalsi;
+    s += '.';
+  }
   // nota libera: aggiunta subito dopo il punto della frase base, PRIMA
   // delle eventuali manovre (Murphy/Blumberg/ecc.) — mai al posto della
   // frase generata dai tag, solo in coda a quella. Stessa regola di
   // composeCoscienza: iniziale maiuscola = nuova frase (resta il punto),
-  // minuscola = continua la stessa frase (il punto diventa virgola)
+  // minuscola = continua la stessa frase (il punto diventa virgola); se
+  // la frase base è assente, la nota libera diventa lei stessa la frase
   const extra = (a.extra || '').trim();
   if(extra){
     const iniziaMaiuscola = /^[A-ZÀ-Ý]/.test(extra);
-    if(iniziaMaiuscola){
+    if(!s){
+      s = cap(extra) + (extra.endsWith('.') ? '' : '.');
+    } else if(iniziaMaiuscola){
       s += ' ' + extra + (extra.endsWith('.') ? '' : '.');
     } else {
       if(s.endsWith('.')) s = s.slice(0, -1);
@@ -8537,7 +8562,7 @@ function composeAddome(){
       return esito === 'no' ? `Non ${opt.label}` : `${opt.label} ${esitoFrase[esito]}`;
     });
   }
-  if(manovreFrasi.length) s += ' ' + cap(joinIt(manovreFrasi)) + '.';
+  if(manovreFrasi.length) s += (s ? ' ' : '') + cap(joinIt(manovreFrasi)) + '.';
   return s;
 }
 
@@ -8927,7 +8952,7 @@ function aggiornaVitale(){
   const nuovoRespiro = composeRespiro();
 
   if(state.outputEsameManuale){
-    if(state.outputEsameManuale.includes(outputRespiroUltimo)){
+    if(outputRespiroUltimo && state.outputEsameManuale.includes(outputRespiroUltimo)){
       const patched = state.outputEsameManuale.replace(outputRespiroUltimo, nuovoRespiro);
       // se il "rammendo" fa combaciare di nuovo tutto col testo generato,
       // non c'è più nessuna modifica manuale da ricordare
