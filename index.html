@@ -1790,6 +1790,13 @@
         <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
       </div>
     </div>
+    <!-- fuori da #respiro-o2-dettagli apposta: quel box si nasconde con O2 in
+         AA, ma questo chip deve restare sempre visibile e cliccabile qui
+         accanto ad "altro", qualunque sia la modalità di ossigenoterapia
+         scelta (o nessuna) -->
+    <div class="inline-fields" style="margin-top:6px;">
+      <div class="chip" id="respiro-pv-stabili">PV stabili</div>
+    </div>
   </div>
   <div class="group">
     <div class="inline-fields">
@@ -1903,6 +1910,7 @@
     <div class="inline-fields" style="align-items:center;">
       <div class="chip" id="addome-alvo-chip">Alvo +</div>
       <input type="date" id="addome-alvo-data" style="max-width:170px;">
+      <div class="chip" id="addome-alvo-clisma" style="display:none;">con clisma</div>
     </div>
   </div>
   <div class="group">
@@ -2065,10 +2073,10 @@ const state = {
   // parte generata torna quella vera (vedi refreshUI/update più in basso)
   outputEsameManuale: '',
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
-  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
+  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
-  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:''}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
+  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
@@ -4557,7 +4565,7 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'' },
+    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false },
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
@@ -4722,7 +4730,7 @@ function applyStateObject(o){
     });
   });
   state.addome.peristalsi = o.addome?.peristalsi ?? (tagNormaleAttivo() ? 'presente' : '');
-  state.addome.alvo = { attivo: !!(o.addome?.alvo?.attivo), data: o.addome?.alvo?.data || '' };
+  state.addome.alvo = { attivo: !!(o.addome?.alvo?.attivo), data: o.addome?.alvo?.data || '', clisma: !!(o.addome?.alvo?.clisma) };
   state.addome.extra = o.addome?.extra ?? '';
   if(o.addome && o.addome.manovreAttive !== undefined){
     state.addome.manovreAttive = new Set(o.addome.manovreAttive || []);
@@ -6905,6 +6913,16 @@ function renderMultiEsclusivo(containerId, options, getSet){
   el.innerHTML = '';
   const s = getSet();
   options.forEach(opt => {
+    // marcatore "vai a capo": forza le voci successive su una riga nuova,
+    // così restano visivamente vicine tra loro invece di finire dove
+    // capita in base allo spazio rimasto sulla riga precedente (usato per
+    // tenere "Sofferente"/"Non sofferente" sempre appaiate, in Aspetto)
+    if(opt.spacer){
+      const sp = document.createElement('div');
+      sp.style.cssText = 'flex-basis:100%; height:0;';
+      el.appendChild(sp);
+      return;
+    }
     const b = document.createElement('div');
     const active = s.has(opt.value);
     b.className = 'chip' + (active ? ' active' : '');
@@ -7266,6 +7284,7 @@ function renderAddomeManovre(){
 function renderAddomeAlvo(){
   const chip = document.getElementById('addome-alvo-chip');
   const dataInput = document.getElementById('addome-alvo-data');
+  const clismaChip = document.getElementById('addome-alvo-clisma');
   if(!chip || !dataInput) return;
   const a = state.addome.alvo;
   chip.classList.toggle('active', a.attivo);
@@ -7281,7 +7300,7 @@ function renderAddomeAlvo(){
   }
   chip.onclick = () => {
     a.attivo = !a.attivo;
-    if(!a.attivo) a.data = '';
+    if(!a.attivo){ a.data = ''; a.clisma = false; }
     update();
   };
   // sia "input" che "change": su alcuni browser/webview mobili il
@@ -7290,13 +7309,36 @@ function renderAddomeAlvo(){
   // "input") — con entrambi assegnati come proprietà (non addEventListener,
   // che qui duplicherebbe i gestori a ogni nuovo render) si intercetta
   // comunque la scelta qualunque evento arrivi per primo
+  const oggiChiave = chiaveGiorno(Date.now());
   const onCambioData = () => {
     a.data = dataInput.value || '';
     if(a.data) a.attivo = true;
+    // "con clisma" ha senso solo per l'alvo di oggi: scegliendo una data
+    // diversa si disattiva da sola (vedi renderAddomeAlvo qui sotto, che
+    // la nasconde/disabilita comunque anche visivamente)
+    if(a.data && a.data !== oggiChiave) a.clisma = false;
     update();
   };
   dataInput.oninput = onCambioData;
   dataInput.onchange = onCambioData;
+
+  if(clismaChip){
+    // visibile solo se "Alvo +" è acceso; selezionabile solo se non c'è
+    // una data, o se la data scelta è proprio oggi — altrimenti disabilitato
+    // (grigio, non cliccabile) e comunque spento, come richiesto
+    const dataÈOggiONessuna = !a.data || a.data === oggiChiave;
+    const abilitato = a.attivo && dataÈOggiONessuna;
+    clismaChip.style.display = a.attivo ? '' : 'none';
+    if(!abilitato && a.clisma) a.clisma = false;
+    clismaChip.classList.toggle('active', abilitato && a.clisma);
+    clismaChip.style.opacity = abilitato ? '' : '0.35';
+    clismaChip.style.pointerEvents = abilitato ? '' : 'none';
+    clismaChip.onclick = () => {
+      if(!abilitato) return;
+      a.clisma = !a.clisma;
+      update();
+    };
+  }
 }
 
 // "Soporoso" apre una tendina annidata: prima risvegliabile sì/no, e se sì
@@ -8161,6 +8203,9 @@ const OPT = {
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
     {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
+    {spacer:true, gruppo:'aspetto'},
+    {value:'sofferente', m:'sofferente', f:'sofferente', excludes:['non_sofferente'], gruppo:'aspetto'},
+    {value:'non_sofferente', label:'non sofferente', excludes:['sofferente'], gruppo:'aspetto'},
     {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','orientato','collaborante'], gruppo:'contattabilita'},
     {value:'occhi_aperti', label:'mantiene gli occhi aperti', gruppo:'contattabilita'},
     {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'},
@@ -8471,6 +8516,11 @@ function renderAll(){
   renderRespiroTipo();
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
   document.getElementById('respiro-o2-dettagli').style.display = state.respiro.o2 !== 'AA' ? '' : 'none';
+  const chipPvStabili = document.getElementById('respiro-pv-stabili');
+  if(chipPvStabili){
+    chipPvStabili.classList.toggle('active', state.respiro.pvStabili);
+    chipPvStabili.onclick = () => { state.respiro.pvStabili = !state.respiro.pvStabili; update(); };
+  }
   renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
 
   renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
@@ -8669,6 +8719,7 @@ function composeRespiro(r){
   }
   const storico = (r.tempStorico || '').trim();
   if(storico) s += (s ? ' ' : '') + cap(storico) + (storico.endsWith('.') ? '' : '.');
+  if(r.pvStabili) s += (s ? ' ' : '') + 'PV stabili.';
   // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
   return s.trim();
 }
@@ -8911,7 +8962,7 @@ function ordinaleGiornata(n){
 function composeAlvoAddome(alvo){
   if(!alvo || !alvo.attivo) return '';
   const data = (alvo.data || '').trim();
-  if(!data || data === chiaveGiorno(Date.now())) return 'Alvo positivo oggi.';
+  if(!data || data === chiaveGiorno(Date.now())) return alvo.clisma ? 'Alvo positivo con clisma oggi.' : 'Alvo positivo oggi.';
   // confronto per chiave "YYYY-MM-DD" (mezzanotte locale su entrambe le
   // date), non per timestamp assoluto, per non sfasare di un giorno vicino
   // al cambio d'ora legale/solare
