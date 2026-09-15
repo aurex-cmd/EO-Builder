@@ -5644,13 +5644,34 @@ function renderVitaliSettore(){
     riga.appendChild(campi);
     lista.appendChild(riga);
 
+    // passaggio automatico al campo successivo della STESSA riga, mentre si
+    // scrive: sistolica (3 cifre, es. "090"/"120") -> diastolica -> SpO2 (2
+    // cifre) -> FC, dove si ferma (niente salto automatico a TC). Il salto
+    // scatta al raggiungimento della lunghezza tipica per quel parametro,
+    // MAI mentre si cancella (altrimenti backspaziare per correggere un
+    // valore rilancerebbe in avanti da solo) — vedi AUTO_ADVANCE_VITALI.
+    // Nei rari casi con una cifra in più (es. diastolica a 3 cifre, o SpO2
+    // a 100), il salto avviene comunque dopo la lunghezza tipica: per
+    // completare il valore si riclicca a mano nel campo, come richiesto
+    const AUTO_ADVANCE_VITALI = {
+      pas: { lunghezza: 3, prossimo: 'pad' },
+      pad: { lunghezza: 2, prossimo: 'sat' },
+      sat: { lunghezza: 2, prossimo: 'fc' }
+      // 'fc' non compare qui apposta: ci si ferma, non si salta da soli a TC
+    };
     [['pas','pas'], ['pad','pad'], ['sat','sat'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
       const input = document.getElementById(`${idPrefix}-${suffix}`);
       input.value = respiro[campo] || '';
       input.classList.toggle('filled', !!respiro[campo]);
-      input.addEventListener('input', () => {
+      input.addEventListener('input', (e) => {
         input.classList.toggle('filled', !!input.value);
         aggiornaVitaleLetto(nome, campo, input.value);
+        const regola = AUTO_ADVANCE_VITALI[suffix];
+        const inCancellazione = (e.inputType || '').startsWith('delete');
+        if(regola && !inCancellazione && input.value.length >= regola.lunghezza){
+          const prossimo = document.getElementById(`${idPrefix}-${regola.prossimo}`);
+          if(prossimo) prossimo.focus();
+        }
       });
     });
   });
@@ -6748,6 +6769,12 @@ function aggiornaDiarioSoloExtra(patientId, nuovoExtra){
   if(!p) return;
   p.state.outputExtra = nuovoExtra;
   p.savedAt = Date.now();
+  // scrivere qui è un vero aggiornamento del diario (non un tocco ai soli
+  // vitali come aggiornaVitaleLetto): va contato come "scritto oggi" tanto
+  // quanto un salvataggio dalla scheda clinica, altrimenti la scheda sparisce
+  // dalla lista di Diari (che da oggi si basa su esameAggiornatoIl) pur
+  // avendo appena ricevuto una nota — es. una dimissione programmata
+  p.esameAggiornatoIl = Date.now();
   if(patientId === currentPatientId){
     state.outputExtra = nuovoExtra;
     const outputEl = document.getElementById('output');
@@ -6787,6 +6814,9 @@ function aggiornaDiarioTesto(patientId, nuovoValore){
   p.state.outputEsameManuale = (esameParte === autoText) ? '' : esameParte;
   p.state.outputExtra = extraParte;
   p.savedAt = Date.now();
+  // stesso motivo di aggiornaDiarioSoloExtra qui sopra: è un vero
+  // aggiornamento del diario, va contato come "scritto oggi"
+  p.esameAggiornatoIl = Date.now();
 
   // se è la scheda attualmente aperta nel form clinico, sincronizza anche
   // lo stato live e la casella "output" lì visibile: stesso principio già
