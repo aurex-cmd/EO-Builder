@@ -6058,15 +6058,26 @@ function prossimaDataPerGiorno(nomeGiorno, daData){
 
 // estrae dal testo (le sole aggiunte del diario, non l'esame obiettivo)
 // tutte le date di dimissione programmata che riesce a riconoscere:
-// "domani dimesso/a"/"dimesso/a domani" -> data di domani; "dimesso/a
-// <giorno>" o "dimission(e/i) ... <giorno>" (fino a una trentina di
-// caratteri di distanza, per tollerare "dimissione prevista per lunedì")
-// -> la prossima data con quel nome. Un solo testo può contenere più date
-// (raro ma possibile se il diario viene riscritto più volte).
+// "dimesso/a oggi"/"dimissione odierna" ecc. (le stesse frasi di
+// haDimissioneOggi) -> data di oggi; "domani dimesso/a"/"dimesso/a
+// domani" -> data di domani; "dimesso/a <giorno>" o "dimission(e/i) ...
+// <giorno>" (fino a una trentina di caratteri di distanza, per tollerare
+// "dimissione prevista per lunedì") -> la prossima data con quel nome. Un
+// solo testo può contenere più date (raro ma possibile se il diario viene
+// riscritto più volte).
 function estraiDimissioniProgrammate(testoExtra){
   if(!testoExtra) return [];
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ');
   const risultati = [];
+
+  // stesse frasi già riconosciute per il pallino "D" di oggi (vedi
+  // haDimissioneOggi/FRASI_DIMISSIONE_OGGI), qui usate per far comparire
+  // la dimissione anche nel Calendario, con la data di oggi
+  if(haDimissioneOggi(normalizzato)){
+    const oggi = new Date();
+    oggi.setHours(0,0,0,0);
+    risultati.push(oggi);
+  }
 
   if(/\bdomani\s+dimess[oa]\b/.test(normalizzato) || /\bdimess[oa]\s+domani\b/.test(normalizzato)){
     const domani = new Date();
