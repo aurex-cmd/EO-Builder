@@ -320,6 +320,7 @@
   .bed-tile-isolamento-badge.rosso{ background:#d9534f; }
   .bed-tile-isolamento-badge.arancione{ background:#dba94a; }
   .bed-tile-isolamento-badge.blu{ background:#4a9fd9; }
+  .bed-tile-isolamento-badge.verde{ background:#3cb464; }
   .diario-isolamento-badge{
     width:18px; height:18px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -328,6 +329,26 @@
   .diario-isolamento-badge.rosso{ background:#d9534f; }
   .diario-isolamento-badge.arancione{ background:#dba94a; }
   .diario-isolamento-badge.blu{ background:#4a9fd9; }
+  .diario-isolamento-badge.verde{ background:#3cb464; }
+  /* stesso taggle "i" della scheda (accanto a Sesso): quando è impostato
+     almeno un tipo di isolamento, prende lo stesso colore del pallino su
+     letto/diario, invece del generico evidenziato "active" — così basta
+     aprire la scheda per capire subito di che isolamento si tratta */
+  #isolamento-toggle.iso-rosso{ background:#d9534f; border-color:#d9534f; color:#fff; box-shadow:0 0 10px rgba(217,83,79,.4); }
+  #isolamento-toggle.iso-arancione{ background:#dba94a; border-color:#dba94a; color:#221a08; box-shadow:0 0 10px rgba(219,169,74,.4); }
+  #isolamento-toggle.iso-blu{ background:#4a9fd9; border-color:#4a9fd9; color:#06131a; box-shadow:0 0 10px rgba(74,159,217,.4); }
+  #isolamento-toggle.iso-verde{ background:#3cb464; border-color:#3cb464; color:#06210d; box-shadow:0 0 10px rgba(60,180,100,.4); }
+  /* nel box informativo, evidenzia il/i blocco/i del tipo di isolamento
+     attivo per il paziente da cui si è arrivati (vedi apriIsolamentoInfo).
+     .group di suo non ha bordo/sfondo (è solo spaziatura), quindi qui
+     vanno dati esplicitamente per essere visibili */
+  .isolamento-info-evidenziato{
+    border:1.5px solid var(--signal);
+    border-radius:12px;
+    background:var(--signal-dim);
+    box-shadow:var(--glow-signal);
+    padding:10px 12px;
+  }
   .diario-dimissione-badge{
     width:18px; height:18px; border-radius:50%; background:#4a9fd9;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -1375,6 +1396,9 @@
       <div class="ric-lista-riga" onclick="mostraVista('impostazioni')">
         <span class="ric-lista-nome">Impostazioni</span>
       </div>
+      <div class="ric-lista-riga" onclick="mostraVista('isolamento-info')">
+        <span class="ric-lista-nome">Isolamento: tipi e DPI</span>
+      </div>
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
       </div>
@@ -1505,6 +1529,63 @@
           <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ISOLAMENTO: box informativo, richiamabile da App e cliccando sul
+     pallino "i" colorato nei Diari (vedi apriIsolamentoInfo) -->
+<div class="card" id="isolamento-info-view" style="display:none; background:var(--panel-3);">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="11" x2="12" y2="16"/></svg> Isolamento: tipi e DPI</h2>
+  <div class="group">
+    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Cos'è e perché</div>
+    <div style="font-size:13.5px; line-height:1.5;">
+      L'isolamento è l'insieme di misure aggiuntive rispetto alle precauzioni standard, adottate quando un paziente è colonizzato o infetto da un microrganismo trasmissibile (spesso multiresistente), per interrompere la catena di trasmissione verso altri pazienti e verso il personale. Il tipo di isolamento dipende dalla via di trasmissione del germe, non dalla sua gravità clinica.
+    </div>
+  </div>
+
+  <div class="group" id="isolamento-info-contatto">
+    <div class="group-label">Da contatto</div>
+    <div style="font-size:13.5px; line-height:1.5;">
+      <b>Via di trasmissione:</b> contatto diretto (mani, cute) o indiretto (superfici, presidi condivisi).<br>
+      <b>Esempi:</b> batteri multiresistenti (MDR/MDRO, es. Klebsiella o E. coli produttori di carbapenemasi), Clostridioides difficile, scabbia, ferite/lesioni con secrezioni non contenibili.<br>
+      <b>DPI:</b> guanti monouso e camice non sterile all'ingresso in stanza, da rimuovere prima di uscire; igiene delle mani dopo la rimozione. Strumentazione dedicata al paziente (fonendoscopio, sfigmomanometro) o disinfettata tra un uso e l'altro.<br>
+      <b>Attenzione al Clostridioides difficile:</b> le sue spore NON vengono eliminate dalla soluzione idroalcolica — serve sempre il lavaggio delle mani con acqua e sapone.
+    </div>
+  </div>
+
+  <div class="group" id="isolamento-info-droplets">
+    <div class="group-label">Da droplet</div>
+    <div style="font-size:13.5px; line-height:1.5;">
+      <b>Via di trasmissione:</b> goccioline respiratorie (>5 micron) emesse con tosse, starnuti o parlando, che si depositano a breve distanza (circa 1-2 metri) senza restare sospese a lungo in aria.<br>
+      <b>Esempi:</b> influenza, COVID-19/SARS-CoV-2, infezione da meningococco, pertosse, alcune polmoniti batteriche.<br>
+      <b>DPI:</b> mascherina chirurgica indossata entrando in stanza (o comunque entro 1-2 metri dal paziente); protezione oculare (visiera/occhiali) se è previsto un contatto ravvicinato o manovre a rischio di schizzi; guanti e camice si aggiungono solo se è prevista anche esposizione da contatto. Per il COVID-19, durante manovre che generano aerosol (es. broncoscopia, aspirazione, ventilazione non invasiva) si passa a facciale filtrante FFP2/FFP3 come per l'isolamento aereo.
+    </div>
+  </div>
+
+  <div class="group" id="isolamento-info-aereo">
+    <div class="group-label">Aereo</div>
+    <div style="font-size:13.5px; line-height:1.5;">
+      <b>Via di trasmissione:</b> particelle molto piccole (nuclei di goccioline, &lt;5 micron) che restano sospese in aria a lungo e possono percorrere distanze maggiori, diffondendosi anche nel resto della stanza o del reparto.<br>
+      <b>Esempi:</b> tubercolosi polmonare/laringea bacillifera, morbillo, varicella (o herpes zoster disseminato).<br>
+      <b>DPI:</b> facciale filtrante FFP2/FFP3 (non la semplice mascherina chirurgica), indossato PRIMA di entrare in stanza; camera preferibilmente a pressione negativa o comunque con porta sempre chiusa; guanti e camice si aggiungono solo se è prevista anche esposizione da contatto (es. lesioni da varicella).
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Isolamenti combinati</div>
+    <div style="font-size:13.5px; line-height:1.5;">
+      Più vie di trasmissione possono coesistere per lo stesso germe: in quel caso i DPI si sommano (es. contatto + droplet richiede sia guanti/camice sia mascherina chirurgica). In tutti i casi restano valide le precauzioni standard di base: igiene delle mani prima e dopo ogni contatto, uso corretto e smaltimento dei DPI, informazione a visitatori e personale.
+    </div>
+  </div>
+
+  <div class="group">
+    <div style="font-size:12px; color:var(--ink-dim); text-align:center;">
+      Riferimento generale — fare sempre riferimento al protocollo aziendale/ISS in vigore e alle indicazioni del microbiologo/infettivologo per il singolo caso.
     </div>
   </div>
 </div>
@@ -5374,6 +5455,7 @@ function mostraVista(v){
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
   document.getElementById('impostazioni-view').style.display = (v === 'impostazioni') ? '' : 'none';
+  document.getElementById('isolamento-info-view').style.display = (v === 'isolamento-info') ? '' : 'none';
   document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
   document.getElementById('consegne-view').style.display = (v === 'consegne') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
@@ -5396,7 +5478,7 @@ function mostraVista(v){
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
-  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', 'isolamento-info':'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
@@ -5415,6 +5497,19 @@ function apriRiepilogo(){ mostraVista('riepilogo'); }
 // (egaContestoAttivo/vfgContestoAttivo restano senza textareaEl, vedi
 // chiudiEgaAnalyzer/chiudiVfgCalc)
 function apriAppTools(){ mostraVista('app'); }
+// tipiAttivi (opzionale): array/Set con i tipi del paziente da cui si è
+// arrivati (vedi il click sul pallino "i" nei Diari) — evidenzia i blocchi
+// corrispondenti nel box. Aperto da App in generale (nessun argomento),
+// nessun blocco viene evidenziato.
+function apriIsolamentoInfo(tipiAttivi){
+  mostraVista('isolamento-info');
+  const tipi = tipiAttivi ? (Array.isArray(tipiAttivi) ? tipiAttivi : [...tipiAttivi]) : [];
+  const mappaId = { contatto:'isolamento-info-contatto', droplets:'isolamento-info-droplets', aereo:'isolamento-info-aereo' };
+  Object.entries(mappaId).forEach(([tipo, id]) => {
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('isolamento-info-evidenziato', tipi.includes(tipo));
+  });
+}
 function apriAppEga(){ apriEgaAnalyzer('', null, null); }
 function apriAppVfg(){ apriVfgCalc('', null, null); }
 function apriAppFarmaco(chiave){ apriFarmaco(chiave, ''); }
@@ -6784,8 +6879,10 @@ function renderRiepilogo(){
       if(coloreIso){
         const isolamentoBadge = document.createElement('div');
         isolamentoBadge.className = 'diario-isolamento-badge ' + coloreIso;
-        isolamentoBadge.title = 'Isolamento';
+        isolamentoBadge.title = 'Isolamento — tocca per info e DPI';
+        isolamentoBadge.style.cursor = 'pointer';
         isolamentoBadge.textContent = 'i';
+        isolamentoBadge.onclick = (e) => { e.stopPropagation(); apriIsolamentoInfo(isoStato.tipi); };
         rightWrap.appendChild(isolamentoBadge);
       }
     }
@@ -7390,6 +7487,14 @@ function renderIsolamentoToggle(){
   if(!toggle || !sotto) return;
   const iso = state.isolamento;
   toggle.classList.toggle('active', iso.attivo);
+  // colore pieno solo quando è impostato almeno un tipo (stesso schema del
+  // pallino su letto/diario, vedi coloreIsolamento); acceso ma senza
+  // ancora nessun tipo scelto resta col generico evidenziato "active"
+  const coloreIso = coloreIsolamento(iso);
+  toggle.classList.toggle('iso-rosso', coloreIso === 'rosso');
+  toggle.classList.toggle('iso-arancione', coloreIso === 'arancione');
+  toggle.classList.toggle('iso-blu', coloreIso === 'blu');
+  toggle.classList.toggle('iso-verde', coloreIso === 'verde');
   sotto.style.display = iso.attivo ? '' : 'none';
   toggle.onclick = () => {
     iso.attivo = !iso.attivo;
@@ -7433,14 +7538,23 @@ function renderIsolamentoTipi(){
 // colore del pallino "i" su letto/diario in base ai tipi selezionati:
 // blu se aereo (da solo, o comunque non insieme a entrambi gli altri due),
 // arancione se da contatto e/o da droplet senza aereo, rosso se tutti e
-// tre insieme. Funziona sia con lo stato "vivo" (tipi è un Set, paziente
+// tre insieme — MA verde a prescindere da tutto il resto se il germe
+// sentinella è un Clostridium/Clostridioides difficile: va da sé (niente
+// soluzione idroalcolica, serve acqua e sapone) e va evidenziato bene,
+// anche a costo di "nascondere" l'arancione del contatto che normalmente
+// ci sarebbe. Funziona sia con lo stato "vivo" (tipi è un Set, paziente
 // aperto ora) sia con quello caricato da localStorage per gli altri
 // pazienti (tipi lì è un semplice array, per via della serializzazione)
+function haClostridium(germe){
+  if(!germe) return false;
+  return /clostridi(um|oides)/i.test(germe);
+}
 function coloreIsolamento(iso){
   if(!iso || !iso.attivo) return null;
   const tipi = iso.tipi ? (Array.isArray(iso.tipi) ? iso.tipi : [...iso.tipi]) : [];
   const c = tipi.includes('contatto'), d = tipi.includes('droplets'), a = tipi.includes('aereo');
   if(!c && !d && !a) return null;
+  if(haClostridium(iso.germe)) return 'verde';
   if(c && d && a) return 'rosso';
   if(a) return 'blu';
   return 'arancione';
@@ -9506,7 +9620,13 @@ function composeIsolamento(){
   if(iso.dataAttivazione !== chiaveGiorno(Date.now())) return '';
   const germe = (iso.germe || '').trim();
   let s = '';
-  if(germe) s += `Pervenuta positività al tampone rettale per germe sentinella: ${germe}. `;
+  if(germe){
+    // per Clostridium/Clostridioides niente "al tampone rettale...": è un
+    // caso a sé, frase più diretta (vedi anche il verde di coloreIsolamento)
+    s += haClostridium(germe)
+      ? `Pervenuta positività per ${germe}. `
+      : `Pervenuta positività al tampone rettale per germe sentinella: ${germe}. `;
+  }
   s += `Si predispone isolamento ${joinIt(tipi)}.`;
   return s;
 }
