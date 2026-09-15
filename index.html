@@ -1785,7 +1785,7 @@
     <div class="chips" id="respiro-o2"></div>
     <div id="respiro-o2-dettagli" style="display:none;">
       <div class="inline-fields" style="margin-top:6px;">
-        <div class="field"><label>L/min (NC)</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
+        <div class="field"><label>L/min (NC/MS/MR)</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
         <div class="field"><label>FiO2 % (MV)</label><input type="number" id="respiro-fio2" min="0" max="100"></div>
         <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
       </div>
@@ -8545,8 +8545,8 @@ function composeRespiro(r){
   let o2text = '';
   if(r.o2 === 'AA') o2text = 'in AA';
   else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
-  else if(r.o2 === 'MS') o2text = 'in MS';
-  else if(r.o2 === 'MR') o2text = 'in MR';
+  else if(r.o2 === 'MS') o2text = `in MS ${r.litri || '_'}L/min`;
+  else if(r.o2 === 'MR') o2text = `in MR ${r.litri || '_'}L/min`;
   else if(r.o2 === 'MV') o2text = `in MV FiO2 ${r.fio2 || '_'}%`;
   else if(r.o2 === 'ALTRO') o2text = (r.altro || 'in ossigenoterapia');
   // r.o2 === '' (nessuna modalità selezionata): o2text resta vuota, non si
