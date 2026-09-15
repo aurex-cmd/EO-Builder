@@ -1463,6 +1463,26 @@
       <div class="chip" id="impostazioni-tagnormale-no" onclick="impostaTagNormale(false)">No</div>
     </div>
   </div>
+
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Reparto: settori e letti</div>
+    <!-- questa parte NON è una preferenza di dispositivo come le due sopra:
+         la disposizione di settori/letti è condivisa su tutto l'account
+         (sincronizzata col cloud come le schede pazienti), quindi ha senso
+         solo per chi è collegato — vedi WARD_MAP_KEY/getWardMap() e
+         aggiornaStatoSync(), che mostra/nasconde questi due blocchi insieme
+         a "Connesso come .../Accedi" -->
+    <div id="impostazioni-reparto-loggato-fuori" style="font-size:12.5px; color:var(--ink-dim); text-align:center; padding:6px 4px;">
+      Per aggiungere o eliminare settori e letti devi prima accedere al tuo account (scheda App → Sincronizzazione): la disposizione del reparto è condivisa con tutti i dispositivi collegati allo stesso account, non è una preferenza di questo dispositivo.
+    </div>
+    <div id="impostazioni-reparto-editor" style="display:none;">
+      <div id="impostazioni-reparto-lista"></div>
+      <div class="inline-fields" style="margin-top:4px;">
+        <input type="text" id="impostazioni-nuovo-settore" placeholder="Nome nuovo settore (es. Settore F)" style="flex:1; min-width:140px;">
+        <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- BACKUP: come Calendario dimissioni, prima era sempre visibile dentro
@@ -2203,7 +2223,7 @@ function setLocalAndCloud(key, rawValue){
 }
 
 // le chiavi che l'app tiene in memoria e sincronizza col cloud
-const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1'];
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1'];
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -2365,11 +2385,21 @@ async function aggiornaStatoSync(){
         ? (ultimoPullFallito ? 'Ultimo scaricamento dal cloud non riuscito' : 'Ultimo salvataggio sul cloud non riuscito') + ' — riprovo automaticamente'
         : 'Sincronizzato';
     }
+    // editor "settori e letti" in Impostazioni: ha senso solo per chi è
+    // loggato, dato che la mappa è condivisa su tutto l'account
+    const repartoFuori = document.getElementById('impostazioni-reparto-loggato-fuori');
+    const repartoEditor = document.getElementById('impostazioni-reparto-editor');
+    if(repartoFuori) repartoFuori.style.display = 'none';
+    if(repartoEditor){ repartoEditor.style.display = ''; if(typeof renderImpostazioniReparto === 'function') renderImpostazioniReparto(); }
   } else {
     outEl.style.display = '';
     inEl.style.display = 'none';
     if(badge) badge.style.display = 'none';
     if(dot) dot.style.display = 'none';
+    const repartoFuori = document.getElementById('impostazioni-reparto-loggato-fuori');
+    const repartoEditor = document.getElementById('impostazioni-reparto-editor');
+    if(repartoFuori) repartoFuori.style.display = '';
+    if(repartoEditor) repartoEditor.style.display = 'none';
   }
 }
 
@@ -4955,18 +4985,34 @@ function autosaveCurrentPatient(){
 }
 
 /* ------------------------------------------------------------
-   MAPPA REPARTO: settori e letti fissi.
-   Per aggiornare la composizione del reparto, modifica solo
-   questo oggetto: ogni chiave è un settore, il valore è
-   l'elenco dei numeri di letto in quel settore.
+   MAPPA REPARTO: settori e letti.
+   WARD_MAP_DEFAULT è la disposizione di partenza (usata solo se
+   l'account non ha ancora una propria mappa salvata). La mappa
+   VERA in uso si legge sempre con getWardMap(), che dà la
+   precedenza a quella salvata in WARD_MAP_KEY — sincronizzata col
+   cloud come le schede pazienti, quindi condivisa su tutto
+   l'account, non è una preferenza di questo dispositivo. Si
+   modifica da App → Impostazioni → "Reparto: settori e letti",
+   visibile solo a chi è loggato (vedi aggiornaStatoSync).
    ------------------------------------------------------------ */
-const WARD_MAP = {
+const WARD_MAP_DEFAULT = {
   'Settore A': ['4.1','4.2','5.1','5.2','6.1','6.2','7.1','7.2'],
   'Settore B': ['8.1','9.1','9.2','10.1','10.2','11.1','11.2','12.1','12.2','13.1','13.2','14.1','14.2'],
   'Settore C': ['15.1','15.2','16.1','16.2','17.1','17.2','18.1','18.2','19.1','19.2','20.1','21.1','22'],
   'Settore D': ['23.1','23.2','24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29.1']
 };
-const SETTORI = Object.keys(WARD_MAP);
+const WARD_MAP_KEY = 'eo_builder_ward_map_v1';
+function getWardMap(){
+  try{
+    const raw = localStorage.getItem(WARD_MAP_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object' && Object.keys(parsed).length) return parsed;
+    }
+  } catch(e){}
+  return JSON.parse(JSON.stringify(WARD_MAP_DEFAULT));
+}
+function getSettori(){ return Object.keys(getWardMap()); }
 // un colore diverso per ciascun settore, usato per il pallino selettore
 // "Settore E" non è un vero settore con letti fissi: raccoglie le schede
 // extra (appoggi, ricoveri fuori mappa). Per questo non sta in WARD_MAP,
@@ -4974,6 +5020,161 @@ const SETTORI = Object.keys(WARD_MAP);
 // dagli altri da un trattino — vedi renderWardMap()
 const SETTORE_EXTRA = 'Settore E';
 function bedName(n){ return 'Letto ' + n; }
+
+// salva la mappa modificata (locale + cloud) e rimette in sesto quello che
+// dipende da lei: se il settore attivo non esiste più tra quelli rimasti
+// (eliminato qui, o su un altro dispositivo poi arrivato via sync), si
+// passa al primo disponibile invece di restare bloccati su un settore
+// fantasma
+function salvaWardMap(map){
+  setLocalAndCloud(WARD_MAP_KEY, JSON.stringify(map));
+  if(settoreAttivo !== SETTORE_EXTRA && !map[settoreAttivo]){
+    settoreAttivo = Object.keys(map)[0] || SETTORE_EXTRA;
+    try{ localStorage.setItem(LAST_SETTORE_KEY, settoreAttivo); }catch(e){}
+  }
+  if(typeof renderImpostazioniReparto === 'function') renderImpostazioniReparto();
+  if(typeof renderWardMap === 'function') renderWardMap();
+}
+
+/* ------------------------------------------------------------
+   EDITOR "Reparto: settori e letti" (dentro App → Impostazioni).
+   Visibile solo a chi è loggato (vedi aggiornaStatoSync): la mappa è
+   condivisa su tutto l'account, non ha senso editabile senza account.
+   Eliminare un settore o un letto NON tocca le schede pazienti già
+   salvate: una scheda il cui letto sparisce dalla mappa ricompare
+   semplicemente tra le "altre schede" del Settore E (stesso
+   meccanismo già usato per le schede libere — vedi renderWardMap,
+   che abbina le schede ai letti solo per nome, non per riferimento).
+   ------------------------------------------------------------ */
+let impostazioniArmato = null;
+let impostazioniArmatoTimer = null;
+// stesso doppio-click di conferma già usato altrove nell'app (vedi
+// eliminaSchedaDaLetto/ripristinaBackup): il primo click "arma" (e si
+// disarma da solo dopo qualche secondo), il secondo click conferma
+function impostazioniArma(id){
+  if(impostazioniArmato !== id){
+    impostazioniArmato = id;
+    clearTimeout(impostazioniArmatoTimer);
+    impostazioniArmatoTimer = setTimeout(() => { impostazioniArmato = null; renderImpostazioniReparto(); }, 3000);
+    renderImpostazioniReparto();
+    return true; // solo armato: aspetta la conferma
+  }
+  clearTimeout(impostazioniArmatoTimer);
+  impostazioniArmato = null;
+  return false; // secondo click: procedi
+}
+
+function renderImpostazioniReparto(){
+  const container = document.getElementById('impostazioni-reparto-lista');
+  if(!container) return;
+  container.innerHTML = '';
+  const map = getWardMap();
+  const settori = Object.keys(map);
+
+  settori.forEach((settore, idx) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--panel-2); border-radius:12px; padding:8px 10px; margin-bottom:8px;';
+
+    const header = document.createElement('div');
+    header.className = 'ric-lista-riga';
+    header.style.cursor = 'default';
+    const titolo = document.createElement('span');
+    titolo.className = 'ric-lista-nome';
+    titolo.textContent = settore + ' · ' + map[settore].length + (map[settore].length === 1 ? ' letto' : ' letti');
+    const idArmatoSettore = 'settore:' + settore;
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn';
+    btnDel.style.flexShrink = '0';
+    btnDel.textContent = (impostazioniArmato === idArmatoSettore) ? 'Confermi? Clicca di nuovo' : 'Elimina settore';
+    btnDel.onclick = (e) => {
+      e.stopPropagation();
+      if(impostazioniArma(idArmatoSettore)) return;
+      const m = getWardMap();
+      delete m[settore];
+      salvaWardMap(m);
+      showToast('Settore "' + settore + '" eliminato (le eventuali schede restano, si spostano nel Settore E)');
+    };
+    header.appendChild(titolo);
+    header.appendChild(btnDel);
+    card.appendChild(header);
+
+    // letti del settore: chip visive, come nella mappa reparto vera e
+    // propria — cliccare un letto lo arma per l'eliminazione (stesso
+    // doppio-click di conferma), un secondo click lo elimina davvero
+    const chipsRow = document.createElement('div');
+    chipsRow.className = 'chips';
+    chipsRow.style.marginTop = '6px';
+    map[settore].forEach(numero => {
+      const idArmatoLetto = 'letto:' + settore + ':' + numero;
+      const armato = impostazioniArmato === idArmatoLetto;
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (armato ? ' active' : '');
+      chip.textContent = numero + (armato ? ' ✓' : ' ×');
+      chip.title = armato ? 'Clicca di nuovo per confermare' : 'Elimina letto ' + numero;
+      chip.onclick = (e) => {
+        e.stopPropagation();
+        if(impostazioniArma(idArmatoLetto)) return;
+        const m = getWardMap();
+        if(m[settore]) m[settore] = m[settore].filter(n => n !== numero);
+        salvaWardMap(m);
+        showToast('Letto "' + numero + '" eliminato (l\'eventuale scheda resta, si sposta nel Settore E)');
+      };
+      chipsRow.appendChild(chip);
+    });
+    if(!map[settore].length){
+      const vuoto = document.createElement('div');
+      vuoto.style.cssText = 'font-size:12px; color:var(--ink-dim); padding:2px 0;';
+      vuoto.textContent = 'Nessun letto in questo settore.';
+      chipsRow.appendChild(vuoto);
+    }
+    card.appendChild(chipsRow);
+
+    const rigaAggiungi = document.createElement('div');
+    rigaAggiungi.className = 'inline-fields';
+    rigaAggiungi.style.marginTop = '6px';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Nuovo letto (es. 30.1)';
+    input.style.cssText = 'flex:1; min-width:100px;';
+    input.id = 'impostazioni-nuovo-letto-' + idx;
+    const conferma = () => { aggiungiLetto(settore, input.value); input.value = ''; };
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') conferma(); });
+    const btnAdd = document.createElement('button');
+    btnAdd.className = 'btn';
+    btnAdd.textContent = '+ Letto';
+    btnAdd.onclick = (e) => { e.stopPropagation(); conferma(); };
+    rigaAggiungi.appendChild(input);
+    rigaAggiungi.appendChild(btnAdd);
+    card.appendChild(rigaAggiungi);
+
+    container.appendChild(card);
+  });
+}
+
+function aggiungiSettore(){
+  const input = document.getElementById('impostazioni-nuovo-settore');
+  const nome = (input.value || '').trim();
+  if(!nome){ showToast('Scrivi un nome per il nuovo settore'); return; }
+  if(nome === SETTORE_EXTRA){ showToast('Quel nome è già riservato alle schede extra'); return; }
+  const map = getWardMap();
+  if(map[nome]){ showToast('Esiste già un settore con questo nome'); return; }
+  map[nome] = [];
+  salvaWardMap(map);
+  input.value = '';
+  showToast('Settore "' + nome + '" aggiunto');
+}
+
+function aggiungiLetto(settore, valoreGrezzo){
+  const numero = (valoreGrezzo || '').trim();
+  if(!numero){ showToast('Scrivi un numero di letto'); return; }
+  const map = getWardMap();
+  if(!map[settore]){ showToast('Settore non più esistente'); return; }
+  const giaEsistente = Object.values(map).some(lista => lista.includes(numero));
+  if(giaEsistente){ showToast('Esiste già un letto "' + numero + '" nella mappa'); return; }
+  map[settore].push(numero);
+  salvaWardMap(map);
+  showToast('Letto "' + numero + '" aggiunto a ' + settore);
+}
 
 let wardMapOpen = false;
 // solo locale (niente sincronizzazione cloud): è una preferenza di
@@ -5044,9 +5245,9 @@ document.addEventListener('DOMContentLoaded', applicaZoom);
 let settoreAttivo = (() => {
   try{
     const salvato = localStorage.getItem(LAST_SETTORE_KEY);
-    if(salvato && (SETTORI.includes(salvato) || salvato === SETTORE_EXTRA)) return salvato;
+    if(salvato && (getSettori().includes(salvato) || salvato === SETTORE_EXTRA)) return salvato;
   } catch(e){}
-  return SETTORI[0];
+  return getSettori()[0];
 })();
 
 // istantanea di uno stato completamente "vuoto" (di default), calcolata una
@@ -5113,7 +5314,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
-  if(v === 'impostazioni') renderImpostazioniTagNormale();
+  if(v === 'impostazioni'){ renderImpostazioniTagNormale(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
@@ -5195,6 +5396,15 @@ function renderHeaderBadge(){
 function renderWardMap(){
   const patients = loadPatients();
   const consegneCorrenti = loadConsegne();
+  const wardMap = getWardMap();
+  const settori = Object.keys(wardMap);
+  // se il settore attivo non esiste più (eliminato qui o arrivato via sync
+  // da un altro dispositivo che ha modificato la mappa), si passa al primo
+  // rimasto invece di restare bloccati su un settore fantasma
+  if(settoreAttivo !== SETTORE_EXTRA && !wardMap[settoreAttivo]){
+    settoreAttivo = settori[0] || SETTORE_EXTRA;
+    try{ localStorage.setItem(LAST_SETTORE_KEY, settoreAttivo); }catch(e){}
+  }
 
   // pallini dei settori (tutti dello stesso colore teal, coerente col
   // resto dell'app: acceso quando attivo, spento quando no — vedi
@@ -5202,7 +5412,7 @@ function renderWardMap(){
   // ricoveri fuori mappa) separato dagli altri da un trattino
   const tabsEl = document.getElementById('settore-tabs');
   tabsEl.innerHTML = '';
-  SETTORI.forEach(s => {
+  settori.forEach(s => {
     const tab = document.createElement('div');
     tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
     tab.textContent = s.replace('Settore ', '');
@@ -5228,7 +5438,7 @@ function renderWardMap(){
   gridEl.innerHTML = '';
   gridEl.style.display = inExtra ? 'none' : '';
   document.getElementById('vitali-settore-group').style.display = inExtra ? 'none' : '';
-  if(!inExtra) WARD_MAP[settoreAttivo].forEach(n => {
+  if(!inExtra) wardMap[settoreAttivo].forEach(n => {
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
@@ -5321,7 +5531,7 @@ function renderWardMap(){
   // altre schede salvate che non corrispondono a un letto della mappa
   // (es. create con "Scheda libera", o dalla rete di sicurezza): visibili
   // solo quando è selezionato il settore E
-  const nomiLetti = new Set(Object.values(WARD_MAP).flat().map(bedName));
+  const nomiLetti = new Set(Object.values(wardMap).flat().map(bedName));
   const altre = Object.entries(patients).filter(([id,p]) => !nomiLetti.has(p.name));
   const altreGroup = document.getElementById('altre-schede-group');
   const altreList = document.getElementById('altre-schede-lista');
@@ -5368,8 +5578,11 @@ function renderVitaliSettore(){
   lista.innerHTML = '';
   if(inExtra) return; // il Settore E non ha letti fissi, vedi renderWardMap
 
+  const wardMap = getWardMap();
+  if(!wardMap[settoreAttivo]) return; // settore eliminato nel frattempo: niente da mostrare qui
+
   const patients = loadPatients();
-  WARD_MAP[settoreAttivo].forEach(n => {
+  wardMap[settoreAttivo].forEach(n => {
     const nome = bedName(n);
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
@@ -5602,7 +5815,8 @@ function eliminaSchedaDaLetto(id){
 // per prime, in ordine alfabetico
 function ordinaPazientiPerLetto(entries){
   const nomiOrdinati = [];
-  SETTORI.forEach(s => WARD_MAP[s].forEach(n => nomiOrdinati.push(bedName(n))));
+  const wardMap = getWardMap();
+  Object.keys(wardMap).forEach(s => wardMap[s].forEach(n => nomiOrdinati.push(bedName(n))));
   return entries.slice().sort((a, b) => {
     const ia = nomiOrdinati.indexOf(a[1].name);
     const ib = nomiOrdinati.indexOf(b[1].name);
