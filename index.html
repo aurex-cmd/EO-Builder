@@ -1465,21 +1465,28 @@
   </div>
 
   <div class="group">
-    <div class="group-label" style="text-align:center;">Reparto: settori e letti</div>
+    <div class="ric-lista-riga" onclick="toggleImpostazioniReparto()">
+      <span class="ric-lista-nome">Editor reparto</span>
+      <span class="admit-chev" id="impostazioni-reparto-chev">›</span>
+    </div>
     <!-- questa parte NON è una preferenza di dispositivo come le due sopra:
          la disposizione di settori/letti è condivisa su tutto l'account
          (sincronizzata col cloud come le schede pazienti), quindi ha senso
          solo per chi è collegato — vedi WARD_MAP_KEY/getWardMap() e
          aggiornaStatoSync(), che mostra/nasconde questi due blocchi insieme
-         a "Connesso come .../Accedi" -->
-    <div id="impostazioni-reparto-loggato-fuori" style="font-size:12.5px; color:var(--ink-dim); text-align:center; padding:6px 4px;">
-      Per aggiungere o eliminare settori e letti devi prima accedere al tuo account (scheda App → Sincronizzazione): la disposizione del reparto è condivisa con tutti i dispositivi collegati allo stesso account, non è una preferenza di questo dispositivo.
-    </div>
-    <div id="impostazioni-reparto-editor" style="display:none;">
-      <div id="impostazioni-reparto-lista"></div>
-      <div class="inline-fields" style="margin-top:4px;">
-        <input type="text" id="impostazioni-nuovo-settore" placeholder="Nome nuovo settore (es. Settore F)" style="flex:1; min-width:140px;">
-        <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
+         a "Connesso come .../Accedi". Tutto il blocco resta comunque
+         chiuso finché non si clicca "Editor reparto" (vedi
+         toggleImpostazioniReparto) -->
+    <div id="impostazioni-reparto-sotto" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px; margin-top:6px;">
+      <div id="impostazioni-reparto-loggato-fuori" style="font-size:12.5px; color:var(--ink-dim); text-align:center; padding:6px 4px;">
+        Per aggiungere o eliminare settori e letti devi prima accedere al tuo account (scheda App → Sincronizzazione): la disposizione del reparto è condivisa con tutti i dispositivi collegati allo stesso account, non è una preferenza di questo dispositivo.
+      </div>
+      <div id="impostazioni-reparto-editor" style="display:none;">
+        <div id="impostazioni-reparto-lista"></div>
+        <div class="inline-fields" style="margin-top:4px;">
+          <input type="text" id="impostazioni-nuovo-settore" placeholder="Nome nuovo settore (es. Settore F)" style="flex:1; min-width:140px;">
+          <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
+        </div>
       </div>
     </div>
   </div>
@@ -5217,6 +5224,22 @@ function renderImpostazioniTagNormale(){
   const btnNo = document.getElementById('impostazioni-tagnormale-no');
   if(btnSi) btnSi.classList.toggle('active', attivo);
   if(btnNo) btnNo.classList.toggle('active', !attivo);
+}
+
+// "Editor reparto" resta chiuso finché non lo si apre a mano (stesso
+// meccanismo a tendina di "Box farmaci" in App — vedi toggleAppFarmaciSotto):
+// evita di mostrare sempre l'editor di settori/letti, che serve raramente,
+// dentro una scheda Impostazioni altrimenti breve
+function toggleImpostazioniReparto(){
+  const sotto = document.getElementById('impostazioni-reparto-sotto');
+  const chev = document.getElementById('impostazioni-reparto-chev');
+  if(!sotto) return;
+  const aperto = sotto.style.display !== 'none';
+  sotto.style.display = aperto ? 'none' : '';
+  if(chev) chev.classList.toggle('aperto', !aperto);
+  // all'apertura, aggiorna subito lo stato loggato/sloggato e il contenuto
+  // dell'editor (vedi aggiornaStatoSync, che chiama anche renderImpostazioniReparto)
+  if(!aperto && typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
 }
 
 // dimensione del testo (e di conseguenza di tutto il resto, dato che le
