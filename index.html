@@ -5522,12 +5522,13 @@ function renderWardMap(){
       esamiBadge.textContent = 'E';
       tile.appendChild(esamiBadge);
     }
-    // pallino azzurro "D": stessa idea, ma per una dimissione programmata
-    // per il giorno dopo (vedi haDimissioneDomani)
-    if(entry && haDimissioneDomani(extraTesto)){
+    // pallino azzurro "D": per una dimissione già di oggi, o programmata
+    // per il giorno dopo (vedi haDimissioneOggi/haDimissioneDomani) — il
+    // titolo (tooltip) distingue i due casi, il pallino è lo stesso
+    if(entry && (haDimissioneOggi(extraTesto) || haDimissioneDomani(extraTesto))){
       const dimissioneBadge = document.createElement('div');
       dimissioneBadge.className = 'bed-tile-dimissione-badge';
-      dimissioneBadge.title = 'Dimissione programmata per domani';
+      dimissioneBadge.title = haDimissioneOggi(extraTesto) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       tile.appendChild(dimissioneBadge);
     }
@@ -6016,6 +6017,23 @@ function haDimissioneDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
   return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase));
+}
+
+// variante per la dimissione di OGGI (non "programmata", già decisa/in
+// corso): stesso pallino "D", solo il titolo (tooltip) cambia per
+// distinguere i due casi — vedi i due punti in cui si controllano insieme
+const FRASI_DIMISSIONE_OGGI = [
+  'dimessa oggi',
+  'dimesso oggi',
+  'oggi dimessa',
+  'oggi dimesso',
+  'dimissione oggi',
+  'dimissione odierna'
+];
+function haDimissioneOggi(testoExtra){
+  if(!testoExtra) return false;
+  const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
+  return FRASI_DIMISSIONE_OGGI.some(frase => normalizzato.includes(frase));
 }
 
 // per il Calendario dimissioni: a differenza di haDimissioneDomani (che si
@@ -6688,12 +6706,12 @@ function renderRiepilogo(){
       esamiBadge.textContent = 'E';
       rightWrap.appendChild(esamiBadge);
     }
-    // stesso meccanismo, per il pallino azzurro "D" (dimissione
-    // programmata per domani, vedi haDimissioneDomani)
-    if(haDimissioneDomani(extraTestoBadge)){
+    // stesso meccanismo, per il pallino azzurro "D" (dimissione di oggi o
+    // programmata per domani, vedi haDimissioneOggi/haDimissioneDomani)
+    if(haDimissioneOggi(extraTestoBadge) || haDimissioneDomani(extraTestoBadge)){
       const dimissioneBadge = document.createElement('div');
       dimissioneBadge.className = 'diario-dimissione-badge';
-      dimissioneBadge.title = 'Dimissione programmata per domani';
+      dimissioneBadge.title = haDimissioneOggi(extraTestoBadge) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       rightWrap.appendChild(dimissioneBadge);
     }
