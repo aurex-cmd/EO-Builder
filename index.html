@@ -311,6 +311,23 @@
      non quando compare da sola (nel qual caso resta dove sta di solito
      la E, in basso a destra) */
   .bed-tile-esami-badge + .bed-tile-dimissione-badge{ right:-16px; }
+  .bed-tile-isolamento-badge{
+    position:absolute; top:-7px; left:-7px; width:18px; height:18px;
+    border-radius:50%; border:2px solid var(--panel-2); z-index:1;
+    display:flex; align-items:center; justify-content:center;
+    font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-size:11px; font-weight:800; color:#fff; line-height:1;
+  }
+  .bed-tile-isolamento-badge.rosso{ background:#d9534f; }
+  .bed-tile-isolamento-badge.arancione{ background:#dba94a; }
+  .bed-tile-isolamento-badge.blu{ background:#4a9fd9; }
+  .diario-isolamento-badge{
+    width:18px; height:18px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-size:11px; font-weight:800; color:#fff; line-height:1;
+  }
+  .diario-isolamento-badge.rosso{ background:#d9534f; }
+  .diario-isolamento-badge.arancione{ background:#dba94a; }
+  .diario-isolamento-badge.blu{ background:#4a9fd9; }
   .diario-dimissione-badge{
     width:18px; height:18px; border-radius:50%; background:#4a9fd9;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -1735,7 +1752,16 @@
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5.2 20c0-3.7 3-6.7 6.8-6.7s6.8 3 6.8 6.7"/></svg> Paziente</h2>
   <div class="group">
     <div class="group-label">Sesso (adatta gli aggettivi nel referto)</div>
-    <div class="chips" id="sesso-chips"></div>
+    <div class="inline-fields" style="align-items:center;">
+      <div class="chips" id="sesso-chips"></div>
+      <!-- taggle tondo "i" per l'isolamento: font diverso (serif corsivo)
+           apposta per distinguerlo a colpo d'occhio dai chip normali -->
+      <div class="chip" id="isolamento-toggle" title="Isolamento" style="width:34px; height:34px; padding:0; box-sizing:border-box; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-weight:700; font-size:17px;">i</div>
+    </div>
+    <div id="isolamento-sotto" style="display:none; margin-top:8px; padding-left:14px; border-left:2px solid var(--signal);">
+      <div class="chips" id="isolamento-tipi"></div>
+      <input type="text" class="wide" id="isolamento-germe" placeholder="Germe sentinella (es. Escherichia coli MDR)" style="margin-top:8px;">
+    </div>
   </div>
 </div>
 
@@ -2062,6 +2088,9 @@ window.addEventListener('error', function(e){
    ============================================================ */
 const state = {
   sesso: null,
+  // isolamento: persiste ogni giorno finché il paziente resta ricoverato
+  // (non si azzera come altri campi) — vedi composeIsolamento/renderIsolamentoToggle
+  isolamento: { attivo:false, tipi:new Set(), germe:'', dataAttivazione:'' },
   // testo scritto a mano in coda al referto generato dai tag (es. esami
   // ematochimici, provvedimenti), separato da riga vuota: resta sempre lì,
   // anche se poi si tocca un tag e la parte generata cambia
@@ -4539,6 +4568,12 @@ function serializeState(){
 function applyStateObject(o){
   o = o || {};
   state.sesso = o.sesso ?? null;
+  state.isolamento = {
+    attivo: !!(o.isolamento?.attivo),
+    tipi: new Set(o.isolamento?.tipi || []),
+    germe: o.isolamento?.germe || '',
+    dataAttivazione: o.isolamento?.dataAttivazione || ''
+  };
   if(o.outputExtra !== undefined){
     state.outputExtra = o.outputExtra || '';
   } else if(o.usaOutputManuale && o.outputManuale){
@@ -5531,6 +5566,20 @@ function renderWardMap(){
       dimissioneBadge.title = haDimissioneOggi(extraTesto) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       tile.appendChild(dimissioneBadge);
+    }
+    // pallino "i" (isolamento): resta ogni giorno finché il paziente è
+    // ricoverato, indipendentemente dal fatto che oggi compaia o no la
+    // frase in fondo al referto (vedi coloreIsolamento/composeIsolamento)
+    if(entry){
+      const isoStato = (entry[0] === currentPatientId) ? state.isolamento : entry[1].state.isolamento;
+      const coloreIso = coloreIsolamento(isoStato);
+      if(coloreIso){
+        const isolamentoBadge = document.createElement('div');
+        isolamentoBadge.className = 'bed-tile-isolamento-badge ' + coloreIso;
+        isolamentoBadge.title = 'Isolamento';
+        isolamentoBadge.textContent = 'i';
+        tile.appendChild(isolamentoBadge);
+      }
     }
 
     // pallini V/E/S/C: dalle consegne incollate/analizzate in App →
@@ -6726,6 +6775,20 @@ function renderRiepilogo(){
       dimissioneBadge.textContent = 'D';
       rightWrap.appendChild(dimissioneBadge);
     }
+    // pallino "i" (isolamento): solo nella vista di oggi, non in quella di
+    // "ieri" (lì le voci sono testo congelato, senza uno stato strutturato
+    // da consultare per i tipi di isolamento — vedi schedeConDatiPerGiorno)
+    if(!diariMostraIeri){
+      const isoStato = (id === currentPatientId) ? state.isolamento : p.state.isolamento;
+      const coloreIso = coloreIsolamento(isoStato);
+      if(coloreIso){
+        const isolamentoBadge = document.createElement('div');
+        isolamentoBadge.className = 'diario-isolamento-badge ' + coloreIso;
+        isolamentoBadge.title = 'Isolamento';
+        isolamentoBadge.textContent = 'i';
+        rightWrap.appendChild(isolamentoBadge);
+      }
+    }
     rightWrap.appendChild(copiaBtn);
     titleRow.appendChild(rightWrap);
 
@@ -7310,6 +7373,79 @@ function renderAddomeManovre(){
 // principale: sceglierne la data lo accende comunque (non ha senso avere
 // una data senza che il tag sia "acceso"), e spegnerlo azzera la data
 // scelta — vedi composeAddome/composeAlvoAddome per la frase generata
+// Isolamento: il taggle tondo "i" apre la tendina con i tre tipi (multi-
+// selezionabili, non esclusivi: "da contatto" e "da droplet" possono
+// stare insieme) e il campo del germe sentinella. Ogni volta che uno di
+// questi cambia si aggiorna dataAttivazione a oggi: la frase (vedi
+// composeIsolamento) compare in fondo al referto SOLO il giorno in cui
+// dataAttivazione è oggi, cioè il giorno in cui è stato scritto o
+// modificato — i giorni dopo, se non lo si tocca, resta impostato ma non
+// ripete più la frase. Il taggle stesso (e il pallino colorato su
+// letto/diario, vedi coloreIsolamento) restano invece attivi ogni giorno,
+// finché non si spegne a mano o si elimina la scheda
+function renderIsolamentoToggle(){
+  const toggle = document.getElementById('isolamento-toggle');
+  const sotto = document.getElementById('isolamento-sotto');
+  const germeInput = document.getElementById('isolamento-germe');
+  if(!toggle || !sotto) return;
+  const iso = state.isolamento;
+  toggle.classList.toggle('active', iso.attivo);
+  sotto.style.display = iso.attivo ? '' : 'none';
+  toggle.onclick = () => {
+    iso.attivo = !iso.attivo;
+    if(!iso.attivo){
+      iso.tipi = new Set();
+      iso.germe = '';
+      iso.dataAttivazione = '';
+    }
+    update();
+  };
+  if(germeInput){
+    if(document.activeElement !== germeInput && germeInput.value !== (iso.germe || '')){
+      germeInput.value = iso.germe || '';
+    }
+    germeInput.oninput = () => {
+      iso.germe = germeInput.value || '';
+      iso.dataAttivazione = chiaveGiorno(Date.now());
+      update();
+    };
+  }
+  renderIsolamentoTipi();
+}
+function renderIsolamentoTipi(){
+  const el = document.getElementById('isolamento-tipi');
+  if(!el) return;
+  el.innerHTML = '';
+  const s = state.isolamento.tipi;
+  OPT.isolamentoTipi.forEach(opt => {
+    const b = document.createElement('div');
+    const active = s.has(opt.value);
+    b.className = 'chip' + (active ? ' active' : '');
+    b.textContent = opt.label;
+    b.onclick = () => {
+      active ? s.delete(opt.value) : s.add(opt.value);
+      state.isolamento.dataAttivazione = chiaveGiorno(Date.now());
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+// colore del pallino "i" su letto/diario in base ai tipi selezionati:
+// blu se aereo (da solo, o comunque non insieme a entrambi gli altri due),
+// arancione se da contatto e/o da droplet senza aereo, rosso se tutti e
+// tre insieme. Funziona sia con lo stato "vivo" (tipi è un Set, paziente
+// aperto ora) sia con quello caricato da localStorage per gli altri
+// pazienti (tipi lì è un semplice array, per via della serializzazione)
+function coloreIsolamento(iso){
+  if(!iso || !iso.attivo) return null;
+  const tipi = iso.tipi ? (Array.isArray(iso.tipi) ? iso.tipi : [...iso.tipi]) : [];
+  const c = tipi.includes('contatto'), d = tipi.includes('droplets'), a = tipi.includes('aereo');
+  if(!c && !d && !a) return null;
+  if(c && d && a) return 'rosso';
+  if(a) return 'blu';
+  return 'arancione';
+}
+
 function renderAddomeAlvo(){
   const chip = document.getElementById('addome-alvo-chip');
   const dataInput = document.getElementById('addome-alvo-data');
@@ -8197,6 +8333,11 @@ const OPT = {
     {value:'M', label:'Maschio'},
     {value:'F', label:'Femmina'}
   ],
+  isolamentoTipi: [
+    {value:'contatto', label:'da contatto'},
+    {value:'droplets', label:'da droplet'},
+    {value:'aereo', label:'aereo'}
+  ],
   coscienzaPrimary: [
     {value:'vigile', m:'Vigile', f:'Vigile'},
     {value:'soporoso', m:'Soporoso', f:'Soporosa', hasLoc:true},
@@ -8533,6 +8674,7 @@ function fraseCute(valore, sedeSet, extraSet){
    ============================================================ */
 function renderAll(){
   renderSingle('sesso-chips', OPT.sesso, ()=>state.sesso, v=>state.sesso=v);
+  renderIsolamentoToggle();
 
   renderCoscienzaPrimary();
   const descGruppo = g => renderMultiEsclusivo('coscienza-'+g, OPT.coscienzaDescrittori.filter(o=>o.gruppo===g), ()=>state.coscienza.descrittori);
@@ -9330,7 +9472,7 @@ function composeNeuro(){
 // frase completa dell'EO a partire dal contenuto corrente di `state`
 // (usata sia per il referto live sia per ricostruire i referti salvati nel riepilogo)
 function composeReferto(){
-  return [
+  const corpo = [
     composeCoscienza(),
     composeRespiro(),
     composeCuore(),
@@ -9342,6 +9484,31 @@ function composeReferto(){
     composeDiuresi(),
     composeNeuro()
   ].filter(Boolean).join(' ');
+  // l'isolamento va a capo rispetto al resto (non in coda con uno spazio
+  // come le altre frasi), per staccarlo visivamente dal corpo dell'esame
+  const isolamento = composeIsolamento();
+  if(!isolamento) return corpo;
+  return corpo ? corpo + '\n' + isolamento : isolamento;
+}
+
+// isolamento: compare in fondo a tutto SOLO il giorno in cui è stato
+// scritto/modificato (vedi renderIsolamentoToggle/renderIsolamentoTipi,
+// che aggiornano dataAttivazione a ogni tocco) — i giorni successivi,
+// lasciato invariato, non produce alcuna frase, anche se resta impostato
+function composeIsolamento(){
+  const iso = state.isolamento;
+  if(!iso || !iso.attivo) return '';
+  const tipi = [];
+  if(iso.tipi.has('contatto')) tipi.push('da contatto');
+  if(iso.tipi.has('droplets')) tipi.push('da droplet');
+  if(iso.tipi.has('aereo')) tipi.push('aereo');
+  if(!tipi.length) return '';
+  if(iso.dataAttivazione !== chiaveGiorno(Date.now())) return '';
+  const germe = (iso.germe || '').trim();
+  let s = '';
+  if(germe) s += `Pervenuta positività al tampone rettale per germe sentinella: ${germe}. `;
+  s += `Si predispone isolamento ${joinIt(tipi)}.`;
+  return s;
 }
 
 // tiene traccia dell'ultimo testo "vero" (generato dai tag) effettivamente
