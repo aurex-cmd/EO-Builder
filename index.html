@@ -1899,6 +1899,13 @@
     <div class="finding-list" id="addome-manovre"></div>
   </div>
   <div class="group">
+    <div class="group-label">Alvo</div>
+    <div class="inline-fields" style="align-items:center;">
+      <div class="chip" id="addome-alvo-chip">Alvo +</div>
+      <input type="date" id="addome-alvo-data" style="max-width:170px;">
+    </div>
+  </div>
+  <div class="group">
     <div class="group-label">Nota libera (aggiunta subito dopo la frase sull'addome)</div>
     <input type="text" class="wide" id="addome-extra" placeholder="es. Strie rubre">
   </div>
@@ -2061,7 +2068,7 @@ const state = {
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'' },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
-  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', manovreAttive:new Set(), manovreEsito:{}, extra:'' },
+  addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:''}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
@@ -4713,6 +4720,7 @@ function applyStateObject(o){
     });
   });
   state.addome.peristalsi = o.addome?.peristalsi ?? (tagNormaleAttivo() ? 'presente' : '');
+  state.addome.alvo = { attivo: !!(o.addome?.alvo?.attivo), data: o.addome?.alvo?.data || '' };
   state.addome.extra = o.addome?.extra ?? '';
   if(o.addome && o.addome.manovreAttive !== undefined){
     state.addome.manovreAttive = new Set(o.addome.manovreAttive || []);
@@ -7248,6 +7256,47 @@ function renderAddomeManovre(){
   });
 }
 
+// "Alvo +" (oggi) con calendarietto per registrare invece la data
+// dell'ultimo alvo positivo, se non è oggi. Il chip è l'interruttore
+// principale: sceglierne la data lo accende comunque (non ha senso avere
+// una data senza che il tag sia "acceso"), e spegnerlo azzera la data
+// scelta — vedi composeAddome/composeAlvoAddome per la frase generata
+function renderAddomeAlvo(){
+  const chip = document.getElementById('addome-alvo-chip');
+  const dataInput = document.getElementById('addome-alvo-data');
+  if(!chip || !dataInput) return;
+  const a = state.addome.alvo;
+  chip.classList.toggle('active', a.attivo);
+  // come renderVitalsStrip: non tocca il valore del campo mentre l'utente
+  // ci sta interagendo. Su iPhone/Safari, riscrivere .value su un <input
+  // type="date"> subito dopo che è stato lui stesso a impostarlo (qui
+  // succede ad ogni re-render, quindi anche nello stesso istante della
+  // scelta) può far "rimbalzare" il calendarietto e perdere la selezione:
+  // qui l'effetto era ancora più marcato che sui vitali, perché il valore
+  // veniva riscritto anche together col resto della scheda a ogni update()
+  if(document.activeElement !== dataInput && dataInput.value !== (a.data || '')){
+    dataInput.value = a.data || '';
+  }
+  chip.onclick = () => {
+    a.attivo = !a.attivo;
+    if(!a.attivo) a.data = '';
+    update();
+  };
+  // sia "input" che "change": su alcuni browser/webview mobili il
+  // calendarietto nativo non emette in modo affidabile "change" appena si
+  // sceglie il giorno (a differenza degli altri campi dell'app, sempre su
+  // "input") — con entrambi assegnati come proprietà (non addEventListener,
+  // che qui duplicherebbe i gestori a ogni nuovo render) si intercetta
+  // comunque la scelta qualunque evento arrivi per primo
+  const onCambioData = () => {
+    a.data = dataInput.value || '';
+    if(a.data) a.attivo = true;
+    update();
+  };
+  dataInput.oninput = onCambioData;
+  dataInput.onchange = onCambioData;
+}
+
 // "Soporoso" apre una tendina annidata: prima risvegliabile sì/no, e se sì
 // compaiono anche le opzioni sullo stimolo (senza specificarlo, resta solo
 // "risvegliabile")
@@ -8450,6 +8499,7 @@ function renderAll(){
   renderDolorabilita();
   renderSingle('addome-peristalsi', OPT.addomePeristalsi, ()=>state.addome.peristalsi, v=>state.addome.peristalsi=v);
   renderAddomeManovre();
+  renderAddomeAlvo();
 
   renderEdemi();
 
@@ -8840,7 +8890,35 @@ function composeAddome(){
     });
   }
   if(manovreFrasi.length) s += (s ? ' ' : '') + cap(joinIt(manovreFrasi)) + '.';
+  const alvoFrase = composeAlvoAddome(a.alvo);
+  if(alvoFrase) s += (s ? ' ' : '') + alvoFrase;
   return s;
+}
+
+// "Alvo positivo oggi." se il tag è acceso senza una data scelta (o con la
+// data di oggi); se invece la data scelta è nel passato, si conta quanti
+// giorni sono trascorsi dall'ultimo alvo positivo e si esprime come
+// "giornata" (il giorno dell'alvo stesso è la prima, il giorno dopo la
+// seconda, e così via): "Alvo non canalizzato in seconda/terza/... giornata."
+// — vedi renderAddomeAlvo per come si imposta
+const ORDINALI_GIORNATA = ['', 'prima', 'seconda', 'terza', 'quarta', 'quinta', 'sesta', 'settima', 'ottava', 'nona', 'decima', 'undicesima', 'dodicesima', 'tredicesima', 'quattordicesima', 'quindicesima', 'sedicesima', 'diciassettesima', 'diciottesima', 'diciannovesima', 'ventesima'];
+function ordinaleGiornata(n){
+  if(n >= 1 && n < ORDINALI_GIORNATA.length) return ORDINALI_GIORNATA[n];
+  return n + 'ª'; // oltre le tre settimane, caso limite: ordinale abbreviato
+}
+function composeAlvoAddome(alvo){
+  if(!alvo || !alvo.attivo) return '';
+  const data = (alvo.data || '').trim();
+  if(!data || data === chiaveGiorno(Date.now())) return 'Alvo positivo oggi.';
+  // confronto per chiave "YYYY-MM-DD" (mezzanotte locale su entrambe le
+  // date), non per timestamp assoluto, per non sfasare di un giorno vicino
+  // al cambio d'ora legale/solare
+  const msAlvo = new Date(data + 'T00:00:00').getTime();
+  const msOggi = new Date(chiaveGiorno(Date.now()) + 'T00:00:00').getTime();
+  const giorniTrascorsi = Math.round((msOggi - msAlvo) / 86400000);
+  if(giorniTrascorsi <= 0) return 'Alvo positivo oggi.'; // data di oggi o (per errore) nel futuro
+  const numeroGiornata = giorniTrascorsi + 1; // il giorno dell'alvo stesso conta come "prima giornata"
+  return `Alvo non canalizzato in ${ordinaleGiornata(numeroGiornata)} giornata.`;
 }
 
 function composeEdemi(){
