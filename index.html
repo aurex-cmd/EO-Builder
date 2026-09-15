@@ -5883,8 +5883,17 @@ function schedeConDati(){
 // ieri, e si mostra direttamente quello, senza bisogno di uno scatto.
 function schedeConDatiPerGiorno(mostraIeri){
   const patients = loadPatients();
+  // il diario in questa vista deve riflettere quando è stato scritto/
+  // aggiornato l'ESAME (esameAggiornatoIl), non l'ultimo tocco qualsiasi
+  // (savedAt): quest'ultimo si aggiorna anche per i soli parametri vitali
+  // dalla pagina "Parametri vitali" (vedi aggiornaVitaleLetto), quindi una
+  // scheda scritta giorni fa e mai più toccata nell'esame comparirebbe lo
+  // stesso tra i "diari di oggi" solo perché qualcuno ha ricontrollato la
+  // pressione. Il fallback a savedAt resta solo per le schede più vecchie
+  // di quando esiste il campo esameAggiornatoIl (mai valorizzato per loro)
+  const dataDiarioReale = p => p.esameAggiornatoIl || p.savedAt;
   if(!mostraIeri){
-    const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && isOggi(p.savedAt));
+    const entries = Object.entries(patients).filter(([id, p]) => schedaHaDati(p.state) && isOggi(dataDiarioReale(p)));
     return ordinaPazientiPerLetto(entries);
   }
   const chiaveIeri = chiaveGiorno(Date.now() - 86400000);
@@ -5893,7 +5902,7 @@ function schedeConDatiPerGiorno(mostraIeri){
     if(p.storico && p.storico[chiaveIeri] !== undefined){
       // riscritto oggi: il diario di ieri è "congelato" nello scatto
       risultato.push([id, { name: p.name, testo: p.storico[chiaveIeri], archiviato: true }]);
-    } else if(schedaHaDati(p.state) && isIeri(p.savedAt)){
+    } else if(schedaHaDati(p.state) && isIeri(dataDiarioReale(p))){
       // mai più toccato da ieri: lo stato attuale è ancora quello di ieri
       risultato.push([id, { name: p.name, testo: getRefertoFor(p.state), archiviato: false }]);
     }
