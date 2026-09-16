@@ -9745,6 +9745,18 @@ document.getElementById('output').addEventListener('input', (e) => {
   state.outputExtra = extraParte;
   autosaveCurrentPatient();
 });
+// stessa unità di misura automatica già usata in Diari (vedi
+// aggiornaDiarioTesto/aggiungiUnitaMancantiTesto), qui applicata anche nel
+// box in fondo alla scheda dell'esame obiettivo: appena si esce dal campo
+// (blur), non a ogni tasto premuto, per non correggere mentre si sta
+// ancora scrivendo il numero
+document.getElementById('output').addEventListener('blur', function(){
+  const corretto = aggiungiUnitaMancantiTesto(this.value);
+  if(corretto !== this.value){
+    this.value = corretto;
+    this.dispatchEvent(new Event('input', { bubbles:true }));
+  }
+});
 
 function copiaTesto(testo){
   if(navigator.clipboard && navigator.clipboard.writeText){
