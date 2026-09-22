@@ -311,6 +311,12 @@
      non quando compare da sola (nel qual caso resta dove sta di solito
      la E, in basso a destra) */
   .bed-tile-esami-badge + .bed-tile-dimissione-badge{ right:-16px; }
+  /* stessa idea per la "i" col baffo del diario copiato oggi (stessa
+     posizione in alto a sinistra, vedi .bed-tile-attiva-badge): se il
+     baffo c'è già, la i si sposta un po' più a destra invece di
+     sovrapporlo e nasconderlo — uso "~" (fratello generico) e non "+"
+     perché tra i due, nel markup, possono comparire anche E/D */
+  .bed-tile-attiva-badge ~ .bed-tile-isolamento-badge{ left:9px; }
   .bed-tile-isolamento-badge{
     position:absolute; top:-7px; left:-7px; width:18px; height:18px;
     border-radius:50%; border:2px solid var(--panel-2); z-index:1;
@@ -338,17 +344,6 @@
   #isolamento-toggle.iso-arancione{ background:#dba94a; border-color:#dba94a; color:#221a08; box-shadow:0 0 10px rgba(219,169,74,.4); }
   #isolamento-toggle.iso-blu{ background:#4a9fd9; border-color:#4a9fd9; color:#06131a; box-shadow:0 0 10px rgba(74,159,217,.4); }
   #isolamento-toggle.iso-verde{ background:#3cb464; border-color:#3cb464; color:#06210d; box-shadow:0 0 10px rgba(60,180,100,.4); }
-  /* nel box informativo, evidenzia il/i blocco/i del tipo di isolamento
-     attivo per il paziente da cui si è arrivati (vedi apriIsolamentoInfo).
-     .group di suo non ha bordo/sfondo (è solo spaziatura), quindi qui
-     vanno dati esplicitamente per essere visibili */
-  .isolamento-info-evidenziato{
-    border:1.5px solid var(--signal);
-    border-radius:12px;
-    background:var(--signal-dim);
-    box-shadow:var(--glow-signal);
-    padding:10px 12px;
-  }
   .diario-dimissione-badge{
     width:18px; height:18px; border-radius:50%; background:#4a9fd9;
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -947,6 +942,37 @@
   }
   #farmaco-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
 
+  /* modale semplice "i" isolamento: germe + DPI del singolo paziente, senza
+     spiegazioni — sostituisce la vecchia scheda informativa generica in
+     App (rimossa, vedi apriIsolamentoModal) */
+  #isolamento-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #isolamento-modal-overlay.show{ display:flex; }
+  #isolamento-modal{
+    width:100%; max-width:400px; max-height:80vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .isolamento-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+  .isolamento-modal-header h2{ margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal); }
+  #isolamento-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #isolamento-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  .isolamento-modal-riga{ font-size:14px; line-height:1.5; margin-bottom:4px; }
+  .isolamento-modal-riga b{ color:var(--ink); }
+  .isolamento-modal-dpi{ margin:4px 0 0; padding-left:18px; font-size:14px; line-height:1.6; color:var(--ink); }
+  .isolamento-modal-nota{ margin-top:10px; font-size:12.5px; color:var(--signal); font-weight:600; line-height:1.4; }
+
   #farmaco-vfg-info{
     font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:14px;
     padding:8px 11px; background:var(--panel-2); border-radius:10px; border:1px solid var(--clay-border);
@@ -1396,9 +1422,6 @@
       <div class="ric-lista-riga" onclick="mostraVista('impostazioni')">
         <span class="ric-lista-nome">Impostazioni</span>
       </div>
-      <div class="ric-lista-riga" onclick="mostraVista('isolamento-info')">
-        <span class="ric-lista-nome">Isolamento: tipi e DPI</span>
-      </div>
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
       </div>
@@ -1529,63 +1552,6 @@
           <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- ISOLAMENTO: box informativo, richiamabile da App e cliccando sul
-     pallino "i" colorato nei Diari (vedi apriIsolamentoInfo) -->
-<div class="card" id="isolamento-info-view" style="display:none; background:var(--panel-3);">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="11" x2="12" y2="16"/></svg> Isolamento: tipi e DPI</h2>
-  <div class="group">
-    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
-  </div>
-
-  <div class="group">
-    <div class="group-label">Cos'è e perché</div>
-    <div style="font-size:13.5px; line-height:1.5;">
-      L'isolamento è l'insieme di misure aggiuntive rispetto alle precauzioni standard, adottate quando un paziente è colonizzato o infetto da un microrganismo trasmissibile (spesso multiresistente), per interrompere la catena di trasmissione verso altri pazienti e verso il personale. Il tipo di isolamento dipende dalla via di trasmissione del germe, non dalla sua gravità clinica.
-    </div>
-  </div>
-
-  <div class="group" id="isolamento-info-contatto">
-    <div class="group-label">Da contatto</div>
-    <div style="font-size:13.5px; line-height:1.5;">
-      <b>Via di trasmissione:</b> contatto diretto (mani, cute) o indiretto (superfici, presidi condivisi).<br>
-      <b>Esempi:</b> batteri multiresistenti (MDR/MDRO, es. Klebsiella o E. coli produttori di carbapenemasi), Clostridioides difficile, scabbia, ferite/lesioni con secrezioni non contenibili.<br>
-      <b>DPI:</b> guanti monouso e camice non sterile all'ingresso in stanza, da rimuovere prima di uscire; igiene delle mani dopo la rimozione. Strumentazione dedicata al paziente (fonendoscopio, sfigmomanometro) o disinfettata tra un uso e l'altro.<br>
-      <b>Attenzione al Clostridioides difficile:</b> le sue spore NON vengono eliminate dalla soluzione idroalcolica — serve sempre il lavaggio delle mani con acqua e sapone.
-    </div>
-  </div>
-
-  <div class="group" id="isolamento-info-droplets">
-    <div class="group-label">Da droplet</div>
-    <div style="font-size:13.5px; line-height:1.5;">
-      <b>Via di trasmissione:</b> goccioline respiratorie (>5 micron) emesse con tosse, starnuti o parlando, che si depositano a breve distanza (circa 1-2 metri) senza restare sospese a lungo in aria.<br>
-      <b>Esempi:</b> influenza, COVID-19/SARS-CoV-2, infezione da meningococco, pertosse, alcune polmoniti batteriche.<br>
-      <b>DPI:</b> mascherina chirurgica indossata entrando in stanza (o comunque entro 1-2 metri dal paziente); protezione oculare (visiera/occhiali) se è previsto un contatto ravvicinato o manovre a rischio di schizzi; guanti e camice si aggiungono solo se è prevista anche esposizione da contatto. Per il COVID-19, durante manovre che generano aerosol (es. broncoscopia, aspirazione, ventilazione non invasiva) si passa a facciale filtrante FFP2/FFP3 come per l'isolamento aereo.
-    </div>
-  </div>
-
-  <div class="group" id="isolamento-info-aereo">
-    <div class="group-label">Aereo</div>
-    <div style="font-size:13.5px; line-height:1.5;">
-      <b>Via di trasmissione:</b> particelle molto piccole (nuclei di goccioline, &lt;5 micron) che restano sospese in aria a lungo e possono percorrere distanze maggiori, diffondendosi anche nel resto della stanza o del reparto.<br>
-      <b>Esempi:</b> tubercolosi polmonare/laringea bacillifera, morbillo, varicella (o herpes zoster disseminato).<br>
-      <b>DPI:</b> facciale filtrante FFP2/FFP3 (non la semplice mascherina chirurgica), indossato PRIMA di entrare in stanza; camera preferibilmente a pressione negativa o comunque con porta sempre chiusa; guanti e camice si aggiungono solo se è prevista anche esposizione da contatto (es. lesioni da varicella).
-    </div>
-  </div>
-
-  <div class="group">
-    <div class="group-label">Isolamenti combinati</div>
-    <div style="font-size:13.5px; line-height:1.5;">
-      Più vie di trasmissione possono coesistere per lo stesso germe: in quel caso i DPI si sommano (es. contatto + droplet richiede sia guanti/camice sia mascherina chirurgica). In tutti i casi restano valide le precauzioni standard di base: igiene delle mani prima e dopo ogni contatto, uso corretto e smaltimento dei DPI, informazione a visitatori e personale.
-    </div>
-  </div>
-
-  <div class="group">
-    <div style="font-size:12px; color:var(--ink-dim); text-align:center;">
-      Riferimento generale — fare sempre riferimento al protocollo aziendale/ISS in vigore e alle indicazioni del microbiologo/infettivologo per il singolo caso.
     </div>
   </div>
 </div>
@@ -5455,7 +5421,6 @@ function mostraVista(v){
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
   document.getElementById('impostazioni-view').style.display = (v === 'impostazioni') ? '' : 'none';
-  document.getElementById('isolamento-info-view').style.display = (v === 'isolamento-info') ? '' : 'none';
   document.getElementById('dimissioni-view').style.display = (v === 'dimissioni') ? '' : 'none';
   document.getElementById('consegne-view').style.display = (v === 'consegne') ? '' : 'none';
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
@@ -5478,7 +5443,7 @@ function mostraVista(v){
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
-  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', 'isolamento-info':'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
@@ -5497,18 +5462,29 @@ function apriRiepilogo(){ mostraVista('riepilogo'); }
 // (egaContestoAttivo/vfgContestoAttivo restano senza textareaEl, vedi
 // chiudiEgaAnalyzer/chiudiVfgCalc)
 function apriAppTools(){ mostraVista('app'); }
-// tipiAttivi (opzionale): array/Set con i tipi del paziente da cui si è
-// arrivati (vedi il click sul pallino "i" nei Diari) — evidenzia i blocchi
-// corrispondenti nel box. Aperto da App in generale (nessun argomento),
-// nessun blocco viene evidenziato.
-function apriIsolamentoInfo(tipiAttivi){
-  mostraVista('isolamento-info');
-  const tipi = tipiAttivi ? (Array.isArray(tipiAttivi) ? tipiAttivi : [...tipiAttivi]) : [];
-  const mappaId = { contatto:'isolamento-info-contatto', droplets:'isolamento-info-droplets', aereo:'isolamento-info-aereo' };
-  Object.entries(mappaId).forEach(([tipo, id]) => {
-    const el = document.getElementById(id);
-    if(el) el.classList.toggle('isolamento-info-evidenziato', tipi.includes(tipo));
-  });
+// box semplice per il singolo paziente: germe isolato + DPI da usare, senza
+// spiegazioni (sostituisce la vecchia scheda informativa generica, troppo
+// prolissa, che è stata rimossa insieme alla sua voce in App)
+function apriIsolamentoModal(isoStato){
+  const iso = isoStato || {};
+  const tipi = iso.tipi ? (Array.isArray(iso.tipi) ? iso.tipi : [...iso.tipi]) : [];
+  const germe = (iso.germe || '').trim();
+  const dpi = [];
+  if(tipi.includes('contatto')) dpi.push('Guanti e camice');
+  if(tipi.includes('droplets')) dpi.push('Mascherina chirurgica (+ occhiali/visiera se contatto ravvicinato)');
+  if(tipi.includes('aereo')) dpi.push('Facciale filtrante FFP2/FFP3');
+  let html = '';
+  if(germe) html += `<div class="isolamento-modal-riga"><b>Germe:</b> ${escapeHtml(germe)}</div>`;
+  if(dpi.length){
+    html += '<div class="isolamento-modal-riga"><b>DPI:</b></div>';
+    html += '<ul class="isolamento-modal-dpi">' + dpi.map(d => `<li>${escapeHtml(d)}</li>`).join('') + '</ul>';
+  }
+  if(haClostridium(germe)) html += '<div class="isolamento-modal-nota">Lavaggio mani con acqua e sapone — il gel idroalcolico non basta sulle spore.</div>';
+  document.getElementById('isolamento-modal-corpo').innerHTML = html;
+  document.getElementById('isolamento-modal-overlay').classList.add('show');
+}
+function chiudiIsolamentoModal(){
+  document.getElementById('isolamento-modal-overlay').classList.remove('show');
 }
 function apriAppEga(){ apriEgaAnalyzer('', null, null); }
 function apriAppVfg(){ apriVfgCalc('', null, null); }
@@ -6882,7 +6858,7 @@ function renderRiepilogo(){
         isolamentoBadge.title = 'Isolamento — tocca per info e DPI';
         isolamentoBadge.style.cursor = 'pointer';
         isolamentoBadge.textContent = 'i';
-        isolamentoBadge.onclick = (e) => { e.stopPropagation(); apriIsolamentoInfo(isoStato.tipi); };
+        isolamentoBadge.onclick = (e) => { e.stopPropagation(); apriIsolamentoModal(isoStato); };
         rightWrap.appendChild(isolamentoBadge);
       }
     }
@@ -9255,6 +9231,7 @@ function composeAlvoAddome(alvo){
   const msOggi = new Date(chiaveGiorno(Date.now()) + 'T00:00:00').getTime();
   const giorniTrascorsi = Math.round((msOggi - msAlvo) / 86400000);
   if(giorniTrascorsi <= 0) return 'Alvo positivo oggi.'; // data di oggi o (per errore) nel futuro
+  if(giorniTrascorsi === 1) return 'Alvo canalizzato ieri.';
   const numeroGiornata = giorniTrascorsi + 1; // il giorno dell'alvo stesso conta come "prima giornata"
   return `Alvo non canalizzato in ${ordinaleGiornata(numeroGiornata)} giornata.`;
 }
@@ -10377,6 +10354,18 @@ try{
     </div>
     <div id="farmaco-vfg-info"></div>
     <div id="farmaco-corpo"></div>
+  </div>
+</div>
+
+<!-- modale semplice isolamento: germe + DPI del singolo paziente, vedi
+     apriIsolamentoModal/chiudiIsolamentoModal -->
+<div id="isolamento-modal-overlay" onclick="if(event.target===this) chiudiIsolamentoModal()">
+  <div id="isolamento-modal">
+    <div class="isolamento-modal-header">
+      <h2>Isolamento</h2>
+      <button id="isolamento-chiudi-btn" onclick="chiudiIsolamentoModal()">✕</button>
+    </div>
+    <div id="isolamento-modal-corpo"></div>
   </div>
 </div>
 
