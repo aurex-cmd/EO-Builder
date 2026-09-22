@@ -8948,13 +8948,16 @@ function composeRespiro(r){
   const tipoText = r.tipo ? ((r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt)) : '';
   let o2text = '';
   if(r.o2 === 'AA') o2text = 'in AA';
-  else if(r.o2 === 'NC') o2text = `in NC ${r.litri || '_'}L/min`;
-  else if(r.o2 === 'MS') o2text = `in MS ${r.litri || '_'}L/min`;
-  else if(r.o2 === 'MR') o2text = `in MR ${r.litri || '_'}L/min`;
-  else if(r.o2 === 'MV') o2text = `in MV FiO2 ${r.fio2 || '_'}%`;
+  else if(r.o2 === 'NC') o2text = r.litri ? `in NC ${r.litri}L/min` : 'in NC';
+  else if(r.o2 === 'MS') o2text = r.litri ? `in MS ${r.litri}L/min` : 'in MS';
+  else if(r.o2 === 'MR') o2text = r.litri ? `in MR ${r.litri}L/min` : 'in MR';
+  else if(r.o2 === 'MV') o2text = r.fio2 ? `in MV FiO2 ${r.fio2}%` : 'in MV';
   else if(r.o2 === 'ALTRO') o2text = (r.altro || 'in ossigenoterapia');
   // r.o2 === '' (nessuna modalità selezionata): o2text resta vuota, non si
   // inventa più "in ossigenoterapia" di default
+  // niente più segnaposto "_L/min"/"_%" quando il valore non è stato
+  // scritto: se non c'è il numero, la frase si ferma alla sola modalità
+  // (es. "in NC.", non "in NC _L/min.")
 
   let s = [tipoText, o2text].filter(Boolean).join(' ');
   // "in bilancia...ventilazione" va dopo il tipo di O2, non subito dopo
