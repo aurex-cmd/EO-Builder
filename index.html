@@ -8970,7 +8970,11 @@ function composeRespiro(r){
 
   const vitali = [];
   if(r.sat) vitali.push(`SatO2 ${r.sat}%`);
-  if(r.pas || r.pad) vitali.push(`PA ${r.pas || '_'}/${r.pad || '_'} mmHg`);
+  // se manca uno dei due valori, si specifica quale dei due si sta
+  // riportando invece di lasciare un segnaposto ("PA 120/_ mmHg")
+  if(r.pas && r.pad) vitali.push(`PA ${r.pas}/${r.pad} mmHg`);
+  else if(r.pas) vitali.push(`PA sistolica ${r.pas} mmHg`);
+  else if(r.pad) vitali.push(`PA diastolica ${r.pad} mmHg`);
   if(r.fc) vitali.push(`FC ${r.fc} bpm`);
   // con la frase sulla bilancia già di mezzo, un'altra "con" di fila
   // suonerebbe ripetuta: lì i parametri vitali proseguono con la virgola
@@ -8981,7 +8985,9 @@ function composeRespiro(r){
 
   const tempOpt = OPT.temp.find(o => o.value === r.temp);
   if(tempOpt){
-    s += r.temp === 'febbrile' ? ` ${g(tempOpt)}, TC ${r.tempValore || '_'}°C.` : ` ${g(tempOpt)}.`;
+    // "Febbrile" senza il valore scritto resta una frase completa da sola,
+    // niente più segnaposto "TC _°C."
+    s += (r.temp === 'febbrile' && r.tempValore) ? ` ${g(tempOpt)}, TC ${r.tempValore}°C.` : ` ${g(tempOpt)}.`;
   }
   const storico = (r.tempStorico || '').trim();
   if(storico) s += (s ? ' ' : '') + cap(storico) + (storico.endsWith('.') ? '' : '.');
@@ -9010,7 +9016,11 @@ function composeCuore(){
   if(soffioAttivo){
     const foc = c.focolaio || 'non specificato';
     const focText = foc === 'mesocardio' ? 'in mesocardio' : `su focolaio ${foc}`;
-    soffioFrag = `soffio ${c.soffio} ${c.grado || '_'}/6 sec. Levine ${focText}`;
+    // senza l'entità (grado) selezionata, si omette tutta la scala "X/6
+    // sec. Levine" invece di lasciare un segnaposto ("_/6 sec.")
+    soffioFrag = c.grado
+      ? `soffio ${c.soffio} ${c.grado}/6 sec. Levine ${focText}`
+      : `soffio ${c.soffio} ${focText}`;
   }
 
   // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
