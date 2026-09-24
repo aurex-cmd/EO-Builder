@@ -159,9 +159,11 @@
     font-family:var(--font-mono); font-weight:700; font-size:14px;
     border:1.5px solid var(--signal); background:var(--panel-2); color:var(--ink-dim);
     box-shadow:0 0 0 1px var(--signal);
-    cursor:pointer; user-select:none;
+    cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation;
     transition:border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
   }
+  /* feedback visivo durante la pressione prolungata (svuota settore) */
+  .settore-dot.in-pressione{ border-color:#d9534f !important; box-shadow:0 0 0 1px #d9534f, 0 0 14px rgba(217,83,79,.55) !important; }
   .settore-dot:hover{ border-color:var(--signal); color:var(--ink); }
   .settore-dot.active{
     border-color:var(--signal); background:var(--signal); color:var(--on-signal);
@@ -971,6 +973,23 @@
   .isolamento-modal-riga{ font-size:14px; line-height:1.5; margin-bottom:4px; color:var(--ink); }
   .isolamento-modal-riga b{ color:var(--ink); }
   .isolamento-modal-dpi{ margin:4px 0 0; padding-left:18px; font-size:14px; line-height:1.6; color:var(--ink); }
+  #svuota-settore-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  #svuota-settore-overlay.show{ display:flex; }
+  #svuota-settore-modal{
+    width:100%; max-width:400px; max-height:80vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px;
+  }
+  .svuota-settore-x{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
   .isolamento-modal-nota{ margin-top:10px; font-size:12.5px; color:var(--signal); font-weight:600; line-height:1.4; }
 
   #farmaco-vfg-info{
@@ -2051,7 +2070,7 @@
     <div class="chips" id="edemi-andamento"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="edemi-custom" placeholder="Frase personalizzata (sovrascrive tutto il resto)">
+    <input type="text" class="wide" id="edemi-custom" placeholder="Nota libera (aggiunta dopo la frase sugli edemi)">
   </div>
 </div>
 
@@ -2065,6 +2084,10 @@
   <div class="group">
     <div class="group-label">Linguaggio</div>
     <div class="chips" id="neuro-linguaggio"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Pupille</div>
+    <div class="finding-list" id="neuro-pupille"></div>
   </div>
   <div class="group">
     <div class="group-label">Mingazzini</div>
@@ -2164,12 +2187,12 @@ const state = {
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
   respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:[new Set()], reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
+  torace: { mv:'presente', mvLoc:[new Set()], mvSel:['presente'], mvLocPerTipo:{}, reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
-  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'' }
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'' }
 };
 
 /* ============================================================
@@ -4709,6 +4732,29 @@ function applyStateObject(o){
       state.torace.mvLoc = [convertiSedeTorace(raw || [])];
     }
   }
+  // MV multiplo: Ridotto/Abolito/Aspro selezionabili insieme, ciascuno con
+  // la sua sede (mvSel = valori nell'ordine in cui sono stati scelti,
+  // mvLocPerTipo = blocchi sede per ciascuno). mv/mvLoc restano allineati
+  // al PRIMO valore scelto, per compatibilità con le schede vecchie e con
+  // eventuali dispositivi che hanno ancora la versione precedente dell'app
+  {
+    const validi = new Set(OPT.toraceMv.map(x => x.value));
+    state.torace.mvLocPerTipo = {};
+    if(Array.isArray(o.torace?.mvSel)){
+      state.torace.mvSel = o.torace.mvSel.filter(v => validi.has(v));
+      const salvati = o.torace.mvLocPerTipo || {};
+      Object.keys(salvati).forEach(k => {
+        const arr = salvati[k] || [];
+        state.torace.mvLocPerTipo[k] = Array.isArray(arr[0])
+          ? arr.map(b => convertiSedeTorace(b))
+          : [convertiSedeTorace(arr)];
+      });
+    } else {
+      state.torace.mvSel = state.torace.mv && validi.has(state.torace.mv) ? [state.torace.mv] : [];
+      if(state.torace.mv) state.torace.mvLocPerTipo[state.torace.mv] = state.torace.mvLoc;
+    }
+    allineaMvLegacy();
+  }
   state.torace.reperti = new Set(o.torace?.reperti || (tagNormaleAttivo() ? ['non_rumori'] : []));
   // migrazione: le vecchie voci sibili separate confluiscono nell'unica
   // "sibili/fischi/gemiti" con sede, riportando la sfumatura come atomo
@@ -5064,6 +5110,9 @@ function applyStateObject(o){
   state.neuro.emineglect = o.neuro?.emineglect ?? '';
   state.neuro.occhiDeviati = o.neuro?.occhiDeviati ?? '';
   state.neuro.deviazioneFacciale = o.neuro?.deviazioneFacciale ?? '';
+  state.neuro.pupille = new Set(o.neuro?.pupille || []);
+  state.neuro.pupilleCoriaLato = o.neuro?.pupilleCoriaLato ?? '';
+  state.neuro.pupilleCicliaLato = o.neuro?.pupilleCicliaLato ?? '';
 }
 // tiene allineato a mano con lo stato iniziale definito sopra
 function resetFormToDefaults(){
@@ -5609,6 +5658,87 @@ function renderHeaderBadge(){
   }
 }
 
+// pressione prolungata (1,5 s) su un elemento: usata sui pallini dei
+// settori per "svuota settore", apposta nascosta per non cancellare nulla
+// per errore. Si annulla se il dito si sposta o si stacca prima del tempo;
+// durante la pressione il pallino si colora di rosso come avviso
+function attivaPressioneProlungata(el, azione){
+  const DURATA_MS = 1500;
+  let timer = null, startX = 0, startY = 0;
+  const annulla = () => {
+    clearTimeout(timer); timer = null;
+    el.classList.remove('in-pressione');
+  };
+  el.addEventListener('pointerdown', (e) => {
+    startX = e.clientX; startY = e.clientY;
+    el.dataset.pressioneScattata = '';
+    el.classList.add('in-pressione');
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      el.classList.remove('in-pressione');
+      el.dataset.pressioneScattata = '1';
+      if(navigator.vibrate) try{ navigator.vibrate(40); }catch(err){}
+      azione();
+    }, DURATA_MS);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if(timer && (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10)) annulla();
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => el.addEventListener(ev, () => { if(timer) annulla(); }));
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// schede presenti nei letti di un settore (solo quelle che esistono davvero)
+function schedeDelSettore(settore){
+  const wardMap = getWardMap();
+  const letti = wardMap[settore] || [];
+  const nomi = new Set(letti.map(bedName));
+  const patients = loadPatients();
+  return Object.entries(patients)
+    .filter(([id, p]) => nomi.has(p.name))
+    .sort((a, b) => letti.indexOf(a[1].name.replace('Letto ', '')) - letti.indexOf(b[1].name.replace('Letto ', '')));
+}
+let settoreDaSvuotare = null;
+function apriSvuotaSettore(settore){
+  const schede = schedeDelSettore(settore);
+  const corpo = document.getElementById('svuota-settore-corpo');
+  const btn = document.getElementById('svuota-settore-conferma');
+  settoreDaSvuotare = settore;
+  if(!schede.length){
+    corpo.innerHTML = `<div class="isolamento-modal-riga">Nessuna scheda da eliminare in ${escapeHtml(settore)}.</div>`;
+    btn.style.display = 'none';
+  } else {
+    const n = schede.length;
+    corpo.innerHTML =
+      `<div class="isolamento-modal-riga">Eliminare ${n === 1 ? 'la scheda' : 'tutte le ' + n + ' schede'} di <b>${escapeHtml(settore)}</b>?</div>` +
+      `<div class="isolamento-modal-riga" style="color:var(--ink-dim); font-size:13px;">${schede.map(([id,p]) => escapeHtml(p.name.replace('Letto ', ''))).join(', ')}</div>`;
+    btn.textContent = n === 1 ? 'Elimina 1 scheda' : `Elimina ${n} schede`;
+    btn.style.display = '';
+  }
+  document.getElementById('svuota-settore-overlay').classList.add('show');
+}
+function chiudiSvuotaSettore(){
+  settoreDaSvuotare = null;
+  document.getElementById('svuota-settore-overlay').classList.remove('show');
+}
+function confermaSvuotaSettore(){
+  const settore = settoreDaSvuotare;
+  if(!settore){ chiudiSvuotaSettore(); return; }
+  const schede = schedeDelSettore(settore);
+  const patients = loadPatients();
+  let apertaEliminata = false;
+  schede.forEach(([id]) => {
+    delete patients[id];
+    if(id === currentPatientId) apertaEliminata = true;
+  });
+  savePatients(patients);
+  chiudiSvuotaSettore();
+  if(apertaEliminata) chiudiPaziente(); // già richiama renderWardMap()
+  else renderWardMap();
+  showToast(`${settore}: ${schede.length} ${schede.length === 1 ? 'scheda eliminata' : 'schede eliminate'}`);
+}
+
 function renderWardMap(){
   const patients = loadPatients();
   const consegneCorrenti = loadConsegne();
@@ -5633,7 +5763,13 @@ function renderWardMap(){
     tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
     tab.textContent = s.replace('Settore ', '');
     tab.title = s;
-    tab.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderWardMap(); };
+    tab.onclick = () => {
+      // se il tocco era una pressione prolungata (vedi attivaPressioneProlungata),
+      // il click che il browser emette subito dopo va ignorato
+      if(tab.dataset.pressioneScattata === '1'){ tab.dataset.pressioneScattata = ''; return; }
+      settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderWardMap();
+    };
+    attivaPressioneProlungata(tab, () => apriSvuotaSettore(s));
     tabsEl.appendChild(tab);
   });
   const separatore = document.createElement('div');
@@ -7932,13 +8068,36 @@ function getLocSetArray(mappa, chiave){
   return mappa[chiave];
 }
 
+// tiene mv/mvLoc (formato storico, un solo valore) allineati al primo
+// valore di mvSel — vedi applyStateObject
+function allineaMvLegacy(){
+  const t = state.torace;
+  t.mv = t.mvSel[0] || '';
+  t.mvLoc = t.mv ? getLocSetArray(t.mvLocPerTipo, t.mv) : [new Set()];
+}
 function renderToraceMv(){
   const el = document.getElementById('torace-mv');
   el.innerHTML = '';
+  const t = state.torace;
   OPT.toraceMv.forEach(opt => {
-    const active = state.torace.mv === opt.value;
-    const onClickChip = () => { state.torace.mv = active ? '' : opt.value; update(); };
-    const builder = opt.noLoc ? null : (inner) => costruisciSedeToraciceMulti(inner, state.torace.mvLoc, OPT.toraceMvExtra);
+    const active = t.mvSel.includes(opt.value);
+    // "Presente su TAP"/"Ventila bilateralmente" (noLoc) sono esclusivi con
+    // tutto il resto; Ridotto/Abolito/Aspro si combinano tra loro
+    const onClickChip = () => {
+      if(active){
+        t.mvSel = t.mvSel.filter(v => v !== opt.value);
+        delete t.mvLocPerTipo[opt.value];
+      } else if(opt.noLoc){
+        t.mvSel = [opt.value];
+        t.mvLocPerTipo = {};
+      } else {
+        const noLoc = new Set(OPT.toraceMv.filter(x => x.noLoc).map(x => x.value));
+        t.mvSel = t.mvSel.filter(v => !noLoc.has(v)).concat(opt.value);
+      }
+      allineaMvLegacy();
+      update();
+    };
+    const builder = opt.noLoc ? null : (inner) => costruisciSedeToraciceMulti(inner, getLocSetArray(t.mvLocPerTipo, opt.value), OPT.toraceMvExtra);
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
   });
 }
@@ -8437,6 +8596,42 @@ function renderNeuroMotorio(){
   });
 }
 
+// Pupille: "Iso-iso" esclude le altre due; "Anisocoriche" e "Anisocicliche"
+// si combinano tra loro, ciascuna con la sua tendina del lato
+function renderNeuroPupille(){
+  const el = document.getElementById('neuro-pupille');
+  if(!el) return;
+  el.innerHTML = '';
+  const n = state.neuro;
+  const s = n.pupille;
+  const opzioni = [
+    { value:'iso', label:'Iso-iso' },
+    { value:'anisocoriche', label:'Anisocoriche', lati:[{value:'sx', label:'Sx > Dx'}, {value:'dx', label:'Dx > Sx'}], campo:'pupilleCoriaLato' },
+    { value:'anisocicliche', label:'Anisocicliche', lati:[{value:'sx', label:'Irregolare Sx'}, {value:'dx', label:'Irregolare Dx'}], campo:'pupilleCicliaLato' }
+  ];
+  opzioni.forEach(opt => {
+    const active = s.has(opt.value);
+    const onClickChip = () => {
+      if(active){
+        s.delete(opt.value);
+        if(opt.campo) n[opt.campo] = '';
+      } else if(opt.value === 'iso'){
+        s.clear(); s.add('iso');
+        n.pupilleCoriaLato = ''; n.pupilleCicliaLato = '';
+      } else {
+        s.delete('iso'); s.add(opt.value);
+      }
+      update();
+    };
+    const builder = opt.lati ? (inner) => {
+      renderGruppoChipInline(inner, null, opt.lati,
+        v => n[opt.campo] === v,
+        (v, vAttivo) => { n[opt.campo] = vAttivo ? '' : v; update(); });
+    } : null;
+    el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
+  });
+}
+
 function renderNeuroMingazzini(){
   const el = document.getElementById('neuro-mingazzini');
   el.innerHTML = '';
@@ -8607,8 +8802,8 @@ const OPT = {
     {value:'base', label:'Base'}
   ],
   toraceLato: [
-    {value:'dx', label:'Dx'},
-    {value:'sx', label:'Sx'}
+    {value:'sx', label:'Sx'},
+    {value:'dx', label:'Dx'}
   ],
   toraceMvExtra: [],
   toraceSottotipoSuono: [
@@ -8727,8 +8922,8 @@ const OPT = {
     {value:'ematuria', label:'Ematuria', frag:'ematuria'}
   ],
   cuteLato: [
-    {value:'dx', label:'Dx'},
-    {value:'sx', label:'Sx'}
+    {value:'sx', label:'Sx'},
+    {value:'dx', label:'Dx'}
   ],
   cuteArti: [
     {value:'aaii', label:'AAII'},
@@ -8788,8 +8983,8 @@ const OPT = {
     {value:'positivo', label:'Positivo', hasLoc:true}
   ],
   neuroLato: [
-    {value:'dx', label:'Destra'},
-    {value:'sx', label:'Sinistra'}
+    {value:'sx', label:'Sinistra'},
+    {value:'dx', label:'Destra'}
   ]
 };
 // collega ogni opt.tipoDrawer (es. 'cicatrici', 'ernie') alla sua lista di
@@ -8904,6 +9099,7 @@ function renderAll(){
 
   renderMulti('neuro-generale', OPT.neuroGenerale, ()=>state.neuro.generale);
   renderNeuroLinguaggio();
+  renderNeuroPupille();
   renderNeuroMingazzini();
   renderNeuroMotorio();
   renderSingle('neuro-emisindrome', OPT.neuroLato, ()=>state.neuro.emisindrome, v=>{
@@ -9111,13 +9307,8 @@ function composeCuore(){
 
 function composeToraceClean(){
   const t = state.torace;
-  const mvOpt = OPT.toraceMv.find(o => o.value === t.mv);
-  let mvText = '';
-  let mvLoc = '';
-  if(mvOpt){
-    mvLoc = comporreSedeToraceMulti(t.mvLoc);
-    mvText = mvOpt.noLoc || !mvLoc ? mvOpt.frag : `${mvOpt.frag} ${mvLoc}`;
-  }
+  const mvItems = (t.mvSel || []).map(v => OPT.toraceMv.find(o => o.value === v)).filter(Boolean)
+    .map(opt => ({ opt, loc: opt.noLoc ? '' : comporreSedeToraceMulti(t.mvLocPerTipo[opt.value] || []) }));
 
   const repertiSelezionati = OPT.toraceReperti.filter(o => t.reperti.has(o.value));
   // per ciascun reperto teniamo separati il frammento testuale e, se previsto,
@@ -9138,35 +9329,29 @@ function composeToraceClean(){
     return { frag, loc, text: loc ? `${frag} ${loc}` : frag };
   });
 
-  // se il MV ha una sede e un reperto condivide ESATTAMENTE la stessa sede
+  // se un MV ha una sede e un reperto condivide ESATTAMENTE la stessa sede
   // (es. entrambi "base dx"), le due frasi si fondono con "con" invece di
   // essere elencate separate, evitando di ripetere due volte la sede:
   // "MV ridotto in base dx con fini crepitii" invece di
-  // "MV ridotto in base dx, fini crepitii in base dx"
-  let corpoParti;
-  if(mvOpt && mvLoc){
-    const idx = repItems.findIndex(r => r.loc && r.loc === mvLoc);
-    if(idx !== -1){
-      // "bilateralmente" è un avverbio riferito a tutto il reperto fuso,
-      // non solo alla sede citata subito dopo "MV [aggettivo]": si legge
-      // meglio spostato in fondo alla frase fusa ("MV ridotto alle basi
-      // con fini crepitii bilateralmente") invece che incastrato in mezzo
-      // ("MV ridotto alle basi bilateralmente con fini crepitii")
-      let locCondivisa = mvLoc;
-      let suffissoFinale = '';
-      if(/\bbilateralmente\b/.test(locCondivisa)){
-        locCondivisa = locCondivisa.replace(/\s*bilateralmente\b/, '').trim();
-        suffissoFinale = ' bilateralmente';
-      }
-      const mvTextFuso = mvOpt.noLoc || !locCondivisa ? mvOpt.frag : `${mvOpt.frag} ${locCondivisa}`;
-      const fuso = `${mvTextFuso} con ${repItems[idx].frag}${suffissoFinale}`;
-      const resto = repItems.filter((_, i) => i !== idx).map(r => r.text);
-      corpoParti = [fuso, ...resto].filter(Boolean);
+  // "MV ridotto in base dx, fini crepitii in base dx". Con più MV (es.
+  // abolito in base dx, ridotto in base sx) "MV" compare solo nel primo
+  const usati = new Set();
+  const mvParti = mvItems.map((m, i) => {
+    const frag = i === 0 ? m.opt.frag : m.opt.frag.replace(/^MV\s+/, '');
+    if(m.opt.noLoc || !m.loc) return frag;
+    const idx = repItems.findIndex((r, j) => !usati.has(j) && r.loc && r.loc === m.loc);
+    if(idx === -1) return `${frag} ${m.loc}`;
+    usati.add(idx);
+    // "bilateralmente" va in fondo alla frase fusa ("MV ridotto alle basi
+    // con fini crepitii bilateralmente"), non in mezzo
+    let loc = m.loc, suffisso = '';
+    if(/\bbilateralmente\b/.test(loc)){
+      loc = loc.replace(/\s*bilateralmente\b/, '').trim();
+      suffisso = ' bilateralmente';
     }
-  }
-  if(!corpoParti){
-    corpoParti = [mvText, ...repItems.map(r => r.text)].filter(Boolean);
-  }
+    return `${loc ? frag + ' ' + loc : frag} con ${repItems[idx].frag}${suffisso}`;
+  });
+  const corpoParti = [...mvParti, ...repItems.filter((_, j) => !usati.has(j)).map(r => r.text)].filter(Boolean);
   if(!corpoParti.length) return '';
   const body = corpoParti.join(', ') + '.';
 
@@ -9330,10 +9515,22 @@ function composeAlvoAddome(alvo){
   return `Alvo non canalizzato in ${ordinaleGiornata(numeroGiornata)} giornata.`;
 }
 
+// nota libera degli edemi: prima sovrascriveva tutto il resto, ora si
+// comporta come gli altri box liberi (coscienza, addome, cute) — viene
+// aggiunta DOPO la frase dei tag: iniziale maiuscola = nuova frase,
+// minuscola = continua la frase precedente con la virgola; da sola (nessun
+// tag) diventa lei stessa la frase, con maiuscola e punto
 function composeEdemi(){
+  const base = composeEdemiTag();
+  const nota = (state.edemi.custom || '').trim();
+  if(!nota) return base;
+  const chiusa = /[.!?]$/.test(nota) ? '' : '.';
+  if(!base) return cap(nota) + chiusa;
+  if(/^[A-ZÀ-Ý]/.test(nota)) return base + ' ' + nota + chiusa;
+  return base.replace(/\.$/, '') + ', ' + nota + chiusa;
+}
+function composeEdemiTag(){
   const e = state.edemi;
-  const custom = (e.custom || '').trim();
-  if(custom) return custom.endsWith('.') ? custom : custom + '.';
 
   if(e.base === 'non_edemi') return 'Non edemi.';
   if(e.base === 'non_declivi'){
@@ -9478,10 +9675,15 @@ function composeDiuresi(){
   if(modOpt) parts.push(modOpt.label);
   if(d.volume) parts.push(`${d.volume} ml`);
   if(urineOpt) parts.push(urineOpt.frag);
-  if(note) parts.push(note);
 
-  // se non è stato selezionato/scritto assolutamente nulla, ometti l'intera frase
-  if(parts.length === 0) return '';
+  // solo nota libera, nessun tag né volume: la nota diventa una frase a sé
+  // (iniziale maiuscola, punto finale), senza il prefisso "Diuresi" —
+  // altrimenti uscirebbe "Diuresi Oliguria."/"Diuresi fimosi."
+  if(parts.length === 0){
+    if(!note) return '';
+    return cap(note) + (/[.!?]$/.test(note) ? '' : '.');
+  }
+  if(note) parts.push(note);
   return 'Diuresi ' + parts.join(', ') + '.';
 }
 
@@ -9615,6 +9817,15 @@ function composeNeuro(){
   const linguaggioLabel = { non_disartria:'non disartria', disartrico:'disartrico', afasico:'afasico' };
   const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
   if(ling.length) parts.push(joinIt(ling));
+
+  if(n.pupille && n.pupille.has('iso')){
+    parts.push('pupille isocicliche e isocoriche');
+  } else if(n.pupille && n.pupille.size){
+    const pezzi = [];
+    if(n.pupille.has('anisocoriche')) pezzi.push('anisocoriche' + (n.pupilleCoriaLato ? ', midriatica la ' + n.pupilleCoriaLato : ''));
+    if(n.pupille.has('anisocicliche')) pezzi.push('anisocicliche' + (n.pupilleCicliaLato ? ', irregolare la ' + n.pupilleCicliaLato : ''));
+    parts.push('pupille ' + pezzi.join(', e '));
+  }
 
   if(n.mingazzini.has('positivo')){
     parts.push('Mingazzini positivo' + (n.mingazziniLato ? ' a ' + n.mingazziniLato : ''));
@@ -10454,6 +10665,22 @@ try{
 
 <!-- modale semplice isolamento: germe + DPI del singolo paziente, vedi
      apriIsolamentoModal/chiudiIsolamentoModal -->
+<!-- conferma "svuota settore" (pressione prolungata sul pallino del
+     settore, vedi attivaPressioneProlungata/apriSvuotaSettore) -->
+<div id="svuota-settore-overlay" onclick="if(event.target===this) chiudiSvuotaSettore()">
+  <div id="svuota-settore-modal">
+    <div class="isolamento-modal-header">
+      <h2 style="color:#d9534f;">Svuota settore</h2>
+      <button class="svuota-settore-x" onclick="chiudiSvuotaSettore()">✕</button>
+    </div>
+    <div id="svuota-settore-corpo"></div>
+    <div style="display:flex; gap:10px; margin-top:14px; justify-content:flex-end;">
+      <button class="btn" onclick="chiudiSvuotaSettore()">Annulla</button>
+      <button class="btn" id="svuota-settore-conferma" onclick="confermaSvuotaSettore()" style="background:#d9534f; border-color:#d9534f; color:#fff;">Elimina</button>
+    </div>
+  </div>
+</div>
+
 <div id="isolamento-modal-overlay" onclick="if(event.target===this) chiudiIsolamentoModal()">
   <div id="isolamento-modal">
     <div class="isolamento-modal-header">
