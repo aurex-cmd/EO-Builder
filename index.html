@@ -1529,6 +1529,21 @@
   </div>
 
   <div class="group">
+    <div class="group-label" style="text-align:center;">Nuovo giorno: riparti da una scheda vuota (isolamento escluso)</div>
+    <!-- a differenza delle due impostazioni sopra, questa NON è una
+         preferenza di dispositivo: vale per tutto l'account (vedi
+         RESET_GIORNALIERO_KEY) — un collega su un altro dispositivo la
+         vede uguale -->
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <div class="chip" id="impostazioni-resetgiorno-si" onclick="impostaResetGiornaliero(true)">Sì</div>
+      <div class="chip" id="impostazioni-resetgiorno-no" onclick="impostaResetGiornaliero(false)">No</div>
+    </div>
+    <div style="font-size:12px; color:var(--ink-dim); text-align:center; margin-top:6px;">
+      Se sì, aprendo (o aggiornando i vitali di) una scheda il cui ultimo salvataggio è di un giorno diverso da oggi, l'intero esame obiettivo — sesso compreso — torna vuoto, come per un paziente nuovo. L'esame di ieri non si perde: resta comunque consultabile in Diari → "ieri".
+    </div>
+  </div>
+
+  <div class="group">
     <div class="ric-lista-riga" onclick="toggleImpostazioniReparto()">
       <span class="ric-lista-nome">Editor reparto</span>
       <span class="admit-chev" id="impostazioni-reparto-chev">›</span>
@@ -2321,7 +2336,7 @@ function setLocalAndCloud(key, rawValue){
 }
 
 // le chiavi che l'app tiene in memoria e sincronizza col cloud
-const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1'];
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1'];
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -3667,11 +3682,16 @@ function apriEsameObiettivoInline(ricoveroId){
   setLocalAndCloud(LAST_PATIENT_KEY, currentPatientId);
   applyStateObject(p.state);
   // stesso azzeramento automatico di selezionaPaziente(): parametri vitali
-  // di un giorno diverso da oggi vanno ripuliti all'apertura
+  // di un giorno diverso da oggi vanno ripuliti all'apertura — oppure tutto
+  // l'esame (isolamento escluso) se è attivo il reset giornaliero completo
   archiviaGiornoSeNecessario(rec.esameObiettivoPatientId, p);
   if(p.savedAt && !isOggi(p.savedAt)){
-    Object.assign(state.respiro, respiroVuotoDiOggi());
-    state.outputEsameManuale = '';
+    if(resetGiornalieroAttivo()){
+      applicaResetGiornalieroCompleto();
+    } else {
+      Object.assign(state.respiro, respiroVuotoDiOggi());
+      state.outputEsameManuale = '';
+    }
   }
   populateInputsFromState();
   // refreshUI(false), NON update(false): anche qui aprire per sola
@@ -5326,6 +5346,53 @@ function renderImpostazioniTagNormale(){
   if(btnNo) btnNo.classList.toggle('active', !attivo);
 }
 
+// "Nuovo giorno: riparti da zero" — A DIFFERENZA di TAG_NORMALE_KEY qui
+// sopra, questa NON è una preferenza di dispositivo: tocca le schede
+// pazienti vere, condivise da tutto il reparto, quindi va sincronizzata
+// sull'account (stesso meccanismo di WARD_MAP_KEY) — un'unica impostazione
+// per tutti, non una per dispositivo. Di default resta il comportamento
+// storico (Sì solo per i vitali, il resto della scheda resta come comodo
+// modello di partenza): chi la attiva sceglie invece di ripartire ogni
+// giorno da una scheda vuota per l'intero esame (isolamento escluso, che
+// deve restare finché il paziente non viene dimesso/eliminato — vedi
+// selezionaPaziente/aggiornaVitaleLetto, dove viene applicata).
+const RESET_GIORNALIERO_KEY = 'eo_builder_reset_giornaliero_v1';
+function resetGiornalieroAttivo(){
+  try{ return localStorage.getItem(RESET_GIORNALIERO_KEY) === '1'; }
+  catch(e){ return false; }
+}
+function impostaResetGiornaliero(attivo){
+  setLocalAndCloud(RESET_GIORNALIERO_KEY, attivo ? '1' : '0');
+  renderImpostazioniResetGiornaliero();
+}
+function renderImpostazioniResetGiornaliero(){
+  const attivo = resetGiornalieroAttivo();
+  const btnSi = document.getElementById('impostazioni-resetgiorno-si');
+  const btnNo = document.getElementById('impostazioni-resetgiorno-no');
+  if(btnSi) btnSi.classList.toggle('active', attivo);
+  if(btnNo) btnNo.classList.toggle('active', !attivo);
+}
+// applica il reset completo di un nuovo giorno a uno state già popolato con
+// quello (vecchio) del paziente: tutto torna al modello di default (stesso
+// usato per un paziente nuovo, rispetta l'impostazione "tag normale"),
+// TRANNE l'isolamento, che si preserva così com'era
+function applicaResetGiornalieroCompleto(){
+  const isolamentoDaTenere = state.isolamento;
+  applyStateObject({});
+  state.isolamento = isolamentoDaTenere;
+}
+// stessa idea di applicaResetGiornalieroCompleto() qui sopra, ma per un
+// paziente NON aperto ora (es. toccato dalla pagina Parametri vitali in
+// Reparto): qui lo stato è già nella forma "serializzata" (i Set sono
+// semplici array), quindi si riparte direttamente da DEFAULT_SNAPSHOT_JSON
+// invece di passare per applyStateObject (che produrrebbe Set veri, non
+// adatti a un oggetto che poi va salvato così com'è in localStorage)
+function statoResetGiornalieroCompleto(vecchioState){
+  const nuovo = JSON.parse(DEFAULT_SNAPSHOT_JSON);
+  nuovo.isolamento = (vecchioState && vecchioState.isolamento) || nuovo.isolamento;
+  return nuovo;
+}
+
 // "Editor reparto" resta chiuso finché non lo si apre a mano (stesso
 // meccanismo a tendina di "Box farmaci" in App — vedi toggleAppFarmaciSotto):
 // evita di mostrare sempre l'editor di settori/letti, che serve raramente,
@@ -5437,7 +5504,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
-  if(v === 'impostazioni'){ renderImpostazioniTagNormale(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+  if(v === 'impostazioni'){ renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
@@ -5852,10 +5919,16 @@ function aggiornaVitaleLetto(nome, campo, valore){
     // stesso azzeramento automatico di selezionaPaziente: l'ultimo
     // salvataggio di questo letto è di un giorno diverso, quindi i vecchi
     // parametri vitali (e un eventuale testo manuale che li citava) vanno
-    // ripuliti prima di scrivere il valore appena digitato
+    // ripuliti prima di scrivere il valore appena digitato — oppure tutto
+    // l'esame (isolamento escluso), se è attiva l'impostazione "Nuovo
+    // giorno: riparti da una scheda vuota" (RESET_GIORNALIERO_KEY)
     archiviaGiornoSeNecessario(entry[0], entry[1]);
-    entry[1].state.respiro = respiroVuotoDiOggi();
-    entry[1].state.outputEsameManuale = '';
+    if(resetGiornalieroAttivo()){
+      entry[1].state = statoResetGiornalieroCompleto(entry[1].state);
+    } else {
+      entry[1].state.respiro = respiroVuotoDiOggi();
+      entry[1].state.outputEsameManuale = '';
+    }
   }
   entry[1].state.respiro = entry[1].state.respiro || {};
 
@@ -5899,17 +5972,23 @@ function selezionaPaziente(id){
   // i parametri vitali (SatO2/PA/FC/temperatura) cambiano ogni giorno: se
   // l'ultimo salvataggio di questa scheda risale a un giorno diverso da
   // oggi, li azzeriamo automaticamente all'apertura, così non restano
-  // quelli di ieri da cancellare a mano. Tutto il resto dell'esame
-  // obiettivo (torace, addome, ecc.) resta invariato, come comodo modello
-  // di partenza.
+  // quelli di ieri da cancellare a mano. Il resto dell'esame obiettivo
+  // resta invece invariato come comodo modello di partenza — A MENO CHE
+  // non sia attiva l'impostazione "Nuovo giorno: riparti da una scheda
+  // vuota" (RESET_GIORNALIERO_KEY, account-wide): in quel caso si azzera
+  // tutto, isolamento escluso — vedi applicaResetGiornalieroCompleto
   if(p.savedAt && !isOggi(p.savedAt)){
     archiviaGiornoSeNecessario(id, p);
-    Object.assign(state.respiro, respiroVuotoDiOggi());
-    // se il giorno prima avevi migliorato a mano il testo (vedi
-    // outputEsameManuale), conteneva probabilmente i vecchi parametri
-    // scritti dentro la frase: lo scartiamo insieme ai parametri, così il
-    // testo mostrato riparte pulito e coerente con i campi appena azzerati
-    state.outputEsameManuale = '';
+    if(resetGiornalieroAttivo()){
+      applicaResetGiornalieroCompleto();
+    } else {
+      Object.assign(state.respiro, respiroVuotoDiOggi());
+      // se il giorno prima avevi migliorato a mano il testo (vedi
+      // outputEsameManuale), conteneva probabilmente i vecchi parametri
+      // scritti dentro la frase: lo scartiamo insieme ai parametri, così il
+      // testo mostrato riparte pulito e coerente con i campi appena azzerati
+      state.outputEsameManuale = '';
+    }
   }
   populateInputsFromState();
   // refreshUI(false), NON update(false): aprire una scheda vecchia per
@@ -10029,6 +10108,7 @@ document.addEventListener('keydown', (e) => {
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
   renderImpostazioniTagNormale();
+  renderImpostazioniResetGiornaliero();
   renderWardMap();
   let lastId = null;
   try{ lastId = localStorage.getItem(LAST_PATIENT_KEY); } catch(e){}
