@@ -7528,8 +7528,10 @@ function grigliaToraceABlocchi(g){
   const extra = [...g.extra];
   if(g.tap) return [new Set(['su_tap', ...extra])];
   const emi = { sx:g.emi.sx, dx:g.emi.dx };
-  // una colonna accesa per intero equivale all'emitorace
+  // una colonna accesa per intero equivale all'emitorace; entrambe le
+  // colonne (cioè tutto il torace) equivalgono a "su TAP"
   ['sx','dx'].forEach(l => { if(ZONE_TORACE.every(z => g.celle[z][l])) emi[l] = true; });
+  if(emi.sx && emi.dx) return [new Set(['su_tap', ...extra])];
   const blocchi = [];
   if(emi.sx && emi.dx){
     blocchi.push(new Set(['emitorace_dx','emitorace_sx']));
@@ -7569,25 +7571,29 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
     locSetArray.splice(0, locSetArray.length, ...nuovi);
     update();
   };
-  const colonnaAccesa = l => g.emi[l] || ZONE_TORACE.every(z => g.celle[z][l]);
+  const colonnaAccesa = l => g.tap || g.emi[l] || ZONE_TORACE.every(z => g.celle[z][l]);
+  const tutto = colonnaAccesa('sx') && colonnaAccesa('dx');
+  // "su TAP" equivale a tutto il torace: prima di modificare una casella o
+  // una colonna lo si scompone nei due emitoraci
+  const scomponiTap = () => { if(g.tap){ g.tap = false; g.emi = {sx:true, dx:true}; } };
 
   const griglia = document.createElement('div');
-  griglia.style.cssText = 'display:grid; grid-template-columns:auto 58px 58px; gap:6px 8px; align-items:center; flex-basis:100%; margin:2px 0 4px;';
+  griglia.style.cssText = 'display:grid; grid-template-columns:max-content 72px 72px; justify-content:start; gap:6px 10px; align-items:center; flex-basis:100%; margin:2px 0 4px;';
   inner.appendChild(griglia);
   const spazio = document.createElement('div');
   griglia.appendChild(spazio);
 
-  const stileCasella = 'width:58px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box; font-size:12.5px;';
+  const stileCasella = 'width:72px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box; font-size:12.5px;';
   ['sx','dx'].forEach(l => {
     const h = document.createElement('div');
-    const on = !g.tap && colonnaAccesa(l);
+    const on = colonnaAccesa(l);
     h.className = 'chip' + (on ? ' active' : '');
     h.style.cssText = stileCasella + ' font-weight:700;';
     h.textContent = l === 'sx' ? 'Sx' : 'Dx';
     h.title = 'Emitorace ' + l;
     h.onclick = (e) => {
       e.stopPropagation();
-      g.tap = false;
+      scomponiTap();
       if(on){ g.emi[l] = false; ZONE_TORACE.forEach(z => g.celle[z][l] = false); }
       else { g.emi[l] = true; ZONE_TORACE.forEach(z => g.celle[z][l] = false); }
       salva();
@@ -7598,18 +7604,18 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
   const nomiZona = { apice:'Apice', medio:'Campo medio', base:'Base' };
   ZONE_TORACE.forEach(z => {
     const lbl = document.createElement('div');
-    lbl.style.cssText = 'font-size:12.5px; color:var(--ink-dim); padding-right:4px;';
+    lbl.style.cssText = 'font-size:13.5px; font-weight:700; color:var(--ink); padding-right:6px;';
     lbl.textContent = nomiZona[z];
     griglia.appendChild(lbl);
     ['sx','dx'].forEach(l => {
-      const on = !g.tap && (g.emi[l] || g.celle[z][l]);
+      const on = g.tap || g.emi[l] || g.celle[z][l];
       const c = document.createElement('div');
       c.className = 'chip' + (on ? ' active' : '');
       c.style.cssText = stileCasella;
       c.textContent = on ? '●' : '';
       c.onclick = (e) => {
         e.stopPropagation();
-        g.tap = false;
+        scomponiTap();
         if(g.emi[l]){
           // spegnere una casella di un emitorace intero: resta il resto della colonna
           g.emi[l] = false;
@@ -7626,16 +7632,15 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
   riga.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; flex-basis:100%; margin-top:4px;';
   inner.appendChild(riga);
   const tap = document.createElement('div');
-  tap.className = 'chip' + (g.tap ? ' active' : '');
+  tap.className = 'chip' + (tutto ? ' active' : '');
   tap.style.cssText = 'font-size:12px; padding:5px 10px;';
   tap.textContent = 'su TAP';
   tap.onclick = (e) => {
     e.stopPropagation();
-    g.tap = !g.tap;
-    if(g.tap){
-      g.emi = {sx:false, dx:false};
-      ZONE_TORACE.forEach(z => g.celle[z] = {sx:false, dx:false});
-    }
+    // acceso = tutto il torace; toccandolo di nuovo si spegne tutto
+    g.tap = !tutto;
+    g.emi = {sx:false, dx:false};
+    ZONE_TORACE.forEach(z => g.celle[z] = {sx:false, dx:false});
     salva();
   };
   riga.appendChild(tap);
