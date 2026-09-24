@@ -7564,8 +7564,14 @@ function grigliaToraceABlocchi(g){
   }
   return blocchi.length ? blocchi : [new Set()];
 }
-function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
+function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions, opzioni){
   const g = blocchiToraceAGriglia(locSetArray);
+  // "sparsi" esclusivo (ronchi/crepitii/rantoli): è mutuamente esclusivo con
+  // qualsiasi sede o altro extra — toccando una casella, una colonna, su TAP
+  // o un altro extra, "Sparsi" si spegne da solo; accendendo "Sparsi" si
+  // azzera tutto il resto
+  const sparsiEsclusivo = !!(opzioni && opzioni.sparsiSenzaSede);
+  const liberaSparsi = () => { if(sparsiEsclusivo) g.extra.delete('sparsi'); };
   const salva = () => {
     const nuovi = grigliaToraceABlocchi(g);
     locSetArray.splice(0, locSetArray.length, ...nuovi);
@@ -7593,6 +7599,7 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
     h.title = 'Emitorace ' + l;
     h.onclick = (e) => {
       e.stopPropagation();
+      liberaSparsi();
       scomponiTap();
       if(on){ g.emi[l] = false; ZONE_TORACE.forEach(z => g.celle[z][l] = false); }
       else { g.emi[l] = true; ZONE_TORACE.forEach(z => g.celle[z][l] = false); }
@@ -7615,6 +7622,7 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
       c.textContent = on ? '●' : '';
       c.onclick = (e) => {
         e.stopPropagation();
+        liberaSparsi();
         scomponiTap();
         if(g.emi[l]){
           // spegnere una casella di un emitorace intero: resta il resto della colonna
@@ -7637,6 +7645,7 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
   tap.textContent = 'su TAP';
   tap.onclick = (e) => {
     e.stopPropagation();
+    liberaSparsi();
     // acceso = tutto il torace; toccandolo di nuovo si spegne tutto
     g.tap = !tutto;
     g.emi = {sx:false, dx:false};
@@ -7652,6 +7661,15 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions){
     b.textContent = opt.label;
     b.onclick = (e) => {
       e.stopPropagation();
+      // accendendo "Sparsi" esclusivo si azzera ogni sede già scelta
+      if(sparsiEsclusivo && opt.value === 'sparsi' && !on){
+        g.tap = false; g.emi = {sx:false, dx:false};
+        ZONE_TORACE.forEach(z => g.celle[z] = {sx:false, dx:false});
+        g.extra.clear(); g.extra.add('sparsi');
+        salva();
+        return;
+      }
+      if(opt.value !== 'sparsi') liberaSparsi();
       // "Dx > Sx" e "Sx > Dx" sono alternativi tra loro
       if(!on && (opt.value === 'dx_maggiore' || opt.value === 'sx_maggiore')){
         g.extra.delete('dx_maggiore'); g.extra.delete('sx_maggiore');
@@ -7732,6 +7750,34 @@ function comporreSedeTorace(locSet, suTapParola){
   // di un elenco piatto con la virgola dappertutto — stesso stile già usato
   // altrove (vedi joinIt), così due sedi diventano "X e Y" e non "X, Y"
   return joinIt(parts);
+}
+
+// sede "semplice" monolaterale: un solo blocco, un solo lato, senza extra
+// (sparsi/alte vie/asimmetrie) — restituisce {lato, zone} oppure null.
+// L'emitorace intero vale come tutte e tre le zone di quel lato
+function sedeToraceUnilaterale(locSetArray){
+  const blocchi = (locSetArray || []).filter(b => b && b.size);
+  if(blocchi.length !== 1) return null;
+  const b = blocchi[0];
+  if(['su_tap','bilaterale',...EXTRA_TORACE].some(x => b.has(x))) return null;
+  const emiDx = b.has('emitorace_dx'), emiSx = b.has('emitorace_sx');
+  if(emiDx && emiSx) return null;
+  if(emiDx || emiSx) return { lato: emiDx ? 'dx' : 'sx', zone: [...ZONE_TORACE] };
+  const dx = b.has('dx'), sx = b.has('sx');
+  if(dx === sx) return null;
+  const zone = ZONE_TORACE.filter(z => b.has(z));
+  return zone.length ? { lato: dx ? 'dx' : 'sx', zone } : null;
+}
+function sedeOmolaterale(zone){
+  const k = ZONE_TORACE.filter(z => zone.includes(z)).join('+');
+  return ({
+    'base': 'alla base omolaterale',
+    'apice': "all'apice omolaterale",
+    'medio': 'al campo medio omolaterale',
+    'medio+base': 'in medio-basale omolaterale',
+    'apice+base': 'in apico-basale omolaterale',
+    'apice+medio': "all'apice e al campo medio omolaterali"
+  })[k] || 'omolateralmente';
 }
 
 // compone il testo per più blocchi sede indipendenti (usata solo per MV):
@@ -8269,7 +8315,7 @@ function renderToraceReperti(){
             v => sottotipiSet.has(v),
             (v, sAttivo) => { sottotipiSet.clear(); if(!sAttivo) sottotipiSet.add(v); update(); });
         }
-        costruisciSedeToraciceMulti(inner, locSetArray, OPT.toraceReperteExtra);
+        costruisciSedeToraciceMulti(inner, locSetArray, OPT.toraceReperteExtra, opt);
       };
     }
     el.appendChild(creaRigaConTendina(opt.label, active, onClickChip, builder));
@@ -8950,9 +8996,9 @@ const OPT = {
   toraceReperti: [
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
     {value:'non_franchi', label:'Non franchi rumori patologici', frag:'non franchi rumori patologici', negativo:true},
-    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, diffusoParola:'diffusi'},
-    {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true, diffusoParola:'diffusi'},
-    {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true, diffusoParola:'diffusi'},
+    {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
+    {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
+    {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
     {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true, diffusoParola:'diffuso'},
     {value:'sibili_fischi_gemiti', label:'Sibili/fischi/gemiti', frag:'sibili, fischi e gemiti', hasLoc:true, diffusoParola:'diffusi'}
   ],
@@ -9455,8 +9501,10 @@ function composeToraceClean(){
       const scelta = sotto && ['piccole','medie','grandi'].find(v => sotto.has(v));
       if(scelta) frag = `rantoli a ${scelta} bolle`;
     }
-    const loc = o.hasLoc ? comporreSedeToraceMulti(t.reperteLocPerTipo[o.value], o.diffusoParola) : '';
-    return { frag, loc, text: loc ? `${frag} ${loc}` : frag };
+    const blocchi = t.reperteLocPerTipo[o.value];
+    const sparsiSoli = o.sparsiSenzaSede && (blocchi || []).some(b => b && b.has('sparsi'));
+    const loc = !o.hasLoc ? '' : sparsiSoli ? 'sparsi' : comporreSedeToraceMulti(blocchi, o.diffusoParola);
+    return { frag, loc, text: loc ? `${frag} ${loc}` : frag, uni: sparsiSoli ? null : sedeToraceUnilaterale(blocchi) };
   });
 
   // se un MV ha una sede e un reperto condivide ESATTAMENTE la stessa sede
@@ -9470,7 +9518,17 @@ function composeToraceClean(){
     const frag = i === 0 ? m.opt.frag : m.opt.frag.replace(/^MV\s+/, '');
     if(m.opt.noLoc || !m.loc) return frag;
     const idx = repItems.findIndex((r, j) => !usati.has(j) && r.loc && r.loc === m.loc);
-    if(idx === -1) return `${frag} ${m.loc}`;
+    if(idx === -1){
+      // reperto nello STESSO emitorace del MV ma su una parte soltanto della
+      // sua sede (es. MV medio-basale dx, crepitii base dx): "MV ridotto in
+      // medio-basale dx con crepitii alla base omolaterale"
+      const mu = sedeToraceUnilaterale(t.mvLocPerTipo[m.opt.value]);
+      const sub = mu ? repItems.findIndex((r, j) => !usati.has(j) && r.uni && r.uni.lato === mu.lato
+        && r.uni.zone.length < mu.zone.length && r.uni.zone.every(z => mu.zone.includes(z))) : -1;
+      if(sub === -1) return `${frag} ${m.loc}`;
+      usati.add(sub);
+      return `${frag} ${m.loc} con ${repItems[sub].frag} ${sedeOmolaterale(repItems[sub].uni.zone)}`;
+    }
     usati.add(idx);
     // "bilateralmente" va in fondo alla frase fusa ("MV ridotto alle basi
     // con fini crepitii bilateralmente"), non in mezzo
