@@ -3115,6 +3115,20 @@ function aggiungiAltroEsame(nome, testo){
   delBtn.title = 'Rimuovi esame';
   delBtn.onclick = () => { row.remove(); aggiornaRicoveroDalForm(); };
 
+  // nome "EGA" -> apre l'EGA Analyzer precompilato con i valori già scritti
+  // nel referto; alla chiusura il referto riceve commento + valori. Si apre
+  // quando si esce dal campo nome (change) o toccando il referto ancora
+  // vuoto, non mentre si digita
+  const eNomeEga = () => /^\s*ega\b/i.test(inputNome.value);
+  const apriEgaEsame = () => {
+    if(document.getElementById('ega-modal-overlay').classList.contains('show')) return;
+    apriEgaAnalyzer(textareaTesto.value, textareaTesto, null, { modo:'esame' });
+  };
+  inputNome.addEventListener('change', () => { if(eNomeEga()) apriEgaEsame(); });
+  textareaTesto.addEventListener('focus', () => {
+    if(eNomeEga() && !textareaTesto.value.trim()){ textareaTesto.blur(); apriEgaEsame(); }
+  });
+
   row.appendChild(inputNome);
   row.appendChild(textareaTesto);
   row.appendChild(delBtn);
@@ -11209,10 +11223,14 @@ function egaParseValori(rigaEga){
 // chiudiEgaAnalyzer
 let egaContestoAttivo = null;
 
-function apriEgaAnalyzer(testoDiario, textareaEl, patientId){
-  egaContestoAttivo = { textareaEl, patientId };
+function apriEgaAnalyzer(testoDiario, textareaEl, patientId, opzioni){
+  // modo 'esame': aperto da una riga "altro esame" del Ricovero col nome
+  // EGA — il referto non ha il prefisso "EGA:", i valori si leggono da
+  // tutto il box e alla chiusura il box riceve commento + valori
+  const modo = (opzioni && opzioni.modo) || 'diario';
+  egaContestoAttivo = { textareaEl, patientId, modo };
   egaResetForm();
-  const valori = egaParseValori(egaEstraiRiga(testoDiario || ''));
+  const valori = egaParseValori(modo === 'esame' ? (testoDiario || '') : egaEstraiRiga(testoDiario || ''));
   ['ph','pco2','hco3','lac'].forEach(campo => {
     const el = document.getElementById('ega-' + campo);
     if(el && valori[campo]) el.value = valori[campo];
@@ -11280,7 +11298,15 @@ function egaComponiRigaFinale(){
 
 function chiudiEgaAnalyzer(){
   const analisiFatta = document.getElementById('ega-output-card').classList.contains('show');
-  if(analisiFatta && egaContestoAttivo && egaContestoAttivo.textareaEl){
+  if(analisiFatta && egaContestoAttivo && egaContestoAttivo.textareaEl && egaContestoAttivo.modo === 'esame'){
+    const riga = egaComponiRigaFinale();
+    if(riga){
+      const el = egaContestoAttivo.textareaEl;
+      el.value = egaComponiRefertoEsame(riga.replace(/^EGA:\s*/, ''), el.value);
+      autoResizeTextarea(el);
+      aggiornaRicoveroDalForm();
+    }
+  } else if(analisiFatta && egaContestoAttivo && egaContestoAttivo.textareaEl){
     const nuovaRiga = egaComponiRigaFinale();
     if(nuovaRiga){
       const { textareaEl, patientId } = egaContestoAttivo;
@@ -11294,6 +11320,28 @@ function chiudiEgaAnalyzer(){
   }
   egaContestoAttivo = null;
   document.getElementById('ega-modal-overlay').classList.remove('show');
+}
+
+// referto dell'esame EGA nel Ricovero: commento + valori calcolati al
+// posto di quelli già scritti nel box; quello che il calcolatore non
+// gestisce (pO2, SatO2, FiO2, "in AA"...) resta in coda, e un commento
+// di una precedente apertura viene sostituito, non duplicato
+function egaComponiRefertoEsame(nuovaRiga, testoPrecedente){
+  let resto = (testoPrecedente || '')
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, d => '₀₁₂₃₄₅₆₇₈₉'.indexOf(d))
+    .replace(/[⁻⁺]/g, '');
+  const diagnosi = [...new Set(Object.values(EGA_DIAGNOSI_BREVE))].sort((a, b) => b.length - a.length);
+  const d = diagnosi.find(x => resto.trim().toLowerCase().startsWith(x));
+  if(d) resto = resto.trim().slice(d.length);
+  resto = resto
+    .replace(/\b(?:ph|pco2|hco3|lac(?:tati)?)\s*:?\s*[0-9]+(?:[.,][0-9]+)?(?:\s*(?:mmhg|mmol\/l))?/gi, '')
+    .replace(/\(\s*[,;\s]*\)/g, '')
+    .replace(/\s*[,;]\s*(?=[,;])/g, '')
+    .replace(/^[\s,;.()]+|[\s,;]+$/g, '')
+    .replace(/\s+([,;])/g, '$1')
+    .replace(/\s{2,}/g, ' ');
+  const riga = nuovaRiga.charAt(0).toUpperCase() + nuovaRiga.slice(1);
+  return resto ? `${riga}, ${resto}` : riga;
 }
 
 // scritto "EGA:" nel diario (in Diari) -> apre il modale precompilato una
