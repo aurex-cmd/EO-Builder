@@ -8247,7 +8247,6 @@ function renderOrientamento(){
     const b = document.createElement('div');
     const active = s.has(opt.value);
     b.className = 'chip' + (active ? ' active' : '');
-    b.style.cssText = 'font-size:12px; padding:5px 10px;';
     b.textContent = opt.chipLabel || g(opt);
     b.onclick = () => {
       if(!active && opt.excludes) opt.excludes.forEach(v => s.delete(v));
