@@ -6193,13 +6193,16 @@ function renderVitaliSettore(){
     // scatta al raggiungimento della lunghezza tipica per quel parametro,
     // MAI mentre si cancella (altrimenti backspaziare per correggere un
     // valore rilancerebbe in avanti da solo) — vedi AUTO_ADVANCE_VITALI.
-    // Nei rari casi con una cifra in più (es. diastolica a 3 cifre, o SpO2
-    // a 100), il salto avviene comunque dopo la lunghezza tipica: per
-    // completare il valore si riclicca a mano nel campo, come richiesto
+    // La lunghezza dipende dalla PRIMA cifra, perché certi valori sono
+    // fisiologicamente impossibili:
+    //  - sistolica: 1xx/2xx → 3 cifre; da 3 a 9 → 2 cifre (85, 60, 40…:
+    //    una sistolica di 300 o più non esiste). Lo 0 iniziale ("085")
+    //    resta valido e conta come terza cifra
+    //  - diastolica e SpO2: 1 → 3 cifre (100-130 / 100%), altrimenti 2
     const AUTO_ADVANCE_VITALI = {
-      pas: { lunghezza: 3, prossimo: 'pad' },
-      pad: { lunghezza: 2, prossimo: 'sat' },
-      sat: { lunghezza: 2, prossimo: 'fc' }
+      pas: { lunghezza: v => /^[3-9]/.test(v) ? 2 : 3, prossimo: 'pad' },
+      pad: { lunghezza: v => /^1/.test(v) ? 3 : 2, prossimo: 'sat' },
+      sat: { lunghezza: v => /^1/.test(v) ? 3 : 2, prossimo: 'fc' }
       // 'fc' non compare qui apposta: ci si ferma, non si salta da soli a TC
     };
     [['pas','pas'], ['pad','pad'], ['sat','sat'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
@@ -6211,9 +6214,27 @@ function renderVitaliSettore(){
         aggiornaVitaleLetto(nome, campo, input.value);
         const regola = AUTO_ADVANCE_VITALI[suffix];
         const inCancellazione = (e.inputType || '').startsWith('delete');
-        if(regola && !inCancellazione && input.value.length >= regola.lunghezza){
+        if(regola && !inCancellazione && input.value.length >= regola.lunghezza(input.value)){
           const prossimo = document.getElementById(`${idPrefix}-${regola.prossimo}`);
           if(prossimo) prossimo.focus();
+        }
+      });
+      // Invio (da qualsiasi campo della riga) → sistolica del paziente
+      // successivo; sull'ultimo letto chiude la tastiera. enterkeyhint
+      // chiede alla tastiera del telefono di mostrare il tasto "Avanti"
+      input.setAttribute('enterkeyhint', 'next');
+      input.addEventListener('keydown', (e) => {
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const vista = document.getElementById('vitali-settore-view');
+        const tutte = [...(vista || document).querySelectorAll('input[id$="-pas"]')];
+        const qui = tutte.indexOf(document.getElementById(`${idPrefix}-pas`));
+        const prossima = qui > -1 ? tutte[qui + 1] : null;
+        if(prossima){
+          prossima.focus();
+          prossima.scrollIntoView({ block:'center', behavior:'smooth' });
+        } else {
+          input.blur();
         }
       });
     });
@@ -9284,8 +9305,8 @@ const OPT = {
   ],
   diuresiModalita: [
     {value:'sacca', label:'attiva in sacca di CV'},
-    {value:'pappagallo', label:'in pappagallo'},
-    {value:'panno', label:'in panno'},
+    {value:'pappagallo', label:'in pappagallo', frag:'attiva in pappagallo'},
+    {value:'panno', label:'in panno', frag:'attiva in panno'},
     {value:'spontanea', label:'spontanea'}
   ],
   diuresiUrine: [
@@ -9605,8 +9626,21 @@ function composeCoscienza(){
 // (state.respiro), ma può ricevere l'oggetto "respiro" di UN ALTRO
 // paziente (vedi aggiornaVitaleLetto) per ricomporre la sua frase senza
 // dover aprire la sua scheda clinica
+// "085" → "85", "036.8" → "36.8" ("0.5" resta com'è): i numeri
+// digitati con uno zero davanti escono puliti nel diario, mentre il campo
+// conserva quello che hai scritto
+function senzaZeriIniziali(v){
+  if(v === undefined || v === null || v === '') return v;
+  return String(v).trim().replace(/^0+(?=\d)/, '');
+}
+
 function composeRespiro(r){
   r = r || state.respiro;
+  r = Object.assign({}, r, {
+    sat: senzaZeriIniziali(r.sat), pas: senzaZeriIniziali(r.pas), pad: senzaZeriIniziali(r.pad),
+    fc: senzaZeriIniziali(r.fc), tempValore: senzaZeriIniziali(r.tempValore),
+    litri: senzaZeriIniziali(r.litri), fio2: senzaZeriIniziali(r.fio2)
+  });
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
   const bilanciaAttiva = (r.tipo === 'tachipnoico' && r.tachipnoicoBilancia);
   const tipoText = r.tipo ? ((r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt)) : '';
@@ -10073,8 +10107,9 @@ function composeDiuresi(){
   const note = (d.note || '').trim();
 
   const parts = [];
-  if(modOpt) parts.push(modOpt.label);
-  if(d.volume) parts.push(`${d.volume} ml`);
+  // frag = testo nel diario, se diverso dall'etichetta del chip
+  if(modOpt) parts.push(modOpt.frag || modOpt.label);
+  if(d.volume) parts.push(`${senzaZeriIniziali(d.volume)} ml`);
   if(urineOpt) parts.push(urineOpt.frag);
 
   // solo nota libera, nessun tag né volume: la nota diventa una frase a sé
