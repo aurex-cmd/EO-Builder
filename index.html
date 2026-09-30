@@ -390,6 +390,9 @@
     letter-spacing:.01em; font-weight:500;
   }
   .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  /* Linguaggio + Aspetto generale affiancati: chip un po' più stretti per
+     stare tutti e quattro sulla stessa riga anche su telefono */
+  #coscienza-linguaggio .chip, #coscienza-aspetto .chip{ padding-left:10px; padding-right:10px; }
   .chip{
     font-family:var(--font-body);
     font-size:13px; line-height:1.3; padding:8px 14px; border-radius:12px;
@@ -1859,13 +1862,23 @@
     <div class="group-label">Atteggiamento</div>
     <div class="finding-list" id="coscienza-atteggiamento"></div>
   </div>
+  <!-- Linguaggio e Aspetto generale affiancati sulla stessa riga (se lo
+       spazio non basta, Aspetto scende sotto intero); Dolore sotto -->
   <div class="group">
-    <div class="group-label">Linguaggio</div>
-    <div class="chips" id="coscienza-linguaggio"></div>
+    <div style="display:flex; flex-wrap:wrap; gap:12px 16px;">
+      <div>
+        <div class="group-label">Linguaggio</div>
+        <div class="chips" id="coscienza-linguaggio"></div>
+      </div>
+      <div>
+        <div class="group-label">Aspetto generale</div>
+        <div class="chips" id="coscienza-aspetto"></div>
+      </div>
+    </div>
   </div>
   <div class="group">
-    <div class="group-label">Aspetto generale</div>
-    <div class="chips" id="coscienza-aspetto"></div>
+    <div class="group-label">Dolore</div>
+    <div class="chips" id="coscienza-dolore"></div>
   </div>
   <div class="group">
     <div class="group-label">Contattabilità</div>
@@ -1895,13 +1908,6 @@
         <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
       </div>
     </div>
-    <!-- fuori da #respiro-o2-dettagli apposta: quel box si nasconde con O2 in
-         AA, ma questo chip deve restare sempre visibile e cliccabile qui
-         accanto ad "altro", qualunque sia la modalità di ossigenoterapia
-         scelta (o nessuna) -->
-    <div class="inline-fields" style="margin-top:6px;">
-      <div class="chip" id="respiro-pv-stabili">PV stabili</div>
-    </div>
   </div>
   <div class="group">
     <div class="inline-fields">
@@ -1913,8 +1919,9 @@
   </div>
   <div class="group">
     <div class="group-label">Temperatura</div>
-    <div class="chips" id="temp-chips"></div>
-    <div class="inline-fields" style="margin-top:6px;">
+    <!-- TC sulla stessa riga di Apiretica/Febbrile -->
+    <div class="inline-fields">
+      <div class="chips" id="temp-chips"></div>
       <div class="field"><label>TC °C</label><input type="number" id="temp-valore" step="0.1"></div>
       <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
@@ -1935,6 +1942,7 @@
   <div class="group">
     <div class="inline-fields">
       <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
+      <div class="chips" id="diuresi-oligo"></div>
       <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
     </div>
   </div>
@@ -2190,7 +2198,7 @@ const state = {
   torace: { mv:'presente', mvLoc:[new Set()], mvSel:['presente'], mvLocPerTipo:{}, reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
-  diuresi: { modalita:'sacca', volume:'', note:'', urine:'' },
+  diuresi: { modalita:'sacca', volume:'', note:'', urine:'', oliguria:false, anuria:false },
   cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'' }
 };
@@ -5182,6 +5190,8 @@ function applyStateObject(o){
   state.diuresi.volume = o.diuresi?.volume ?? '';
   state.diuresi.urine = o.diuresi?.urine ?? '';
   state.diuresi.note = o.diuresi?.note ?? '';
+  state.diuresi.oliguria = !!o.diuresi?.oliguria;
+  state.diuresi.anuria = !!o.diuresi?.anuria;
 
   if(o.cute && o.cute.reperti !== undefined){
     if(o.cute.cicatrici !== undefined){
@@ -7487,6 +7497,14 @@ function renderSingle(containerId, options, getVal, setVal){
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   options.forEach(opt => {
+    // "vai a capo" (vedi renderMultiEsclusivo); il margine negativo evita
+    // che la riga vuota raddoppi lo spazio tra le due righe di chip
+    if(opt.spacer){
+      const sp = document.createElement('div');
+      sp.style.cssText = 'flex-basis:100%; height:0; margin-top:-8px;';
+      el.appendChild(sp);
+      return;
+    }
     const b = document.createElement('div');
     b.className = 'chip' + (getVal()===opt.value ? ' active' : '');
     b.textContent = g(opt);
@@ -9135,9 +9153,8 @@ const OPT = {
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
     {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
-    {spacer:true, gruppo:'aspetto'},
-    {value:'sofferente', m:'sofferente', f:'sofferente', excludes:['non_sofferente'], gruppo:'aspetto'},
-    {value:'non_sofferente', label:'non sofferente', excludes:['sofferente'], gruppo:'aspetto'},
+    {value:'sofferente', m:'sofferente', f:'sofferente', excludes:['non_sofferente'], gruppo:'dolore'},
+    {value:'non_sofferente', label:'non sofferente', excludes:['sofferente'], gruppo:'dolore'},
     {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','orientato','collaborante'], gruppo:'contattabilita'},
     {value:'occhi_aperti', label:'mantiene gli occhi aperti', gruppo:'contattabilita'},
     {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'},
@@ -9306,6 +9323,7 @@ const OPT = {
   diuresiModalita: [
     {value:'sacca', label:'attiva in sacca di CV'},
     {value:'pappagallo', label:'in pappagallo', frag:'attiva in pappagallo'},
+    {spacer:true},   // "in panno" e "spontanea" su una riga a sé
     {value:'panno', label:'in panno', frag:'attiva in panno'},
     {value:'spontanea', label:'spontanea'}
   ],
@@ -9444,12 +9462,21 @@ function renderAll(){
   renderAtteggiamento();
   descGruppo('linguaggio');
   descGruppo('aspetto');
+  descGruppo('dolore');
   descGruppo('contattabilita');
 
   renderRespiroTipo();
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
   document.getElementById('respiro-o2-dettagli').style.display = state.respiro.o2 !== 'AA' ? '' : 'none';
-  const chipPvStabili = document.getElementById('respiro-pv-stabili');
+  // "PV stabili" in coda ai chip dell'ossigenoterapia, sulla stessa riga di
+  // "altro": renderSingle svuota il contenitore a ogni aggiornamento, quindi
+  // il chip si ricrea qui ogni volta (sempre visibile, qualunque O2)
+  const chipPvStabili = document.createElement('div');
+  chipPvStabili.className = 'chip';
+  chipPvStabili.id = 'respiro-pv-stabili';
+  chipPvStabili.textContent = 'PV stabili';
+  chipPvStabili.style.marginLeft = '14px';
+  document.getElementById('respiro-o2').appendChild(chipPvStabili);
   if(chipPvStabili){
     chipPvStabili.classList.toggle('active', state.respiro.pvStabili);
     chipPvStabili.onclick = () => { state.respiro.pvStabili = !state.respiro.pvStabili; update(); };
@@ -9488,7 +9515,29 @@ function renderAll(){
 
   renderEdemi();
 
-  renderSingle('diuresi-modalita', OPT.diuresiModalita, ()=>state.diuresi.modalita, v=>state.diuresi.modalita=v);
+  // scegliere una modalità spegne oliguria/anuria (e viceversa, sotto)
+  renderSingle('diuresi-modalita', OPT.diuresiModalita, ()=>state.diuresi.modalita, v => {
+    state.diuresi.modalita = v;
+    if(v){ state.diuresi.oliguria = false; state.diuresi.anuria = false; }
+  });
+  // Oliguria / Anuria: combinabili tra loro ("oligo-anurico"); accesi,
+  // tolgono la modalità — l'oligo-anurico ha sempre il CV, quindi la frase
+  // dice comunque "in sacca di CV" (vedi composeDiuresi)
+  (() => {
+    const box = document.getElementById('diuresi-oligo');
+    box.innerHTML = '';
+    [['oliguria','Oliguria'], ['anuria','Anuria']].forEach(([campo, etichetta]) => {
+      const b = document.createElement('div');
+      b.className = 'chip' + (state.diuresi[campo] ? ' active' : '');
+      b.textContent = etichetta;
+      b.onclick = () => {
+        state.diuresi[campo] = !state.diuresi[campo];
+        if(state.diuresi[campo]) state.diuresi.modalita = '';
+        update();
+      };
+      box.appendChild(b);
+    });
+  })();
   renderSingle('diuresi-urine', OPT.diuresiUrine, ()=>state.diuresi.urine, v=>state.diuresi.urine=v);
 
   renderCute();
@@ -10105,6 +10154,19 @@ function composeDiuresi(){
   const modOpt = OPT.diuresiModalita.find(o => o.value === d.modalita);
   const urineOpt = OPT.diuresiUrine.find(o => o.value === d.urine);
   const note = (d.note || '').trim();
+
+  // "Oligurica, 300 ml in sacca di CV, urine normocromiche." /
+  // "Oligo-anurico, 200 ml in sacca di CV, ematuria."
+  if(d.oliguria || d.anuria){
+    const radice = d.oliguria && d.anuria ? 'oligo-anuric' : d.oliguria ? 'oliguric' : 'anuric';
+    // "in sacca di CV" solo insieme agli ml: senza quantità basta
+    // "Oligurico." / "Oligurico, urine normocromiche."
+    const pezzi = [cap(radice + (state.sesso === 'F' ? 'a' : 'o'))];
+    if(d.volume) pezzi.push(`${senzaZeriIniziali(d.volume)} ml in sacca di CV`);
+    if(urineOpt) pezzi.push(urineOpt.frag);
+    if(note) pezzi.push(note);
+    return pezzi.join(', ') + '.';
+  }
 
   const parts = [];
   // frag = testo nel diario, se diverso dall'etichetta del chip
