@@ -11715,6 +11715,23 @@ function vfgParseValori(riga){
   };
 }
 
+// creatinina già scritta NEL RESTO DEL DIARIO ("crea 1.4", "creat: 1,4",
+// "creatinina 1.4 mg/dL"...): si prende l'ULTIMA citata, e in un
+// andamento ("crea 1.8 → 1.4", "crea 1.8-1.4", "crea 1.8/1.4") l'ultimo
+// valore della serie, cioè il più recente
+function vfgTrovaCreatinina(testo){
+  const norm = (testo || '').replace(/(\d),(\d)/g, '$1.$2');
+  const re = /(?<![\p{L}])crea(?:t(?:inina)?)?\.?\s*[:=]?\s*(\d+(?:\.\d+)?(?:\s*(?:→|->|-->|>|-|\/|poi)\s*\d+(?:\.\d+)?)*)/giu;
+  let ultimo = '';
+  for(const m of norm.matchAll(re)){
+    const numeri = m[1].match(/\d+(?:\.\d+)?/g);
+    if(numeri) ultimo = numeri[numeri.length - 1];
+  }
+  // valori plausibili in mg/dL (esclude p.es. una clearance scritta dopo "crea")
+  const v = parseFloat(ultimo);
+  return (v > 0 && v < 25) ? ultimo : '';
+}
+
 // tiene traccia di quale textarea (e paziente) ha aperto il modale, per
 // poter scrivere il risultato al suo posto quando si chiude — stesso
 // principio di egaContestoAttivo
@@ -11724,6 +11741,9 @@ function apriVfgCalc(testoDiario, textareaEl, patientId){
   vfgContestoAttivo = { textareaEl, patientId };
   vfgResetForm();
   const valori = vfgParseValori(vfgEstraiRiga(testoDiario));
+  // creatinina non scritta sulla riga del trigger → la si cerca nel resto
+  // del diario (di solito è già stata scritta con gli esami del giorno)
+  if(!valori.creat) valori.creat = vfgTrovaCreatinina(testoDiario);
   ['age','weight','creat'].forEach(campo => {
     const el = document.getElementById('vfg-' + campo);
     if(el && valori[campo]) el.value = valori[campo];
