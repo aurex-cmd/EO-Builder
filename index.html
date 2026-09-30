@@ -2296,6 +2296,9 @@ let ultimoPushFallito = false;
 // ignorato in silenzio — ricaricare la pagina più volte non serviva a
 // niente perché l'errore si ripeteva sempre senza nessun avviso
 let ultimoPullFallito = false;
+// momento dell'ultimo scaricamento andato a buon fine (usato dal pull
+// automatico per non ripeterlo a raffica)
+let ultimoPullRiuscito = 0;
 
 // invia (in background, senza bloccare l'interfaccia) il valore grezzo di
 // una chiave di localStorage al database cloud dell'utente connesso.
@@ -2318,15 +2321,45 @@ function cloudPush(key, rawValue){
   if(inalterato || !supabaseClient) return codaCloudPush;
   const invio = async () => {
     try{
-      const { data } = await supabaseClient.auth.getUser();
+      const { data, error: erroreUtente } = await supabaseClient.auth.getUser();
+      // senza rete getUser fallisce: prima finiva in "non loggato" e
+      // l'invio veniva lasciato cadere in silenzio, senza ritentativo
+      if(erroreUtente) throw erroreUtente;
       const user = data && data.user;
       if(!user) return;
-      await supabaseClient.from('eo_data').upsert({
+      // schede pazienti: prima di scrivere si guarda cosa c'è ORA sul
+      // cloud. Se nel frattempo un altro dispositivo l'ha cambiato, invece
+      // di sovrascriverlo alla cieca (perdendo le sue modifiche) si fonde
+      // paziente per paziente e si invia il risultato
+      if(key === PATIENTS_KEY){
+        const { data: righe, error: erroreLettura } = await supabaseClient.from('eo_data').select('value').eq('user_id', user.id).eq('key', key);
+        if(erroreLettura) throw erroreLettura;
+        const valoreCloud = righe && righe[0] && typeof righe[0].value === 'string' ? righe[0].value : null;
+        const base = leggiValoreSincronizzato(key);
+        let attuale = rawValue;
+        try{ attuale = localStorage.getItem(key) ?? rawValue; } catch(e){}
+        if(valoreCloud !== null && valoreCloud !== base && valoreCloud !== attuale){
+          aggiornaBackupLocale(attuale, true);
+          const fuso = fondiSchedePazienti(base, attuale, valoreCloud);
+          try{ localStorage.setItem(key, fuso); } catch(e){}
+          rawValue = fuso;
+          if(typeof ricaricaSchedaApertaDopoSync === 'function') ricaricaSchedaApertaDopoSync(attuale, fuso);
+        } else {
+          rawValue = attuale;
+        }
+        if(rawValue === valoreCloud){ segnaValoreSincronizzato(key, rawValue); return; }
+      }
+      // supabase-js NON lancia eccezioni sugli errori del database: li
+      // restituisce in { error }. Prima non veniva controllato, quindi un
+      // invio respinto (sessione scaduta, rete caduta a metà) veniva
+      // segnato come "sincronizzato" — e da lì in poi mai più ritentato
+      const { error } = await supabaseClient.from('eo_data').upsert({
         user_id: user.id,
         key,
         value: rawValue,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,key' });
+      if(error) throw error;
       segnaValoreSincronizzato(key, rawValue);
       if(ultimoPushFallito){ ultimoPushFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
     } catch(e){
@@ -2366,6 +2399,66 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
 // creati prima di collegare l'account, o su un dispositivo che non aveva
 // ancora fatto login, o un invio precedente mai arrivato a destinazione) —
 // altrimenti quei dati resterebbero invisibili su ogni altro dispositivo
+// FUSIONE PAZIENTE PER PAZIENTE delle schede (chiave PATIENTS_KEY) quando
+// sia questo dispositivo sia il cloud le hanno cambiate dall'ultima
+// sincronizzazione. Prima vinceva il blocco intero più "recente": bastava
+// che il telefono, rimasto indietro (es. sessione scaduta), toccasse anche
+// solo una scheda — aprire un letto di ieri fa già un salvataggio — per
+// avere un timestamp più fresco e rimandare al cloud TUTTE le sue schede
+// vecchie, cancellando gli esami scritti nel frattempo dal PC, su ogni
+// dispositivo. Ora si confronta ogni scheda con la sua versione comune
+// (l'ultima sincronizzata):
+//  - cambiata da una parte sola → vince quella parte (anche un'eliminazione)
+//  - cambiata da entrambe → vince quella salvata più di recente
+//  - eliminata da una parte ma modificata dall'altra → si tiene la modifica
+//    (meglio una scheda da ri-eliminare che un esame perso)
+function fondiSchedePazienti(rawBase, rawLocale, rawCloud){
+  const parse = r => { try{ const o = JSON.parse(r || '{}'); return (o && typeof o === 'object') ? o : {}; } catch(e){ return {}; } };
+  const haBase = rawBase !== null && rawBase !== undefined;
+  const B = parse(rawBase), L = parse(rawLocale), C = parse(rawCloud);
+  const js = x => x === undefined ? undefined : JSON.stringify(x);
+  const risultato = {};
+  new Set([...Object.keys(L), ...Object.keys(C)]).forEach(id => {
+    const l = L[id], c = C[id], b = B[id];
+    const sl = js(l), sc = js(c), sb = js(b);
+    // per decidere un'ELIMINAZIONE conta solo quello che hai scritto: lo
+    // scatto del diario di ieri (storico) che l'app archivia da sola
+    // aprendo un letto non vale come "modificata", altrimenti una scheda
+    // cancellata dal telefono ricomparirebbe solo perché il PC l'ha aperta
+    const senzaStorico = x => { if(x === undefined) return undefined; const { storico, ...resto } = x; return JSON.stringify(resto); };
+    let scelta;
+    if(sl === sc) scelta = l;
+    else if(haBase && b !== undefined && c === undefined && senzaStorico(l) === senzaStorico(b)) scelta = undefined; // eliminata sul cloud, qui non toccata
+    else if(haBase && b !== undefined && l === undefined && senzaStorico(c) === senzaStorico(b)) scelta = undefined; // eliminata qui, sul cloud non toccata
+    else if(haBase && sl === sb) scelta = c;          // cambiata solo sul cloud
+    else if(haBase && sc === sb) scelta = l;          // cambiata solo qui
+    else if(l === undefined) scelta = c;              // c'è solo da una parte:
+    else if(c === undefined) scelta = l;              // la si tiene
+    else scelta = ((l.savedAt || 0) >= (c.savedAt || 0)) ? l : c;
+    if(scelta !== undefined) risultato[id] = scelta;
+  });
+  return JSON.stringify(risultato);
+}
+
+// dopo una fusione fatta durante un INVIO: se la scheda aperta a schermo
+// è cambiata (o è stata eliminata altrove), la si riallinea subito
+function ricaricaSchedaApertaDopoSync(rawPrima, rawDopo){
+  if(typeof currentPatientId === 'undefined' || !currentPatientId) return;
+  let prima = {}, dopo = {};
+  try{ prima = JSON.parse(rawPrima || '{}'); dopo = JSON.parse(rawDopo || '{}'); } catch(e){ return; }
+  if(JSON.stringify(prima[currentPatientId]) === JSON.stringify(dopo[currentPatientId])) return;
+  if(!dopo[currentPatientId]){
+    currentPatientId = null;
+    if(typeof resetFormToDefaults === 'function') resetFormToDefaults();
+    if(typeof refreshUI === 'function') refreshUI(false);
+    if(typeof showToast === 'function') showToast('Scheda eliminata da un altro dispositivo');
+    return;
+  }
+  applyStateObject(dopo[currentPatientId].state);
+  if(typeof populateInputsFromState === 'function') populateInputsFromState();
+  if(typeof refreshUI === 'function') refreshUI(false);
+}
+
 let ritentativoPullTimer = null;
 async function cloudPullAll(){
   if(!supabaseClient) return;
@@ -2382,13 +2475,47 @@ async function cloudPullAll(){
     const { data, error } = await supabaseClient.from('eo_data').select('key,value,updated_at').eq('user_id', user.id);
     if(error) throw error;
     const chiaviNelCloud = new Set();
+    // chiavi il cui valore locale è stato davvero sostituito da quello del
+    // cloud in questo giro: solo allora ha senso ridisegnare la scheda aperta
+    const chiaviScaricate = new Set();
     if(data){
       for(const row of data){
         chiaviNelCloud.add(row.key);
         if(typeof row.value !== 'string') continue;
+        // chi è cambiato dall'ultima sincronizzazione? Si confronta il
+        // CONTENUTO con l'ultimo valore allineato, non gli orologi: il
+        // timestamp locale viene dall'orologio di questo dispositivo e
+        // quello del cloud dall'orologio dell'altro, e bastano pochi
+        // secondi/minuti di differenza tra telefono e PC per scegliere la
+        // versione sbagliata. Gli orologi restano solo come arbitro quando
+        // sono cambiati TUTTI E DUE (conflitto vero)
+        let valoreLocaleAttuale = null;
+        try{ valoreLocaleAttuale = localStorage.getItem(row.key); } catch(e){}
+        const sincronizzato = leggiValoreSincronizzato(row.key);
+        const cloudCambiato = row.value !== sincronizzato;
+        const localeCambiato = valoreLocaleAttuale !== null && valoreLocaleAttuale !== sincronizzato;
+        if(row.value === valoreLocaleAttuale){
+          if(sincronizzato !== row.value) segnaValoreSincronizzato(row.key, row.value);
+          continue;
+        }
+        if(localeCambiato && !cloudCambiato){
+          await cloudPush(row.key, valoreLocaleAttuale);
+          continue;
+        }
+        if(row.key === PATIENTS_KEY && localeCambiato && cloudCambiato){
+          // copia di sicurezza della versione locale prima di toccarla,
+          // senza aspettare l'intervallo dei 15 minuti dei backup
+          aggiornaBackupLocale(valoreLocaleAttuale, true);
+          const fuso = fondiSchedePazienti(sincronizzato, valoreLocaleAttuale, row.value);
+          try{ localStorage.setItem(row.key, fuso); } catch(e){}
+          if(fuso === row.value){ segnaValoreSincronizzato(row.key, row.value); }
+          else { segnaValoreSincronizzato(row.key, row.value); await cloudPush(row.key, fuso); }
+          chiaviScaricate.add(row.key);
+          continue;
+        }
         const tsCloud = row.updated_at ? new Date(row.updated_at).getTime() : 0;
         const tsLocale = leggiTimestampLocale(row.key);
-        if(tsLocale > tsCloud){
+        if(localeCambiato && cloudCambiato && tsLocale > tsCloud){
           // il locale è più recente di quanto il cloud abbia davvero
           // ricevuto: probabile invio precedente non riuscito. Invece di
           // sovrascrivere la modifica locale con quella (più vecchia) del
@@ -2399,8 +2526,10 @@ async function cloudPullAll(){
           continue;
         }
         try{
+          if(row.key === PATIENTS_KEY && valoreLocaleAttuale) aggiornaBackupLocale(valoreLocaleAttuale);
           localStorage.setItem(row.key, row.value);
           segnaValoreSincronizzato(row.key, row.value);
+          chiaviScaricate.add(row.key);
         } catch(e){}
       }
     }
@@ -2422,7 +2551,19 @@ async function cloudPullAll(){
     // davvero. Mettendo il rimedio qui dentro, vale automaticamente per
     // ogni punto dell'app che chiama cloudPullAll, anche uno scritto in
     // futuro senza ricordarsi di questo problema.
-    if(typeof currentPatientId !== 'undefined' && currentPatientId && chiaviNelCloud.has(PATIENTS_KEY)){
+    ultimoPullRiuscito = Date.now();
+    // (prima bastava che la chiave ESISTESSE sul cloud per ricaricare la
+    // scheda aperta: innocuo con un pull solo all'avvio, ma con quelli
+    // automatici qui sotto ridisegnerebbe il form a ogni rientro nell'app)
+    if(typeof currentPatientId !== 'undefined' && currentPatientId && chiaviScaricate.has(PATIENTS_KEY) && !loadPatients()[currentPatientId]){
+      // la scheda aperta qui è stata eliminata su un altro dispositivo:
+      // si chiude, invece di restare a schermo come se esistesse ancora
+      currentPatientId = null;
+      if(typeof resetFormToDefaults === 'function') resetFormToDefaults();
+      if(typeof refreshUI === 'function') refreshUI(false);
+      if(typeof showToast === 'function') showToast('Scheda eliminata da un altro dispositivo');
+    }
+    if(typeof currentPatientId !== 'undefined' && currentPatientId && chiaviScaricate.has(PATIENTS_KEY)){
       const pAggiornato = loadPatients()[currentPatientId];
       if(pAggiornato){
         applyStateObject(pAggiornato.state);
@@ -2555,6 +2696,48 @@ async function aggiornaStatoSync(){
 })();
 document.addEventListener('DOMContentLoaded', () => { if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); });
 
+// PULL AUTOMATICO. Prima l'app scaricava dal cloud solo all'avvio, al
+// login e col tasto "Aggiorna" dei parametri vitali: un PC lasciato aperto
+// sulla scrivania non vedeva MAI le modifiche fatte nel frattempo dal
+// telefono — e al primo salvataggio le cancellava, perché ogni chiave
+// (es. tutte le schede pazienti) viaggia come un blocco unico e l'ultimo
+// che scrive vince. Ora scarica anche:
+//  - quando l'app torna in primo piano (passaggio telefono → PC e viceversa)
+//  - quando torna la rete
+//  - ogni 60 secondi mentre è visibile, ma solo se non si sta scrivendo
+let pullAutoInCorso = false;
+let ultimaDigitazione = 0;
+document.addEventListener('input', () => { ultimaDigitazione = Date.now(); }, true);
+function staiScrivendo(){
+  const a = document.activeElement;
+  const campo = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+  return campo || (Date.now() - ultimaDigitazione) < 15000;
+}
+async function pullAutomatico(motivo){
+  if(!supabaseClient || pullAutoInCorso || document.visibilityState !== 'visible') return;
+  if(motivo === 'timer' && staiScrivendo()) return;
+  // niente raffiche: focus + visibilitychange arrivano spesso insieme
+  if(motivo !== 'timer' && (Date.now() - ultimoPullRiuscito) < 5000) return;
+  pullAutoInCorso = true;
+  try{
+    const { data } = await supabaseClient.auth.getSession();
+    if(!(data && data.session)) return;
+    await attendiCloudPush();
+    await cloudPullAll();
+    if(typeof renderWardMap === 'function') renderWardMap();
+    if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
+    if(typeof renderConsegneLista === 'function' && document.getElementById('consegne-view')?.style.display !== 'none') renderConsegneLista();
+    if(typeof renderVitaliSettore === 'function' && document.getElementById('vitali-settore-view')?.style.display !== 'none') renderVitaliSettore();
+  } catch(e){
+  } finally {
+    pullAutoInCorso = false;
+  }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') pullAutomatico('rientro'); });
+window.addEventListener('focus', () => pullAutomatico('rientro'));
+window.addEventListener('online', () => pullAutomatico('rete'));
+setInterval(() => pullAutomatico('timer'), 60000);
+
 const PATIENTS_KEY = 'eo_builder_patients_v1';
 const LAST_PATIENT_KEY = 'eo_builder_last_patient_v1';
 // solo locale (niente sincronizzazione cloud): è una preferenza di
@@ -2575,7 +2758,7 @@ const BACKUP_KEY = 'eo_builder_backup_patients_v1';
 const BACKUP_INTERVALLO_MS = 15 * 60 * 1000; // una nuova copia al massimo ogni 15 minuti...
 const BACKUP_MAX = 3;                        // ...tenendo le ultime 3
 
-function aggiornaBackupLocale(rawValue){
+function aggiornaBackupLocale(rawValue, forza){
   try{
     let backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
     const ultimo = backups[backups.length - 1];
@@ -2584,7 +2767,9 @@ function aggiornaBackupLocale(rawValue){
     // nuova voce (capita spesso: molti salvataggi non cambiano i dati
     // pazienti, es. un tocco ai soli parametri vitali di un altro letto)
     if(ultimo && ultimo.data === rawValue) return;
-    if(!ultimo || (ora - ultimo.ts) >= BACKUP_INTERVALLO_MS){
+    // forza: copia fatta dalla sincronizzazione un attimo prima di
+    // sostituire o fondere le schede locali con quelle del cloud
+    if(forza || !ultimo || (ora - ultimo.ts) >= BACKUP_INTERVALLO_MS){
       backups.push({ ts: ora, data: rawValue });
       if(backups.length > BACKUP_MAX) backups = backups.slice(backups.length - BACKUP_MAX);
       localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
@@ -8922,10 +9107,10 @@ const OPT = {
     {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'non_collaborante', label:'non collaborante', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'parzialmente_collaborante', label:'parzialmente collaborante', excludes:['collaborante','non_collaborante'], gruppo:'atteggiamento'},
-    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso'], gruppo:'atteggiamento'},
+    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso','oppositivo'], gruppo:'atteggiamento'},
     {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
     {value:'astenico', m:'astenico', f:'astenica', gruppo:'atteggiamento'},
-    {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo'], gruppo:'atteggiamento'},
+    {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo','tranquillo'], gruppo:'atteggiamento'},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
     {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
@@ -9315,7 +9500,8 @@ function renderAll(){
    ============================================================ */
 // descrittori che nei referti reali si legano a "tranquillo/a" con "ma"
 // (es. "rallentato ma tranquillo", "disorientata ma tranquilla")
-const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','mutacico','oppositivo','a_tratti_oppositivo','non_collaborante'];
+// (non mutacico né oppositivo/a tratti oppositivo: con questi il "ma" non regge)
+const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','non_collaborante'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
 const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande','astenico'];
@@ -9340,19 +9526,29 @@ function composeCoscienza(){
     selected.splice(idxCollaborante, 0, tmp);
   }
 
-  const hasTranquillo = selected.some(o => o.value === 'tranquillo');
-  const partner = selected.find(o => TRANQUILLO_PARTNERS.includes(o.value));
+  const etichetta = o => {
+    const fragGiusto = o.fragM !== undefined ? (state.sesso === 'F' ? o.fragF : o.fragM) : o.frag;
+    return fragGiusto || g(o);
+  };
+  // "X ma tranquillo e collaborante": il "ma" regge TUTTO l'atteggiamento
+  // positivo (tranquillo e/o collaborante), e la coppia va in fondo
+  // all'elenco — "rallentato ma tranquillo e collaborante", non
+  // "collaborante e rallentato ma tranquillo". Vale anche col solo
+  // collaborante: "rallentato ma collaborante"
+  const MA_POSITIVI = ['tranquillo', 'collaborante'];
+  const positivi = selected.filter(o => MA_POSITIVI.includes(o.value));
+  const partners = selected.filter(o => TRANQUILLO_PARTNERS.includes(o.value));
+  const partner = positivi.length ? partners[partners.length - 1] : null;
 
   const descLabels = [];
+  let clausolaMa = '';
   selected.forEach(o => {
-    if(hasTranquillo && partner && o.value === partner.value){
-      const tranquilloOpt = OPT.coscienzaDescrittori.find(x => x.value === 'tranquillo');
-      descLabels.push(g(o) + ' ma ' + g(tranquilloOpt));
-    } else if(o.value === 'tranquillo' && hasTranquillo && partner){
-      // già incluso nella coppia "X ma tranquillo/a" sopra
+    if(partner && o.value === partner.value){
+      clausolaMa = etichetta(o) + ' ma ' + joinIt(positivi.map(etichetta));
+    } else if(partner && MA_POSITIVI.includes(o.value)){
+      // già dentro la clausola col "ma"
     } else {
-      const fragGiusto = o.fragM !== undefined ? (state.sesso === 'F' ? o.fragF : o.fragM) : o.frag;
-      descLabels.push(fragGiusto || g(o));
+      descLabels.push(etichetta(o));
     }
   });
 
@@ -9373,7 +9569,10 @@ function composeCoscienza(){
   const parts = [];
   if(primaryText) parts.push(primaryText);
   frasiInizio.forEach(o => parts.push(g(o)));
-  if(descLabels.length) parts.push(joinIt(descLabels));
+  // la clausola col "ma" contiene già una "e": si attacca con la
+  // virgola, non con un'altra "e" ("discretamente orientato, rallentato
+  // ma tranquillo e collaborante")
+  if(descLabels.length || clausolaMa) parts.push([descLabels.length ? joinIt(descLabels) : '', clausolaMa].filter(Boolean).join(', '));
   const corpo = parts.join(', ');
   let s = corpo ? cap(corpo) + '.' : '';
 
@@ -12825,6 +13024,107 @@ function soffiControllaTrigger(testoAttuale, elementoTextarea){
   }, true);
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') chiudiAurexEgg(); });
 })();
+</script>
+
+<script>
+/* ============================================================
+   INCOLLA REFERTI NEI DIARI
+   Incollando in un box dei diari (scheda clinica o vista Diari) il testo
+   di un referto — Rx/TC/AngioTC/RM/RMN ...: oppure Visita/Valutazione/
+   Consulenza ...: — tutto quello che segue i due punti diventa una riga
+   sola (a capo → spazio, parole spezzate riunite, elenchi puntati → ";").
+   Vale anche se l'intestazione l'hai scritta tu e incolli solo il corpo.
+   Tocca SOLO il testo incollato: quello che scrivi a mano (i
+   provvedimenti) resta com'è. Nel testo incollato corregge anche gli
+   accenti sbagliati (nè → né, perchè → perché, un pò → un po'...).
+   Si inserisce col comando nativo, così Annulla/Ctrl+Z riporta
+   all'originale con gli a capo.
+   ============================================================ */
+const REFERTO_INTESTAZIONE = /^\s*(?:(?:rx|tc|angio-?tc|rmn?|rm)(?![\p{L}])|(?:visita|valutazione|consulenza)(?![\p{L}]))[^:\n]{0,80}:/iu;
+// Ricoveri: box dei referti radiologici (gli "altri esami" hanno la classe
+// altro-esame-testo)
+const REFERTO_BOX_RICOVERO = ['admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale'];
+const REFERTO_PUNTO_ELENCO = /^\s*(?:[-–•*·▪►]|\d{1,2}[.)])\s+/u;
+
+function correggiAccenti(t){
+  return t
+    .replace(/(?<![\p{L}])(n|s|perch|poich|affinch|finch|bench|giacch|purch|anzich|nonch|cosicch|fuorch|sicch|macch)è(?![\p{L}])/giu, '$1é')
+    .replace(/(?<=\p{L})trè(?![\p{L}])/giu, 'tré')
+    .replace(/(?<![\p{L}])(p)ò(?![\p{L}])/giu, "$1o'");
+}
+
+// unisce le righe di UN referto (intestazione compresa) in una sola
+function unisciRigheReferto(righe){
+  let out = '';
+  righe.forEach(r => {
+    const riga = r.trim();
+    if(!riga) return;
+    const puntoElenco = REFERTO_PUNTO_ELENCO.test(riga);
+    const pulita = puntoElenco ? riga.replace(REFERTO_PUNTO_ELENCO, '') : riga;
+    if(!out){ out = pulita; return; }
+    if(puntoElenco){
+      out += /[:;.]$/.test(out) ? ' ' + pulita : '; ' + pulita;
+    } else if(/\p{Ll}-$/u.test(out) && /^\p{Ll}/u.test(pulita)){
+      out = out.slice(0, -1) + pulita;          // addo- / me → addome
+    } else {
+      out += ' ' + pulita;
+    }
+  });
+  return out.replace(/\s{2,}/g, ' ').replace(/\s+([,;.:])/g, '$1');
+}
+
+// testoPrima = quello che c'è nel box prima del cursore
+// sempreReferto: box che contengono per definizione un referto (Ricoveri:
+// Rx/TC e "altri esami"), dove l'intestazione è il nome del campo e non
+// sta nel testo — lì si uniscono sempre le righe incollate
+function formattaRefertoIncollato(incollato, testoPrima, sempreReferto){
+  const rigaCorrente = testoPrima.slice(testoPrima.lastIndexOf('\n') + 1);
+  const dentroReferto = sempreReferto || REFERTO_INTESTAZIONE.test(rigaCorrente);
+  const righe = incollato.replace(/\r\n?/g, '\n').split('\n');
+  if(!dentroReferto && !righe.some(r => REFERTO_INTESTAZIONE.test(r))) return null;
+
+  // blocchi: ogni intestazione apre un referto nuovo; le righe prima della
+  // prima intestazione continuano il referto già aperto sulla riga del
+  // cursore (se c'è), altrimenti restano com'erano
+  const blocchi = [];
+  let attuale = { referto: dentroReferto, righe: [] };
+  righe.forEach(r => {
+    if(REFERTO_INTESTAZIONE.test(r)){
+      if(attuale.righe.length) blocchi.push(attuale);
+      attuale = { referto: true, righe: [r] };
+    } else {
+      attuale.righe.push(r);
+    }
+  });
+  if(attuale.righe.length) blocchi.push(attuale);
+
+  let risultato = blocchi.map(b => b.referto ? unisciRigheReferto(b.righe) : b.righe.join('\n'))
+    .filter((x, i) => x !== '' || i > 0).join('\n');
+  // incollato subito dopo \"Visita pneumologica:\" senza spazio
+  if(dentroReferto && blocchi[0] && blocchi[0].referto && /:$/.test(rigaCorrente) && risultato && !/^\s/.test(risultato)) risultato = ' ' + risultato;
+  return risultato;
+}
+
+document.addEventListener('paste', (e) => {
+  const el = e.target;
+  if(!el || el.tagName !== 'TEXTAREA' || el.readOnly) return;
+  const boxDiario = el.id === 'output' || el.classList.contains('bed-text');
+  const boxReferto = REFERTO_BOX_RICOVERO.includes(el.id) || el.classList.contains('altro-esame-testo');
+  if(!boxDiario && !boxReferto) return;
+  const incollato = (e.clipboardData || window.clipboardData)?.getData('text');
+  if(!incollato) return;
+  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto);
+  const finale = correggiAccenti(formattato === null ? incollato : formattato);
+  if(finale === incollato) return;              // niente da cambiare: incolla normale
+  e.preventDefault();
+  el.focus();
+  let ok = false;
+  try{ ok = document.execCommand('insertText', false, finale); } catch(_){}
+  if(!ok){
+    el.setRangeText(finale, el.selectionStart, el.selectionEnd, 'end');
+    el.dispatchEvent(new Event('input', { bubbles:true }));
+  }
+}, true);
 </script>
 </body>
 </html>
