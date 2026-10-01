@@ -7490,17 +7490,23 @@ function renderRiepilogo(){
       areeTesto.push(body);
       return;
     }
+    // trigger già presenti nel testo all'apertura (es. "VFG: ..." di ieri):
+    // contano come "già visti", si apre solo scrivendone uno nuovo
+    body.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, body.value).length);
+    body.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, body.value).length);
     body.addEventListener('input', () => {
       if(diariSoloConsegneAttivo){
         // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
         // tasto premuto aggiorna SOLO quella, senza toccare né rischiare
         // di corrompere l'esame obiettivo nascosto in questo momento
         aggiornaDiarioSoloExtra(id, body.value);
-        autoResizeTextarea(body);
-        return;
+      } else {
+        aggiornaDiarioTesto(id, body.value);
       }
-      aggiornaDiarioTesto(id, body.value);
       autoResizeTextarea(body);
+      // i trigger valgono anche con "Nascondi E.O." attivo (prima no): i
+      // box, alla chiusura, riscrivono il testo e rilanciano questo stesso
+      // evento, che salva nel modo giusto (solo aggiunte o diario intero)
       egaControllaTrigger(body.value, body, id);
       vfgControllaTrigger(body.value, body, id);
       farmacoControllaTrigger(body.value, body, id);
@@ -7643,6 +7649,16 @@ function diarioRigheDiIeri(p){
 // parti restano separate da una riga vuota, e la parte "esame" diventa una
 // modifica manuale SOLO se differisce dal testo che i tag genererebbero
 // da soli (altrimenti resta agganciata ai tag, come se non l'avessi toccata)
+// salvataggio del diario dopo che un box (EGA, VFG, score, farmaco,
+// premedicazione) ha riscritto il testo: si rilancia l'evento input del
+// campo, così salva il gestore di Diari, che sa se il campo contiene il
+// diario intero o — con "Nascondi E.O." — solo le aggiunte (scrivere quel
+// testo parziale con aggiornaDiarioTesto cancellerebbe l'esame obiettivo)
+function salvaDiarioDaBox(el, patientId, testo){
+  if(el && el.isConnected){ el.dispatchEvent(new Event('input', { bubbles:true })); return; }
+  if(patientId && !diariSoloConsegneAttivo) aggiornaDiarioTesto(patientId, testo);
+}
+
 function aggiornaDiarioTesto(patientId, nuovoValore){
   const patients = loadPatients();
   const p = patients[patientId];
@@ -11721,6 +11737,43 @@ function egaResetForm(){
 // isola, nel testo del diario, solo la porzione dopo "EGA:" fino a fine
 // riga: evitiamo di cercare i valori in tutto il resto del testo, dove
 // parole come "ph" potrebbero comparire per altri motivi
+// TRIGGER EGA:/VFG CON PIÙ RIGHE NEL DIARIO. Le aggiunte passano da un
+// giorno all'altro, quindi nel diario c'è spesso già una riga "VFG: ..." o
+// "EGA: ..." di ieri. Prima il box si apriva solo se nel testo NON c'era
+// già un trigger (riscrivere "VFG" sotto quello vecchio non faceva nulla),
+// leggeva i valori dalla PRIMA riga e alla chiusura sovrascriveva la
+// PRIMA riga, cioè quella vecchia. Ora: si apre quando il numero di
+// trigger nel testo AUMENTA (ne è stato scritto uno nuovo), si lavora
+// sull'occorrenza appena scritta (quella subito prima del cursore) e alla
+// chiusura si sostituisce solo quella
+function triggerOccorrenze(re, testo){
+  const g = new RegExp(re.source, 'gi'); const out = []; let m;
+  while((m = g.exec(testo || ''))){ out.push(m.index); if(m[0] === '') g.lastIndex++; }
+  return out;
+}
+function triggerNuovo(re, el, chiaveDataset){
+  const occ = triggerOccorrenze(re, el.value);
+  const prima = el.dataset[chiaveDataset];
+  el.dataset[chiaveDataset] = String(occ.length);
+  const cursore = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+  const vicina = occ.filter(i => i <= cursore).pop();
+  const inizio = vicina !== undefined ? vicina : occ[occ.length - 1];
+  if(prima === undefined){
+    // campo mai visto: si apre solo se il trigger è stato appena digitato
+    // (finisce proprio dove sta il cursore)
+    if(inizio === undefined) return null;
+    const m = new RegExp(re.source, 'i').exec(el.value.slice(inizio));
+    return m && inizio + m[0].length === cursore ? inizio : null;
+  }
+  return occ.length > Number(prima) ? inizio : null;
+}
+function triggerSostituisci(re, testo, inizio, riga){
+  const da = (typeof inizio === 'number' && inizio <= testo.length) ? inizio : 0;
+  return testo.slice(0, da) + testo.slice(da).replace(new RegExp(re.source + '.*', 'i'), () => riga);
+}
+const EGA_TRIGGER_RE = /ega\s*:/;
+const VFG_TRIGGER_RE = /cockroft|cockcroft|vfg/;
+
 function egaEstraiRiga(testoCompleto){
   const m = testoCompleto.match(/ega\s*:\s*(.*)/i);
   return m ? m[1].split('\n')[0] : '';
@@ -11756,9 +11809,10 @@ function apriEgaAnalyzer(testoDiario, textareaEl, patientId, opzioni){
   // EGA — il referto non ha il prefisso "EGA:", i valori si leggono da
   // tutto il box e alla chiusura il box riceve commento + valori
   const modo = (opzioni && opzioni.modo) || 'diario';
-  egaContestoAttivo = { textareaEl, patientId, modo };
+  const inizio = opzioni && typeof opzioni.inizio === 'number' ? opzioni.inizio : null;
+  egaContestoAttivo = { textareaEl, patientId, modo, inizio };
   egaResetForm();
-  const valori = egaParseValori(modo === 'esame' ? (testoDiario || '') : egaEstraiRiga(testoDiario || ''));
+  const valori = egaParseValori(modo === 'esame' ? (testoDiario || '') : egaEstraiRiga((testoDiario || '').slice(inizio || 0)));
   ['ph','pco2','hco3','lac'].forEach(campo => {
     const el = document.getElementById('ega-' + campo);
     if(el && valori[campo]) el.value = valori[campo];
@@ -11840,9 +11894,10 @@ function chiudiEgaAnalyzer(){
       const { textareaEl, patientId } = egaContestoAttivo;
       // sostituisce solo la riga "EGA: ..." (fino a fine riga), lasciando
       // intatto tutto il resto del diario prima e dopo
-      const nuovoTesto = textareaEl.value.replace(/ega\s*:.*/i, () => nuovaRiga);
+      const nuovoTesto = triggerSostituisci(EGA_TRIGGER_RE, textareaEl.value, egaContestoAttivo.inizio, nuovaRiga);
       textareaEl.value = nuovoTesto;
-      aggiornaDiarioTesto(patientId, nuovoTesto);
+      textareaEl.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, nuovoTesto).length);
+      salvaDiarioDaBox(textareaEl, patientId, nuovoTesto);
       autoResizeTextarea(textareaEl);
     }
   }
@@ -11877,13 +11932,8 @@ function egaComponiRefertoEsame(nuovaRiga, testoPrecedente){
 // altro, non si riapre da solo; si riapre solo se si cancella e si
 // riscrive "EGA:" di nuovo (vedi renderRiepilogo)
 function egaControllaTrigger(testoAttuale, elementoTextarea, patientId){
-  const contieneEga = /ega\s*:/i.test(testoAttuale);
-  if(contieneEga && elementoTextarea.dataset.egaAperto !== '1'){
-    apriEgaAnalyzer(testoAttuale, elementoTextarea, patientId);
-    elementoTextarea.dataset.egaAperto = '1';
-  } else if(!contieneEga){
-    elementoTextarea.dataset.egaAperto = '0';
-  }
+  const inizio = triggerNuovo(EGA_TRIGGER_RE, elementoTextarea, 'egaN');
+  if(inizio !== null) apriEgaAnalyzer(testoAttuale, elementoTextarea, patientId, { inizio });
 }
 
 // Frecce sinistra/destra per spostarsi tra i campi del modale (pH -> pCO2
@@ -12031,10 +12081,10 @@ function vfgTrovaCreatinina(testo){
 // principio di egaContestoAttivo
 let vfgContestoAttivo = null;
 
-function apriVfgCalc(testoDiario, textareaEl, patientId){
-  vfgContestoAttivo = { textareaEl, patientId };
+function apriVfgCalc(testoDiario, textareaEl, patientId, inizio){
+  vfgContestoAttivo = { textareaEl, patientId, inizio: typeof inizio === 'number' ? inizio : null };
   vfgResetForm();
-  const valori = vfgParseValori(vfgEstraiRiga(testoDiario));
+  const valori = vfgParseValori(vfgEstraiRiga((testoDiario || '').slice(typeof inizio === 'number' ? inizio : 0)));
   // creatinina non scritta sulla riga del trigger → la si cerca nel resto
   // del diario (di solito è già stata scritta con gli esami del giorno)
   if(!valori.creat) valori.creat = vfgTrovaCreatinina(testoDiario);
@@ -12086,9 +12136,10 @@ function chiudiVfgCalc(){
       // sostituisce dal trigger (Cockroft/Cockcroft/VFG) fino a fine riga,
       // lasciando intatto il resto del diario prima e dopo — stesso
       // meccanismo di chiudiEgaAnalyzer
-      const nuovoTesto = textareaEl.value.replace(/(?:cockroft|cockcroft|vfg).*/i, () => nuovaRiga);
+      const nuovoTesto = triggerSostituisci(VFG_TRIGGER_RE, textareaEl.value, vfgContestoAttivo.inizio, nuovaRiga);
       textareaEl.value = nuovoTesto;
-      aggiornaDiarioTesto(patientId, nuovoTesto);
+      textareaEl.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, nuovoTesto).length);
+      salvaDiarioDaBox(textareaEl, patientId, nuovoTesto);
       autoResizeTextarea(textareaEl);
     }
   }
@@ -12114,13 +12165,9 @@ function vfgControllaTrigger(testoAttuale, elementoTextarea, patientId){
   // l'utente non aveva più toccato "Cockroft"/"VFG". Un controllo per
   // sottostringa, senza \b — la stessa impostazione già usata per "EGA:" in
   // egaControllaTrigger — non ha questo problema.
-  const contieneTrigger = /cockroft|cockcroft|vfg/i.test(testoAttuale);
-  if(contieneTrigger && elementoTextarea.dataset.vfgAperto !== '1'){
-    apriVfgCalc(testoAttuale, elementoTextarea, patientId);
-    elementoTextarea.dataset.vfgAperto = '1';
-  } else if(!contieneTrigger){
-    elementoTextarea.dataset.vfgAperto = '0';
-  }
+  // (aggiornato: ora conta le occorrenze, vedi triggerNuovo)
+  const inizio = triggerNuovo(VFG_TRIGGER_RE, elementoTextarea, 'vfgN');
+  if(inizio !== null) apriVfgCalc(testoAttuale, elementoTextarea, patientId, inizio);
 }
 
 // Frecce sinistra/destra per spostarsi tra età -> peso -> creatinina,
@@ -12740,6 +12787,8 @@ function chiudiFarmaco(){
   // dal diario (come /premedicazione e gli score; NON VFG ed EGA:, che
   // lasciano la loro riga di risultato)
   const c = farmacoTriggerCtx;
+  farmacoTriggerCtx = null;
+  document.getElementById('farmaco-modal-overlay').classList.remove('show');
   if(c && c.textareaEl){
     const el = c.textareaEl;
     const nuovo = el.value
@@ -12749,15 +12798,13 @@ function chiudiFarmaco(){
         return k === c.chiave ? ' ' : tutto;
       })
       .replace(/ +\n/g, '\n').replace(/\n +/g, '\n').replace(/^ +| +$/g, '');
+    el.dataset.farmacoAperto = '';
     if(nuovo !== el.value){
       el.value = nuovo;
-      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
       if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+      salvaDiarioDaBox(el, c.patientId, nuovo);
     }
-    el.dataset.farmacoAperto = '';
   }
-  farmacoTriggerCtx = null;
-  document.getElementById('farmaco-modal-overlay').classList.remove('show');
 }
 let farmacoTriggerCtx = null;
 
@@ -13323,21 +13370,24 @@ function aggiornaRisultatoScore(){
 }
 
 function chiudiScore(){
+  // prima si chiude il box, POI si scrive nel diario: il salvataggio
+  // rilancia i trigger, e un altro /score ancora presente nel testo deve
+  // potersi aprire senza essere richiuso subito da questa funzione
   const c = scoreContesto;
+  const riga = c ? scoreRisultato().riga : '';
+  scoreContesto = null;
+  document.getElementById('score-modal-overlay').classList.remove('show');
   if(c && c.textareaEl){
     const el = c.textareaEl;
-    const riga = scoreRisultato().riga;
     const re = new RegExp('\\/' + c.trigger + '\\b', 'i');
     const nuovo = riga ? el.value.replace(re, () => riga) : el.value;
     if(nuovo !== el.value){
       el.value = nuovo;
-      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
-      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
       el.dataset.scoreAperto = '';
+      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+      salvaDiarioDaBox(el, c.patientId, nuovo);
     }
   }
-  scoreContesto = null;
-  document.getElementById('score-modal-overlay').classList.remove('show');
 }
 
 // \"/nomescore\" in Diari: apre una volta per comparsa (come /farmaco ed EGA:)
@@ -13448,18 +13498,18 @@ function chiudiMdcInfo(){
   // box aperto con /premedicazione: alla chiusura il trigger sparisce dal
   // diario (come per gli score), senza lasciare residui nel testo
   const c = mdcPremedContesto;
+  mdcPremedContesto = null;
+  document.getElementById('mdc-modal-overlay').classList.remove('show');
   if(c && c.textareaEl){
     const el = c.textareaEl;
     const nuovo = el.value.replace(/[ \t]*\/premedicazione\b[ \t]*/i, ' ').replace(/ +\n/g, '\n').replace(/^ +| +$/g, '');
+    el.dataset.premedAperto = '';
     if(nuovo !== el.value){
       el.value = nuovo;
-      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
       if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+      salvaDiarioDaBox(el, c.patientId, nuovo);
     }
-    el.dataset.premedAperto = '';
   }
-  mdcPremedContesto = null;
-  document.getElementById('mdc-modal-overlay').classList.remove('show');
 }
 
 // ============================================================
