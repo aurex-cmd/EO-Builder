@@ -7343,6 +7343,45 @@ function toggleDiariGiorno(){
   renderRiepilogo();
 }
 
+// (spostato qui, nel primo blocco <script>: renderRiepilogo lo usa già
+// all'avvio, prima che i blocchi successivi siano eseguiti)
+// TRIGGER EGA:/VFG CON PIÙ RIGHE NEL DIARIO. Le aggiunte passano da un
+// giorno all'altro, quindi nel diario c'è spesso già una riga "VFG: ..." o
+// "EGA: ..." di ieri. Prima il box si apriva solo se nel testo NON c'era
+// già un trigger (riscrivere "VFG" sotto quello vecchio non faceva nulla),
+// leggeva i valori dalla PRIMA riga e alla chiusura sovrascriveva la
+// PRIMA riga, cioè quella vecchia. Ora: si apre quando il numero di
+// trigger nel testo AUMENTA (ne è stato scritto uno nuovo), si lavora
+// sull'occorrenza appena scritta (quella subito prima del cursore) e alla
+// chiusura si sostituisce solo quella
+function triggerOccorrenze(re, testo){
+  const g = new RegExp(re.source, 'gi'); const out = []; let m;
+  while((m = g.exec(testo || ''))){ out.push(m.index); if(m[0] === '') g.lastIndex++; }
+  return out;
+}
+function triggerNuovo(re, el, chiaveDataset){
+  const occ = triggerOccorrenze(re, el.value);
+  const prima = el.dataset[chiaveDataset];
+  el.dataset[chiaveDataset] = String(occ.length);
+  const cursore = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+  const vicina = occ.filter(i => i <= cursore).pop();
+  const inizio = vicina !== undefined ? vicina : occ[occ.length - 1];
+  if(prima === undefined){
+    // campo mai visto: si apre solo se il trigger è stato appena digitato
+    // (finisce proprio dove sta il cursore)
+    if(inizio === undefined) return null;
+    const m = new RegExp(re.source, 'i').exec(el.value.slice(inizio));
+    return m && inizio + m[0].length === cursore ? inizio : null;
+  }
+  return occ.length > Number(prima) ? inizio : null;
+}
+function triggerSostituisci(re, testo, inizio, riga){
+  const da = (typeof inizio === 'number' && inizio <= testo.length) ? inizio : 0;
+  return testo.slice(0, da) + testo.slice(da).replace(new RegExp(re.source + '.*', 'i'), () => riga);
+}
+const EGA_TRIGGER_RE = /ega\s*:/;
+const VFG_TRIGGER_RE = /cockroft|cockcroft|vfg/;
+
 function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
@@ -11737,43 +11776,6 @@ function egaResetForm(){
 // isola, nel testo del diario, solo la porzione dopo "EGA:" fino a fine
 // riga: evitiamo di cercare i valori in tutto il resto del testo, dove
 // parole come "ph" potrebbero comparire per altri motivi
-// TRIGGER EGA:/VFG CON PIÙ RIGHE NEL DIARIO. Le aggiunte passano da un
-// giorno all'altro, quindi nel diario c'è spesso già una riga "VFG: ..." o
-// "EGA: ..." di ieri. Prima il box si apriva solo se nel testo NON c'era
-// già un trigger (riscrivere "VFG" sotto quello vecchio non faceva nulla),
-// leggeva i valori dalla PRIMA riga e alla chiusura sovrascriveva la
-// PRIMA riga, cioè quella vecchia. Ora: si apre quando il numero di
-// trigger nel testo AUMENTA (ne è stato scritto uno nuovo), si lavora
-// sull'occorrenza appena scritta (quella subito prima del cursore) e alla
-// chiusura si sostituisce solo quella
-function triggerOccorrenze(re, testo){
-  const g = new RegExp(re.source, 'gi'); const out = []; let m;
-  while((m = g.exec(testo || ''))){ out.push(m.index); if(m[0] === '') g.lastIndex++; }
-  return out;
-}
-function triggerNuovo(re, el, chiaveDataset){
-  const occ = triggerOccorrenze(re, el.value);
-  const prima = el.dataset[chiaveDataset];
-  el.dataset[chiaveDataset] = String(occ.length);
-  const cursore = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
-  const vicina = occ.filter(i => i <= cursore).pop();
-  const inizio = vicina !== undefined ? vicina : occ[occ.length - 1];
-  if(prima === undefined){
-    // campo mai visto: si apre solo se il trigger è stato appena digitato
-    // (finisce proprio dove sta il cursore)
-    if(inizio === undefined) return null;
-    const m = new RegExp(re.source, 'i').exec(el.value.slice(inizio));
-    return m && inizio + m[0].length === cursore ? inizio : null;
-  }
-  return occ.length > Number(prima) ? inizio : null;
-}
-function triggerSostituisci(re, testo, inizio, riga){
-  const da = (typeof inizio === 'number' && inizio <= testo.length) ? inizio : 0;
-  return testo.slice(0, da) + testo.slice(da).replace(new RegExp(re.source + '.*', 'i'), () => riga);
-}
-const EGA_TRIGGER_RE = /ega\s*:/;
-const VFG_TRIGGER_RE = /cockroft|cockcroft|vfg/;
-
 function egaEstraiRiga(testoCompleto){
   const m = testoCompleto.match(/ega\s*:\s*(.*)/i);
   return m ? m[1].split('\n')[0] : '';
