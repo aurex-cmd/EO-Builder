@@ -8570,7 +8570,7 @@ function renderAtteggiamento(){
   el.appendChild(spacer());
   ['oppositivo', 'a_tratti_oppositivo'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
   el.appendChild(spacer());
-  ['tranquillo', 'ansioso', 'astenico'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
+  ['tranquillo', 'ansioso', 'astenico', 'affaccendato'].forEach(v => { const c = creaChip(v); if(c) el.appendChild(c); });
 
   const umoreAttivo = state.coscienza.umore.attiva;
   const umoreBuilder = (inner) => {
@@ -9406,14 +9406,16 @@ const OPT = {
     {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico'], gruppo:'linguaggio'},
+    {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico','confabulante'], gruppo:'linguaggio'},
     {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
+    {value:'confabulante', m:'confabulante', f:'confabulante', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'non_collaborante', label:'non collaborante', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'parzialmente_collaborante', label:'parzialmente collaborante', excludes:['collaborante','non_collaborante'], gruppo:'atteggiamento'},
-    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso','oppositivo'], gruppo:'atteggiamento'},
+    {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso','oppositivo','affaccendato'], gruppo:'atteggiamento'},
     {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
     {value:'astenico', m:'astenico', f:'astenica', gruppo:'atteggiamento'},
+    {value:'affaccendato', m:'affaccendato', f:'affaccendata', excludes:['tranquillo'], gruppo:'atteggiamento'},
     {value:'oppositivo', m:'oppositivo alla visita', f:'oppositiva alla visita', excludes:['collaborante','a_tratti_oppositivo','tranquillo'], gruppo:'atteggiamento'},
     {value:'a_tratti_oppositivo', m:'a tratti oppositivo alla visita', f:'a tratti oppositiva alla visita', excludes:['collaborante','oppositivo'], gruppo:'atteggiamento'},
     {value:'cachettico', m:'cachettico', f:'cachettica', gruppo:'aspetto'},
