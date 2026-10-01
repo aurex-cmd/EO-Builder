@@ -509,12 +509,20 @@
      testo (.bed-text-specchio) disegnata sotto la textarea, il cui testo
      diventa trasparente SOLO quando non è in modifica: scrivendo si torna
      al testo vero, così il cursore non può mai disallinearsi */
+  /* nessuna proprietà che cambia l'impaginazione al tocco (posizione,
+     display, sfondo della textarea): su iPhone cambiarle proprio mentre il
+     campo prende il focus faceva perdere il primo tocco. Al focus cambia
+     SOLO il colore del testo: la textarea è sempre sopra, trasparente, e
+     lo sfondo lo disegna sempre la copia sotto */
   .bed-text-wrap{ position:relative; }
   .bed-text-specchio{ position:absolute; inset:0; pointer-events:none; overflow:hidden;
-    overflow-wrap:break-word; word-break:normal; display:none; }
-  .bed-text-wrap.con-ieri:not(.in-modifica) .bed-text-specchio{ display:block; }
-  .bed-text-wrap.con-ieri:not(.in-modifica) textarea.bed-text{
-    color:transparent; background:transparent; box-shadow:none; position:relative; }
+    overflow-wrap:break-word; word-break:normal; z-index:0; }
+  .bed-text-wrap textarea.bed-text{ position:relative; z-index:1; background:transparent; box-shadow:none; }
+  .bed-text-wrap.con-ieri:not(.in-modifica) textarea.bed-text{ color:transparent; }
+  .bed-text-wrap:not(.con-ieri) .bed-text-specchio,
+  .bed-text-wrap:not(.con-ieri) .bed-text-specchio *,
+  .bed-text-wrap.in-modifica .bed-text-specchio,
+  .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
   .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
   .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
