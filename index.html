@@ -14221,7 +14221,15 @@ function soffiControllaTrigger(testoAttuale, elementoTextarea){
    Si inserisce col comando nativo, così Annulla/Ctrl+Z riporta
    all'originale con gli a capo.
    ============================================================ */
-const REFERTO_INTESTAZIONE = /^\s*(?:(?:rx|tc|angio-?tc|rmn?|rm)(?![\p{L}])|(?:visita|valutazione|consulenza)(?![\p{L}]))[^:\n]{0,80}:/iu;
+// esami strumentali riconosciuti come intestazione di un referto (aggiunti
+// eco/ecografia/ecocardio/doppler, endoscopie, scintigrafie, PET, MOC...)
+const REFERTO_ESAMI = String.raw`rx|tc|angio-?tc|uro-?tc|angio-?rmn?|rmn?|eco(?:grafia|cardio(?:gramma|grafia)?|-?color-?doppler|-?doppler|tomografia)?|ecocolordoppler|doppler|egds|gastroscopia|colonscopia|rettosigmoidoscopia|scintigrafia|pet(?:-?tc)?|moc|dxa|mammografia|ortopantomografia|holter|ecg|eeg|emg|elettromiografia|spirometria|broncoscopia|toracentesi|paracentesi`;
+const REFERTO_INTESTAZIONE = new RegExp(String.raw`^\s*(?:(?:${REFERTO_ESAMI})(?![\p{L}])|(?:visita|valutazione|consulenza)(?![\p{L}]))[^:\n]{0,80}:`, 'iu');
+// anche SENZA due punti, ma solo per gli esami strumentali e solo se la
+// riga è una vera intestazione: breve e senza punto (\"ECOGRAFIA ADDOME
+// COMPLETO\", \"Rx torace a letto\")
+const REFERTO_INTESTAZIONE_NUDA = new RegExp(String.raw`^\s*(?:${REFERTO_ESAMI})(?![\p{L}])[^.:;\n]{0,60}$`, 'iu');
+const eIntestazioneReferto = r => REFERTO_INTESTAZIONE.test(r) || REFERTO_INTESTAZIONE_NUDA.test(r);
 // Ricoveri: box dei referti radiologici (gli "altri esami" hanno la classe
 // altro-esame-testo)
 const REFERTO_BOX_RICOVERO = ['admit-rxtorace','admit-rxaddome','admit-tcaddome','admit-tctorace','admit-tccerebrale'];
@@ -14260,9 +14268,9 @@ function unisciRigheReferto(righe){
 // sta nel testo — lì si uniscono sempre le righe incollate
 function formattaRefertoIncollato(incollato, testoPrima, sempreReferto){
   const rigaCorrente = testoPrima.slice(testoPrima.lastIndexOf('\n') + 1);
-  const dentroReferto = sempreReferto || REFERTO_INTESTAZIONE.test(rigaCorrente);
+  const dentroReferto = sempreReferto || eIntestazioneReferto(rigaCorrente);
   const righe = incollato.replace(/\r\n?/g, '\n').split('\n');
-  if(!dentroReferto && !righe.some(r => REFERTO_INTESTAZIONE.test(r))) return null;
+  if(!dentroReferto && !righe.some(r => eIntestazioneReferto(r))) return null;
 
   // blocchi: ogni intestazione apre un referto nuovo; le righe prima della
   // prima intestazione continuano il referto già aperto sulla riga del
@@ -14270,9 +14278,12 @@ function formattaRefertoIncollato(incollato, testoPrima, sempreReferto){
   const blocchi = [];
   let attuale = { referto: dentroReferto, righe: [] };
   righe.forEach(r => {
-    if(REFERTO_INTESTAZIONE.test(r)){
+    if(eIntestazioneReferto(r)){
       if(attuale.righe.length) blocchi.push(attuale);
-      attuale = { referto: true, righe: [r] };
+      // intestazione senza due punti ("ECOGRAFIA ADDOME COMPLETO"): si
+      // aggiungono, così una volta unita la riga resta leggibile
+      const intest = REFERTO_INTESTAZIONE.test(r) ? r : r.replace(/\s+$/, '') + ':';
+      attuale = { referto: true, righe: [intest] };
     } else {
       attuale.righe.push(r);
     }
