@@ -2434,6 +2434,8 @@ let ultimoPullFallito = false;
 // momento dell'ultimo scaricamento andato a buon fine (usato dal pull
 // automatico per non ripeterlo a raffica)
 let ultimoPullRiuscito = 0;
+// chiavi davvero scaricate dal cloud nell'ultimo pull (vedi pullAutomatico)
+let ultimoPullCambi = new Set();
 
 // invia (in background, senza bloccare l'interfaccia) il valore grezzo di
 // una chiave di localStorage al database cloud dell'utente connesso.
@@ -2613,6 +2615,7 @@ async function cloudPullAll(){
     // chiavi il cui valore locale è stato davvero sostituito da quello del
     // cloud in questo giro: solo allora ha senso ridisegnare la scheda aperta
     const chiaviScaricate = new Set();
+    ultimoPullCambi = chiaviScaricate;
     if(data){
       for(const row of data){
         chiaviNelCloud.add(row.key);
@@ -2858,16 +2861,39 @@ async function pullAutomatico(motivo){
     const { data } = await supabaseClient.auth.getSession();
     if(!(data && data.session)) return;
     await attendiCloudPush();
+    ultimoPullCambi = new Set();
     await cloudPullAll();
-    if(typeof renderWardMap === 'function') renderWardMap();
-    if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
-    if(typeof renderConsegneLista === 'function' && document.getElementById('consegne-view')?.style.display !== 'none') renderConsegneLista();
-    if(typeof renderVitaliSettore === 'function' && document.getElementById('vitali-settore-view')?.style.display !== 'none') renderVitaliSettore();
+    // si ridisegna SOLO se dal cloud è arrivato davvero qualcosa. Prima si
+    // ridisegnava a ogni pull: tornando nella finestra con un clic dentro
+    // un diario, il pull partito da quel rientro ricostruiva l'elenco
+    // subito dopo, la textarea appena cliccata veniva sostituita e il clic
+    // andava perso. E se si sta scrivendo, si aspetta che si esca dal campo
+    if(ultimoPullCambi.size) ridisegnaVisteDopoPull();
   } catch(e){
   } finally {
     pullAutoInCorso = false;
   }
 }
+let ridisegnoInSospeso = false;
+function campoAttivo(){
+  const a = document.activeElement;
+  return !!(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable));
+}
+function ridisegnaVisteDopoPull(){
+  if(campoAttivo()){ ridisegnoInSospeso = true; return; }
+  ridisegnoInSospeso = false;
+  if(typeof renderWardMap === 'function') renderWardMap();
+  if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
+  if(typeof renderConsegneLista === 'function' && document.getElementById('consegne-view')?.style.display !== 'none') renderConsegneLista();
+  if(typeof renderVitaliSettore === 'function' && document.getElementById('vitali-settore-view')?.style.display !== 'none') renderVitaliSettore();
+}
+// uscendo da un campo: se c'era un ridisegno in attesa lo si fa ora, ma
+// solo se non si è appena entrati in un altro campo (passaggio diretto da
+// un diario all'altro)
+document.addEventListener('focusout', () => {
+  if(!ridisegnoInSospeso) return;
+  setTimeout(() => { if(ridisegnoInSospeso && !campoAttivo()) ridisegnaVisteDopoPull(); }, 300);
+});
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') pullAutomatico('rientro'); });
 window.addEventListener('focus', () => pullAutomatico('rientro'));
 window.addEventListener('online', () => pullAutomatico('rete'));
