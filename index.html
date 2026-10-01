@@ -980,6 +980,10 @@
   .score-fc{ display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px;
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; }
   .score-fc .testo{ color:var(--ink); }
+  .score-scelta{ padding:9px 10px; margin-bottom:6px; background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; }
+  .score-scelta .titolo{ font-size:14px; color:var(--ink); margin-bottom:7px; font-weight:600; }
+  .score-scelta .opzioni{ display:flex; flex-wrap:wrap; gap:6px; }
+  .score-scelta .chip{ font-size:12.5px; }
   .score-fc input{ width:74px; font-size:15px; padding:6px 8px; border-radius:9px; border:1px solid var(--clay-border);
     background:var(--panel); color:var(--ink); font-family:var(--font-mono); }
   .score-risultato{ margin-top:12px; padding:12px; border-radius:14px; background:var(--panel-2);
@@ -1585,6 +1589,21 @@
         </div>
         <div class="ric-lista-riga" onclick="apriScore('padua')">
           <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Padua Prediction Score</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('lrinec')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>LRINEC</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('nihss')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>NIHSS</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('gcs')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Glasgow Coma Scale</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('hasbled')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>HAS-BLED</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('berlino')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>ARDS · criteri di Berlino</span>
         </div>
       </div>
       </div>
@@ -12601,7 +12620,8 @@ function chiudiFarmaco(){
 // riapre solo cancellando e riscrivendo lo stesso trigger da capo
 // ============================================================
 // SCORE — score clinici interattivi (Geneva, Wells, PESI/sPESI,
-// CHA2DS2-VASc, calcemia corretta, Padua). Si aprono da App → Score oppure
+// CHA2DS2-VASc, calcemia corretta, Padua, LRINEC, NIHSS, GCS, HAS-BLED,
+// criteri di Berlino per ARDS). Si aprono da App → Score oppure
 // scrivendo "/nomescore" in Diari (vedi SCORE_ALIAS): in quel caso, alla
 // chiusura, il trigger viene sostituito nel diario dalla riga del risultato.
 // Precompilazione automatica (sempre modificabile a mano):
@@ -12689,6 +12709,33 @@ function scoreRaccogliDati(patientId, testoDiario){
   // albumina sempre in g/L: un valore scritto in g/dL (1–6) viene convertito
   if(alb !== null && alb >= 1 && alb <= 6) alb = alb * 10;
   if(alb !== null && alb >= 10 && alb <= 60) d.alb = Math.round(alb * 10) / 10;
+  // altri esami (LRINEC, HAS-BLED, ARDS): ultimo valore plausibile scritto
+  d.pcr = d.gb = d.hb = d.na = d.creat = d.glic = d.pao2 = d.fio2 = null;
+  { // PCR: solo se l'unità è scritta (mg/dL o mg/L non si possono indovinare)
+    let m, g = /\b(?:pcr|crp|proteina c reattiva)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(mg\/dl|mg\/l)\b/gi;
+    while((m = g.exec(tuttoLab))){ const x = parseFloat(m[1].replace(',', '.')); d.pcr = m[2].toLowerCase() === 'mg/dl' ? Math.round(x * 100) / 10 : x; }
+  }
+  let gb = ultimo(/\b(?:gb|wbc|leucociti|globuli bianchi)\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(gb !== null && gb >= 1000) gb = gb / 1000;
+  if(gb !== null && gb >= 0.1 && gb <= 300) d.gb = Math.round(gb * 10) / 10;
+  let hb = ultimo(/\b(?:hb|hgb|emoglobina)\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(hb !== null && hb > 25 && hb <= 250) hb = hb / 10;
+  if(hb !== null && hb >= 3 && hb <= 25) d.hb = hb;
+  const na = ultimo(/\b(?:na\+?|sodio|natremia|sodiemia)\s*[:=]?\s*(\d{3}(?:[.,]\d+)?)/);
+  if(na !== null && na >= 100 && na <= 185) d.na = na;
+  let cr = ultimo(/\b(?:creat\w*|crea)\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(cr !== null && cr > 20 && cr <= 2000) cr = Math.round(cr / 88.4 * 100) / 100; // µmol/L
+  if(cr !== null && cr >= 0.1 && cr <= 20) d.creat = cr;
+  let gl = ultimo(/\b(?:glicemia|glic|glucosio|glu)\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(gl !== null && gl < 35) gl = Math.round(gl * 18); // mmol/L
+  if(gl !== null && gl >= 20 && gl <= 1500) d.glic = gl;
+  const po2 = ultimo(/\bpa?o2\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(po2 !== null && po2 >= 20 && po2 <= 700) d.pao2 = po2;
+  let fi = ultimo(/\bfio2\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  if(fi !== null && fi <= 1) fi = Math.round(fi * 100);
+  if(fi !== null && fi >= 21 && fi <= 100) d.fio2 = fi;
+  const gcs = tuttoLab.match(/\bE\s*([1-4])\s*V\s*([1-5]|T)\s*M\s*([1-6])\b/i);
+  d.gcsE = gcs ? gcs[1] : null; d.gcsV = gcs ? gcs[2].toUpperCase() : null; d.gcsM = gcs ? gcs[3] : null;
   return d;
 }
 const trovaRemota = k => d => scoreTrovaTesto(SCORE_PAROLE[k], d.remota) || null;
@@ -12885,7 +12932,136 @@ const SCORE_DB = {
         manca: c.val.eta === null ? 'Manca l\'età.' : '' };
     },
     nota: 'Con rischio alto, valutare comunque il rischio emorragico (es. IMPROVE bleeding) prima di prescrivere la profilassi; se controindicata, profilassi meccanica.'
+  },
+  lrinec: {
+    nome: 'LRINEC', sub: 'rischio di fascite necrotizzante (Wong 2004)',
+    campi: [
+      { tipo:'num', k:'pcr', label:'PCR', unita:'mg/L', auto: d => d.pcr, decimali:true, info: () => '≥ 150: +4 (mg/dL × 10 = mg/L)' },
+      { tipo:'num', k:'gb', label:'Globuli bianchi', unita:'×10³/µL', auto: d => d.gb, decimali:true, info: () => '15–25: +1 · > 25: +2' },
+      { tipo:'num', k:'hb', label:'Emoglobina', unita:'g/dL', auto: d => d.hb, decimali:true, info: () => '11–13,5: +1 · < 11: +2' },
+      { tipo:'num', k:'na', label:'Sodio', unita:'mmol/L', auto: d => d.na, info: () => '< 135: +2' },
+      { tipo:'num', k:'creat', label:'Creatinina', unita:'mg/dL', auto: d => d.creat, decimali:true, info: () => '> 1,6: +2' },
+      { tipo:'num', k:'glic', label:'Glicemia', unita:'mg/dL', auto: d => d.glic, info: () => '> 180: +1' }
+    ],
+    calcola(c){
+      const v = c.val;
+      let tot = 0;
+      if(v.pcr !== null && v.pcr >= 150) tot += 4;
+      if(v.gb !== null) tot += v.gb > 25 ? 2 : v.gb >= 15 ? 1 : 0;
+      if(v.hb !== null) tot += v.hb < 11 ? 2 : v.hb <= 13.5 ? 1 : 0;
+      if(v.na !== null && v.na < 135) tot += 2;
+      if(v.creat !== null && v.creat > 1.6) tot += 2;
+      if(v.glic !== null && v.glic > 180) tot += 1;
+      const rischio = tot <= 5 ? 'basso' : tot <= 7 ? 'intermedio' : 'alto';
+      const prob = tot <= 5 ? '< 50%' : tot <= 7 ? '50–75%' : '> 75%';
+      return { totale: tot, esito: `Rischio <b>${rischio}</b> di fascite necrotizzante (probabilità ${prob})`,
+        riga: `LRINEC score: ${tot} (rischio ${rischio})`,
+        manca: Object.values(v).some(x => x === null) ? 'Mancano alcuni esami: il punteggio può essere sottostimato.' : '' };
+    },
+    nota: 'La sensibilità negli studi di validazione è modesta: un punteggio basso NON esclude la fascite necrotizzante. Con sospetto clinico (dolore sproporzionato, rapida progressione, crepitio, instabilità) → valutazione chirurgica urgente indipendentemente dal punteggio.'
+  },
+
+  nihss: {
+    nome: 'NIHSS', sub: 'National Institutes of Health Stroke Scale',
+    campi: [
+      { tipo:'scelta', colonna:true, k:'1a', label:'1a · Livello di coscienza', opzioni:[{v:'0',p:0,label:'Vigile'},{v:'1',p:1,label:'Sonnolento, risvegliabile con stimoli minori'},{v:'2',p:2,label:'Stuporoso, richiede stimoli ripetuti o dolorosi'},{v:'3',p:3,label:'Coma, risposte solo riflesse o assenti'}] },
+      { tipo:'scelta', colonna:true, k:'1b', label:'1b · Domande (mese ed età)', opzioni:[{v:'0',p:0,label:'Entrambe corrette'},{v:'1',p:1,label:'Una corretta'},{v:'2',p:2,label:'Nessuna corretta'}] },
+      { tipo:'scelta', colonna:true, k:'1c', label:'1c · Comandi (aprire/chiudere gli occhi, stringere la mano)', opzioni:[{v:'0',p:0,label:'Entrambi eseguiti'},{v:'1',p:1,label:'Uno eseguito'},{v:'2',p:2,label:'Nessuno eseguito'}] },
+      { tipo:'scelta', colonna:true, k:'2', label:'2 · Sguardo', opzioni:[{v:'0',p:0,label:'Normale'},{v:'1',p:1,label:'Paralisi parziale'},{v:'2',p:2,label:'Deviazione forzata o paralisi totale'}] },
+      { tipo:'scelta', colonna:true, k:'3', label:'3 · Campo visivo', opzioni:[{v:'0',p:0,label:'Nessun deficit'},{v:'1',p:1,label:'Emianopsia parziale'},{v:'2',p:2,label:'Emianopsia completa'},{v:'3',p:3,label:'Emianopsia bilaterale (anche cecità corticale)'}] },
+      { tipo:'scelta', colonna:true, k:'4', label:'4 · Paralisi facciale', opzioni:[{v:'0',p:0,label:'Normale'},{v:'1',p:1,label:'Minore (asimmetria del sorriso)'},{v:'2',p:2,label:'Parziale (paralisi totale o quasi del volto inferiore)'},{v:'3',p:3,label:'Completa (volto superiore e inferiore)'}] },
+      ...[['5a','5a · Motilità arto superiore sx','10'],['5b','5b · Motilità arto superiore dx','10'],['6a','6a · Motilità arto inferiore sx','5'],['6b','6b · Motilità arto inferiore dx','5']].map(([k, label, s]) =>
+        ({ tipo:'scelta', colonna:true, k, label, opzioni:[{v:'0',p:0,label:`Nessuno slivellamento per ${s} s`},{v:'1',p:1,label:`Slivellamento prima dei ${s} s, senza toccare il letto`},{v:'2',p:2,label:'Qualche sforzo contro gravità'},{v:'3',p:3,label:'Nessuno sforzo contro gravità, cade'},{v:'4',p:4,label:'Nessun movimento'},{v:'UN',p:0,label:'Non valutabile (amputazione, anchilosi)'}] })),
+      { tipo:'scelta', colonna:true, k:'7', label:'7 · Atassia degli arti', opzioni:[{v:'0',p:0,label:'Assente'},{v:'1',p:1,label:'In un arto'},{v:'2',p:2,label:'In due arti'},{v:'UN',p:0,label:'Non valutabile'}] },
+      { tipo:'scelta', colonna:true, k:'8', label:'8 · Sensibilità', opzioni:[{v:'0',p:0,label:'Normale'},{v:'1',p:1,label:'Ipoestesia lieve-moderata'},{v:'2',p:2,label:'Anestesia grave o totale'}] },
+      { tipo:'scelta', colonna:true, k:'9', label:'9 · Linguaggio', opzioni:[{v:'0',p:0,label:'Normale'},{v:'1',p:1,label:'Afasia lieve-moderata'},{v:'2',p:2,label:'Afasia grave'},{v:'3',p:3,label:'Muto, afasia globale'}] },
+      { tipo:'scelta', colonna:true, k:'10', label:'10 · Disartria', opzioni:[{v:'0',p:0,label:'Normale'},{v:'1',p:1,label:'Lieve-moderata'},{v:'2',p:2,label:'Grave, anartria'},{v:'UN',p:0,label:'Non valutabile (intubato)'}] },
+      { tipo:'scelta', colonna:true, k:'11', label:'11 · Estinzione e inattenzione (neglect)', opzioni:[{v:'0',p:0,label:'Nessuna'},{v:'1',p:1,label:'In una modalità sensoriale'},{v:'2',p:2,label:'Profonda o in più modalità'}] }
+    ],
+    calcola(c, somma){
+      const mancanti = this.campi.filter(f => c.val[f.k] === null).length;
+      const g = somma === 0 ? 'nessun deficit' : somma <= 4 ? 'ictus minore' : somma <= 15 ? 'ictus moderato' : somma <= 20 ? 'ictus moderato-grave' : 'ictus grave';
+      const un = this.campi.filter(f => c.val[f.k] === 'UN').map(f => f.k);
+      return { totale: somma + (mancanti ? '<span style="font-size:14px;"> parziale</span>' : ''),
+        esito: mancanti ? `Valutate ${15 - mancanti} voci su 15` : `<b>${g.charAt(0).toUpperCase() + g.slice(1)}</b>`,
+        riga: mancanti ? '' : `NIHSS: ${somma} (${g}${un.length ? `; non valutabili: ${un.join(', ')}` : ''})`,
+        manca: mancanti ? 'Completa tutte le voci: finché ne manca una il risultato non viene scritto nel diario.' : '' };
+    },
+    nota: 'Si registra ciò che il paziente fa, non ciò che si pensa possa fare; non tornare indietro a correggere le voci. 0 nessun deficit · 1–4 minore · 5–15 moderato · 16–20 moderato-grave · 21–42 grave.'
+  },
+
+  gcs: {
+    nome: 'Glasgow Coma Scale', sub: 'GCS',
+    campi: [
+      { tipo:'scelta', colonna:true, k:'e', label:'Apertura degli occhi (E)', auto: d => d.gcsE, opzioni:[{v:'4',p:4,label:'4 · Spontanea'},{v:'3',p:3,label:'3 · Alla voce'},{v:'2',p:2,label:'2 · Al dolore'},{v:'1',p:1,label:'1 · Nessuna'}] },
+      { tipo:'scelta', colonna:true, k:'v', label:'Risposta verbale (V)', auto: d => d.gcsV, opzioni:[{v:'5',p:5,label:'5 · Orientata'},{v:'4',p:4,label:'4 · Confusa'},{v:'3',p:3,label:'3 · Parole inappropriate'},{v:'2',p:2,label:'2 · Suoni incomprensibili'},{v:'1',p:1,label:'1 · Nessuna'},{v:'T',p:0,label:'T · Intubato / tracheostomizzato'}] },
+      { tipo:'scelta', colonna:true, k:'m', label:'Risposta motoria (M)', auto: d => d.gcsM, opzioni:[{v:'6',p:6,label:'6 · Esegue gli ordini'},{v:'5',p:5,label:'5 · Localizza il dolore'},{v:'4',p:4,label:'4 · Retrae al dolore (flessione normale)'},{v:'3',p:3,label:'3 · Flessione anomala (decorticazione)'},{v:'2',p:2,label:'2 · Estensione (decerebrazione)'},{v:'1',p:1,label:'1 · Nessuna'}] }
+    ],
+    calcola(c, somma){
+      const { e, v, m } = c.val;
+      if(e === null || v === null || m === null) return { totale: '—', esito: 'Seleziona occhi, risposta verbale e motoria', riga: '' };
+      const intubato = v === 'T';
+      const tot = intubato ? `${somma}T` : somma;
+      const g = intubato ? 'componente verbale non valutabile' : somma <= 8 ? 'grave' : somma <= 12 ? 'moderato' : 'lieve';
+      return { totale: tot, esito: `E${e} V${v} M${m}${intubato ? ` · ${g}` : ` · compromissione <b>${g}</b>`}`,
+        riga: `GCS ${tot} (E${e} V${v} M${m})` };
+    },
+    nota: 'GCS ≤ 8: valutare la protezione delle vie aeree. Si registra la risposta migliore; riportare sempre anche le tre componenti.'
+  },
+
+  hasbled: {
+    nome: 'HAS-BLED', sub: 'rischio emorragico in anticoagulazione (FA)',
+    campi: [
+      { tipo:'check', k:'h', testo:'Ipertensione non controllata (PAS > 160 mmHg)', punti:1, auto: d => d.pas !== null ? d.pas > 160 : null },
+      { tipo:'check', k:'rene', testo:'Funzione renale alterata (dialisi, trapianto, creatinina ≥ 2,26 mg/dL)', punti:1,
+        auto: d => (scoreTrovaTesto(/dialis\w*|trapianto renale|emodialis\w*/, d.remota) || (d.creat !== null && d.creat >= 2.26)) || null },
+      { tipo:'check', k:'fegato', testo:'Funzione epatica alterata (cirrosi, bilirubina > 2× o AST/ALT > 3× il normale)', punti:1, auto: d => scoreTrovaTesto(/cirros\w*|epatopatia cronica/, d.remota) || null },
+      { tipo:'check', k:'ictus', testo:'Ictus pregresso', punti:1, auto: d => scoreTrovaTesto(/ictus|\bstroke\b|infarto cerebrale|emorragia cerebrale/, d.remota) || null },
+      { tipo:'check', k:'bleeding', testo:'Sanguinamento maggiore pregresso o predisposizione (es. anemia)', punti:1,
+        auto: d => scoreTrovaTesto(/emorragi\w*|sanguinament\w*|melena|ematochezia|ematemesi|rettorragi\w*/, d.remota) || null },
+      { tipo:'check', k:'inr', testo:'INR labile (TTR < 60%, solo in terapia con AVK)', punti:1 },
+      { tipo:'check', k:'anziano', testo:'Età > 65 anni', punti:1, auto: d => d.eta !== null ? d.eta > 65 : null, mostraEta:true },
+      { tipo:'check', k:'farmaci', testo:'Farmaci che predispongono al sanguinamento (antiaggreganti, FANS)', punti:1,
+        auto: d => scoreTrovaTesto(/cardioaspirin\w*|\basa\b|acido acetilsalicilico|clopidogrel|ticagrelor|prasugrel|ticlopidina|ibuprofen\w*|ketoprofen\w*|diclofenac\w*|naprossen\w*|nimesulid\w*|\bfans\b/, d.farmaci) || null },
+      { tipo:'check', k:'alcol', testo:'Abuso di alcol (≥ 8 unità/settimana)', punti:1, auto: d => scoreTrovaTesto(/etilism\w*|abuso (?:di )?alcol\w*|alcolism\w*/, d.remota) || null }
+    ],
+    calcola(c, somma){
+      const alto = somma >= 3;
+      return { totale: somma, esito: alto ? '<b>Rischio emorragico alto</b>' : '<b>Rischio emorragico basso-moderato</b>',
+        riga: `HAS-BLED: ${somma} (rischio emorragico ${alto ? 'alto' : 'basso-moderato'})` };
+    },
+    nota: 'Un punteggio ≥ 3 non controindica l\'anticoagulazione: serve a correggere i fattori modificabili (pressione, antiaggreganti/FANS, alcol, INR labile) e a programmare controlli più stretti.'
+  },
+
+  berlino: {
+    nome: 'ARDS · criteri di Berlino', sub: 'definizione di Berlino 2012',
+    campi: [
+      { tipo:'check', k:'timing', testo:'Esordio entro 1 settimana da un insulto clinico noto o da sintomi respiratori nuovi o in peggioramento', punti:0 },
+      { tipo:'check', k:'imaging', testo:'Opacità bilaterali all\'RX/TC non spiegate da versamenti, atelettasie lobari/polmonari o noduli', punti:0 },
+      { tipo:'check', k:'edema', testo:'Insufficienza respiratoria non spiegata del tutto da scompenso cardiaco o sovraccarico idrico (ecocardiogramma se nessun fattore di rischio)', punti:0 },
+      { tipo:'check', k:'peep', testo:'PEEP o CPAP ≥ 5 cmH₂O', punti:0 },
+      { tipo:'num', k:'pao2', label:'PaO₂', unita:'mmHg', auto: d => d.pao2 },
+      { tipo:'num', k:'fio2', label:'FiO₂', unita:'%', auto: d => d.fio2, info: () => '21–100 (0,40 = 40%)' }
+    ],
+    calcola(c){
+      const v = c.val;
+      let fio2 = v.fio2;
+      if(fio2 !== null && fio2 <= 1) fio2 = fio2 * 100;
+      const pf = (v.pao2 !== null && fio2) ? Math.round(v.pao2 / (fio2 / 100)) : null;
+      const criteri = ['timing','imaging','edema','peep'].filter(k => v[k]).length;
+      if(pf === null) return { totale: '—', esito: `Criteri clinici soddisfatti: ${criteri}/4 · inserisci PaO₂ e FiO₂`, riga: '' };
+      const grado = pf <= 100 ? 'grave' : pf <= 200 ? 'moderata' : pf <= 300 ? 'lieve' : null;
+      if(criteri === 4 && grado){
+        return { totale: `P/F ${pf}`, esito: `<b>ARDS ${grado}</b> (mortalità indicativa ${grado === 'lieve' ? '~27%' : grado === 'moderata' ? '~32%' : '~45%'})`,
+          riga: `ARDS ${grado} secondo i criteri di Berlino (PaO2/FiO2 ${pf} con PEEP ≥ 5 cmH2O)` };
+      }
+      const motivo = !grado ? 'P/F > 300' : `criteri clinici ${criteri}/4`;
+      return { totale: `P/F ${pf}`, esito: `Criteri di Berlino <b>non soddisfatti</b> (${motivo})`,
+        riga: `Criteri di Berlino per ARDS non soddisfatti (PaO2/FiO2 ${pf}, ${motivo})` };
+    },
+    nota: 'Lieve 201–300 · moderata 101–200 · grave ≤ 100 mmHg, sempre con PEEP/CPAP ≥ 5. La definizione globale del 2023 estende la diagnosi anche ai pazienti in ossigeno ad alti flussi (≥ 30 L/min) e accetta il rapporto SpO₂/FiO₂ quando l\'EGA non è disponibile.'
   }
+
 };
 
 // trigger in Diari: \"/geneva\", \"/wells\", \"/pesi\", \"/spesi\", \"/chadsvasc\"
@@ -12896,7 +13072,12 @@ const SCORE_ALIAS = {
   pesi:'pesi', spesi:'pesi',
   chadsvasc:'chadsvasc', chads:'chadsvasc', cha2ds2vasc:'chadsvasc', chadvasc:'chadsvasc', chadsvas:'chadsvasc', cha2ds2va:'chadsvasc',
   calcemia:'calcemia', calcio:'calcemia', calciocorretto:'calcemia',
-  padua:'padua'
+  padua:'padua',
+  lrinec:'lrinec', fascite:'lrinec',
+  nihss:'nihss',
+  gcs:'gcs', glasgow:'gcs',
+  hasbled:'hasbled', hasbleed:'hasbled',
+  berlino:'berlino', ards:'berlino'
 };
 
 let scoreContesto = null;
@@ -12931,7 +13112,11 @@ function scorePunti(f, c){
   return (f.punti && f.punti[c.versione]) || 0;
 }
 function scoreSomma(def, c){
-  return scoreCampiVisibili(def, c).reduce((t, f) => t + (f.tipo === 'check' && c.val[f.k] ? scorePunti(f, c) : 0), 0);
+  return scoreCampiVisibili(def, c).reduce((t, f) => {
+    if(f.tipo === 'check') return t + (c.val[f.k] ? scorePunti(f, c) : 0);
+    if(f.tipo === 'scelta'){ const o = f.opzioni.find(o => o.v === c.val[f.k]); return t + ((o && o.p) || 0); }
+    return t;
+  }, 0);
 }
 
 function renderScore(){
@@ -12952,6 +13137,10 @@ function renderScore(){
         <input type="number" inputmode="${f.decimali ? 'decimal' : 'numeric'}" step="any" data-num="${f.k}" placeholder="—" value="${c.val[f.k] ?? ''}">
         <div style="font-size:12px; color:var(--ink-dim); min-width:34px;">${f.unita || ''}</div>
       </div>`;
+    } else if(f.tipo === 'scelta' && f.colonna){
+      // scelte con molte opzioni (NIHSS, GCS): titolo sopra, opzioni a capo
+      h += `<div class="score-scelta"><div class="titolo">${f.label}${c.fonte[f.k] ? auto : ''}</div><div class="opzioni">`
+        + f.opzioni.map(o => `<div class="chip ${c.val[f.k] === o.v ? 'active' : ''}" data-scelta="${f.k}" data-v="${o.v}">${o.label}</div>`).join('') + `</div></div>`;
     } else if(f.tipo === 'scelta'){
       h += `<div class="score-fc"><div class="testo" style="flex:1; font-size:14px;">${f.label}${c.fonte[f.k] ? auto : ''}</div>`
         + f.opzioni.map(o => `<div class="chip ${c.val[f.k] === o.v ? 'active' : ''}" data-scelta="${f.k}" data-v="${o.v}">${o.label}</div>`).join('') + `</div>`;
