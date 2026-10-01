@@ -544,6 +544,8 @@
   }
   .admit-block[open] .admit-chev{ transform:rotate(90deg); }
   #app-farmaci-chev.aperto{ transform:rotate(90deg); }
+  #app-score-chev{ transition:transform .2s; }
+  #app-score-chev.aperto{ transform:rotate(90deg); }
   .admit-block-title{
     font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
   }
@@ -940,12 +942,51 @@
   .farmaco-modal-header h2{
     margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
   }
-  #farmaco-chiudi-btn{
+  #farmaco-chiudi-btn, #score-chiudi-btn{
     background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
     border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
     flex-shrink:0; box-shadow:var(--clay-out-sm);
   }
-  #farmaco-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  #farmaco-chiudi-btn:hover, #score-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  /* ---------- SCORE (modale) ----------
+     score clinici interattivi (per ora Geneva rivisto/semplificato),
+     richiamabili da App → Score o scrivendo "/geneva" in Diari; i dati già
+     presenti (FC del diario, emottisi scritta, età del ricovero) entrano da
+     soli e sono segnati come "dal diario" */
+  #score-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  #score-modal-overlay.show{ display:flex; }
+  #score-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px;
+  }
+  .score-sub{ font-size:12px; color:var(--ink-dim); margin:-2px 0 10px; font-family:var(--font-mono); }
+  .score-voce{ display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px;
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; cursor:pointer; user-select:none; }
+  .score-voce.attiva{ border-color:var(--signal); box-shadow:inset 0 0 0 1px var(--signal); }
+  .score-voce .spunta{ width:20px; height:20px; border-radius:6px; border:1.5px solid var(--ink-dim); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--signal); }
+  .score-voce.attiva .spunta{ border-color:var(--signal); }
+  .score-voce .testo{ flex:1; font-size:14px; line-height:1.35; color:var(--ink); }
+  .score-voce .punti{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-dim); white-space:nowrap; }
+  .score-auto{ display:inline-block; margin-left:6px; font-size:10.5px; font-family:var(--font-mono); color:var(--signal);
+    border:1px solid var(--signal); border-radius:8px; padding:0 5px; vertical-align:1px; }
+  .score-fc{ display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px;
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; }
+  .score-fc .testo{ color:var(--ink); }
+  .score-fc input{ width:74px; font-size:15px; padding:6px 8px; border-radius:9px; border:1px solid var(--clay-border);
+    background:var(--panel); color:var(--ink); font-family:var(--font-mono); }
+  .score-risultato{ margin-top:12px; padding:12px; border-radius:14px; background:var(--panel-2);
+    border:1px solid var(--clay-border); text-align:center; }
+  .score-risultato .totale{ font-family:var(--font-display); font-size:30px; font-weight:700; color:var(--signal); line-height:1.1; }
+  .score-risultato .esito{ font-size:14px; margin-top:4px; color:var(--ink); }
+  .score-nota{ font-size:12px; line-height:1.5; color:var(--ink-dim); margin-top:10px; }
 
   /* modale semplice "i" isolamento: germe + DPI del singolo paziente, senza
      spiegazioni — sostituisce la vecchia scheda informativa generica in
@@ -1517,7 +1558,35 @@
           <div class="ric-lista-riga" onclick="apriAppFarmaco('unasyn')">
             <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Ampicillina/sulbactam</span>
           </div>
+          <div class="ric-lista-riga" onclick="apriAppFarmaco('clindamicina')">
+            <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Clindamicina</span>
+          </div>
         </div>
+      </div>
+      <div class="ric-lista-riga" onclick="toggleAppScoreSotto()">
+        <span class="ric-lista-nome">Score</span>
+        <span class="admit-chev" id="app-score-chev">›</span>
+      </div>
+      <div id="app-score-sotto" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px;">
+        <div class="ric-lista-riga" onclick="apriScore('geneva')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Geneva Score (EP)</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('wells')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Wells Score (EP / TVP)</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('pesi')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>PESI / sPESI</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('chadsvasc')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>CHA₂DS₂-VASc</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('calcemia')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Calcemia corretta</span>
+        </div>
+        <div class="ric-lista-riga" onclick="apriScore('padua')">
+          <span class="ric-lista-nome"><span class="farmaco-bullet">•</span>Padua Prediction Score</span>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -5816,6 +5885,13 @@ function chiudiIsolamentoModal(){
 function apriAppEga(){ apriEgaAnalyzer('', null, null); }
 function apriAppVfg(){ apriVfgCalc('', null, null); }
 function apriAppFarmaco(chiave){ apriFarmaco(chiave, ''); }
+function toggleAppScoreSotto(){
+  const sotto = document.getElementById('app-score-sotto');
+  const chev = document.getElementById('app-score-chev');
+  const aperto = sotto.style.display !== 'none';
+  sotto.style.display = aperto ? 'none' : '';
+  chev.classList.toggle('aperto', !aperto);
+}
 
 function toggleAppFarmaciSotto(){
   const sotto = document.getElementById('app-farmaci-sotto');
@@ -7344,6 +7420,7 @@ function renderRiepilogo(){
       egaControllaTrigger(body.value, body, id);
       vfgControllaTrigger(body.value, body, id);
       farmacoControllaTrigger(body.value, body);
+      scoreControllaTrigger(body.value, body, id);
       ecgsimControllaTrigger(body.value, body);
       soffiControllaTrigger(body.value, body);
     });
@@ -11160,6 +11237,17 @@ try{
   </div>
 </div>
 
+<!-- SCORE: vedi apriScore / SCORE_DB più sotto -->
+<div id="score-modal-overlay" onclick="if(event.target===this) chiudiScore()">
+  <div id="score-modal">
+    <div class="farmaco-modal-header">
+      <h2 id="score-modal-titolo">Score</h2>
+      <button id="score-chiudi-btn" onclick="chiudiScore()">✕</button>
+    </div>
+    <div id="score-corpo"></div>
+  </div>
+</div>
+
 <!-- modale semplice isolamento: germe + DPI del singolo paziente, vedi
      apriIsolamentoModal/chiudiIsolamentoModal -->
 <!-- conferma "svuota settore" (pressione prolungata sul pallino del
@@ -12272,6 +12360,15 @@ const FARMACI_DB = {
         dose: (opz) => (opz.aumentato ? '3 g (2 g/1 g)' : '1,5 g (1 g/500 mg)') + ' EV ogni 24h.' }
     ],
     note: 'Il dosaggio aumentato (3 g invece di 1,5 g, stesso intervallo) è indicato per infezioni da A. baumannii. Non superare 4 g/die di sulbactam (con la dose aumentata, 3 g ogni 6h corrisponde già a 4 g/die di sulbactam: il tetto). AKI sepsi-relata nel paziente settico: è ragionevole attendere 48h prima di ridurre la dose per il peggioramento renale, perché una rapida risoluzione dell\'AKI esporrebbe il paziente al rischio di sottodosaggio nel pieno della sepsi.'
+  },
+  clindamicina: {
+    nome: 'Clindamicina',
+    sottotitolo: 'lincosamide · eliminazione prevalentemente epatica',
+    fasce: [
+      { min: 0, max: Infinity, label: 'Qualsiasi VFG',
+        dose: 'Nessun aggiustamento per funzione renale.\nOS: 300-600 mg ogni 6-8h. Dose massima: 1800 mg/die.\nEV: 600 mg ogni 6-8h o 900 mg ogni 8h. Dose massima: 2700 mg/die.' }
+    ],
+    note: 'Tra gli antibiotici a più alto rischio di colite da C. difficile: sospendere in caso di diarrea e ricercare la tossina. Nell\'insufficienza epatica grave l\'emivita si allunga: valutare la funzione epatica nelle terapie prolungate. Non rimossa in modo significativo dall\'emodialisi.'
   }
 };
 
@@ -12286,6 +12383,8 @@ const FARMACI_GRUPPI = {
 const FARMACI_ALIAS = {
   amoxi: 'augmentin',
   amoxicillina: 'augmentin',
+  dalacin: 'clindamicina',
+  clinda: 'clindamicina',
   // nomi commerciali dei singoli NAO/DOAC: aprono la scheda del singolo
   // farmaco (la scheda cumulativa "/nao" o "/doac" resta com'era, invariata)
   eliquis: 'apixaban',
@@ -12500,6 +12599,430 @@ function chiudiFarmaco(){
 // specifica: se poi si scrive "/altrofarmaco" (chiave diversa) si apre
 // anche quello. Chiudere e continuare a scrivere non lo riapre; si
 // riapre solo cancellando e riscrivendo lo stesso trigger da capo
+// ============================================================
+// SCORE — score clinici interattivi (Geneva, Wells, PESI/sPESI,
+// CHA2DS2-VASc, calcemia corretta, Padua). Si aprono da App → Score oppure
+// scrivendo "/nomescore" in Diari (vedi SCORE_ALIAS): in quel caso, alla
+// chiusura, il trigger viene sostituito nel diario dalla riga del risultato.
+// Precompilazione automatica (sempre modificabile a mano):
+//  - FC: dai parametri vitali della scheda (state.respiro.fc), altrimenti
+//    da un "FC 98" scritto nel testo del diario
+//  - emottisi: se compare scritta nel diario o nel ricovero collegato, e
+//    non è negata ("no emottisi", "nega emottisi", "non emottisi"...)
+//  - età > 65: dall'età inserita nel ricovero collegato
+//
+// Geneva rivisto: Le Gal et al., Ann Intern Med 2006; versione
+// semplificata: Klok et al., Arch Intern Med 2008. Da usare solo nel
+// paziente con sospetto clinico di EP, non come screening.
+// ============================================================
+// ---------- riconoscimento dal testo ----------
+// cerca la parola e controlla che non sia negata nei ~25 caratteri prima
+function scoreTrovaTesto(re, testo){
+  const t = (testo || '').toLowerCase();
+  let m; const g = new RegExp(re.source, 'gi');
+  while((m = g.exec(t))){
+    const prima = t.slice(Math.max(0, m.index - 25), m.index);
+    if(!/\b(non|no|nega|negata|negati|assenza di|assente|senza|né)\b[^.;\n]*$/.test(prima)) return true;
+  }
+  return false;
+}
+
+// parole chiave: le comorbidità si cercano SOLO nell'anamnesi remota del
+// ricovero (altrimenti una TVP o un'EP sospettate oggi passerebbero per
+// \"pregresse\"); i segni del giorno nel diario e nella diagnosi
+const SCORE_PAROLE = {
+  emottisi:     /emottis\w*|emoftoe|emoftis\w*/,
+  neoplasia:    /neoplas\w*|carcinom\w*|tumor\w*|linfom\w*|leucemi\w*|mielom\w*|metasta\w*|\bk\s+(?:polm|mamm|prost|colon|retto|vescic|pancrea|gastr|rene|renal|ovar|uter|esofag|fegat)\w*/,
+  tev:          /\btvp\b|trombosi venosa profonda|\btev\b|tromboembolismo venoso|embolia polmonare|\btep\b/,
+  scompenso:    /scompenso cardiaco|insufficienza cardiaca|cardiomiopatia dilatativa|\bhf[rmp]?ef\b|fe(?:vs)?\s*(?:ridotta|depressa)|\bscc\b/,
+  polmonare:    /\bbpco\b|enfisema|bronchiectasi\w*|fibrosi polmonare|interstiziopatia|pneumopatia cronica|insufficienza respiratoria cronica|\basma\b|asmatic\w*/,
+  ipertensione: /ipertensione(?!\s+(?:polmonare|portale|endocranica))|iperteso|ipertesa/,
+  diabete:      /diabet\w*|\bdm\s*(?:t?[12]|ii?)?\b|\bdmt[12]\b|\bniddm\b|\biddm\b/,
+  ictus:        /ictus|\bstroke\b|\btia\b|attacco ischemico transitorio|ischemia cerebrale|infarto cerebrale|lacunar\w*|embolia sistemica|cardioemboli\w*/,
+  vasculopatia: /\bima\b|infarto miocardico|\bn?stemi\b|cardiopatia ischemica|\bptca\b|\bpci\b|\bcabg\b|by-?pass aorto\w*|arteriopatia|\baop\b|vasculopatia periferica|placc\w* aortic\w*|ateromasia aortica/,
+  trombofilia:  /trombofili\w*|leiden|g20210a|deficit di proteina [cs]|deficit di antitrombina|antifosfolipid\w*/,
+  obesita:      /obesit\w*|\bobes[oa]\b|\bbmi\s*[:=]?\s*(?:3\d|[4-9]\d)/,
+  ormoni:       /estroprogest\w*|estrogen\w*|contraccett\w*|tamoxifen\w*|raloxifen\w*|terapia ormonale sostitutiva/,
+  infezione:    /polmonit\w*|infezion\w*|sepsi|\bivu\b|pielonefrit\w*|cellulit\w*|erisipela|colangit\w*|colecistit\w*|bronchite acuta|artrite reumatoide|\blupus\b|polimialgia|vasculit\w*/,
+  acutoCV:      /\bima\b|\bn?stemi\b|sindrome coronarica acuta|\bsca\b|ictus|\bstroke\b/,
+  insuffResp:   /insufficienza respiratoria/,
+  mentale:      /confus\w*|disorientat\w*|soporos\w*|sopor\w*|stupor\w*|obnubilat\w*|delirium|non contattabile|\bgcs\s*[:=]?\s*(?:[3-9]|1[0-4])\b/,
+  immobile:     /allettat\w*|allettamento|immobilizzat\w*|non deambula\w*/
+};
+
+function scoreRaccogliDati(patientId, testoDiario){
+  const d = { eta:null, sesso:null, fc:null, pas:null, sat:null, temp:null, ca:null, alb:null,
+    testoGiorno:'', remota:'', diagnosi:'', farmaci:'' };
+  const pid = patientId || (typeof currentPatientId !== 'undefined' ? currentPatientId : null);
+  let p = null;
+  try{ p = pid ? loadPatients()[pid] : null; } catch(e){}
+  const num = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) || n <= 0 ? null : n; };
+  if(p && p.state && p.state.respiro){
+    const r = p.state.respiro;
+    d.fc = num(r.fc); d.pas = num(r.pas); d.sat = num(r.sat); d.temp = num(r.tempValore);
+  }
+  let testo = testoDiario || '';
+  try{ if(p && p.state && typeof getRefertoFor === 'function') testo += '\n' + getRefertoFor(p.state); } catch(e){}
+  let rec = null;
+  try{ rec = pid && typeof loadRicoveri === 'function' ? loadRicoveri().find(r => r.esameObiettivoPatientId === pid) : null; } catch(e){}
+  let esami = '';
+  if(rec && rec.campi){
+    const c = rec.campi;
+    d.eta = num(c.eta);
+    if(c.sesso === 'M' || c.sesso === 'F') d.sesso = c.sesso;
+    d.remota = c.remota || '';
+    d.diagnosi = [c.diagnosi, c.prossima, c.provvedimenti].filter(Boolean).join('\n');
+    d.farmaci = c.farmacologica || '';
+    esami = [c.ematochimici].concat((c.altriEsami || []).map(e => (e.nome || '') + ' ' + (e.testo || ''))).filter(Boolean).join('\n');
+  }
+  d.testoGiorno = testo + '\n' + d.diagnosi;
+  if(d.fc === null){ const m = testo.match(/\bFC\s*[:=]?\s*(\d{2,3})\b/i); if(m) d.fc = +m[1]; }
+  if(d.pas === null){ const m = testo.match(/\bPA\s*[:=]?\s*(\d{2,3})\s*\/\s*\d{2,3}/i); if(m) d.pas = +m[1]; }
+  if(d.sat === null){ const m = testo.match(/\bSat\w*\s*[:=]?\s*(\d{2,3})\s*%/i); if(m) d.sat = +m[1]; }
+  // calcio totale e albumina: l'ultimo valore scritto (diario, poi esami
+  // del ricovero), solo se plausibile; mai il calcio ionizzato
+  const tuttoLab = testo + '\n' + esami;
+  const ultimo = (re) => { let v = null, m; const g = new RegExp(re.source, 'gi'); while((m = g.exec(tuttoLab))) v = parseFloat(m[1].replace(',', '.')); return v; };
+  const ca = ultimo(/\bca(?:lcio|lcemia)?(?!\s*(?:\+|2\+|ion))(?:\s*tot(?:ale)?)?\s*[:=]?\s*(\d+(?:[.,]\d+)?)(?!\s*\+)/);
+  if(ca !== null && ca >= 4 && ca <= 16) d.ca = ca;
+  let alb = ultimo(/\balb(?:umina)?(?:emia)?\s*[:=]?\s*(\d+(?:[.,]\d+)?)/);
+  // albumina sempre in g/L: un valore scritto in g/dL (1–6) viene convertito
+  if(alb !== null && alb >= 1 && alb <= 6) alb = alb * 10;
+  if(alb !== null && alb >= 10 && alb <= 60) d.alb = Math.round(alb * 10) / 10;
+  return d;
+}
+const trovaRemota = k => d => scoreTrovaTesto(SCORE_PAROLE[k], d.remota) || null;
+const trovaGiorno = k => d => scoreTrovaTesto(SCORE_PAROLE[k], d.testoGiorno) || null;
+
+// ---------- definizioni ----------
+// campi: num (valore numerico, eventualmente da sorgente automatica),
+// check (voce sì/no con punti), scelta (una tra più opzioni). \"versioni\"
+// sul campo = visibile solo in quelle versioni. punti: numero oppure
+// oggetto {versione: punti}
+const SCORE_DB = {
+  geneva: {
+    nome: 'Geneva Score', sub: 'sospetto di embolia polmonare',
+    versioni: [{ k:'rivisto', label:'Rivisto' }, { k:'semplificato', label:'Semplificato' }],
+    campi: [
+      { tipo:'num', k:'fc', label:'Frequenza cardiaca', unita:'bpm', auto: d => d.fc,
+        info: c => c.versione === 'semplificato' ? '75–94: +1 · ≥95: +2' : '75–94: +3 · ≥95: +5' },
+      { tipo:'check', k:'eta', testo:'Età > 65 anni', punti:{ rivisto:1, semplificato:1 }, auto: d => d.eta !== null ? d.eta > 65 : null, mostraEta:true },
+      { tipo:'check', k:'tev', testo:'TVP o EP pregressa', punti:{ rivisto:3, semplificato:1 }, auto: trovaRemota('tev') },
+      { tipo:'check', k:'chirurgia', testo:'Chirurgia in anestesia generale o frattura degli arti inferiori nell\'ultimo mese', punti:{ rivisto:2, semplificato:1 } },
+      { tipo:'check', k:'neoplasia', testo:'Neoplasia attiva (solida o ematologica, o guarita da < 1 anno)', punti:{ rivisto:2, semplificato:1 }, auto: trovaRemota('neoplasia') },
+      { tipo:'check', k:'dolore', testo:'Dolore unilaterale a un arto inferiore', punti:{ rivisto:3, semplificato:1 } },
+      { tipo:'check', k:'emottisi', testo:'Emottisi', punti:{ rivisto:2, semplificato:1 }, auto: trovaGiorno('emottisi') },
+      { tipo:'check', k:'palpazione', testo:'Dolore alla palpazione venosa profonda dell\'arto inferiore ED edema unilaterale', punti:{ rivisto:4, semplificato:1 } }
+    ],
+    calcola(c, somma){
+      const semp = c.versione === 'semplificato';
+      let tot = somma;
+      const fc = c.val.fc;
+      if(fc !== null) tot += fc >= 95 ? (semp ? 2 : 5) : fc >= 75 ? (semp ? 1 : 3) : 0;
+      const prob = semp ? (tot <= 1 ? 'bassa' : tot <= 4 ? 'intermedia' : 'alta') : (tot <= 3 ? 'bassa' : tot <= 10 ? 'intermedia' : 'alta');
+      const dic = (semp ? tot <= 2 : tot <= 5) ? 'EP improbabile' : 'EP probabile';
+      return { totale: tot, esito: `Probabilità clinica <b>${prob}</b> · ${dic}`,
+        riga: `Geneva score ${c.versione}: ${tot} (probabilità clinica ${prob}, ${dic})`,
+        manca: fc === null ? 'Manca la frequenza cardiaca: inseriscila per un punteggio completo.' : '' };
+    },
+    nota: 'EP improbabile → D-dimero (cut-off aggiustato per età oltre i 50 anni: età × 10 µg/L FEU): se negativo, EP esclusa; se positivo → angio-TC. EP probabile → angio-TC direttamente, senza D-dimero.'
+  },
+
+  wells: {
+    nome: 'Wells Score', sub: 'probabilità clinica pre-test',
+    versioni: [{ k:'ep', label:'EP' }, { k:'tvp', label:'TVP' }],
+    campi: [
+      { tipo:'num', k:'fc', label:'Frequenza cardiaca', unita:'bpm', auto: d => d.fc, versioni:['ep'], info: () => '> 100: +1,5' },
+      { tipo:'check', k:'segniTvp', testo:'Segni e sintomi clinici di TVP (edema dell\'arto e dolore alla palpazione delle vene profonde)', punti:{ ep:3 }, versioni:['ep'] },
+      { tipo:'check', k:'altraDiagnosi', testo:'Diagnosi alternativa meno probabile dell\'EP', punti:{ ep:3 }, versioni:['ep'] },
+      { tipo:'check', k:'immobilizzazione', testo:'Immobilizzazione ≥ 3 giorni o chirurgia nelle 4 settimane precedenti', punti:{ ep:1.5 }, versioni:['ep'], auto: trovaGiorno('immobile') },
+      { tipo:'check', k:'tevEp', testo:'TVP o EP pregressa', punti:{ ep:1.5 }, versioni:['ep'], auto: trovaRemota('tev') },
+      { tipo:'check', k:'emottisi', testo:'Emottisi', punti:{ ep:1 }, versioni:['ep'], auto: trovaGiorno('emottisi') },
+      { tipo:'check', k:'neoplasiaEp', testo:'Neoplasia attiva (in trattamento, nei 6 mesi precedenti o in cure palliative)', punti:{ ep:1 }, versioni:['ep'], auto: trovaRemota('neoplasia') },
+
+      { tipo:'check', k:'neoplasiaTvp', testo:'Neoplasia attiva (in trattamento, nei 6 mesi precedenti o in cure palliative)', punti:{ tvp:1 }, versioni:['tvp'], auto: trovaRemota('neoplasia') },
+      { tipo:'check', k:'paralisi', testo:'Paralisi, paresi o recente immobilizzazione gessata dell\'arto inferiore', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'allettamento', testo:'Allettamento ≥ 3 giorni o chirurgia maggiore nelle 12 settimane precedenti', punti:{ tvp:1 }, versioni:['tvp'], auto: trovaGiorno('immobile') },
+      { tipo:'check', k:'dolenzia', testo:'Dolenzia localizzata lungo il decorso delle vene profonde', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'gambaGonfia', testo:'Edema dell\'intero arto inferiore', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'polpaccio', testo:'Circonferenza del polpaccio > 3 cm rispetto al controlaterale (10 cm sotto la tuberosità tibiale)', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'fovea', testo:'Edema improntabile limitato all\'arto sintomatico', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'collaterali', testo:'Circoli venosi superficiali collaterali (non varicosi)', punti:{ tvp:1 }, versioni:['tvp'] },
+      { tipo:'check', k:'tvpPregressa', testo:'TVP pregressa documentata', punti:{ tvp:1 }, versioni:['tvp'], auto: d => scoreTrovaTesto(/\btvp\b|trombosi venosa profonda/, d.remota) || null },
+      { tipo:'check', k:'alternativaTvp', testo:'Diagnosi alternativa probabile almeno quanto la TVP', punti:{ tvp:-2 }, versioni:['tvp'] }
+    ],
+    calcola(c, somma){
+      if(c.versione === 'tvp'){
+        const dic = somma >= 2 ? 'TVP probabile' : 'TVP improbabile';
+        return { totale: somma, esito: dic, riga: `Wells score TVP: ${somma} (${dic})` };
+      }
+      let tot = somma;
+      if(c.val.fc !== null && c.val.fc > 100) tot += 1.5;
+      const prob = tot < 2 ? 'bassa' : tot <= 6 ? 'intermedia' : 'alta';
+      const dic = tot <= 4 ? 'EP improbabile' : 'EP probabile';
+      const t = String(tot).replace('.', ',');
+      return { totale: t, esito: `Probabilità clinica <b>${prob}</b> · ${dic}`,
+        riga: `Wells score EP: ${t} (probabilità clinica ${prob}, ${dic})`,
+        manca: c.val.fc === null ? 'Manca la frequenza cardiaca: inseriscila per un punteggio completo.' : '' };
+    },
+    nota: c => c.versione === 'tvp'
+      ? 'TVP improbabile → D-dimero: se negativo, TVP esclusa; se positivo → ecocolordoppler. TVP probabile → ecocolordoppler.'
+      : 'EP improbabile (≤ 4) → D-dimero (cut-off aggiustato per età oltre i 50 anni): se negativo, EP esclusa; se positivo → angio-TC. EP probabile (> 4) → angio-TC.'
+  },
+
+  pesi: {
+    nome: 'PESI', sub: 'prognosi a 30 giorni nell\'EP confermata',
+    versioni: [{ k:'pesi', label:'PESI' }, { k:'spesi', label:'sPESI' }],
+    campi: [
+      { tipo:'num', k:'eta', label:'Età', unita:'anni', auto: d => d.eta, info: c => c.versione === 'spesi' ? '> 80: +1' : '+1 per anno' },
+      { tipo:'num', k:'fc', label:'Frequenza cardiaca', unita:'bpm', auto: d => d.fc, info: c => c.versione === 'spesi' ? '≥ 110: +1' : '≥ 110: +20' },
+      { tipo:'num', k:'pas', label:'PA sistolica', unita:'mmHg', auto: d => d.pas, info: c => c.versione === 'spesi' ? '< 100: +1' : '< 100: +30' },
+      { tipo:'num', k:'sat', label:'SatO₂', unita:'%', auto: d => d.sat, info: c => c.versione === 'spesi' ? '< 90: +1' : '< 90: +20' },
+      { tipo:'num', k:'fr', label:'Frequenza respiratoria', unita:'atti/min', versioni:['pesi'], info: () => '≥ 30: +20' },
+      { tipo:'num', k:'temp', label:'Temperatura', unita:'°C', versioni:['pesi'], auto: d => d.temp, info: () => '< 36: +20' },
+      { tipo:'check', k:'maschio', testo:'Sesso maschile', punti:{ pesi:10 }, versioni:['pesi'], auto: d => d.sesso ? d.sesso === 'M' : null },
+      { tipo:'check', k:'neoplasia', testo:'Neoplasia (attiva o anamnestica)', punti:{ pesi:30, spesi:1 }, auto: trovaRemota('neoplasia') },
+      { tipo:'check', k:'scompenso', testo:'Scompenso cardiaco cronico', punti:{ pesi:10 }, versioni:['pesi'], auto: trovaRemota('scompenso') },
+      { tipo:'check', k:'polmonare', testo:'Malattia polmonare cronica', punti:{ pesi:10 }, versioni:['pesi'], auto: trovaRemota('polmonare') },
+      { tipo:'check', k:'cardiopolm', testo:'Scompenso cardiaco o malattia polmonare cronica', punti:{ spesi:1 }, versioni:['spesi'],
+        auto: d => (scoreTrovaTesto(SCORE_PAROLE.scompenso, d.remota) || scoreTrovaTesto(SCORE_PAROLE.polmonare, d.remota)) || null },
+      { tipo:'check', k:'mentale', testo:'Alterazione dello stato mentale (disorientamento, letargia, stupor, coma)', punti:{ pesi:60 }, versioni:['pesi'], auto: trovaGiorno('mentale') }
+    ],
+    calcola(c, somma){
+      const v = c.val;
+      if(c.versione === 'spesi'){
+        let tot = somma;
+        if(v.eta !== null && v.eta > 80) tot++;
+        if(v.fc !== null && v.fc >= 110) tot++;
+        if(v.pas !== null && v.pas < 100) tot++;
+        if(v.sat !== null && v.sat < 90) tot++;
+        const esito = tot === 0 ? 'Basso rischio · mortalità a 30 giorni ~1%' : 'Alto rischio · mortalità a 30 giorni ~10,9%';
+        return { totale: tot, esito, riga: `sPESI: ${tot} (${tot === 0 ? 'basso rischio' : 'alto rischio'})`,
+          manca: [v.eta, v.fc, v.pas, v.sat].some(x => x === null) ? 'Mancano alcuni parametri: il punteggio può essere sottostimato.' : '' };
+      }
+      let tot = somma + (v.eta || 0);
+      if(v.fc !== null && v.fc >= 110) tot += 20;
+      if(v.pas !== null && v.pas < 100) tot += 30;
+      if(v.sat !== null && v.sat < 90) tot += 20;
+      if(v.fr !== null && v.fr >= 30) tot += 20;
+      if(v.temp !== null && v.temp < 36) tot += 20;
+      const classi = [[65,'I','molto basso','0–1,6%'],[85,'II','basso','1,7–3,5%'],[105,'III','intermedio','3,2–7,1%'],[125,'IV','alto','4,0–11,4%'],[Infinity,'V','molto alto','10,0–24,5%']];
+      const cl = classi.find(x => tot <= x[0]);
+      return { totale: tot, esito: `Classe <b>${cl[1]}</b> · rischio ${cl[2]} · mortalità a 30 giorni ${cl[3]}`,
+        riga: `PESI: ${tot}, classe ${cl[1]} (rischio ${cl[2]})`,
+        manca: v.eta === null ? 'Manca l\'età: senza, il punteggio è molto sottostimato.' : [v.fc, v.pas, v.sat, v.fr, v.temp].some(x => x === null) ? 'Mancano alcuni parametri: il punteggio può essere sottostimato.' : '' };
+    },
+    nota: 'Classe I–II PESI (o sPESI 0), senza disfunzione del ventricolo destro né troponina elevata: candidato a dimissione precoce/gestione domiciliare. Classe III–V (sPESI ≥ 1): stratificare con ecocardiogramma/TC per il ventricolo destro e troponina (rischio intermedio-basso vs intermedio-alto).'
+  },
+
+  chadsvasc: {
+    nome: 'CHA₂DS₂-VASc', sub: 'rischio tromboembolico nella fibrillazione atriale',
+    campi: [
+      { tipo:'num', k:'eta', label:'Età', unita:'anni', auto: d => d.eta, info: () => '65–74: +1 · ≥ 75: +2' },
+      { tipo:'scelta', k:'sesso', label:'Sesso', opzioni:[{ v:'M', label:'M' }, { v:'F', label:'F (+1)' }], auto: d => d.sesso },
+      { tipo:'check', k:'scompenso', testo:'Scompenso cardiaco o disfunzione ventricolare sinistra', punti:1, auto: trovaRemota('scompenso') },
+      { tipo:'check', k:'ipertensione', testo:'Ipertensione arteriosa', punti:1, auto: trovaRemota('ipertensione') },
+      { tipo:'check', k:'diabete', testo:'Diabete mellito', punti:1, auto: trovaRemota('diabete') },
+      { tipo:'check', k:'ictus', testo:'Ictus, TIA o tromboembolismo sistemico pregressi', punti:2, auto: trovaRemota('ictus') },
+      { tipo:'check', k:'vasc', testo:'Vasculopatia (IMA pregresso, arteriopatia periferica, placca aortica)', punti:1, auto: trovaRemota('vasculopatia') }
+    ],
+    calcola(c, somma){
+      const v = c.val;
+      const puntiEta = v.eta === null ? 0 : v.eta >= 75 ? 2 : v.eta >= 65 ? 1 : 0;
+      const va = somma + puntiEta;
+      const tot = va + (v.sesso === 'F' ? 1 : 0);
+      const indicazione = va >= 2 ? 'anticoagulante orale raccomandato' : va === 1 ? 'anticoagulante orale da considerare' : 'anticoagulante orale non indicato';
+      return { totale: tot, esito: `CHA₂DS₂-VA (ESC 2024, senza sesso): <b>${va}</b> → ${indicazione}`,
+        riga: `CHA2DS2-VASc: ${tot} (CHA2DS2-VA ${va})`,
+        manca: v.eta === null ? 'Manca l\'età.' : (!v.sesso ? 'Manca il sesso.' : '') };
+    },
+    nota: 'Le linee guida ESC 2024 usano il CHA₂DS₂-VA (il sesso femminile non conta più): ≥ 2 anticoagulazione raccomandata, 1 da considerare. Con il CHA₂DS₂-VASc classico (ESC 2020): ≥ 2 negli uomini / ≥ 3 nelle donne raccomandata. Valutare sempre anche il rischio emorragico (es. HAS-BLED) per correggere i fattori modificabili, non per negare l\'anticoagulazione.'
+  },
+
+  calcemia: {
+    nome: 'Calcemia corretta', sub: 'calcio totale corretto per l\'albumina (formula di Payne)',
+    campi: [
+      { tipo:'num', k:'ca', label:'Calcio totale', unita:'mg/dL', auto: d => d.ca, decimali:true },
+      { tipo:'num', k:'alb', label:'Albumina', unita:'g/L', auto: d => d.alb, decimali:true }
+    ],
+    calcola(c){
+      const { ca, alb } = c.val;
+      if(ca === null || alb === null) return { totale: '—', esito: 'Inserisci calcio totale e albumina', riga: '' };
+      // albumina in g/L: Ca + 0,08 × (40 − albumina), equivalente a
+      // Ca + 0,8 × (4 − albumina in g/dL)
+      const corr = Math.round((ca + 0.08 * (40 - alb)) * 10) / 10;
+      const f = x => Number(x).toFixed(1).replace('.', ',');
+      const fa = x => String(Math.round(x * 10) / 10).replace('.', ',');
+      const giudizio = corr < 8.5 ? 'ipocalcemia' : corr > 10.5 ? 'ipercalcemia' : 'nella norma';
+      return { totale: f(corr) + ' <span style="font-size:15px;">mg/dL</span>', esito: giudizio.charAt(0).toUpperCase() + giudizio.slice(1) + ' (riferimento indicativo 8,5–10,5 mg/dL)',
+        riga: `Calcemia corretta per albumina: ${f(corr)} mg/dL (Ca ${f(ca)} mg/dL, albumina ${fa(alb)} g/L)` };
+    },
+    nota: ''
+  },
+
+  padua: {
+    nome: 'Padua Prediction Score', sub: 'rischio di TEV nel paziente medico ricoverato',
+    campi: [
+      { tipo:'num', k:'eta', label:'Età', unita:'anni', auto: d => d.eta, info: () => '≥ 70: +1' },
+      { tipo:'check', k:'neoplasia', testo:'Neoplasia attiva (metastasi e/o chemio-radioterapia negli ultimi 6 mesi)', punti:3, auto: trovaRemota('neoplasia') },
+      { tipo:'check', k:'tev', testo:'TEV pregresso (escluse le trombosi venose superficiali)', punti:3, auto: trovaRemota('tev') },
+      { tipo:'check', k:'mobilita', testo:'Mobilità ridotta (allettamento, con accesso al bagno, per ≥ 3 giorni)', punti:3, auto: trovaGiorno('immobile') },
+      { tipo:'check', k:'trombofilia', testo:'Condizione trombofilica nota', punti:3, auto: trovaRemota('trombofilia') },
+      { tipo:'check', k:'trauma', testo:'Trauma e/o chirurgia recente (≤ 1 mese)', punti:2 },
+      { tipo:'check', k:'cardioResp', testo:'Insufficienza cardiaca e/o respiratoria', punti:1,
+        auto: d => (scoreTrovaTesto(SCORE_PAROLE.scompenso, d.remota + '\n' + d.diagnosi) || scoreTrovaTesto(SCORE_PAROLE.insuffResp, d.remota + '\n' + d.diagnosi)) || null },
+      { tipo:'check', k:'acutoCV', testo:'IMA acuto e/o ictus ischemico acuto', punti:1, auto: d => scoreTrovaTesto(SCORE_PAROLE.acutoCV, d.diagnosi) || null },
+      { tipo:'check', k:'infezione', testo:'Infezione acuta e/o malattia reumatologica', punti:1,
+        auto: d => (scoreTrovaTesto(SCORE_PAROLE.infezione, d.diagnosi)) || null },
+      { tipo:'check', k:'obesita', testo:'Obesità (BMI ≥ 30)', punti:1, auto: trovaRemota('obesita') },
+      { tipo:'check', k:'ormoni', testo:'Terapia ormonale in corso', punti:1, auto: d => scoreTrovaTesto(SCORE_PAROLE.ormoni, d.farmaci) || null }
+    ],
+    calcola(c, somma){
+      const tot = somma + (c.val.eta !== null && c.val.eta >= 70 ? 1 : 0);
+      const alto = tot >= 4;
+      return { totale: tot, esito: alto ? '<b>Alto rischio</b> di TEV → profilassi farmacologica, se il rischio emorragico lo consente' : '<b>Basso rischio</b> di TEV → profilassi farmacologica non indicata',
+        riga: `Padua prediction score: ${tot} (${alto ? 'alto rischio TEV, indicata profilassi' : 'basso rischio TEV'})`,
+        manca: c.val.eta === null ? 'Manca l\'età.' : '' };
+    },
+    nota: 'Con rischio alto, valutare comunque il rischio emorragico (es. IMPROVE bleeding) prima di prescrivere la profilassi; se controindicata, profilassi meccanica.'
+  }
+};
+
+// trigger in Diari: \"/geneva\", \"/wells\", \"/pesi\", \"/spesi\", \"/chadsvasc\"
+// (e varianti), \"/calcemia\", \"/padua\"
+const SCORE_ALIAS = {
+  geneva:'geneva', ginevra:'geneva',
+  wells:'wells',
+  pesi:'pesi', spesi:'pesi',
+  chadsvasc:'chadsvasc', chads:'chadsvasc', cha2ds2vasc:'chadsvasc', chadvasc:'chadsvasc', chadsvas:'chadsvasc', cha2ds2va:'chadsvasc',
+  calcemia:'calcemia', calcio:'calcemia', calciocorretto:'calcemia',
+  padua:'padua'
+};
+
+let scoreContesto = null;
+
+function apriScore(chiave, testoDiario, textareaEl, patientId, trigger){
+  const def = SCORE_DB[chiave];
+  if(!def) return;
+  const d = scoreRaccogliDati(patientId, testoDiario);
+  const val = {}, fonte = {};
+  def.campi.forEach(f => {
+    val[f.k] = f.tipo === 'check' ? false : null;
+    if(f.auto){
+      const a = f.auto(d);
+      if(a !== null && a !== undefined && a !== false){ val[f.k] = a; fonte[f.k] = true; }
+      else if(a === false && f.tipo === 'check'){ fonte[f.k] = false; }
+    }
+  });
+  let versione = def.versioni ? def.versioni[0].k : null;
+  if(trigger === 'spesi') versione = 'spesi';
+  scoreContesto = { chiave, textareaEl: textareaEl || null, patientId: patientId || null,
+    trigger: trigger || chiave, val, fonte, versione, eta: d.eta };
+  document.getElementById('score-modal-titolo').textContent = def.nome;
+  renderScore();
+  document.getElementById('score-modal-overlay').classList.add('show');
+}
+
+function scoreCampiVisibili(def, c){
+  return def.campi.filter(f => !f.versioni || f.versioni.includes(c.versione));
+}
+function scorePunti(f, c){
+  if(typeof f.punti === 'number') return f.punti;
+  return (f.punti && f.punti[c.versione]) || 0;
+}
+function scoreSomma(def, c){
+  return scoreCampiVisibili(def, c).reduce((t, f) => t + (f.tipo === 'check' && c.val[f.k] ? scorePunti(f, c) : 0), 0);
+}
+
+function renderScore(){
+  const c = scoreContesto; if(!c) return;
+  const def = SCORE_DB[c.chiave];
+  const auto = '<span class="score-auto">rilevato</span>';
+  const fmt = n => (n > 0 ? '+' : '') + String(n).replace('.', ',');
+  const corpo = document.getElementById('score-corpo');
+  let h = `<div class="score-sub">${def.sub}</div>`;
+  if(def.versioni){
+    h += `<div class="inline-fields" style="justify-content:center; margin-bottom:10px;">`
+      + def.versioni.map(v => `<div class="chip ${c.versione === v.k ? 'active' : ''}" data-ver="${v.k}">${v.label}</div>`).join('') + `</div>`;
+  }
+  scoreCampiVisibili(def, c).forEach(f => {
+    if(f.tipo === 'num'){
+      h += `<div class="score-fc">
+        <div class="testo" style="flex:1; font-size:14px;">${f.label}${c.fonte[f.k] ? auto : ''}${f.info ? `<div style="font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); margin-top:2px;">${f.info(c)}</div>` : ''}</div>
+        <input type="number" inputmode="${f.decimali ? 'decimal' : 'numeric'}" step="any" data-num="${f.k}" placeholder="—" value="${c.val[f.k] ?? ''}">
+        <div style="font-size:12px; color:var(--ink-dim); min-width:34px;">${f.unita || ''}</div>
+      </div>`;
+    } else if(f.tipo === 'scelta'){
+      h += `<div class="score-fc"><div class="testo" style="flex:1; font-size:14px;">${f.label}${c.fonte[f.k] ? auto : ''}</div>`
+        + f.opzioni.map(o => `<div class="chip ${c.val[f.k] === o.v ? 'active' : ''}" data-scelta="${f.k}" data-v="${o.v}">${o.label}</div>`).join('') + `</div>`;
+    } else {
+      const on = !!c.val[f.k];
+      h += `<div class="score-voce ${on ? 'attiva' : ''}" data-k="${f.k}">
+        <div class="spunta">${on ? '✓' : ''}</div>
+        <div class="testo">${f.testo}${c.fonte[f.k] ? auto : ''}${f.mostraEta && c.eta !== null ? ` <span style="color:var(--ink-dim); font-size:12px;">(${c.eta} aa)</span>` : ''}</div>
+        <div class="punti">${fmt(scorePunti(f, c))}</div>
+      </div>`;
+    }
+  });
+  const nota = typeof def.nota === 'function' ? def.nota(c) : def.nota;
+  h += `<div class="score-risultato" id="score-risultato"></div>
+    <div class="score-nota">${[nota,
+      Object.values(c.fonte).some(Boolean) ? 'Le voci «rilevato» sono state riconosciute dal diario o dal ricovero: verificale.' : '',
+      c.textareaEl ? `Alla chiusura il risultato viene scritto nel diario al posto di /${c.trigger}.` : ''].filter(Boolean).join('<br>')}</div>`;
+  corpo.innerHTML = h;
+  corpo.querySelectorAll('[data-ver]').forEach(el => el.onclick = () => { c.versione = el.dataset.ver; renderScore(); });
+  corpo.querySelectorAll('.score-voce').forEach(el => el.onclick = () => { c.val[el.dataset.k] = !c.val[el.dataset.k]; renderScore(); });
+  corpo.querySelectorAll('[data-scelta]').forEach(el => el.onclick = () => { c.val[el.dataset.scelta] = el.dataset.v; renderScore(); });
+  corpo.querySelectorAll('[data-num]').forEach(el => el.oninput = () => {
+    const v = parseFloat(String(el.value).replace(',', '.')); c.val[el.dataset.num] = isNaN(v) ? null : v; aggiornaRisultatoScore();
+  });
+  aggiornaRisultatoScore();
+}
+
+function scoreRisultato(){
+  const c = scoreContesto; const def = SCORE_DB[c.chiave];
+  return def.calcola(c, scoreSomma(def, c));
+}
+function aggiornaRisultatoScore(){
+  const c = scoreContesto; if(!c) return;
+  const r = scoreRisultato();
+  document.getElementById('score-risultato').innerHTML = `<div class="totale">${r.totale}</div><div class="esito">${r.esito}</div>`
+    + (r.manca ? `<div class="score-nota" style="margin-top:6px;">${r.manca}</div>` : '');
+}
+
+function chiudiScore(){
+  const c = scoreContesto;
+  if(c && c.textareaEl){
+    const el = c.textareaEl;
+    const riga = scoreRisultato().riga;
+    const re = new RegExp('\\/' + c.trigger + '\\b', 'i');
+    const nuovo = riga ? el.value.replace(re, () => riga) : el.value;
+    if(nuovo !== el.value){
+      el.value = nuovo;
+      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
+      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+      el.dataset.scoreAperto = '';
+    }
+  }
+  scoreContesto = null;
+  document.getElementById('score-modal-overlay').classList.remove('show');
+}
+
+// \"/nomescore\" in Diari: apre una volta per comparsa (come /farmaco ed EGA:)
+function scoreControllaTrigger(testoAttuale, elementoTextarea, patientId){
+  let trovato = null;
+  for(const m of (testoAttuale || '').matchAll(/\/([a-z0-9]+)\b/gi)){
+    const t = m[1].toLowerCase();
+    if(SCORE_ALIAS[t]) trovato = t;
+  }
+  if(trovato && elementoTextarea.dataset.scoreAperto !== trovato){
+    elementoTextarea.dataset.scoreAperto = trovato;
+    apriScore(SCORE_ALIAS[trovato], testoAttuale, elementoTextarea, patientId, trovato);
+  } else if(!trovato){
+    elementoTextarea.dataset.scoreAperto = '';
+  }
+}
+
 function farmacoControllaTrigger(testoAttuale, elementoTextarea){
   const chiave = farmacoTrovaChiaveAttiva(testoAttuale);
   if(chiave && elementoTextarea.dataset.farmacoAperto !== chiave){
