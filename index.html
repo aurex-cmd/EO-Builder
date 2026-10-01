@@ -504,6 +504,19 @@
     width:100%; resize:none; overflow-y:hidden; min-height:64px;
   }
   .referto-block textarea.bed-text:focus{ outline:none; border-color:var(--signal); }
+  /* righe delle aggiunte rimaste uguali al diario del giorno prima: in
+     grigio chiaro (vedi diarioRigheDiIeri). Si ottiene con una copia del
+     testo (.bed-text-specchio) disegnata sotto la textarea, il cui testo
+     diventa trasparente SOLO quando non è in modifica: scrivendo si torna
+     al testo vero, così il cursore non può mai disallinearsi */
+  .bed-text-wrap{ position:relative; }
+  .bed-text-specchio{ position:absolute; inset:0; pointer-events:none; overflow:hidden;
+    overflow-wrap:break-word; word-break:normal; display:none; }
+  .bed-text-wrap.con-ieri:not(.in-modifica) .bed-text-specchio{ display:block; }
+  .bed-text-wrap.con-ieri:not(.in-modifica) textarea.bed-text{
+    color:transparent; background:transparent; box-shadow:none; position:relative; }
+  .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
+  .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -7474,7 +7487,37 @@ function renderRiepilogo(){
     });
 
     block.appendChild(titleRow);
-    block.appendChild(body);
+    const righeIeri = diarioRigheDiIeri(p);
+    if(righeIeri.size){
+      const wrap = document.createElement('div');
+      wrap.className = 'bed-text-wrap';
+      const specchio = document.createElement('div');
+      specchio.className = 'bed-text bed-text-specchio';
+      specchio.setAttribute('aria-hidden', 'true');
+      const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      body._aggiornaSpecchio = () => {
+        const v = body.value;
+        // in "Nascondi E.O." il box contiene già solo le aggiunte
+        const inizioExtra = diariSoloConsegneAttivo ? 0 : (v.indexOf('\n\n') === -1 ? Infinity : v.indexOf('\n\n') + 2);
+        let pos = 0, almenoUna = false;
+        const html = v.split('\n').map(riga => {
+          const inExtra = pos >= inizioExtra;
+          pos += riga.length + 1;
+          if(inExtra && riga.trim() && righeIeri.has(riga.trim())){ almenoUna = true; return `<span class="dal-ieri">${esc(riga)}</span>`; }
+          return esc(riga);
+        }).join('\n');
+        specchio.innerHTML = html + '\n';
+        wrap.classList.toggle('con-ieri', almenoUna);
+      };
+      body.addEventListener('focus', () => wrap.classList.add('in-modifica'));
+      body.addEventListener('blur', () => { wrap.classList.remove('in-modifica'); body._aggiornaSpecchio(); });
+      wrap.appendChild(specchio);
+      wrap.appendChild(body);
+      block.appendChild(wrap);
+      body._aggiornaSpecchio();
+    } else {
+      block.appendChild(body);
+    }
     container.appendChild(block);
     areeTesto.push(body);
   });
@@ -7540,6 +7583,24 @@ function aggiornaDiarioSoloExtra(patientId, nuovoExtra){
 function autoResizeTextarea(el){
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
+  // diario con righe del giorno prima: riallinea la copia in grigio ogni
+  // volta che il testo cambia, anche da codice (score, farmaci, EGA...)
+  if(el._aggiornaSpecchio) el._aggiornaSpecchio();
+}
+
+// righe delle AGGIUNTE (dopo la riga vuota) del diario archiviato più
+// recente prima di oggi: se oggi una riga è ancora identica, viene
+// mostrata in grigio chiaro in Diari per far capire che arriva dal giorno
+// prima. Appena la si modifica torna del colore normale
+function diarioRigheDiIeri(p){
+  if(!p || !p.storico) return new Set();
+  const oggi = chiaveGiorno(Date.now());
+  const chiavi = Object.keys(p.storico).filter(k => k < oggi).sort();
+  if(!chiavi.length) return new Set();
+  const t = p.storico[chiavi[chiavi.length - 1]] || '';
+  const i = t.indexOf('\n\n');
+  if(i === -1) return new Set();
+  return new Set(t.slice(i + 2).split('\n').map(r => r.trim()).filter(Boolean));
 }
 
 // salva la modifica fatta direttamente nel diario (vista Riepilogo) sulla
