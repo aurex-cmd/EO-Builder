@@ -961,6 +961,24 @@
     display:none; align-items:center; justify-content:center; padding:20px;
   }
   #score-modal-overlay.show{ display:flex; }
+  #mdc-modal-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  #mdc-modal-overlay.show{ display:flex; }
+  #mdc-modal{ width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px; color:var(--ink); }
+  #mdc-modal .mdc-sez{ background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; padding:10px 12px; margin-top:8px; }
+  #mdc-modal .mdc-sez h3{ margin:0 0 6px; font-family:var(--font-display); font-size:13px; letter-spacing:.04em; text-transform:uppercase; color:var(--signal); }
+  #mdc-modal .mdc-sez p, #mdc-modal .mdc-sez li{ font-size:13.5px; line-height:1.5; margin:0; }
+  #mdc-modal .mdc-sez ul{ margin:0; padding-left:18px; }
+  #mdc-modal .mdc-sez li + li{ margin-top:5px; }
+  #mdc-modal .mdc-calc{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); }
+  #mdc-modal .mdc-vfg{ text-align:center; padding:10px; border-radius:14px; background:var(--panel-2); border:1px solid var(--clay-border); }
+  #mdc-modal .mdc-vfg .val{ font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--signal); }
+  #mdc-modal .mdc-vfg .fonte{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  #mdc-chiudi-btn{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2);
+    color:var(--ink-dim); font-size:15px; cursor:pointer; box-shadow:var(--clay-out); flex-shrink:0; }
   #score-modal{
     width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
     background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
@@ -5903,7 +5921,7 @@ function chiudiIsolamentoModal(){
 }
 function apriAppEga(){ apriEgaAnalyzer('', null, null); }
 function apriAppVfg(){ apriVfgCalc('', null, null); }
-function apriAppFarmaco(chiave){ apriFarmaco(chiave, ''); }
+function apriAppFarmaco(chiave){ farmacoTriggerCtx = null; apriFarmaco(chiave, ''); }
 function toggleAppScoreSotto(){
   const sotto = document.getElementById('app-score-sotto');
   const chev = document.getElementById('app-score-chev');
@@ -7438,8 +7456,10 @@ function renderRiepilogo(){
       autoResizeTextarea(body);
       egaControllaTrigger(body.value, body, id);
       vfgControllaTrigger(body.value, body, id);
-      farmacoControllaTrigger(body.value, body);
+      farmacoControllaTrigger(body.value, body, id);
       scoreControllaTrigger(body.value, body, id);
+      mdcControllaTrigger(body.value, body, id);
+      premedControllaTrigger(body.value, body, id);
       ecgsimControllaTrigger(body.value, body);
       soffiControllaTrigger(body.value, body);
     });
@@ -11256,6 +11276,17 @@ try{
   </div>
 </div>
 
+<!-- TC CON MDC E VFG < 30: box informativo, vedi mdcControllaTrigger -->
+<div id="mdc-modal-overlay" onclick="if(event.target===this) chiudiMdcInfo()">
+  <div id="mdc-modal">
+    <div class="farmaco-modal-header">
+      <h2 id="mdc-modal-titolo">TC con MdC e funzione renale</h2>
+      <button id="mdc-chiudi-btn" onclick="chiudiMdcInfo()">✕</button>
+    </div>
+    <div id="mdc-corpo"></div>
+  </div>
+</div>
+
 <!-- SCORE: vedi apriScore / SCORE_DB più sotto -->
 <div id="score-modal-overlay" onclick="if(event.target===this) chiudiScore()">
   <div id="score-modal">
@@ -12610,14 +12641,31 @@ function apriFarmaco(chiave, testoDiario){
 }
 
 function chiudiFarmaco(){
+  // aperto da "/nomefarmaco" in Diari: alla chiusura il trigger viene tolto
+  // dal diario (come /premedicazione e gli score; NON VFG ed EGA:, che
+  // lasciano la loro riga di risultato)
+  const c = farmacoTriggerCtx;
+  if(c && c.textareaEl){
+    const el = c.textareaEl;
+    const nuovo = el.value
+      .replace(/[ \t]*\/([a-z]+)\b[ \t]*/gi, (tutto, parola) => {
+        let k = parola.toLowerCase();
+        if(FARMACI_ALIAS[k]) k = FARMACI_ALIAS[k];
+        return k === c.chiave ? ' ' : tutto;
+      })
+      .replace(/ +\n/g, '\n').replace(/\n +/g, '\n').replace(/^ +| +$/g, '');
+    if(nuovo !== el.value){
+      el.value = nuovo;
+      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
+      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+    }
+    el.dataset.farmacoAperto = '';
+  }
+  farmacoTriggerCtx = null;
   document.getElementById('farmaco-modal-overlay').classList.remove('show');
 }
+let farmacoTriggerCtx = null;
 
-// scritto "/nomefarmaco" nel diario (in Diari) -> apre il box del
-// farmaco corrispondente, una volta sola per comparsa di QUELLA parola
-// specifica: se poi si scrive "/altrofarmaco" (chiave diversa) si apre
-// anche quello. Chiudere e continuare a scrivere non lo riapre; si
-// riapre solo cancellando e riscrivendo lo stesso trigger da capo
 // ============================================================
 // SCORE — score clinici interattivi (Geneva, Wells, PESI/sPESI,
 // CHA2DS2-VASc, calcemia corretta, Padua, LRINEC, NIHSS, GCS, HAS-BLED,
@@ -13212,10 +13260,170 @@ function scoreControllaTrigger(testoAttuale, elementoTextarea, patientId){
   }
 }
 
-function farmacoControllaTrigger(testoAttuale, elementoTextarea){
+// ============================================================
+// TC CON MDC IN PAZIENTE CON VFG < 30 — box informativo (procedura del
+// Dipartimento di Diagnostica per Immagini, LG ESUR 2025): compare quando
+// nel diario si richiede una TC con mezzo di contrasto e la funzione renale
+// del paziente è < 30. La VFG si cerca, dal più recente:
+//  1) nel diario di oggi (riga "VFG: 25 mL/min" del calcolatore, o
+//     "eGFR 25" / "VFG 25" scritti a mano)
+//  2) negli esami del ricovero collegato
+//  3) nei diari dei giorni precedenti (storico)
+//  4) se non è scritta da nessuna parte: stimata con CKD-EPI 2021 da
+//     creatinina + età + sesso, se ci sono tutti e tre
+// Con il peso (dalla riga VFG o da "peso 65 kg") calcola anche le
+// velocità di infusione dei due schemi.
+// ============================================================
+const MDC_TC_RE = /angio-?\s?tc\b|\buro-?tc\b|\btc\b[^.\n]{0,50}?(?:\bcon\s+(?:m\.?d\.?c\.?|mezzo di contrasto|contrasto)\b|\bc\/\s?m\.?d\.?c\.?|\bc\.\s?m\.?d\.?c\.?|\bmdc\b|\bmultifasic\w*|\btrifasic\w*)/;
+let mdcContesto = null;
+
+function mdcTrovaVfg(testo){
+  let v = null, m;
+  const g = /\b(?:vfg|e?gfr|filtrato glomerulare)\s*(?:stimat[ao]\s*)?[:=]?\s*(\d+(?:[.,]\d+)?)/gi;
+  while((m = g.exec(testo || ''))){ const x = parseFloat(m[1].replace(',', '.')); if(x > 0 && x < 200) v = x; }
+  return v;
+}
+
+function mdcValutaRene(patientId, testoDiario){
+  let p = null, rec = null;
+  try{ p = loadPatients()[patientId]; } catch(e){}
+  try{ rec = loadRicoveri().find(r => r.esameObiettivoPatientId === patientId); } catch(e){}
+  const c = (rec && rec.campi) || {};
+  const esami = [c.ematochimici].concat((c.altriEsami || []).map(e => (e.nome || '') + ' ' + (e.testo || ''))).filter(Boolean).join('\n');
+  const storico = p && p.storico ? Object.keys(p.storico).sort().reverse().map(k => p.storico[k]) : [];
+  let vfg = null, fonte = '';
+  vfg = mdcTrovaVfg(testoDiario); if(vfg !== null) fonte = 'dal diario di oggi';
+  if(vfg === null){ vfg = mdcTrovaVfg(esami); if(vfg !== null) fonte = 'dagli esami del ricovero'; }
+  if(vfg === null){ for(const t of storico){ vfg = mdcTrovaVfg(t); if(vfg !== null){ fonte = 'da un diario precedente'; break; } } }
+  const tutto = [testoDiario, esami].concat(storico).join('\n');
+  if(vfg === null){
+    const d = typeof scoreRaccogliDati === 'function' ? scoreRaccogliDati(patientId, testoDiario) : {};
+    const eta = d.eta, sesso = d.sesso, cr = d.creat;
+    if(cr && eta && sesso){
+      const f = sesso === 'F';
+      const k = f ? 0.7 : 0.9, a = f ? -0.241 : -0.302;
+      vfg = Math.round(142 * Math.pow(Math.min(cr / k, 1), a) * Math.pow(Math.max(cr / k, 1), -1.2) * Math.pow(0.9938, eta) * (f ? 1.012 : 1));
+      fonte = `stimata con CKD-EPI 2021 (creatinina ${String(cr).replace('.', ',')} mg/dL, ${eta} anni, ${sesso})`;
+    }
+  }
+  let peso = null;
+  const mp = [...tutto.matchAll(/\bpeso\s*[:=]?\s*(\d{2,3}(?:[.,]\d+)?)\s*kg/gi)];
+  if(mp.length){ const x = parseFloat(mp[0][1].replace(',', '.')); if(x >= 25 && x <= 300) peso = x; }
+  return { vfg, fonte, peso };
+}
+
+// richiesta di TC con contrasto: esclude "TC senza mdc" / "TC s/mdc" (ma non
+// "con e senza mdc") e le richieste negate ("non eseguire TC con mdc")
+function mdcRichiestaTc(testo){
+  const t = (testo || '').toLowerCase();
+  const g = new RegExp(MDC_TC_RE.source, 'gi');
+  let m;
+  while((m = g.exec(t))){
+    const trovato = m[0];
+    if(/\bsenza\b|\bs\/\s?m\.?d\.?c/.test(trovato) && !/\bcon\b|\bc\//.test(trovato)) continue;
+    const prima = t.slice(Math.max(0, m.index - 25), m.index);
+    if(/\b(non|no|nega|senza|evitare|evitata|controindicat\w*)\b[^.;\n]*$/.test(prima)) continue;
+    return true;
+  }
+  return false;
+}
+
+function apriMdcInfo(r){
+  const f = x => String(Math.round(x)).replace('.', ',');
+  const calcBic = r.peso ? `<div class="mdc-calc">→ ${f(r.peso)} kg: ${f(r.peso * 3)} mL/h, 1 h prima e 1 h dopo</div>` : '';
+  const calcFis = r.peso ? `<div class="mdc-calc">→ ${f(r.peso)} kg: ${f(r.peso)} mL/h, 3–4 h prima e 4–6 h dopo</div>` : '';
+  document.getElementById('mdc-modal-titolo').textContent = 'TC con MdC e funzione renale';
+  mdcPremedContesto = null;
+  document.getElementById('mdc-corpo').innerHTML = `
+    <div class="mdc-vfg"><div class="val">VFG ${String(r.vfg).replace('.', ',')}</div><div class="fonte">${r.fonte}</div></div>
+    <div class="mdc-sez"><p>Secondo le LG ESUR 2025, con eGFR &lt; 30 mL/min/1,73 m² e mezzo di contrasto per via endovenosa sono necessari la <b>pre-idratazione</b> e il <b>monitoraggio</b> di diuresi e funzione renale.</p></div>
+    <div class="mdc-sez"><h3>Pre-idratazione EV</h3>
+      <p style="margin-bottom:6px;">Uno dei due schemi (pazienti a rischio moderato di AKI post-contrasto):</p>
+      <ul>
+        <li><b>NaHCO₃ 8,4%</b> 50 mL in 500 mL di fisiologica a <b>3 mL/kg/h</b> per 1 h prima e 1 h dopo il MdC${calcBic}</li>
+        <li><b>Fisiologica</b> a <b>1 mL/kg/h</b> per 3–4 h prima e 4–6 h dopo il MdC${calcFis}</li>
+      </ul>${r.peso ? '' : '<p style="margin-top:6px; font-size:12px; color:var(--ink-dim);">Peso non trovato nel diario: scrivi "peso 70 kg" per avere le velocità calcolate.</p>'}</div>
+    <div class="mdc-sez"><h3>Monitoraggio</h3>
+      <ul><li><b>Diuresi</b> fino a 72 h dopo l'indagine</li><li><b>Funzione renale</b> fino a 72 h dopo l'indagine</li></ul></div>
+    <div class="mdc-sez"><h3>Farmaci</h3>
+      <p>La somministrazione (e/o sospensione) di eventuali farmaci nefrotossici (ACE-inibitori/sartani, aminoglicosidi, FANS, antifungini, antivirali, betabloccanti, biguanidi, diuretici dell'ansa, interleuchina) non è necessaria, a meno che non sia ritenuta opportuna dal nefrologo e/o dal medico curante.</p></div>`;
+  document.getElementById('mdc-modal-overlay').classList.add('show');
+}
+function chiudiMdcInfo(){
+  // box aperto con /premedicazione: alla chiusura il trigger sparisce dal
+  // diario (come per gli score), senza lasciare residui nel testo
+  const c = mdcPremedContesto;
+  if(c && c.textareaEl){
+    const el = c.textareaEl;
+    const nuovo = el.value.replace(/[ \t]*\/premedicazione\b[ \t]*/i, ' ').replace(/ +\n/g, '\n').replace(/^ +| +$/g, '');
+    if(nuovo !== el.value){
+      el.value = nuovo;
+      if(c.patientId && typeof aggiornaDiarioTesto === 'function') aggiornaDiarioTesto(c.patientId, nuovo);
+      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+    }
+    el.dataset.premedAperto = '';
+  }
+  mdcPremedContesto = null;
+  document.getElementById('mdc-modal-overlay').classList.remove('show');
+}
+
+// ============================================================
+// /premedicazione — box informativo sulla premedicazione per le reazioni
+// allergiche al MdC (procedura del Dipartimento di Diagnostica per
+// Immagini, LG ESUR 2025). Condivide il modale del box TC/funzione renale
+// ============================================================
+let mdcPremedContesto = null;
+function apriPremedicazioneInfo(textareaEl, patientId){
+  mdcPremedContesto = { textareaEl: textareaEl || null, patientId: patientId || null };
+  document.getElementById('mdc-modal-titolo').textContent = 'Premedicazione per MdC';
+  document.getElementById('mdc-corpo').innerHTML = `
+    <div class="mdc-sez"><h3>Quando è raccomandata</h3>
+      <p style="margin-bottom:6px;">Secondo le LG ESUR 2025, la premedicazione preventiva per le reazioni allergiche al MdC è raccomandata in caso di:</p>
+      <ul>
+        <li>pregressa reazione allergica o simil-allergica dopo un'indagine con la <b>medesima classe di MdC</b> da impiegare;</li>
+        <li><b>asma bronchiale</b> o <b>orticaria-angioedema</b> non controllati dalla terapia farmacologica;</li>
+        <li><b>mastocitosi</b>;</li>
+        <li>pregressa <b>anafilassi idiopatica</b> (episodi di anafilassi senza causa scatenante riconoscibile).</li>
+      </ul></div>
+    <div class="mdc-sez"><h3>Schema di premedicazione</h3>
+      <ul>
+        <li><b>Prednisolone 50 mg per os</b> oppure <b>metilprednisolone 32 mg per os</b>, <b>13, 7 e 1 ora</b> prima dell'esame</li>
+        <li><b>+ antistaminico</b> (es. cetirizina 10 mg o clorfenamina 10 mg) <b>1 ora</b> prima dell'esame</li>
+      </ul></div>`;
+  document.getElementById('mdc-modal-overlay').classList.add('show');
+}
+function premedControllaTrigger(testoAttuale, elementoTextarea, patientId){
+  const presente = /\/premedicazione\b/i.test(testoAttuale || '');
+  if(presente && elementoTextarea.dataset.premedAperto !== '1'){
+    elementoTextarea.dataset.premedAperto = '1';
+    apriPremedicazioneInfo(elementoTextarea, patientId);
+  } else if(!presente){
+    elementoTextarea.dataset.premedAperto = '';
+  }
+}
+
+// una sola comparsa per richiesta: si riattiva se la richiesta di TC con
+// MdC viene cancellata e riscritta
+function mdcControllaTrigger(testoAttuale, elementoTextarea, patientId){
+  const richiesta = mdcRichiestaTc(testoAttuale);
+  if(!richiesta){ elementoTextarea.dataset.mdcAvvisato = ''; return; }
+  if(elementoTextarea.dataset.mdcAvvisato === '1') return;
+  const r = mdcValutaRene(patientId, testoAttuale);
+  if(r.vfg === null || r.vfg >= 30) return;
+  elementoTextarea.dataset.mdcAvvisato = '1';
+  apriMdcInfo(r);
+}
+
+// scritto "/nomefarmaco" nel diario (in Diari) -> apre il box del
+// farmaco corrispondente, una volta sola per comparsa di QUELLA parola
+// specifica: se poi si scrive "/altrofarmaco" (chiave diversa) si apre
+// anche quello. Chiudere e continuare a scrivere non lo riapre; si
+// riapre solo cancellando e riscrivendo lo stesso trigger da capo
+function farmacoControllaTrigger(testoAttuale, elementoTextarea, patientId){
   const chiave = farmacoTrovaChiaveAttiva(testoAttuale);
   if(chiave && elementoTextarea.dataset.farmacoAperto !== chiave){
     apriFarmaco(chiave, testoAttuale);
+    farmacoTriggerCtx = { textareaEl: elementoTextarea, patientId: patientId || null, chiave };
     elementoTextarea.dataset.farmacoAperto = chiave;
   } else if(!chiave){
     elementoTextarea.dataset.farmacoAperto = '';
