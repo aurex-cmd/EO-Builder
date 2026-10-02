@@ -14309,8 +14309,26 @@ document.addEventListener('paste', (e) => {
   if(!boxDiario && !boxReferto) return;
   const incollato = (e.clipboardData || window.clipboardData)?.getData('text');
   if(!incollato) return;
-  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto);
-  const finale = correggiAccenti(formattato === null ? incollato : formattato);
+  // nei diari si incollano di fatto solo referti: ogni testo incollato su
+  // più righe viene unito, con o senza intestazione riconosciuta (prima
+  // solo dopo "Rx/TC/Eco...:" sulla stessa riga del cursore). Più referti
+  // incollati insieme, ciascuno con la sua intestazione, restano su righe
+  // separate. Ctrl+Z / Annulla riporta il testo com'era
+  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto || boxDiario);
+  let finale = correggiAccenti(formattato === null ? incollato : formattato);
+  // intestazione scritta a mano e poi "a capo" prima di incollare
+  // ("AngioTC dell'aorta toracica:" + Invio + incolla): il referto va
+  // attaccato all'intestazione, sulla stessa riga
+  const primaCursore = el.value.slice(0, el.selectionStart);
+  const capo = primaCursore.match(/:[ \t]*\n[ \t]*$/);
+  if(capo && /[\r\n]/.test(incollato.trim())){
+    const riga = primaCursore.slice(0, capo.index + 1);
+    const rigaIntest = riga.slice(riga.lastIndexOf('\n') + 1);
+    if(eIntestazioneReferto(rigaIntest)){
+      el.setSelectionRange(capo.index + 1, el.selectionEnd);
+      finale = ' ' + finale.replace(/^\s+/, '');
+    }
+  }
   if(finale === incollato) return;              // niente da cambiare: incolla normale
   e.preventDefault();
   el.focus();
