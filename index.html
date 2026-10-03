@@ -7846,21 +7846,38 @@ function aggConsPezzi(testo){
     return { testo: senza, trattino: senza !== x, richiesta: /^R\b/.test(senza) };
   });
 }
-// richieste "R ..." ANCHE dentro una riga: dopo una freccia ("->", "→",
+// richieste "R ..." ANCHE dentro una riga (vedi i due casi nella
+// funzione): dopo una freccia ("->", "→",
 // ">"), un ";", una virgola o una parentesi, oppure a inizio riga. Il
 // (anche dopo i due punti: "Dolore dorsale: R RX rachide"). Il
 // giallo va dalla R fino al separatore successivo (virgola, punto e
 // virgola, freccia, parentesi chiusa) o a fine riga:
 // "mantiene Amoxi/clav ev -> R RX torace" → giallo solo "R RX torace"
 function aggConsRichiesteHtml(testo, apri, chiudi){
-  const re = /(^|->|→|>|;|:|,|\()(\s*)(R\s+[^,;()→>]+?)(?=\s*(?:,|;|->|→|>|\)|$))/g;
-  let out = '', ultimo = 0, m;
-  while((m = re.exec(testo))){
-    const inizio = m.index + m[1].length + m[2].length;
-    out += aggConsEsc(testo.slice(ultimo, inizio)) + apri + aggConsEsc(m[3]) + chiudi;
-    ultimo = inizio + m[3].length;
-    if(m[0] === '') re.lastIndex++;
+  const fine = String.raw`(?=\s*(?:,|;|->|→|>|\)|$))`;
+  // 1) R a inizio riga o dopo un separatore: qualsiasi richiesta
+  const reSep = new RegExp(String.raw`(^|->|→|>|;|:|,|\()(\s*)(R\s+[^,;()→>]+?)` + fine, 'g');
+  // 2) R in mezzo alla frase (\"per peggioramento respiratorio R RX torace\"):
+  //    solo se seguita da un esame strumentale, una visita/consulenza o la
+  //    FKT, così \"KCl R 2 cp\" non diventa giallo
+  const esami = String.raw`(?:rx|tc|angio-?\w*|uro-?tc|rmn?|eco\w*|doppler|ecocolordoppler|v\.|visita|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia)`;
+  const reMezzo = new RegExp(String.raw`(\s)()(R\s+` + esami + String.raw`(?![\p{L}])[^,;()→>]*?)` + fine, 'giu');
+  const intervalli = [];
+  for(const re of [reSep, reMezzo]){
+    let m;
+    while((m = re.exec(testo))){
+      const inizio = m.index + m[1].length + m[2].length;
+      intervalli.push([inizio, inizio + m[3].length]);
+      if(m[0] === '') re.lastIndex++;
+    }
   }
+  intervalli.sort((a, b) => a[0] - b[0]);
+  let out = '', ultimo = 0;
+  intervalli.forEach(([a, b]) => {
+    if(a < ultimo) return; // sovrapposto a uno già evidenziato
+    out += aggConsEsc(testo.slice(ultimo, a)) + apri + aggConsEsc(testo.slice(a, b)) + chiudi;
+    ultimo = b;
+  });
   return out + aggConsEsc(testo.slice(ultimo));
 }
 function aggConsHtmlConsegna(testo){
