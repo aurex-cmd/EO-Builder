@@ -514,6 +514,39 @@
      campo prende il focus faceva perdere il primo tocco. Al focus cambia
      SOLO il colore del testo: la textarea è sempre sopra, trasparente, e
      lo sfondo lo disegna sempre la copia sotto */
+  /* ---------- AGGIORNA CONSEGNE (vista di Diari) ---------- */
+  .agg-cons-barra{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .agg-cons-barra label{ font-size:13px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .agg-cons-scroll{ overflow-x:auto; }
+  table.agg-cons{ width:100%; border-collapse:separate; border-spacing:0 6px; table-layout:fixed; }
+  table.agg-cons col.c-letto{ width:30%; max-width:150px; }
+  table.agg-cons th{ text-align:left; font-size:11.5px; font-family:var(--font-mono); color:var(--ink-dim); font-weight:600; padding:0 8px 2px; text-transform:uppercase; letter-spacing:.04em; }
+  table.agg-cons td{ vertical-align:top; background:var(--panel-2); padding:8px; border-top:1px solid var(--clay-border); border-bottom:1px solid var(--clay-border); color:var(--ink); }
+  table.agg-cons td:first-child{ border-left:1px solid var(--clay-border); border-radius:12px 0 0 12px; font-weight:700; font-size:13.5px; overflow-wrap:anywhere; }
+  table.agg-cons td:first-child > div:first-child{ margin-bottom:6px; }
+  table.agg-cons .agg-cons-righe{ cursor:text; overflow-wrap:anywhere; }
+  table.agg-cons td:last-child{ border-right:1px solid var(--clay-border); border-radius:0 12px 12px 0; }
+  table.agg-cons textarea.agg-cons-testo{ width:100%; min-height:44px; resize:vertical; font-size:13.5px; line-height:1.45; padding:6px 8px;
+    border-radius:9px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); font-family:inherit; box-sizing:border-box; }
+  table.agg-cons .agg-cons-righe{ font-size:13.5px; line-height:1.5; color:var(--ink); }
+  /* trattino in una colonnina a sé: le righe che vanno a capo restano
+     allineate al testo, non al trattino (prima il rientro era stimato in
+     "em" e non coincideva con la larghezza reale di "- ") */
+  table.agg-cons .agg-cons-righe .riga{ display:flex; gap:.4em; }
+  table.agg-cons .agg-cons-righe .riga .tr{ flex:0 0 auto; }
+  table.agg-cons .agg-cons-righe .riga .tx{ flex:1 1 auto; min-width:0; }
+  table.agg-cons .agg-cons-righe .r{ background:#ffff00; color:#12181e; padding:0 2px; border-radius:2px; }
+  table.agg-cons .agg-cons-azioni{ display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  table.agg-cons .agg-cons-azioni button, table.agg-cons .agg-cons-etichetta{ font-size:12px; padding:4px 9px; border-radius:8px;
+    border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); cursor:pointer; }
+  table.agg-cons .agg-cons-esami{ margin-top:6px; font-size:12.5px; line-height:1.45; color:var(--ink-dim); white-space:pre-wrap;
+    background:var(--panel); border:1px dashed var(--clay-border); border-radius:9px; padding:6px 8px; }
+  table.agg-cons .agg-cons-etichetta{ display:block; width:100%; margin-bottom:5px; text-align:left; white-space:normal; font-weight:400; line-height:1.35; }
+  table.agg-cons .agg-cons-etichetta .ico-sotto{ display:block; text-align:right; line-height:1; margin-top:2px; }
+  table.agg-cons .agg-cons-etichetta .ee{ background:#edabee; color:#12181e; font-weight:700; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-etichetta .dim{ background:#00ffff; color:#12181e; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-vuoto{ font-size:12px; color:var(--ink-dim); }
+
   .bed-text-wrap{ position:relative; }
   .bed-text-specchio{ position:absolute; inset:0; pointer-events:none; overflow:hidden;
     overflow-wrap:break-word; word-break:normal; z-index:0; }
@@ -1495,9 +1528,9 @@
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="1.5"/><rect x="9" y="2.3" width="6" height="3" rx="1"/><line x1="9" y1="10.5" x2="15" y2="10.5"/><line x1="9" y1="13.8" x2="15" y2="13.8"/><line x1="9" y1="17.1" x2="13" y2="17.1"/></svg> Diari</h2>
   <div class="group">
     <div class="inline-fields" style="flex-wrap:nowrap;">
-      <button class="btn primary" style="flex:1;" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
+      <button class="btn primary" style="flex:1;" id="diari-esporta-btn" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
       <button class="btn" style="flex:1;" id="diari-toggle-giorno-btn" onclick="toggleDiariGiorno()">Diari di ieri</button>
-      <button class="btn" style="flex:1;" onclick="chiudiWardMap()" title="Torna alla scheda" aria-label="Torna alla scheda">Indietro ←</button>
+      <button class="btn" style="flex:1;" onclick="diariIndietro()" title="Indietro" aria-label="Indietro">Indietro ←</button>
     </div>
   </div>
   <div class="group" id="riepilogo-lista"></div>
@@ -5931,7 +5964,8 @@ function toggleWardMap(){
 }
 function apriWardMap(){ mostraVista('wardmap'); }
 function chiudiWardMap(){ mostraVista('clinical'); }
-function apriRiepilogo(){ mostraVista('riepilogo'); }
+// riaprendo Diari si riparte sempre dall'elenco, non dalla tabella consegne
+function apriRiepilogo(){ if(typeof diariVistaConsegne !== 'undefined') diariVistaConsegne = false; mostraVista('riepilogo'); }
 
 // vista "App": elenco degli strumenti clinici integrati (EGA, VFG,
 // farmaci). Aprirli da qui usa le stesse funzioni già richiamate scrivendo
@@ -7391,7 +7425,19 @@ function renderRiepilogo(){
   // (stessa riga di "Esporta"/"Torna alla scheda", vedi HTML): qui si
   // aggiorna solo il testo, non se ne crea uno nuovo a ogni render
   const toggleGiornoBtn = document.getElementById('diari-toggle-giorno-btn');
-  if(toggleGiornoBtn) toggleGiornoBtn.textContent = diariMostraIeri ? 'Diari di oggi' : 'Diari di ieri';
+  if(toggleGiornoBtn){
+    toggleGiornoBtn.textContent = diariMostraIeri ? 'Diari di oggi' : 'Diari di ieri';
+    // nella tabella "Aggiorna consegne" non serve
+    toggleGiornoBtn.style.display = (diariVistaConsegne && !diariMostraIeri) ? 'none' : '';
+  }
+  // nemmeno l'esportazione dei diari in .txt
+  const esportaBtn = document.getElementById('diari-esporta-btn');
+  if(esportaBtn) esportaBtn.style.display = (diariVistaConsegne && !diariMostraIeri) ? 'none' : '';
+
+  if(diariVistaConsegne && !diariMostraIeri && entries.length){
+    renderAggiornaConsegne(container, entries);
+    return;
+  }
 
   if(entries.length === 0){
     const vuoto = document.createElement('div');
@@ -7612,16 +7658,325 @@ function renderRiepilogo(){
   // obiettivo di TUTTI i diari del giorno, lasciando solo le aggiunte dopo
   // la riga vuota — comodo per scorrere solo i provvedimenti quando si
   // aggiornano le consegne
-  const toggleBtn = document.createElement('button');
-  toggleBtn.className = 'btn';
-  toggleBtn.style.cssText = 'display:block; width:100%; margin-top:14px;';
-  toggleBtn.textContent = diariSoloConsegneAttivo ? 'Mostra E.O.' : 'Nascondi E.O.';
-  toggleBtn.onclick = toggleDiariSoloConsegne;
-  container.appendChild(toggleBtn);
+  // (prima: "Nascondi E.O.") — apre la tabella per aggiornare le consegne
+  if(!diariMostraIeri){
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn primary';
+    toggleBtn.style.cssText = 'display:block; width:100%; margin-top:14px;';
+    toggleBtn.textContent = 'Aggiorna consegne';
+    toggleBtn.onclick = () => { diariVistaConsegne = true; diariSoloConsegneAttivo = false; renderRiepilogo(); window.scrollTo(0, 0); };
+    container.appendChild(toggleBtn);
+  }
 }
 
 // vedi il pulsante in fondo a renderRiepilogo()
 let diariSoloConsegneAttivo = false;
+
+// ============================================================
+// AGGIORNA CONSEGNE — al posto di "Nascondi E.O.": una tabella con una riga
+// per letto, pronta per aggiornare le consegne:
+//  - Consegna: sintesi delle aggiunte del diario (l'esame obiettivo è
+//    escluso), ottenuta con regole fisse, offline: niente esami
+//    ematochimici/EGA/VFG (restano consultabili col pulsante "Esami"),
+//    colture e provvedimenti sì, abbreviati come si scrive in consegna
+//    ("si richiede" → R, "terapia antibiotica" → ATB, ...). Le righe
+//    rimaste identiche al diario di ieri sono già in consegna: escluse,
+//    salvo spunta "Includi righe di ieri". Il testo è modificabile prima
+//    di copiarlo
+//  - Esami / dimissione: "EE 04/10" (evidenziato in violetto come nel
+//    documento delle consegne) e "Dimissione 04/10", calcolati da "esami
+//    domani", "esami per lunedì", "esami il 6/10", "dimesso sabato"...;
+//    si copiano già formattati per incollarli nel Google Doc
+// ============================================================
+let diariVistaConsegne = false;
+// modifiche fatte a mano alle consegne nella tabella (per id paziente)
+const aggConsModifiche = new Map();
+// "Indietro" in Diari: dalla tabella delle consegne torna ai diari, dai
+// diari torna alla scheda (come prima)
+function diariIndietro(){
+  if(diariVistaConsegne){ diariVistaConsegne = false; renderRiepilogo(); window.scrollTo(0, 0); return; }
+  chiudiWardMap();
+}
+
+const AGG_CONS_RIGA_ESAMI = /^\s*(?:[-–•*]\s*)?(?:agli\s+(?:ee|eec|esami)\b|(?:ee|eec)\s*[:.]|esami(?:\s+(?:ematochimici|ematici|di\s+laboratorio|del\s+sangue))?\s*:|ematochimici\s*:|emocromo\s*:|vfg\s*:|ega\s*:|emogas\w*\s*:)/i;
+const AGG_CONS_ABBREVIAZIONI = [
+  [/\bmantenere\s+(?:l'|la\s+)?indicazione\s+(?:a|al|alla|allo|ai|agli|alle)\s+/gi, ''],
+  [/\bsi\s+richied\w*\s+|\brichiest[aoie]\s+|\brichied[oe]\s+|\bsi\s+richiede\s+|\brichiedere\s+/gi, 'R '],
+  [/\bterapia\s+antibiotica\b|\bantibioticoterapia\b/gi, 'ATB'],
+  [/\besami\s+(?:ematochimici|ematici|di\s+laboratorio)(?:\s+di\s+controllo)?\b|\besami\s+di\s+controllo\b/gi, 'EE'],
+  [/\bsi\s+sospende\b|\bsospes[oaie]\b|\bsospend[oe]\b|\bsospendere\b/gi, 'stop'],
+  [/\bsoluzione\s+fisiologica\b/gi, 'SF'],
+  [/\bcatetere\s+vescicale\b/gi, 'CV'],
+  [/\bossigenoterapia\b/gi, 'O2tp'],
+  [/\bfisio(?:kinesi)?terapia\b/gi, 'FKT'],
+  [/\burinocoltur[ae]\b/gi, 'URO'],
+  [/\bvisita\s+(?=\p{L})/giu, 'v. '],
+  [/\bvalutazione\s+(?=\p{L})/giu, 'val. '],
+  [/\bconsulenza\s+(?=\p{L})/giu, 'cons. '],
+  [/\bnegativa\s+la\s+ricerca\s+(?:di|del|della|dello|dei|degli|delle)\s+/gi, 'neg ricerca '],
+  [/\bpositiva\s+la\s+ricerca\s+(?:di|del|della|dello|dei|degli|delle)\s+/gi, 'pos ricerca '],
+  [/\bsi\s+(prosegue|inizia|imposta|aumenta|riduce|posiziona|esegue|rimuove|avvia)\b/gi, '$1'],
+  [/\bprosegu[eo]\b/gi, 'prosegue'],
+  [/\b(?:in\s+data|il\s+giorno)\s+/gi, '']
+];
+const AGG_CONS_GIORNI = { 'lunedì':1, 'lunedi':1, 'martedì':2, 'martedi':2, 'mercoledì':3, 'mercoledi':3, 'giovedì':4, 'giovedi':4, 'venerdì':5, 'venerdi':5, 'sabato':6, 'domenica':0 };
+
+function aggConsData(d){ return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
+function aggConsProssimoGiorno(idx){
+  const d = new Date(); d.setHours(0,0,0,0);
+  let diff = (idx - d.getDay() + 7) % 7; if(diff === 0) diff = 7; // "esami lunedì" detto di lunedì = il prossimo
+  d.setDate(d.getDate() + diff); return d;
+}
+function aggConsDataDaGiornoMese(g, m){
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const d = new Date(oggi.getFullYear(), m - 1, g);
+  if(d < oggi && (oggi - d) > 180 * 864e5) d.setFullYear(d.getFullYear() + 1);
+  return isNaN(d) ? null : d;
+}
+
+// data degli esami programmati: "esami domani" (le frasi della E), "esami
+// per sabato", "EE lunedì", "esami il 6/10"
+function aggConsDataEsami(extra){
+  const t = (extra || '').toLowerCase().replace(/\s+/g, ' ');
+  if(typeof haEsamiDomani === 'function' && haEsamiDomani(t)){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
+  const esami = String.raw`(?:esami|ee|eec)(?:\s+(?:ematochimici|ematici|di\s+controllo|programmati|previsti))*(?:\s+(?:per|il|di|da\s+fare|fissati\s+per))?`;
+  let m = t.match(new RegExp(esami + String.raw`\s+(lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica)(?![a-zà-ù])`));
+  if(m) return aggConsProssimoGiorno(AGG_CONS_GIORNI[m[1]]);
+  m = t.match(new RegExp(esami + String.raw`\s+(?:\p{L}+\s+)?(\d{1,2})[\/.](\d{1,2})(?!\d)`, 'u'));
+  if(m) return aggConsDataDaGiornoMese(+m[1], +m[2]);
+  return null;
+}
+function aggConsDataDimissione(extra){
+  if(typeof estraiDimissioniProgrammate !== 'function') return null;
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const date = estraiDimissioniProgrammate(extra).filter(d => d >= oggi).sort((a, b) => a - b);
+  return date[0] || null;
+}
+
+// frasi già coperte dalla colonna Esami/dimissione: tolte dalla sintesi
+function aggConsTogliProgrammati(riga){
+  const giorni = String.raw`(?:domani|oggi|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
+  return riga
+    .replace(new RegExp(String.raw`[^.;\n]*\b(?:esami|ee|eec)\b[^.;\n]*?\b` + giorni + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
+    .replace(new RegExp(String.raw`[^.;\n]*\b(?:domani\s+esami|domani\s+dimess[oa]|dimess[oa]\s+` + giorni + String.raw`|dimission[ei])[^.;\n]*[.;]?`, 'gi'), '')
+    .trim();
+}
+
+function aggConsSintesi(extra, righeIeri, includiIeri){
+  const esami = [];
+  const pezzi = [];
+  (extra || '').split('\n').forEach(r => {
+    const riga = r.trim();
+    if(!riga) return;
+    if(AGG_CONS_RIGA_ESAMI.test(riga)){ esami.push(riga); return; }
+    if(!includiIeri && righeIeri && righeIeri.has(riga)) return;
+    let x = aggConsTogliProgrammati(riga.replace(/^[-–•*·▪►]\s*/, ''));
+    if(!x) return;
+    AGG_CONS_ABBREVIAZIONI.forEach(([re, sost]) => { x = x.replace(re, sost); });
+    x = x.replace(/\s{2,}/g, ' ').replace(/\s+([,;.:])/g, '$1').replace(/[.;,]+$/, '').trim();
+    if(x) pezzi.push(x);
+  });
+  // una consegna per riga, col trattino, iniziale maiuscola
+  let testo = pezzi.map(x => '- ' + x.charAt(0).toUpperCase() + x.slice(1)).join('\n');
+  return { testo, esami };
+}
+
+// copia negli appunti con formattazione (HTML) + testo semplice: incollato
+// in Google Docs mantiene evidenziazione e grassetto
+async function aggConsCopia(html, testo, btn){
+  let ok = false;
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type:'text/html' }), 'text/plain': new Blob([testo], { type:'text/plain' }) })]);
+      ok = true;
+    }
+  } catch(e){}
+  if(!ok){
+    const div = document.createElement('div');
+    div.contentEditable = 'true'; div.innerHTML = html;
+    div.style.cssText = 'position:fixed; left:-9999px; top:0; opacity:0;';
+    document.body.appendChild(div);
+    const sel = window.getSelection(); const range = document.createRange();
+    range.selectNodeContents(div); sel.removeAllRanges(); sel.addRange(range);
+    try{ ok = document.execCommand('copy'); } catch(e){}
+    sel.removeAllRanges(); div.remove();
+  }
+  if(btn){ const prima = btn.innerHTML; btn.textContent = ok ? 'Copiato ✓' : 'Non copiato'; setTimeout(() => { btn.innerHTML = prima; }, 1200); }
+}
+
+// formattazione per il Google Doc delle consegne: Arial 10, nessuno
+// sfondo, tranne i colori convenzionali del reparto (presi dal documento):
+//  - giallo (#ffff00): richieste di esami strumentali/visite ("R ...")
+//  - violetto (#edabee, grassetto): EE gg/mm
+//  - azzurro (#00ffff): dimissione
+const AGG_CONS_STILE_BASE = 'font-family:Arial,sans-serif; font-size:10pt; background-color:transparent; color:#000000;';
+const aggConsEsc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// i pezzi della consegna (separati da ";") che iniziano con "R " sono
+// richieste: evidenziati in giallo
+// una riga per consegna ("- ..."): le righe che iniziano con "R " sono
+// richieste, evidenziate in giallo (trattino escluso)
+function aggConsPezzi(testo){
+  return (testo || '').split('\n').map(x => x.trim()).filter(Boolean).map(x => {
+    const senza = x.replace(/^[-–•]\s*/, '');
+    return { testo: senza, trattino: senza !== x, richiesta: /^R\b/.test(senza) };
+  });
+}
+function aggConsHtmlConsegna(testo){
+  const righe = aggConsPezzi(testo).map(p => (p.trattino ? '- ' : '') + (p.richiesta
+    ? `<span style="background-color:#ffff00;">${aggConsEsc(p.testo)}</span>`
+    : aggConsEsc(p.testo)));
+  return `<span style="${AGG_CONS_STILE_BASE}">${righe.join('<br>')}</span>`;
+}
+function aggConsHtmlEtichetta(testo, sfondo, grassetto){
+  return `<span style="${AGG_CONS_STILE_BASE} background-color:${sfondo}; color:#12181e;${grassetto ? ' font-weight:bold;' : ''}">${aggConsEsc(testo)}</span>`;
+}
+
+// destinazione della dimissione, con il nome della struttura se scritto
+// subito dopo (parole con l'iniziale maiuscola, anche "S." o "di"):
+// "CdR Merlara", "OdC di Montagnana" → "OdC Montagnana", "RSA S. Tecla".
+// Ordine di precedenza: RSA, OdC, CdR, Hospice; altrimenti "Dimissione"
+const AGG_CONS_DESTINAZIONI = [
+  ['RSA', /\brsa\b/i],
+  ['OdC', /\bodc\b|ospedale\s+di\s+comunit[àa]/i],
+  ['CdR', /\bcdr\b|casa\s+di\s+riposo/i],
+  ['Hospice', /\bhospice\b/i]
+];
+const AGG_CONS_NON_NOMI = /^(?:Lunedì|Lunedi|Martedì|Martedi|Mercoledì|Mercoledi|Giovedì|Giovedi|Venerdì|Venerdi|Sabato|Domenica|Domani|Oggi|Se|Ma|In|Con|Dopo|Prima|Dimesso|Dimessa|Dimissione)$/;
+function aggConsDestinazione(extra){
+  for(const [sigla, re] of AGG_CONS_DESTINAZIONI){
+    const m = re.exec(extra || '');
+    if(!m) continue;
+    const dopo = extra.slice(m.index + m[0].length).replace(/^\s+(?:di|a|del|della|dello|presso)\b/, '');
+    const parole = [];
+    for(const p of dopo.match(/^\s+(\S+(?:\s+\S+){0,4})/)?.[1].split(/\s+/) || []){
+      const pulita = p.replace(/[,;:.!?)]+$/, '');
+      if(!/^[A-ZÀ-Ù]/.test(p) || AGG_CONS_NON_NOMI.test(pulita)) break;
+      parole.push(/^[A-ZÀ-Ù]\.$/.test(p) ? p : pulita);
+      if(/[,;:!?)]$/.test(p) || (/\.$/.test(p) && !/^[A-ZÀ-Ù]\.$/.test(p))) break;
+    }
+    return parole.length ? `${sigla} ${parole.join(' ')}` : sigla;
+  }
+  return 'Dimissione';
+}
+
+function renderAggiornaConsegne(container, entries){
+
+  const scroll = document.createElement('div');
+  scroll.className = 'agg-cons-scroll';
+  const tab = document.createElement('table');
+  tab.className = 'agg-cons';
+  tab.innerHTML = '<colgroup><col class="c-letto"><col></colgroup><thead><tr><th>Letto</th><th>Consegna</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  entries.forEach(([id, p]) => {
+    const testo = getRefertoFor(p.state);
+    const sep = testo.indexOf('\n\n');
+    const extra = sep === -1 ? '' : testo.slice(sep + 2);
+    // le righe identiche a ieri sono già in consegna (che si aggiorna giorno
+    // per giorno): sempre escluse
+    const { testo: sintesi, esami } = aggConsSintesi(extra, diarioRigheDiIeri(p), false);
+    const dEsami = aggConsDataEsami(extra);
+    const dDim = aggConsDataDimissione(extra);
+
+    const tr = document.createElement('tr');
+    const tdLetto = document.createElement('td');
+    const nomeLetto = document.createElement('div');
+    nomeLetto.textContent = p.name;
+    tdLetto.appendChild(nomeLetto);
+
+    const tdCons = document.createElement('td');
+    // consegna mostrata già formattata (una riga per voce, richieste "R ..."
+    // in giallo), come arriverà nel documento: non modificabile
+    // toccandola diventa modificabile; uscendo dal campo torna la vista
+    // formattata. Le modifiche valgono per questa sessione (sopravvivono ai
+    // ridisegni, non si salvano nel diario)
+    let corrente = aggConsModifiche.has(id) ? aggConsModifiche.get(id) : sintesi;
+    const vista = document.createElement('div');
+    vista.className = 'agg-cons-righe';
+    vista.title = 'Tocca per modificare';
+    const disegna = () => {
+      const pz = aggConsPezzi(corrente);
+      vista.innerHTML = pz.length
+        ? pz.map(p => `<div class="riga"><span class="tr">${p.trattino ? '-' : ''}</span><span class="tx">${p.richiesta ? `<span class="r">${aggConsEsc(p.testo)}</span>` : aggConsEsc(p.testo)}</span></div>`).join('')
+        : '<span class="agg-cons-vuoto">Nessuna novità rispetto a ieri — tocca per scrivere</span>';
+      bCopia.style.display = pz.length ? '' : 'none';
+    };
+    vista.onclick = () => {
+      const ta = document.createElement('textarea');
+      ta.className = 'agg-cons-testo';
+      ta.value = corrente;
+      vista.replaceWith(ta);
+      const adatta = () => { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; };
+      ta.addEventListener('input', adatta);
+      ta.addEventListener('blur', () => {
+        corrente = ta.value.replace(/\s+$/, '');
+        aggConsModifiche.set(id, corrente);
+        disegna();
+        ta.replaceWith(vista);
+        // un ridisegno arrivato dal cloud mentre si scriveva era in attesa
+        if(typeof ridisegnoInSospeso !== 'undefined' && ridisegnoInSospeso) setTimeout(() => { if(!campoAttivo()) ridisegnaVisteDopoPull(); }, 300);
+      });
+      ta.focus();
+      adatta();
+    };
+    tdCons.appendChild(vista);
+    const azioni = document.createElement('div');
+    azioni.className = 'agg-cons-azioni';
+    const bCopia = document.createElement('button');
+    bCopia.textContent = 'Copia';
+    bCopia.onclick = () => aggConsCopia(aggConsHtmlConsegna(corrente), corrente, bCopia);
+    azioni.appendChild(bCopia);
+    disegna();
+    if(esami.length){
+      const bEsami = document.createElement('button');
+      bEsami.textContent = 'Esami';
+      const box = document.createElement('div');
+      box.className = 'agg-cons-esami';
+      box.textContent = esami.join('\n');
+      box.style.display = 'none';
+      bEsami.onclick = () => { const vis = box.style.display === 'none'; box.style.display = vis ? '' : 'none'; bEsami.textContent = vis ? 'Nascondi esami' : 'Esami'; };
+      azioni.appendChild(bEsami);
+      tdCons.appendChild(azioni);
+      tdCons.appendChild(box);
+    } else {
+      tdCons.appendChild(azioni);
+    }
+
+    // esami e dimissione sotto il nome del letto (niente terza colonna)
+    const tdEE = tdLetto;
+    if(dEsami){
+      const t = 'EE ' + aggConsData(dEsami);
+      const b = document.createElement('button');
+      b.className = 'agg-cons-etichetta';
+      b.title = 'Copia formattato';
+      b.innerHTML = `<span class="ee">${t}</span> ⧉`;
+      b.onclick = () => aggConsCopia(aggConsHtmlEtichetta(t, '#edabee', true), t, b);
+      tdEE.appendChild(b);
+    }
+    if(dDim){
+      // "Dimissione sabato 03/10"; se nelle aggiunte c'è la destinazione
+      // (RSA, OdC, CdR, Hospice), questa prende il posto di "Dimissione":
+      // "RSA sabato 03/10"
+      const dest = aggConsDestinazione(extra);
+      const t = `${dest} ${NOMI_GIORNI_SETTIMANA[dDim.getDay()]} ${aggConsData(dDim)}`;
+      const b = document.createElement('button');
+      b.className = 'agg-cons-etichetta';
+      b.title = 'Copia formattato';
+      // icona in basso a destra, su una riga sua: il testo usa tutta la
+      // larghezza e non va a capo più del necessario
+      b.innerHTML = `<span class="dim">${t}</span><span class="ico-sotto">⧉</span>`;
+      b.onclick = () => aggConsCopia(aggConsHtmlEtichetta(t, '#00ffff', false), t, b);
+      tdEE.appendChild(b);
+    }
+
+    tr.appendChild(tdLetto); tr.appendChild(tdCons);
+    tbody.appendChild(tr);
+  });
+  tab.appendChild(tbody);
+  scroll.appendChild(tab);
+  container.appendChild(scroll);
+}
 function toggleDiariSoloConsegne(){
   diariSoloConsegneAttivo = !diariSoloConsegneAttivo;
   renderRiepilogo();
