@@ -7845,12 +7845,13 @@ async function aggConsCopia(html, testo, btn){
   if(btn){ const prima = btn.innerHTML; btn.textContent = ok ? 'Copiato ✓' : 'Non copiato'; setTimeout(() => { btn.innerHTML = prima; }, 1200); }
 }
 
-// formattazione per il Google Doc delle consegne: Arial 10, nessuno
+// formattazione per il Google Doc delle consegne: Calibri 11 (come il
+// testo delle consegne nel documento), nessuno
 // sfondo, tranne i colori convenzionali del reparto (presi dal documento):
 //  - giallo (#ffff00): richieste di esami strumentali/visite ("R ...")
 //  - violetto (#edabee, grassetto): EE gg/mm
 //  - azzurro (#00ffff): dimissione
-const AGG_CONS_STILE_BASE = 'font-family:Arial,sans-serif; font-size:10pt; background-color:transparent; color:#000000;';
+const AGG_CONS_STILE_BASE = 'font-family:Calibri,Carlito,sans-serif; font-size:11pt; background-color:transparent; color:#000000;';
 const aggConsEsc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // i pezzi della consegna (separati da ";") che iniziano con "R " sono
 // richieste: evidenziati in giallo
