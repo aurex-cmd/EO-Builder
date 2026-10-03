@@ -7858,6 +7858,7 @@ function aggConsPezzi(testo){
 // giallo va dalla R fino al separatore successivo (virgola, punto e
 // virgola, freccia, parentesi chiusa) o a fine riga:
 // "mantiene Amoxi/clav ev -> R RX torace" → giallo solo "R RX torace"
+const AGG_CONS_FINE_RICHIESTA = /\s+(?:come\s+(?:da|indicato|suggerito|consigliato|richiesto|concordato)|su\s+(?:indicazione|consiglio|richiesta|parere|suggerimento)|secondo\s+(?:indicazione|indicazioni|parere|quanto)|per\s+indicazione|da\s+indicazione|dietro\s+(?:indicazione|consiglio)|previa?\s+indicazione|in\s+accordo\s+con|concordat[oa]\s+con)\b/i;
 function aggConsRichiesteHtml(testo, apri, chiudi){
   const fine = String.raw`(?=\s*(?:,|;|->|→|>|\)|$))`;
   // 1) R a inizio riga o dopo un separatore: qualsiasi richiesta
@@ -7873,7 +7874,11 @@ function aggConsRichiesteHtml(testo, apri, chiudi){
     let m;
     while((m = re.exec(testo))){
       const inizio = m.index + m[1].length + m[2].length;
-      intervalli.push([inizio, inizio + m[3].length]);
+      // il giallo si ferma prima di "come da indicazione…" e simili: la
+      // motivazione della richiesta resta in testo normale
+      const coda = m[3].search(AGG_CONS_FINE_RICHIESTA);
+      const lung = coda > 0 ? coda : m[3].length;
+      intervalli.push([inizio, inizio + lung]);
       if(m[0] === '') re.lastIndex++;
     }
   }
