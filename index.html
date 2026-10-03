@@ -6853,7 +6853,9 @@ function estraiDimissioniProgrammate(testoExtra){
   // trasferimento". "p.v." diventa "pv" (i punti spezzerebbero la frase).
   // Con "prossimo"/"pv" detto nello stesso giorno della settimana si
   // intende quello della settimana dopo
-  const testoG = normalizzato.replace(/\bp\.\s?v\./g, 'pv').replace(/\b([a-zà-ù])\.(?=\s)/g, '$1') // "s. tecla".replace(/\blunedi\b/g, 'lunedì').replace(/\bmartedi\b/g, 'martedì')
+  // (gli a capo restano: righe diverse sono frasi diverse — "- Esami lunedì"
+  // e "- Dimesso martedì pv" non vanno lette come "lunedì … dimesso")
+  const testoG = testoExtra.toLowerCase().replace(/[ \t]+/g, ' ').replace(/\bp\.\s?v\./g, 'pv').replace(/\b([a-zà-ù])\.(?=\s)/g, '$1') // "s. tecla".replace(/\blunedi\b/g, 'lunedì').replace(/\bmartedi\b/g, 'martedì')
     .replace(/\bmercoledi\b/g, 'mercoledì').replace(/\bgiovedi\b/g, 'giovedì').replace(/\bvenerdi\b/g, 'venerdì');
   const PAROLA = String.raw`(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)`;
   const GIORNO = String.raw`(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-zà-ù])((?:\s+(?:prossimo\s+venturo|prossimo|pv))?)`;
@@ -6864,11 +6866,20 @@ function estraiDimissioniProgrammate(testoExtra){
     if(prossimo && d.getTime() === oggi.getTime()) d.setDate(d.getDate() + 7);
     risultati.push(d);
   };
-  const reGiorno = new RegExp(PAROLA + String.raw`[^.,;\n]{0,30}?\b` + GIORNO, 'g');
+  // tra la parola e il giorno (e viceversa) non devono esserci altri giorni,
+  // né esami: in "esami per lunedì e dimesso martedì pv" il lunedì è degli
+  // esami, non della dimissione
+  const SALTA = n => String.raw`(?:(?!esami|\bee\b|\beec\b|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,${n}}?`;
+  const reGiorno = new RegExp(PAROLA + SALTA(30) + String.raw`\b` + GIORNO, 'g');
   let m;
   while((m = reGiorno.exec(testoG))) aggiungi(m[1], !!m[2].trim());
-  const reGiornoPrima = new RegExp(String.raw`\b` + GIORNO + String.raw`[^.;\n]{0,40}?\b` + PAROLA, 'g');
-  while((m = reGiornoPrima.exec(testoG))) aggiungi(m[1], !!m[2].trim());
+  const reGiornoPrima = new RegExp(String.raw`\b` + GIORNO + SALTA(40) + String.raw`\b` + PAROLA, 'g');
+  while((m = reGiornoPrima.exec(testoG))){
+    // un giorno che appartiene agli esami ("esami per lunedì e dimesso…") no
+    const prima = testoG.slice(Math.max(0, m.index - 30), m.index);
+    if(/(?:esami|\bee|\beec)\b[^.,;\n]*$/.test(prima)) continue;
+    aggiungi(m[1], !!m[2].trim());
+  }
   // stessa data trovata due volte (es. "dimesso lunedì ... dimissione lunedì"): una sola
   const viste = new Set();
   return risultati.filter(d => { const k = d.getTime(); if(viste.has(k)) return false; viste.add(k); return true; });
