@@ -7728,6 +7728,7 @@ const AGG_CONS_ABBREVIAZIONI = [
   [/\bossigenoterapia\b/gi, 'O2tp'],
   [/\bfisio(?:kinesi)?terapia\b/gi, 'FKT'],
   [/\burinocoltur[ae]\b/gi, 'URO'],
+  [/\brettosigmoidoscopi[ae]\b/gi, 'RSS'],
   [/\bvisita\s+(?=\p{L})/giu, 'v. '],
   [/\bvalutazione\s+(?=\p{L})/giu, 'val. '],
   [/\bconsulenza\s+(?=\p{L})/giu, 'cons. '],
@@ -7860,7 +7861,7 @@ function aggConsRichiesteHtml(testo, apri, chiudi){
   // 2) R in mezzo alla frase (\"per peggioramento respiratorio R RX torace\"):
   //    solo se seguita da un esame strumentale, una visita/consulenza o la
   //    FKT, così \"KCl R 2 cp\" non diventa giallo
-  const esami = String.raw`(?:rx|tc|angio-?\w*|uro-?tc|rmn?|eco\w*|doppler|ecocolordoppler|v\.|visita|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia)`;
+  const esami = String.raw`(?:rx|tc|angio-?\w*|colangio-?\w*|entero-?\w*|uro-?\w*|rmn?|eco\w*|doppler|ecocolordoppler|v\.|visita|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|rettosigmoidoscopia|rss|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia)`;
   const reMezzo = new RegExp(String.raw`(\s)()(R\s+` + esami + String.raw`(?![\p{L}])[^,;()→>]*?)` + fine, 'giu');
   const intervalli = [];
   for(const re of [reSep, reMezzo]){
@@ -14640,7 +14641,7 @@ function soffiControllaTrigger(testoAttuale, elementoTextarea){
    ============================================================ */
 // esami strumentali riconosciuti come intestazione di un referto (aggiunti
 // eco/ecografia/ecocardio/doppler, endoscopie, scintigrafie, PET, MOC...)
-const REFERTO_ESAMI = String.raw`rx|tc|angio-?tc|uro-?tc|angio-?rmn?|rmn?|eco(?:grafia|cardio(?:gramma|grafia)?|-?color-?doppler|-?doppler|tomografia)?|ecocolordoppler|doppler|egds|gastroscopia|colonscopia|rettosigmoidoscopia|scintigrafia|pet(?:-?tc)?|moc|dxa|mammografia|ortopantomografia|holter|ecg|eeg|emg|elettromiografia|spirometria|broncoscopia|toracentesi|paracentesi`;
+const REFERTO_ESAMI = String.raw`rx|tc|angio-?tc|uro-?tc|angio-?rmn?|colangio-?rmn?|entero-?(?:rmn?|tc)|rmn?|eco(?:grafia|cardio(?:gramma|grafia)?|-?color-?doppler|-?doppler|tomografia)?|ecocolordoppler|doppler|egds|gastroscopia|colonscopia|rettosigmoidoscopia|rss|scintigrafia|pet(?:-?tc)?|moc|dxa|mammografia|ortopantomografia|holter|ecg|eeg|emg|elettromiografia|spirometria|broncoscopia|toracentesi|paracentesi`;
 const REFERTO_INTESTAZIONE = new RegExp(String.raw`^\s*(?:(?:${REFERTO_ESAMI})(?![\p{L}])|(?:visita|valutazione|consulenza)(?![\p{L}]))[^:\n]{0,80}:`, 'iu');
 // anche SENZA due punti, ma solo per gli esami strumentali e solo se la
 // riga è una vera intestazione: breve e senza punto (\"ECOGRAFIA ADDOME
