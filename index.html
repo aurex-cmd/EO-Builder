@@ -7821,10 +7821,26 @@ function aggConsPezzi(testo){
     return { testo: senza, trattino: senza !== x, richiesta: /^R\b/.test(senza) };
   });
 }
+// richieste "R ..." ANCHE dentro una riga: dopo una freccia ("->", "→",
+// ">"), un ";", una virgola o una parentesi, oppure a inizio riga. Il
+// (anche dopo i due punti: "Dolore dorsale: R RX rachide"). Il
+// giallo va dalla R fino al separatore successivo (virgola, punto e
+// virgola, freccia, parentesi chiusa) o a fine riga:
+// "mantiene Amoxi/clav ev -> R RX torace" → giallo solo "R RX torace"
+function aggConsRichiesteHtml(testo, apri, chiudi){
+  const re = /(^|->|→|>|;|:|,|\()(\s*)(R\s+[^,;()→>]+?)(?=\s*(?:,|;|->|→|>|\)|$))/g;
+  let out = '', ultimo = 0, m;
+  while((m = re.exec(testo))){
+    const inizio = m.index + m[1].length + m[2].length;
+    out += aggConsEsc(testo.slice(ultimo, inizio)) + apri + aggConsEsc(m[3]) + chiudi;
+    ultimo = inizio + m[3].length;
+    if(m[0] === '') re.lastIndex++;
+  }
+  return out + aggConsEsc(testo.slice(ultimo));
+}
 function aggConsHtmlConsegna(testo){
-  const righe = aggConsPezzi(testo).map(p => (p.trattino ? '- ' : '') + (p.richiesta
-    ? `<span style="background-color:#ffff00;">${aggConsEsc(p.testo)}</span>`
-    : aggConsEsc(p.testo)));
+  const righe = aggConsPezzi(testo).map(p => (p.trattino ? '- ' : '')
+    + aggConsRichiesteHtml(p.testo, '<span style="background-color:#ffff00;">', '</span>'));
   return `<span style="${AGG_CONS_STILE_BASE}">${righe.join('<br>')}</span>`;
 }
 function aggConsHtmlEtichetta(testo, sfondo, grassetto){
@@ -7898,7 +7914,7 @@ function renderAggiornaConsegne(container, entries){
     const disegna = () => {
       const pz = aggConsPezzi(corrente);
       vista.innerHTML = pz.length
-        ? pz.map(p => `<div class="riga"><span class="tr">${p.trattino ? '-' : ''}</span><span class="tx">${p.richiesta ? `<span class="r">${aggConsEsc(p.testo)}</span>` : aggConsEsc(p.testo)}</span></div>`).join('')
+        ? pz.map(p => `<div class="riga"><span class="tr">${p.trattino ? '-' : ''}</span><span class="tx">${aggConsRichiesteHtml(p.testo, '<span class="r">', '</span>')}</span></div>`).join('')
         : '<span class="agg-cons-vuoto">Nessuna novità rispetto a ieri — tocca per scrivere</span>';
       bCopia.style.display = pz.length ? '' : 'none';
     };
