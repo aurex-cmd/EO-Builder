@@ -7719,7 +7719,11 @@ function diariIndietro(){
 const AGG_CONS_RIGA_ESAMI = /^\s*(?:[-–•*]\s*)?(?:agli\s+(?:ee|eec|esami)\b|(?:ee|eec)\s*[:.]|esami(?:\s+(?:ematochimici|ematici|di\s+laboratorio|del\s+sangue))?\s*:|ematochimici\s*:|emocromo\s*:|vfg\s*:|ega\s*:|emogas\w*\s*:)/i;
 const AGG_CONS_ABBREVIAZIONI = [
   [/\bmantenere\s+(?:l'|la\s+)?indicazione\s+(?:a|al|alla|allo|ai|agli|alle)\s+/gi, ''],
-  [/\bsi\s+richied\w*\s+|\brichiest[aoie]\s+|\brichied[oe]\s+|\bsi\s+richiede\s+|\brichiedere\s+/gi, 'R '],
+  // verbi di richiesta → "R": richiedo, si richiede/richiedono, richiesto/a/i/e,
+  // richiedere, chiedo, si chiede/chiedono, chiesto/a/i/e. NON "chiede" da
+  // solo ("il figlio chiede se...", "chiede di parlare col medico")
+  [/\bsi\s+richied\w*\s+|\brichiest[aoie]\s+|\brichied(?:o|e|ere|iamo)\s+|\bsi\s+chied(?:e|ono)\s+|\bchied(?:o|iamo)\s+|\bchiest[aoie]\s+/gi, 'R '],
+  [/\bda\s+R\s+/gi, 'R '],
   [/\bterapia\s+antibiotica\b|\bantibioticoterapia\b/gi, 'ATB'],
   [/\besami\s+(?:ematochimici|ematici|di\s+laboratorio)(?:\s+di\s+controllo)?\b|\besami\s+di\s+controllo\b/gi, 'EE'],
   [/\bsi\s+sospende\b|\bsospes[oaie]\b|\bsospend[oe]\b|\bsospendere\b/gi, 'stop'],
@@ -7858,11 +7862,12 @@ function aggConsRichiesteHtml(testo, apri, chiudi){
   const fine = String.raw`(?=\s*(?:,|;|->|→|>|\)|$))`;
   // 1) R a inizio riga o dopo un separatore: qualsiasi richiesta
   const reSep = new RegExp(String.raw`(^|->|→|>|;|:|,|\()(\s*)(R\s+[^,;()→>]+?)` + fine, 'g');
-  // 2) R in mezzo alla frase (\"per peggioramento respiratorio R RX torace\"):
-  //    solo se seguita da un esame strumentale, una visita/consulenza o la
-  //    FKT, così \"KCl R 2 cp\" non diventa giallo
+  // 2) R in mezzo alla frase (\"per peggioramento respiratorio R RX torace\",
+  //    \"in caso di febbre R emocolture\"): qualsiasi richiesta, purché la R
+  //    sia seguita da una parola e non da un numero (\"KCl R 2 cp\" resta
+  //    normale). La lista degli esami resta per riferimento
   const esami = String.raw`(?:rx|tc|angio-?\w*|colangio-?\w*|entero-?\w*|uro-?\w*|rmn?|eco\w*|doppler|ecocolordoppler|v\.|visita|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|rettosigmoidoscopia|rss|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia)`;
-  const reMezzo = new RegExp(String.raw`(\s)()(R\s+` + esami + String.raw`(?![\p{L}])[^,;()→>]*?)` + fine, 'giu');
+  const reMezzo = new RegExp(String.raw`(\s)()(R\s+(?=[\p{L}])[^,;()→>]*?)` + fine, 'gu');
   const intervalli = [];
   for(const re of [reSep, reMezzo]){
     let m;
