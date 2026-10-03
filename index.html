@@ -6847,13 +6847,31 @@ function estraiDimissioniProgrammate(testoExtra){
     risultati.push(domani);
   }
 
-  const reGiorno = /(?:dimess[oa]|dimission[ei])[^.,;\n]{0,30}?\b(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-zà-ù])/g;
+  // anche trasferimenti ("trasferito presso OdC", "trasferimento in RSA")
+  // e il giorno PRIMA della parola: "martedì prossimo venturo dimesso in
+  // OdC", "giovedì pv trasferito presso...", "mercoledì prossimo
+  // trasferimento". "p.v." diventa "pv" (i punti spezzerebbero la frase).
+  // Con "prossimo"/"pv" detto nello stesso giorno della settimana si
+  // intende quello della settimana dopo
+  const testoG = normalizzato.replace(/\bp\.\s?v\./g, 'pv').replace(/\b([a-zà-ù])\.(?=\s)/g, '$1') // "s. tecla".replace(/\blunedi\b/g, 'lunedì').replace(/\bmartedi\b/g, 'martedì')
+    .replace(/\bmercoledi\b/g, 'mercoledì').replace(/\bgiovedi\b/g, 'giovedì').replace(/\bvenerdi\b/g, 'venerdì');
+  const PAROLA = String.raw`(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)`;
+  const GIORNO = String.raw`(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-zà-ù])((?:\s+(?:prossimo\s+venturo|prossimo|pv))?)`;
+  const aggiungi = (nome, prossimo) => {
+    const d = prossimaDataPerGiorno(nome);
+    if(!d) return;
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    if(prossimo && d.getTime() === oggi.getTime()) d.setDate(d.getDate() + 7);
+    risultati.push(d);
+  };
+  const reGiorno = new RegExp(PAROLA + String.raw`[^.,;\n]{0,30}?\b` + GIORNO, 'g');
   let m;
-  while((m = reGiorno.exec(normalizzato))){
-    const d = prossimaDataPerGiorno(m[1]);
-    if(d) risultati.push(d);
-  }
-  return risultati;
+  while((m = reGiorno.exec(testoG))) aggiungi(m[1], !!m[2].trim());
+  const reGiornoPrima = new RegExp(String.raw`\b` + GIORNO + String.raw`[^.;\n]{0,40}?\b` + PAROLA, 'g');
+  while((m = reGiornoPrima.exec(testoG))) aggiungi(m[1], !!m[2].trim());
+  // stessa data trovata due volte (es. "dimesso lunedì ... dimissione lunedì"): una sola
+  const viste = new Set();
+  return risultati.filter(d => { const k = d.getTime(); if(viste.has(k)) return false; viste.add(k); return true; });
 }
 
 // scandisce solo le schede dell'ULTIMO giorno per cui esiste almeno un
@@ -7756,10 +7774,17 @@ function aggConsDataDimissione(extra){
 // frasi già coperte dalla colonna Esami/dimissione: tolte dalla sintesi
 function aggConsTogliProgrammati(riga){
   const giorni = String.raw`(?:domani|oggi|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
+  const uscita = String.raw`(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)`;
+  // "p.v." e iniziali puntate ("RSA S. Tecla") non devono spezzare la
+  // frase: il punto viene nascosto e poi rimesso
+  riga = riga.replace(/\bp\.\s?v\./gi, 'pv').replace(/\b([A-Za-zÀ-ù])\.(?=\s)/g, '$1\u0001');
   return riga
+    // "giovedì pv trasferito presso OdC...", "trasferimento in RSA mercoledì"
+    .replace(new RegExp(String.raw`[^.;\n]*\b` + giorni + String.raw`[^.;\n]*\b` + uscita + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
+    .replace(new RegExp(String.raw`[^.;\n]*\b` + uscita + String.raw`[^.;\n]*\b` + giorni + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
     .replace(new RegExp(String.raw`[^.;\n]*\b(?:esami|ee|eec)\b[^.;\n]*?\b` + giorni + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
     .replace(new RegExp(String.raw`[^.;\n]*\b(?:domani\s+esami|domani\s+dimess[oa]|dimess[oa]\s+` + giorni + String.raw`|dimission[ei])[^.;\n]*[.;]?`, 'gi'), '')
-    .trim();
+    .trim().replace(/\u0001/g, '.');
 }
 
 function aggConsSintesi(extra, righeIeri, includiIeri){
