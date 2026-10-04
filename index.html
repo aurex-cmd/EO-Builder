@@ -7157,8 +7157,14 @@ function testoRilevanteOggi(testo){
 // lettera specifica: meglio segnalare "c'è scritto qualcosa, controlla tu"
 // piuttosto che nascondere per sbaglio una consegna che lo strumento non
 // sa classificare
+// (aggiornato) il paziente entra nell'elenco ogni volta che nelle consegne
+// c'è scritto qualcosa oltre a "su chiamata" — a prescindere dal giorno a
+// cui si riferisce: prima "EE lun 5/10" letto di domenica, "su chiamata,
+// sabato in dimissione" letto di lunedì o "vedi emocolture del 29/09: se
+// peggioramento…" venivano scartati. Il giorno resta usato solo per le
+// lettere V/E/S/C (classificaConsegna), che compaiono se valgono oggi
 function haQualcosaDaSegnalareOggi(testoConsegna){
-  const rilevante = testoRilevanteOggi(testoConsegna).trim();
+  const rilevante = (testoConsegna || '').trim();
   if(!rilevante) return false;
   const ripulito = rilevante
     .replace(/\bsu\s+chiamata\b/gi, '')
