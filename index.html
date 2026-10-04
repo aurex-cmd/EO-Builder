@@ -131,7 +131,18 @@
   .topnav-btn .topnav-icon{ width:17px; height:17px; flex-shrink:0; stroke:currentColor; }
   .topnav-btn.vista-attiva{ background:none; color:var(--page-ink); border-bottom-color:var(--signal); font-weight:700; }
   .bed-grid{ display:flex; flex-wrap:wrap; column-gap:8px; row-gap:10px; }
-  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .appoggio-aggiungi-riga{ display:flex; justify-content:flex-end; margin-top:8px; }
+  .appoggio-aggiungi{ width:26px; height:26px; border-radius:50%; border:1px dashed var(--clay-border); background:transparent;
+    color:var(--ink-dim); font-size:16px; line-height:1; cursor:pointer; opacity:.55; transition:.15s; padding:0; }
+  .appoggio-aggiungi:hover{ opacity:1; border-color:var(--signal); color:var(--signal); }
+  /* riquadro nuovo appoggio: sembra un letto normale, con dentro solo il
+     testo che si scrive (niente bordo/alone teal del campo) */
+  .bed-tile.bed-tile-nuovo{ cursor:text; }
+  .bed-tile.bed-tile-nuovo input,
+  .bed-tile.bed-tile-nuovo input:focus{ width:40px; height:1.3em; font-family:var(--font-mono); font-weight:600; font-size:13.5px; text-align:center;
+    padding:0; margin:0; border:none !important; outline:none !important; box-shadow:none !important; background:transparent !important; color:var(--ink); text-transform:uppercase; }
+  .bed-tile.bed-tile-nuovo input::placeholder{ color:var(--ink-dim); opacity:.6; font-weight:400; }
+  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center; }
   .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
   .sync-box{
     border:1px solid var(--clay-border); border-radius:16px; padding:13px 14px;
@@ -300,6 +311,16 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
+  .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.35); }
+  .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
+  .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#111; font-family:var(--font-mono); }
+  .diario-consegna-pallino.v{ background:#dba94a; }
+  .diario-consegna-pallino.e{ background:#b18cf0; }
+  .diario-consegna-pallino.s{ background:#4dd0e1; }
+  .diario-consegna-pallino.c{ background:#e08cc0; }
+  .diario-consegna-pallino.info{ background:#4a9fd9; color:#fff; font-style:italic; }
+  .diario-consegna-testo{ margin:2px 0 8px; white-space:pre-wrap; font-size:13px; }
   .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.4); }
   .bed-tile-dimissione-badge{
     position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
@@ -1482,9 +1503,23 @@
   </div>
   <div class="group">
     <div class="bed-grid" id="bed-grid"></div>
+    <!-- tondo "+" sotto i letti, a destra: aggiunge un appoggio (che compare
+         come riquadro normale nella sezione Appoggi qui sotto) -->
+    <div class="appoggio-aggiungi-riga" id="appoggio-aggiungi-riga" style="display:none;"></div>
   </div>
+  <div class="group" id="appoggi-settore-group" style="display:none;">
+    <div class="group-label">Appoggi</div>
+    <div class="bed-grid" id="appoggi-grid"></div>
+  </div>
+  <!-- consegne dei letti di questo settore (solo il giorno in cui sono
+       state caricate): testo della consegna e lettere V/E/S/C modificabili -->
   <div class="group" id="vitali-settore-group">
     <button class="btn primary" style="width:100%;" onclick="apriVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Parametri vitali</button>
+  </div>
+
+  <div class="group" id="consegne-settore-group" style="display:none;">
+    <div class="group-label">Consegne del settore</div>
+    <div id="consegne-settore-lista"></div>
   </div>
 
   <div class="group" id="scheda-libera-group" style="display:none;">
@@ -6142,6 +6177,188 @@ function confermaSvuotaSettore(){
   showToast(`${settore}: ${schede.length} ${schede.length === 1 ? 'scheda eliminata' : 'schede eliminate'}`);
 }
 
+// riepilogo delle consegne per i letti del settore aperto in Reparto:
+// nome del letto, lettere V/E/S/C (accese = da fare; toccandole si
+// aggiungono o tolgono a mano) e, toccando il nome, il testo della consegna
+let consegnaSettoreAperta = null;
+function renderConsegneSettore(nomiLetti, consegne){
+  const group = document.getElementById('consegne-settore-group');
+  const lista = document.getElementById('consegne-settore-lista');
+  if(!group || !lista) return;
+  const nomi = nomiLetti.filter(n => consegne[n]);
+  group.style.display = nomi.length ? '' : 'none';
+  lista.innerHTML = '';
+  nomi.forEach(nome => {
+    const voce = consegne[nome];
+    const riga = document.createElement('div');
+    riga.className = 'ric-lista-riga';
+    const nomeEl = document.createElement('span');
+    nomeEl.className = 'ric-lista-nome';
+    nomeEl.textContent = nome + (consegnaSettoreAperta === nome ? ' ▾' : ' ▸');
+    nomeEl.style.cursor = 'pointer';
+    nomeEl.onclick = () => { consegnaSettoreAperta = consegnaSettoreAperta === nome ? null : nome; renderConsegneSettore(nomiLetti, loadConsegne()); };
+    riga.appendChild(nomeEl);
+    const lettere = document.createElement('div');
+    lettere.style.cssText = 'display:flex; gap:6px; flex-shrink:0;';
+    ['V','E','S','C'].forEach(l => {
+      const b = document.createElement('div');
+      b.className = `lettera-toggle toggle-${l.toLowerCase()}` + (voce[l] && !voce['fatto' + l] ? ' attivo' : '');
+      b.textContent = l;
+      b.title = (voce[l] ? 'Togli ' : 'Aggiungi ') + NOMI_LETTERE_CONSEGNA[l];
+      b.onclick = (e) => { e.stopPropagation(); if(voce[l] && voce['fatto' + l]){ const c = loadConsegne(); c[nome]['fatto' + l] = false; saveConsegne(c); renderWardMap(); } else toggleLetteraConsegna(nome, l); };
+      lettere.appendChild(b);
+    });
+    riga.appendChild(lettere);
+    lista.appendChild(riga);
+    if(consegnaSettoreAperta === nome){
+      const box = document.createElement('div');
+      box.className = 'note-box';
+      box.style.cssText = 'margin:-4px 0 8px; white-space:pre-wrap;';
+      box.textContent = voce.testo || '';
+      lista.appendChild(box);
+    }
+  });
+}
+
+// APPOGGI DEI SETTORI: letti in più aggiunti a mano a un settore ("+" in
+// fondo alla riga dei letti), con le iniziali del paziente ("MR") o il
+// numero di un letto vero ("15.1" → "Letto 15.1"). Sincronizzati come le
+// altre chiavi: { settore: [nomi] }
+const APPOGGI_KEY = 'eo_builder_appoggi_v1';
+function loadAppoggi(){
+  try{ const v = JSON.parse(localStorage.getItem(APPOGGI_KEY) || '{}'); return (v && typeof v === 'object') ? v : {}; } catch(e){ return {}; }
+}
+function saveAppoggi(v){ setLocalAndCloud(APPOGGI_KEY, JSON.stringify(v)); }
+function aggiungiAppoggio(settore, testo){
+  let t = (testo || '').trim();
+  if(!t) return;
+  const nome = /^\d+(?:\.\d+)?$/.test(t) ? bedName(t) : t.toUpperCase();
+  const v = loadAppoggi();
+  v[settore] = v[settore] || [];
+  const giaLetto = Object.values(getWardMap()).flat().map(bedName).includes(nome);
+  if(giaLetto || v[settore].includes(nome)){ showToast(nome + ' è già presente'); return; }
+  v[settore].push(nome);
+  saveAppoggi(v);
+  renderWardMap();
+}
+let rimuoviAppoggioArmato = null, rimuoviAppoggioTimer = null;
+function rimuoviAppoggio(settore, nome){
+  const chiave = settore + '|' + nome;
+  if(rimuoviAppoggioArmato !== chiave){
+    rimuoviAppoggioArmato = chiave;
+    clearTimeout(rimuoviAppoggioTimer);
+    rimuoviAppoggioTimer = setTimeout(() => { rimuoviAppoggioArmato = null; renderWardMap(); }, 3000);
+    renderWardMap();
+    return;
+  }
+  rimuoviAppoggioArmato = null;
+  const v = loadAppoggi();
+  v[settore] = (v[settore] || []).filter(n => n !== nome);
+  if(!v[settore].length) delete v[settore];
+  saveAppoggi(v);
+  renderWardMap();
+}
+// TONDO "+" PER GLI APPOGGI: sta nella stessa riga dell'ultima fila di
+// letti, allineato a destra con l'ultimo letto della fila sopra (non è un
+// riquadro e non aggiunge righe: "Parametri vitali" non si sposta). Si
+// posiziona misurando i riquadri dopo il disegno; se l'ultima fila è piena
+// e non c'è spazio, scende in una riga sua sotto i letti
+function posizionaTondoAppoggio(inExtra){
+  const grid = document.getElementById('bed-grid');
+  const riga = document.getElementById('appoggio-aggiungi-riga');
+  if(!grid || !riga) return;
+  let tondo = document.getElementById('appoggio-aggiungi-tondo');
+  if(!tondo){
+    tondo = document.createElement('button');
+    tondo.id = 'appoggio-aggiungi-tondo';
+    tondo.className = 'appoggio-aggiungi';
+    tondo.textContent = '+';
+    tondo.title = 'Aggiungi un appoggio al settore';
+    tondo.setAttribute('aria-label', tondo.title);
+    tondo.onclick = iniziaNuovoAppoggio;
+  }
+  riga.style.display = 'none';
+  if(inExtra){ tondo.remove(); return; }
+  grid.style.position = 'relative';
+  grid.appendChild(tondo);
+  tondo.style.position = 'absolute';
+  // osserva la griglia: quando cambia dimensione (Reparto che diventa
+  // visibile, rotazione del telefono) il tondo si riposiziona
+  if(!grid._osservata && window.ResizeObserver){
+    grid._osservata = true;
+    new ResizeObserver(() => posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA)).observe(grid);
+  }
+  const sistema = () => {
+    if(!grid.offsetParent) return; // Reparto nascosto: ci pensa l'osservatore quando ricompare
+    const tiles = [...grid.querySelectorAll('.bed-tile')];
+    if(!tiles.length){ tondo.style.left = '0px'; tondo.style.top = '0px'; return; }
+    const gr = grid.getBoundingClientRect();
+    const box = tiles.map(t => t.getBoundingClientRect());
+    const ultimaTop = Math.max(...box.map(b => Math.round(b.top)));
+    const ultimaFila = box.filter(b => Math.round(b.top) === ultimaTop);
+    const filaSopra = box.filter(b => Math.round(b.top) < ultimaTop);
+    const topSopra = filaSopra.length ? Math.max(...filaSopra.map(b => Math.round(b.top))) : null;
+    const destraSopra = topSopra !== null ? Math.max(...filaSopra.filter(b => Math.round(b.top) === topSopra).map(b => b.right)) : null;
+    const destraUltima = Math.max(...ultimaFila.map(b => b.right));
+    const lato = tondo.offsetWidth || 26;
+    const altezzaFila = ultimaFila[0].height;
+    // allineato a destra con l'ultimo letto della fila sopra; con una sola
+    // fila, subito dopo l'ultimo letto
+    let destra = destraSopra !== null ? destraSopra : destraUltima + 8 + lato;
+    if(destra - destraUltima < lato + 8){
+      // niente spazio nell'ultima fila: in una riga sua sotto i letti
+      tondo.remove(); riga.appendChild(tondo); tondo.style.position = ''; tondo.style.left = ''; tondo.style.top = '';
+      riga.style.display = ''; return;
+    }
+    tondo.style.left = (destra - gr.left - lato) + 'px';
+    tondo.style.top = (ultimaTop - gr.top + (altezzaFila - lato) / 2) + 'px';
+  };
+  requestAnimationFrame(sistema);
+}
+window.addEventListener('resize', () => { if(document.getElementById('bed-grid')) posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA); });
+
+// tocco sul tondo "+": nella sezione Appoggi compare un riquadro nuovo,
+// come un letto, con il campo per le iniziali ("MR") o il numero ("15.1")
+let appoggioInCreazione = null;
+function iniziaNuovoAppoggio(){
+  appoggioInCreazione = settoreAttivo;
+  renderWardMap();
+  const inp = document.querySelector('#appoggi-grid .bed-tile-nuovo input');
+  if(inp) inp.focus();
+}
+function creaTileNuovoAppoggio(settore){
+  const tile = document.createElement('div');
+  tile.className = 'bed-tile bed-tile-nuovo';
+  const inp = document.createElement('input');
+  inp.placeholder = 'iniz.';
+  inp.setAttribute('autocapitalize', 'characters');
+  tile.appendChild(inp);
+  let fatto = false;
+  const chiudi = (v) => {
+    if(fatto) return; fatto = true;
+    appoggioInCreazione = null;
+    if(v && v.trim()) aggiungiAppoggio(settore, v); else renderWardMap();
+  };
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); chiudi(inp.value); } if(e.key === 'Escape') chiudi(''); });
+  inp.addEventListener('blur', () => chiudi(inp.value));
+  return tile;
+}
+// etichetta corta per un riquadro: "Letto 15.1" → 15.1, "Mario Rossi" → MR,
+// "Appoggio 1" → A1, "MR" resta MR
+function inizialiLetto(nome){
+  const m = (nome || '').match(/^letto\s+(.+)$/i);
+  if(m) return m[1];
+  const parole = (nome || '').trim().split(/\s+/).filter(Boolean);
+  if(parole.length === 1) return parole[0].length <= 4 ? parole[0].toUpperCase() : parole[0].slice(0, 2).toUpperCase();
+  return parole.map(w => /^\d/.test(w) ? w : w.charAt(0).toUpperCase()).join('').slice(0, 5);
+}
+// schede del settore E: non sono letti della mappa né appoggi di un settore
+function altreSchedeE(patients, wardMap){
+  const nomi = new Set(Object.values(wardMap).flat().map(bedName));
+  Object.values(loadAppoggi()).flat().forEach(n => nomi.add(n));
+  return Object.entries(patients).filter(([id, p]) => !nomi.has(p.name));
+}
+
 function renderWardMap(){
   const patients = loadPatients();
   const consegneCorrenti = loadConsegne();
@@ -6191,10 +6408,12 @@ function renderWardMap(){
   // letti del settore attivo (nascosti quando è selezionato "E")
   const gridEl = document.getElementById('bed-grid');
   gridEl.innerHTML = '';
-  gridEl.style.display = inExtra ? 'none' : '';
+  gridEl.style.display = '';
   document.getElementById('vitali-settore-group').style.display = inExtra ? 'none' : '';
-  if(!inExtra) wardMap[settoreAttivo].forEach(n => {
-    const nome = bedName(n);
+  // un riquadro-letto (stato verde/viola/grigio, spunta "copiato", pallini,
+  // alone consegne, ×): usato per i letti del settore, per gli appoggi del
+  // settore e per le schede del settore E (con le iniziali come etichetta)
+  const creaTileLetto = (nome, etichetta) => {
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
     // verde solo se la scheda clinica vera e propria è stata salvata oggi
@@ -6211,10 +6430,10 @@ function renderWardMap(){
     tile.className = 'bed-tile'
       + classeStato
       + (entry && entry[0] === currentPatientId ? ' active' : '');
-    tile.onclick = () => apriLetto(nome);
+    tile.onclick = () => { if(tile.dataset.pressioneScattata === '1'){ tile.dataset.pressioneScattata = ''; return; } apriLetto(nome); };
 
     const numero = document.createElement('span');
-    numero.textContent = n;
+    numero.textContent = etichetta;
     tile.appendChild(numero);
 
     if(entry && entry[1].refertoCopiato && isOggi(entry[1].refertoCopiatoIl)){
@@ -6291,8 +6510,49 @@ function renderWardMap(){
       tile.appendChild(delBtn);
     }
 
-    gridEl.appendChild(tile);
-  });
+    return tile;
+  };
+
+  if(!inExtra){
+    wardMap[settoreAttivo].forEach(n => gridEl.appendChild(creaTileLetto(bedName(n), n)));
+  } else {
+    // settore E: anche qui i riquadri, con le iniziali ("Mario Rossi" → MR),
+    // così si vedono verde/copiato/pallini come per i letti veri
+    altreSchedeE(patients, wardMap)
+      .sort((a, b) => a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' }))
+      .forEach(([id, p]) => { const t = creaTileLetto(p.name, inizialiLetto(p.name)); t.title = p.name; gridEl.appendChild(t); });
+  }
+
+  // appoggi del settore: sotto i letti, con l'etichetta "Appoggi"
+  const appGroup = document.getElementById('appoggi-settore-group');
+  const appGrid = document.getElementById('appoggi-grid');
+  if(appGroup && appGrid){
+    appGrid.innerHTML = '';
+    const appoggi = inExtra ? [] : (loadAppoggi()[settoreAttivo] || []);
+    const inCreazione = !inExtra && appoggioInCreazione === settoreAttivo;
+    appGroup.style.display = (appoggi.length || inCreazione) ? '' : 'none';
+    posizionaTondoAppoggio(inExtra);
+    appoggi.forEach(nome => {
+      const t = creaTileLetto(nome, inizialiLetto(nome));
+      t.classList.add('appoggio');
+      t.title = nome + ' (appoggio)';
+      // appoggio libero (scheda vuota): × per toglierlo dal settore
+      const occupatoApp = Object.values(patients).some(p => p.name === nome && schedaHaDati(p.state));
+      if(!occupatoApp){
+        const rm = document.createElement('div');
+        const armato = rimuoviAppoggioArmato === settoreAttivo + '|' + nome;
+        rm.className = 'bed-tile-del' + (armato ? ' confirm' : '');
+        rm.textContent = armato ? '✓' : '×';
+        rm.title = armato ? 'Clicca di nuovo per togliere l\'appoggio' : 'Togli questo appoggio dal settore';
+        rm.onclick = (e) => { e.stopPropagation(); rimuoviAppoggio(settoreAttivo, nome); };
+        t.appendChild(rm);
+      }
+      appGrid.appendChild(t);
+    });
+    if(inCreazione) appGrid.appendChild(creaTileNuovoAppoggio(settoreAttivo));
+  }
+
+  renderConsegneSettore(inExtra ? [] : wardMap[settoreAttivo].map(bedName).concat(loadAppoggi()[settoreAttivo] || []), consegneCorrenti);
 
   // form "Scheda libera" per crearne una nuova: visibile solo nel settore E
   const formLibera = document.getElementById('scheda-libera-group');
@@ -6301,8 +6561,7 @@ function renderWardMap(){
   // altre schede salvate che non corrispondono a un letto della mappa
   // (es. create con "Scheda libera", o dalla rete di sicurezza): visibili
   // solo quando è selezionato il settore E
-  const nomiLetti = new Set(Object.values(wardMap).flat().map(bedName));
-  const altre = Object.entries(patients).filter(([id,p]) => !nomiLetti.has(p.name));
+  const altre = altreSchedeE(patients, wardMap);
   const altreGroup = document.getElementById('altre-schede-group');
   const altreList = document.getElementById('altre-schede-lista');
   altreList.innerHTML = '';
@@ -6352,8 +6611,10 @@ function renderVitaliSettore(){
   if(!wardMap[settoreAttivo]) return; // settore eliminato nel frattempo: niente da mostrare qui
 
   const patients = loadPatients();
-  wardMap[settoreAttivo].forEach(n => {
-    const nome = bedName(n);
+  // letti del settore e, in coda, i suoi appoggi ("MR", "Letto 15.1")
+  const voci = wardMap[settoreAttivo].map(n => ({ nome: bedName(n), chiave: String(n) }))
+    .concat((loadAppoggi()[settoreAttivo] || []).map(a => ({ nome: a, chiave: 'app-' + a })));
+  voci.forEach(({ nome, chiave }) => {
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
     const isCurrent = entry && entry[0] === currentPatientId;
@@ -6381,7 +6642,7 @@ function renderVitaliSettore(){
 
     const campi = document.createElement('div');
     campi.className = 'vitals-strip inline-fields';
-    const idPrefix = 'vitset-' + n.replace(/\./g,'_');
+    const idPrefix = 'vitset-' + chiave.replace(/[^\w-]/g,'_');
     campi.innerHTML = `
       <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="${idPrefix}-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="${idPrefix}-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
       <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="${idPrefix}-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
@@ -6640,7 +6901,8 @@ function eliminaSchedaDaLetto(id){
 function ordinaPazientiPerLetto(entries){
   const nomiOrdinati = [];
   const wardMap = getWardMap();
-  Object.keys(wardMap).forEach(s => wardMap[s].forEach(n => nomiOrdinati.push(bedName(n))));
+  const appoggi = loadAppoggi();
+  Object.keys(wardMap).forEach(s => { wardMap[s].forEach(n => nomiOrdinati.push(bedName(n))); (appoggi[s] || []).forEach(a => nomiOrdinati.push(a)); });
   return entries.slice().sort((a, b) => {
     const ia = nomiOrdinati.indexOf(a[1].name);
     const ib = nomiOrdinati.indexOf(b[1].name);
@@ -7017,15 +7279,46 @@ async function caricaFileConsegne(file){
   }
 }
 
+// LE CONSEGNE VALGONO UN GIORNO SOLO: si caricano la mattina del festivo
+// in cui si è di guardia e il giorno dopo non servono più (chi fa la
+// guardia il sabato non la fa la domenica, e il lunedì non deve ritrovare
+// letti evidenziati). Il giorno in cui sono state salvate viaggia con i
+// dati (__giorno): se non è oggi, per l'app non ci sono consegne — alone,
+// pallini, riepiloghi e box in Diari spariscono da soli. Le consegne
+// salvate prima di questa modifica (senza __giorno) contano come scadute
 function loadConsegne(){
-  try{ return JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}'); } catch(e){ return {}; }
+  let dati = {};
+  try{ dati = JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}') || {}; } catch(e){ return {}; }
+  if(dati.__giorno !== chiaveGiorno(Date.now())) return {};
+  const pulite = {};
+  Object.keys(dati).forEach(k => { if(!k.startsWith('__')) pulite[k] = dati[k]; });
+  return pulite;
 }
 function saveConsegne(consegne){
   // come le altre chiavi cliniche: sincronizzata col cloud, non solo
   // salvata in locale — altrimenti analizzare le consegne sul telefono
   // non le farebbe comparire anche sul PC (e viceversa)
-  setLocalAndCloud(CONSEGNE_KEY, JSON.stringify(consegne));
+  const daSalvare = Object.assign({}, consegne, { __giorno: chiaveGiorno(Date.now()) });
+  setLocalAndCloud(CONSEGNE_KEY, JSON.stringify(daSalvare));
 }
+// assegna/toglie a mano una lettera (V/E/S/C) a un letto consegnato: il
+// programma non sempre capisce dal testo cosa va fatto, o si vuole anche
+// visitare un paziente che ha "solo" esami da vedere
+function toggleLetteraConsegna(nomeLetto, lettera){
+  const consegne = loadConsegne();
+  const voce = consegne[nomeLetto];
+  if(!voce) return;
+  voce[lettera] = !voce[lettera];
+  voce['fatto' + lettera] = false;
+  saveConsegne(consegne);
+  renderWardMap();
+  if(typeof renderConsegneLista === 'function') renderConsegneLista();
+}
+// pallini V/E/S/C ancora da fare (gli stessi dei letti in Reparto)
+function lettereConsegnaDaFare(voce){
+  return voce ? ['V','E','S','C'].filter(l => voce[l] && !voce['fatto' + l]) : [];
+}
+const NOMI_LETTERE_CONSEGNA = { V:'visita', E:'esami ematochimici', S:'esame strumentale', C:'esame colturale' };
 
 // divide il testo incollato in blocchi, uno per ciascun "Letto X.X" trovato
 // (dall'inizio di quel marcatore fino al prossimo, o alla fine del testo),
@@ -7107,22 +7400,26 @@ function trovaMarcatoriGiorno(testo){
 // nessun riferimento di giorno, la occorrenza resta valida comunque
 // (meglio mostrarla sempre che rischiare di nasconderla per sbaglio).
 function categoriaValidaOggi(testo, sorgenteRegex){
-  const marcatoriGiorno = trovaMarcatoriGiorno(testo);
+  // (aggiornato) il giorno si cerca solo DENTRO LA STESSA FRASE della parola
+  // chiave: in \"su chiamata - vd se emo in corso da ps - EE lun 5/10\" il
+  // lunedì è degli EE, non delle emocolture (che vanno viste oggi → C).
+  // E vale anche un giorno già passato: \"vedi emocolture del 29/09\" o \"EE
+  // ven\" letto di sabato sono risultati da controllare oggi. Non vale solo
+  // un giorno futuro (\"EE lun 5/10\" letto di sabato)
   const oggiChiave = chiaveGiorno(Date.now());
-  const re = new RegExp(sorgenteRegex, 'gi');
-  let trovata = false;
-  let m;
-  while((m = re.exec(testo))){
-    if(!marcatoriGiorno.length){ trovata = true; continue; }
-    let piuVicino = marcatoriGiorno[0];
-    let distMin = Math.abs(marcatoriGiorno[0].pos - m.index);
-    marcatoriGiorno.forEach(mk => {
-      const d = Math.abs(mk.pos - m.index);
-      if(d < distMin){ distMin = d; piuVicino = mk; }
-    });
-    if(chiaveGiorno(piuVicino.data.getTime()) === oggiChiave) trovata = true;
-  }
-  return trovata;
+  return frasiConsegna(testo).some(frase => {
+    const re = new RegExp(sorgenteRegex, 'gi');
+    const marcatori = trovaMarcatoriGiorno(frase);
+    let m, trovata = false;
+    while((m = re.exec(frase))){
+      if(!marcatori.length){ trovata = true; break; }
+      let piuVicino = marcatori[0], distMin = Math.abs(marcatori[0].pos - m.index);
+      marcatori.forEach(mk => { const d = Math.abs(mk.pos - m.index); if(d < distMin){ distMin = d; piuVicino = mk; } });
+      if(chiaveGiorno(piuVicino.data.getTime()) <= oggiChiave){ trovata = true; break; }
+      if(m[0] === '') re.lastIndex++;
+    }
+    return trovata;
+  });
 }
 
 // come categoriaValidaOggi, ma per l'intero testo invece che per una
@@ -7163,14 +7460,55 @@ function testoRilevanteOggi(testo){
 // sabato in dimissione" letto di lunedì o "vedi emocolture del 29/09: se
 // peggioramento…" venivano scartati. Il giorno resta usato solo per le
 // lettere V/E/S/C (classificaConsegna), che compaiono se valgono oggi
+// INDICAZIONI CONDIZIONATE (\"se febbre emocolture\", \"se febbre
+// paracetamolo\", \"se agitato aloperidolo\", \"se peggiora avvisare\"):
+// sono cose che l'infermiere può chiedere al medico di guardia, che allora
+// le va a leggere nelle consegne del reparto — non sono una consegna da
+// fare. Una frase che inizia con \"se\" non conta, TRANNE se chiede di
+// visitare/rivalutare il paziente (\"se agitato, visitare\" → resta, con V)
+const CONSEGNA_VISITA_RE = /\bvisit\w*|\brivalut\w*|\briveder\w*|\brived[oi]\b|controllo\s+clinico|valutar\w*\s+clinicamente|valutazione\s+clinica/i;
+// divide in frasi (punto, punto e virgola, a capo, trattino separatore)
+function frasiConsegna(testo){
+  return (testo || '').replace(/\bsu\s+chiamata\b/gi, '').split(/[.;\n]|\s[-–]\s|^[-–]\s|^-(?=\S)/);
+}
+function eCondizionale(frase){
+  const f = frase.replace(/^[\s\-–>,:]+/, '');
+  return /^se\b/i.test(f) && !CONSEGNA_VISITA_RE.test(f);
+}
+// testo senza le frasi condizionate (per le lettere E/S/C)
+function togliCondizionali(testo){
+  return frasiConsegna(testo).map(f => {
+    // anche a metà frase dopo una virgola: \"vedi URO, se febbre emo\"
+    return f.split(',').filter(p => !eCondizionale(p)).join(',');
+  }).filter(f => !eCondizionale(f)).join('. ');
+}
 function haQualcosaDaSegnalareOggi(testoConsegna){
   const rilevante = (testoConsegna || '').trim();
   if(!rilevante) return false;
-  const ripulito = rilevante
-    .replace(/\bsu\s+chiamata\b/gi, '')
-    .replace(/[.,;:\-–>]/g, '')
-    .trim();
-  return ripulito.length > 0;
+  // frasi e pezzi di consegna (separati da punto, virgola, punto e virgola,
+  // a capo o trattino): \"su chiamata\" non conta, le indicazioni condizionate
+  // nemmeno (vedi sopra), e nemmeno un esame fissato per un giorno
+  // successivo (\"su chiamata. EE 05/10\" letto di sabato: è una consegna per
+  // il lunedì, non per il festivo). Basta un pezzo che resta per considerare
+  // il paziente consegnato
+  const ESAMI = /\b(?:ee|eec|ega|pcr|esami|emocromo|procalcitonina|tc|tac|angio\w*|rx|eco\w*|rmn?|risonanza\w*|emocoltur\w*|urinocoltur\w*|uro\w*|colturali)\b/i;
+  const oggiChiave = chiaveGiorno(Date.now());
+  const pezzi = [];
+  frasiConsegna(rilevante).forEach(frase => {
+    if(eCondizionale(frase)) return;          // la virgola dopo \"se febbre,\" non la spezza
+    frase.split(',').forEach(p => { if(!eCondizionale(p)) pezzi.push(p); });
+  });
+  const puliti = pezzi.map(x => x.replace(/[:\-–>]/g, ' ').trim()).filter(Boolean);
+  // si scartano solo gli esami fissati per un giorno FUTURO: un esame con
+  // una data passata (\"vedi emocolture del 29/09\") è un risultato da
+  // controllare, quindi resta; e un pezzo che chiede di visitare/rivalutare
+  // resta sempre
+  return puliti.some(pezzo => {
+    if(!ESAMI.test(pezzo) || CONSEGNA_VISITA_RE.test(pezzo)) return true;
+    const giorni = trovaMarcatoriGiorno(pezzo);
+    if(!giorni.length) return true;
+    return giorni.some(g => chiaveGiorno(g.data.getTime()) <= oggiChiave);
+  });
 }
 
 // parole chiave per ciascuna lettera — non è un'interpretazione perfetta
@@ -7187,10 +7525,17 @@ function haQualcosaDaSegnalareOggi(testoConsegna){
 // nel testo.
 function classificaConsegna(testo){
   return {
-    V: categoriaValidaOggi(testo, '\\bvisit\\w*|controllo\\s+clinico|ob\\.?\\s*addome|ob\\.?\\s*torace|obiettivit[àa]\\s+clinica|se\\s+agitat[oa]'),
-    E: categoriaValidaOggi(testo, '\\b(ee|eec|ega|pcr|procalcitonina|emocromo)\\b'),
-    S: categoriaValidaOggi(testo, '\\b(rx|tc|eco\\w*|rmn|risonanza\\w*)\\b'),
-    C: categoriaValidaOggi(testo, '\\bemo(?!cromo)\\w*|\\buro\\w*|\\bantibiogramma\\w*|\\batb\\b|colt\\w*')
+    // V: basta la parola, qualunque giorno sia indicato — un paziente da
+    // visitare sabato merita di essere rivisto anche domenica. Il giorno
+    // conta solo per E/S/C (gli "EE lun 5/10" letti di domenica no)
+    // ("se agitato …" non conta più come V: è un'indicazione condizionata,
+    // salvo che chieda esplicitamente di visitare — vedi togliCondizionali)
+    V: new RegExp('\\bvisit\\w*|controllo\\s+clinico|ob\\.?\\s*addome|ob\\.?\\s*torace|obiettivit[àa]\\s+clinica|\\brivalut\\w*|\\briveder\\w*|\\brived[oi]\\b|\\bvalutar\\w*\\s+clinicamente|\\bvalutazione\\s+clinica', 'i').test(togliCondizionali(testo)),
+    E: categoriaValidaOggi(togliCondizionali(testo), '\\b(ee|eec|ega|pcr|procalcitonina|emocromo|esami|troponina|tropo|tni)\\b'),
+    S: categoriaValidaOggi(togliCondizionali(testo), '\\b(rx|tc|eco\\w*|rmn|risonanza\\w*)\\b'),
+    // le indicazioni condizionate ("se febbre emo", "se dolore RX") non
+    // accendono E/S/C — vedi togliCondizionali
+    C: categoriaValidaOggi(togliCondizionali(testo), '\\bemo(?!cromo)\\w*|\\buro\\w*|\\bantibiogramma\\w*|\\batb\\b|colt\\w*')
   };
 }
 
@@ -7451,6 +7796,83 @@ function triggerSostituisci(re, testo, inizio, riga){
 const EGA_TRIGGER_RE = /ega\s*:/;
 const VFG_TRIGGER_RE = /cockroft|cockcroft|vfg/;
 
+// pallini V/E/S/C accanto al nome del letto in Diari; toccandoli (o
+// toccando l'icona ⓘ se non ci sono lettere) si apre/chiude sotto il
+// titolo il testo della consegna
+function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
+  const wrap = document.createElement('div');
+  wrap.className = 'diario-consegna-pallini';
+  wrap.title = 'Mostra la consegna';
+  const lettere = lettereConsegnaDaFare(voce);
+  if(lettere.length){
+    lettere.forEach(l => {
+      const b = document.createElement('span');
+      b.className = 'diario-consegna-pallino ' + l.toLowerCase();
+      b.textContent = l;
+      wrap.appendChild(b);
+    });
+  } else {
+    const b = document.createElement('span');
+    b.className = 'diario-consegna-pallino info';
+    b.textContent = 'i';
+    wrap.appendChild(b);
+  }
+  wrap.onclick = (e) => {
+    e.stopPropagation();
+    const esistente = block.querySelector('.diario-consegna-testo');
+    if(esistente){ esistente.remove(); return; }
+    const box = document.createElement('div');
+    box.className = 'note-box diario-consegna-testo';
+    box.textContent = voce.testo || '';
+    const riga = block.querySelector('.bed-title-row');
+    riga.insertAdjacentElement('afterend', box);
+  };
+  titleWrap.appendChild(wrap);
+}
+
+// box in Diari per un letto consegnato che oggi NON ha un esame obiettivo
+// (es. va solo visto un colturale o un esame): nome, alone blu, pallini e
+// un campo per una nota ("Emocolture in corso") da copiare nel programma
+// dell'ospedale. La nota sta con le consegne di oggi, non tocca la scheda
+// del paziente, e sparisce con esse il giorno dopo. Se poi il paziente
+// viene visitato, compare il suo diario normale al posto di questo box
+function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
+  const block = document.createElement('div');
+  block.className = 'referto-block ha-consegne consegna-da-vedere';
+  const titleRow = document.createElement('div');
+  titleRow.className = 'bed-title-row';
+  const titleWrap = document.createElement('div');
+  titleWrap.style.cssText = 'display:flex; align-items:baseline; flex-wrap:wrap;';
+  const title = document.createElement('div');
+  title.className = 'bed-title';
+  title.textContent = nome;
+  titleWrap.appendChild(title);
+  const sotto = document.createElement('div');
+  sotto.className = 'bed-date';
+  sotto.textContent = 'consegnato · non visitato';
+  titleWrap.appendChild(sotto);
+  aggiungiPalliniConsegnaDiari(titleWrap, block, voce);
+  titleRow.appendChild(titleWrap);
+  const copiaBtn = document.createElement('button');
+  copiaBtn.className = 'copia-btn';
+  copiaBtn.textContent = 'Copia';
+  titleRow.appendChild(copiaBtn);
+  block.appendChild(titleRow);
+  const body = document.createElement('textarea');
+  body.className = 'bed-text';
+  body.value = voce.nota || '';
+  body.placeholder = 'Nota (es. Emocolture in corso)';
+  body.addEventListener('input', () => {
+    const c = loadConsegne();
+    if(c[nome]){ c[nome].nota = body.value; saveConsegne(c); }
+    autoResizeTextarea(body);
+  });
+  copiaBtn.onclick = () => { if(body.value.trim()){ copiaTesto(body.value); block.classList.add('copiato'); } };
+  block.appendChild(body);
+  container.appendChild(block);
+  areeTesto.push(body);
+}
+
 function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
@@ -7474,6 +7896,18 @@ function renderRiepilogo(){
     return;
   }
 
+  // consegne di oggi: i letti consegnati senza un diario di oggi compaiono
+  // comunque, come box "da vedere" (vedi sotto, p.__consegna)
+  const consegneOggi = diariMostraIeri ? {} : loadConsegne();
+  if(!diariMostraIeri){
+    const presenti = new Set(entries.map(([, p]) => p.name));
+    Object.keys(consegneOggi).forEach(nome => {
+      if(!presenti.has(nome)) entries.push(['__consegna__' + nome, { name: nome, __consegna: true }]);
+    });
+    const ordinate = ordinaPazientiPerLetto(entries);
+    entries.length = 0; ordinate.forEach(e => entries.push(e));
+  }
+
   if(entries.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
@@ -7494,6 +7928,7 @@ function renderRiepilogo(){
   const areeTesto = [];
 
   entries.forEach(([id, p]) => {
+    if(p.__consegna){ renderBoxConsegnaDiari(container, p.name, consegneOggi[p.name], areeTesto); return; }
     // "oggi": p è il paziente vero e proprio (serve lo stato live per i
     // pulsanti Copia/badge se è quello aperto ora). "ieri": p è invece
     // {name, testo, archiviato} già pronto da schedeConDatiPerGiorno —
@@ -7503,7 +7938,8 @@ function renderRiepilogo(){
     const soloExtra = sepIdx === -1 ? '' : testo.slice(sepIdx + 2).replace(/^\s+/, '');
 
     const block = document.createElement('div');
-    block.className = 'referto-block' + (!diariMostraIeri && p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '');
+    block.className = 'referto-block' + (!diariMostraIeri && p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '')
+      + (consegneOggi[p.name] ? ' ha-consegne' : '');
 
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
@@ -7517,6 +7953,7 @@ function renderRiepilogo(){
     title.className = 'bed-title';
     title.textContent = p.name;
     titleWrap.appendChild(title);
+    if(consegneOggi[p.name]) aggiungiPalliniConsegnaDiari(titleWrap, block, consegneOggi[p.name]);
 
     // orario del PRIMO salvataggio dell'esame di oggi (non l'ultimo tocco):
     // per schede più vecchie di quando esiste questo campo, si torna
