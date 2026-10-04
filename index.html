@@ -7750,6 +7750,9 @@ const AGG_CONS_ABBREVIAZIONI = [
   [/\bfisio(?:kinesi)?terapia\b/gi, 'FKT'],
   [/\burinocoltur[ae]\b/gi, 'URO'],
   [/\brettosigmoidoscopi[ae]\b/gi, 'RSS'],
+  [/\btroponina\b|\btropo\b|\btni\b/gi, 'TnI'],
+  [/\bsodio\b/gi, 'Na'],
+  [/\bpotassio\b/gi, 'K'],
   [/\bvisita\s+(?=\p{L})/giu, 'v. '],
   [/\bvalutazione\s+(?=\p{L})/giu, 'val. '],
   [/\bconsulenza\s+(?=\p{L})/giu, 'cons. '],
@@ -7788,6 +7791,47 @@ function aggConsDataEsami(extra){
   if(m) return aggConsDataDaGiornoMese(+m[1], +m[2]);
   return null;
 }
+// ESAMI SPECIFICI programmati per un giorno ("emocromo di controllo per
+// domani", "emocromo e PCR per il 06/10", "richiedo INR per domenica"):
+// anche questi sono EE in violetto, con l'esame tra parentesi:
+// "EE 06/10 (emocromo)". Se per lo stesso giorno sono previsti anche
+// "esami" generici, resta "EE gg/mm" senza parentesi
+const AGG_CONS_ESAMI_SPECIFICI = [
+  ['emocromo', /emocromo/], ['elettroliti', /elettroliti|ionogramma/], ['PCR', /pcr/],
+  ['INR', /inr/], ['funzione renale', /funzione\s+renale|funzionalit[àa]\s+renale/],
+  ['TnI', /troponina|\btropo\b|\btni\b/], ['Na', /sodio|natremia|sodiemia|\bna\b/], ['K', /potassio|kaliemia|potassiemia|\bk\b/]
+];
+const AGG_CONS_RE_SPECIFICO = String.raw`(?:emocromo|elettroliti|ionogramma|pcr|inr|funzione\s+renale|funzionalit[àa]\s+renale|troponina|tropo|tni|sodio|natremia|sodiemia|na|potassio|kaliemia|potassiemia|k)(?![\p{L}])`;
+const AGG_CONS_RE_GIORNO_ESAME = String.raw`(?:(?:per|il|di|da\s+fare|programmat[oiae]\s+per|previst[oiae]\s+per)\s+)?(?:(?:prossimo|il)\s+)?(domani|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
+function aggConsDataDaParola(parola){
+  if(parola === 'domani'){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
+  if(AGG_CONS_GIORNI[parola] !== undefined) return aggConsProssimoGiorno(AGG_CONS_GIORNI[parola]);
+  const m = parola.match(/(\d{1,2})[\/.](\d{1,2})/);
+  return m ? aggConsDataDaGiornoMese(+m[1], +m[2]) : null;
+}
+function aggConsEsamiProgrammati(extra, dataGenerici){
+  const t = (extra || '').toLowerCase().replace(/[ \t]+/g, ' ');
+  const perData = new Map();
+  const aggiungi = (d, dettaglio) => {
+    if(!d) return;
+    const k = d.getTime();
+    if(!perData.has(k)) perData.set(k, { data: d, generici: false, dettagli: [] });
+    const v = perData.get(k);
+    if(dettaglio === null) v.generici = true;
+    else if(!v.dettagli.includes(dettaglio)) v.dettagli.push(dettaglio);
+  };
+  if(dataGenerici) aggiungi(dataGenerici, null);
+  const re = new RegExp(String.raw`\b(` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)(?:\s+di\s+controllo)?\s*` + AGG_CONS_RE_GIORNO_ESAME, 'giu');
+  let m;
+  while((m = re.exec(t))){
+    const d = aggConsDataDaParola(m[2]);
+    AGG_CONS_ESAMI_SPECIFICI.forEach(([nome, r]) => { if(r.test(m[1])) aggiungi(d, nome); });
+  }
+  return [...perData.values()]
+    .sort((a, b) => a.data - b.data)
+    .map(v => ({ data: v.data, dettagli: v.generici ? [] : v.dettagli }));
+}
+
 function aggConsDataDimissione(extra){
   if(typeof estraiDimissioniProgrammate !== 'function') return null;
   const oggi = new Date(); oggi.setHours(0,0,0,0);
@@ -7812,7 +7856,7 @@ function aggConsTogliProgrammati(riga){
   // richieste). In \"si richiede RX torace ed esami per domani\" sparisce
   // solo \"ed esami per domani\", la richiesta di RX resta
   const reEsami = new RegExp(
-    String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo))\s+|\b(?:richiest|chiest)[aoie]\s+)?\b(?:esami|ee|eec)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'gi');
+    String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo))\s+|\b(?:richiest|chiest)[aoie]\s+)?\b(?:esami|ee|eec|` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'giu');
   return riga
     .replace(reEsami, '')
     // \"giovedì pv trasferito presso OdC...\", \"trasferimento in RSA mercoledì\"
@@ -8048,15 +8092,17 @@ function renderAggiornaConsegne(container, entries){
 
     // esami e dimissione sotto il nome del letto (niente terza colonna)
     const tdEE = tdLetto;
-    if(dEsami){
-      const t = 'EE ' + aggConsData(dEsami);
+    // una etichetta violetta per data: "EE 06/10", oppure "EE 06/10
+    // (emocromo)" se per quel giorno è previsto solo un esame specifico
+    aggConsEsamiProgrammati(extra, dEsami).forEach(({ data, dettagli }) => {
+      const t = 'EE ' + aggConsData(data) + (dettagli.length ? ` (${dettagli.join(', ')})` : '');
       const b = document.createElement('button');
       b.className = 'agg-cons-etichetta';
       b.title = 'Copia formattato';
       b.innerHTML = `<span class="ee">${t}</span> ⧉`;
       b.onclick = () => aggConsCopia(aggConsHtmlEtichetta(t, '#edabee', true), t, b);
       tdEE.appendChild(b);
-    }
+    });
     if(dDim){
       // "Dimissione sabato 03/10"; se nelle aggiunte c'è la destinazione
       // (RSA, OdC, CdR, Hospice), questa prende il posto di "Dimissione":
