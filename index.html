@@ -7780,6 +7780,8 @@ function aggConsDataEsami(extra){
   const t = (extra || '').toLowerCase().replace(/\s+/g, ' ');
   if(typeof haEsamiDomani === 'function' && haEsamiDomani(t)){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
   const esami = String.raw`(?:esami|ee|eec)(?:\s+(?:ematochimici|ematici|di\s+controllo|programmati|previsti))*(?:\s+(?:per|il|di|da\s+fare|fissati\s+per))?`;
+  // "esami (di controllo) domani" anche senza le frasi esatte della E
+  if(new RegExp(esami + String.raw`\s+domani(?![a-zà-ù])`).test(t)){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
   let m = t.match(new RegExp(esami + String.raw`\s+(lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica)(?![a-zà-ù])`));
   if(m) return aggConsProssimoGiorno(AGG_CONS_GIORNI[m[1]]);
   m = t.match(new RegExp(esami + String.raw`\s+(?:\p{L}+\s+)?(\d{1,2})[\/.](\d{1,2})(?!\d)`, 'u'));
@@ -7797,15 +7799,29 @@ function aggConsDataDimissione(extra){
 function aggConsTogliProgrammati(riga){
   const giorni = String.raw`(?:domani|oggi|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
   const uscita = String.raw`(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)`;
-  // "p.v." e iniziali puntate ("RSA S. Tecla") non devono spezzare la
+  // \"p.v.\" e iniziali puntate (\"RSA S. Tecla\") non devono spezzare la
   // frase: il punto viene nascosto e poi rimesso
   riga = riga.replace(/\bp\.\s?v\./gi, 'pv').replace(/\b([A-Za-zÀ-ù])\.(?=\s)/g, '$1\u0001');
+  // si toglie solo il PEZZO di frase (fino a virgola, punto, punto e
+  // virgola), non la frase intera: \"Prosegue ATB, richiedo esami per
+  // domani\" → resta \"Prosegue ATB\"
+  const PEZZO = String.raw`[^.,;\n]*`;
+  // esami programmati per un giorno: sono sempre esami ematochimici e
+  // diventano l'etichetta violetta EE gg/mm, anche se preceduti da
+  // \"richiedo/richiesti/si chiede...\" (l'unica eccezione al giallo delle
+  // richieste). In \"si richiede RX torace ed esami per domani\" sparisce
+  // solo \"ed esami per domani\", la richiesta di RX resta
+  const reEsami = new RegExp(
+    String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo))\s+|\b(?:richiest|chiest)[aoie]\s+)?\b(?:esami|ee|eec)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'gi');
   return riga
-    // "giovedì pv trasferito presso OdC...", "trasferimento in RSA mercoledì"
-    .replace(new RegExp(String.raw`[^.;\n]*\b` + giorni + String.raw`[^.;\n]*\b` + uscita + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
-    .replace(new RegExp(String.raw`[^.;\n]*\b` + uscita + String.raw`[^.;\n]*\b` + giorni + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
-    .replace(new RegExp(String.raw`[^.;\n]*\b(?:esami|ee|eec)\b[^.;\n]*?\b` + giorni + String.raw`[^.;\n]*[.;]?`, 'gi'), '')
-    .replace(new RegExp(String.raw`[^.;\n]*\b(?:domani\s+esami|domani\s+dimess[oa]|dimess[oa]\s+` + giorni + String.raw`|dimission[ei])[^.;\n]*[.;]?`, 'gi'), '')
+    .replace(reEsami, '')
+    // \"giovedì pv trasferito presso OdC...\", \"trasferimento in RSA mercoledì\"
+    .replace(new RegExp(PEZZO + String.raw`\b` + giorni + PEZZO + String.raw`\b` + uscita + PEZZO, 'gi'), '')
+    .replace(new RegExp(PEZZO + String.raw`\b` + uscita + PEZZO + String.raw`\b` + giorni + PEZZO, 'gi'), '')
+    .replace(new RegExp(PEZZO + String.raw`\b(?:domani\s+esami|domani\s+dimess[oa]|dimission[ei])` + PEZZO, 'gi'), '')
+    // virgole/congiunzioni rimaste orfane
+    .replace(/\s*,\s*(?=,|$)/g, '').replace(/^\s*[,;]\s*/, '').replace(/\s+(?:ed?|e)\s*$/i, '')
+    .replace(/\s{2,}/g, ' ')
     .trim().replace(/\u0001/g, '.');
 }
 
