@@ -1036,6 +1036,14 @@
     display:none; align-items:center; justify-content:center; padding:20px;
   }
   #score-modal-overlay.show{ display:flex; }
+  .reparto-extra-blocco{ margin-top:18px; padding-top:14px; border-top:1px solid var(--clay-border); }
+  #aggiunta-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.5); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  #aggiunta-overlay.show{ display:flex; }
+  #aggiunta-box{ width:100%; max-width:320px; background:var(--panel); border:1px solid var(--clay-border); border-radius:18px; box-shadow:var(--clay-out); padding:16px; }
+  .aggiunta-domanda{ text-align:center; font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  .aggiunta-scelte{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .aggiunta-scelte .btn{ flex:1; min-width:80px; }
   #mdc-modal-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.55);
     backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
     display:none; align-items:center; justify-content:center; padding:20px; }
@@ -1498,8 +1506,10 @@
   </div>
 
   <div class="group">
-    <div class="group-label">Settori</div>
+    <div class="group-label" id="settori-label">Settori</div>
     <div class="settore-dots" id="settore-tabs"></div>
+    <!-- reparti aggiunti per la guardia di un festivo (solo per oggi) -->
+    <div id="settori-extra"></div>
   </div>
   <div class="group">
     <div class="bed-grid" id="bed-grid"></div>
@@ -1521,6 +1531,8 @@
     <div class="group-label">Consegne del settore</div>
     <div id="consegne-settore-lista"></div>
   </div>
+  <!-- reparti aggiunti per la guardia di un festivo (solo per oggi) -->
+  <div id="reparti-extra-blocchi"></div>
 
   <div class="group" id="scheda-libera-group" style="display:none;">
     <div class="group-label">Scheda libera (fuori settore, es. appoggio)</div>
@@ -1759,6 +1771,17 @@
   </div>
 
   <div class="group">
+    <div class="group-label">Reparto</div>
+    <!-- reparto di tutti i giorni: decide i settori mostrati in Reparto
+         (gli altri si aggiungono solo nei festivi, dal "+") -->
+    <select id="impostazioni-reparto-scelta" onchange="impostaReparto(this.value)" style="width:100%;">
+      <option value="geriatria">Geriatria</option>
+      <option value="c1">Medicina C1</option>
+      <option value="c2">Medicina C2</option>
+    </select>
+  </div>
+
+  <div class="group">
     <div class="ric-lista-riga" onclick="toggleImpostazioniReparto()">
       <span class="ric-lista-nome">Editor reparto</span>
       <span class="admit-chev" id="impostazioni-reparto-chev">›</span>
@@ -1817,6 +1840,14 @@
       <input type="file" id="consegne-file-input" accept=".docx,.pdf" onchange="caricaFileConsegne(this.files[0])">
     </div>
     <div class="group-label" id="consegne-file-stato" style="min-height:16px; opacity:.75;"></div>
+    <div class="inline-fields" style="margin-bottom:8px; align-items:center;">
+      <span class="group-label" style="margin:0;">Reparto delle consegne</span>
+      <select id="consegne-reparto" style="flex:1; min-width:150px;" onchange="this.dataset.toccato='1'">
+        <option value="geriatria">Geriatria</option>
+        <option value="c1">Medicina C1</option>
+        <option value="c2">Medicina C2</option>
+      </select>
+    </div>
     <textarea id="consegne-testo-incollato" placeholder="Incolla qui il testo delle consegne…" style="min-height:140px;"></textarea>
     <div class="row" style="margin-top:8px;">
       <button class="btn primary" onclick="analizzaConsegne()">Analizza consegne</button>
@@ -5606,7 +5637,85 @@ const WARD_MAP_DEFAULT = {
   'Settore D': ['23.1','23.2','24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29.1']
 };
 const WARD_MAP_KEY = 'eo_builder_ward_map_v1';
+
+// REPARTI. La Geriatria usa la mappa modificabile qui sopra (WARD_MAP_KEY,
+// letti "Letto 4.1"). Le due Medicine hanno una mappa fissa, ricavata dalle
+// loro consegne: i letti sono scritti "C2:15 P" (reparto:numero) così il
+// nome della scheda è unico ("C2 · Letto 15 P") anche se lo stesso numero
+// esiste in un altro reparto; sul riquadro si vede solo "15 P". I letti
+// "P" sono i PEIMAF (in più, come dei bis). I settori sono "C2 · Settore
+// C" (in C1 c'è anche un "Settore E", che non va confuso con il settore
+// E delle schede extra)
+const WARD_MAP_MEDICINA = {
+  c1: {
+    'C1 · Settore A': ['1 P','2 P','1','2','3.1','3.2','4.1','4.2','5.1','5.2'],
+    'C1 · Settore B': ['6.1','6.2','7.1','7.2','8.1','8.2','9.1','9.2','10.1','10.2','11.1','11.2'],
+    'C1 · Settore C': ['12.1','12.2','13.1','13.2','14.1','14.2','15.1','15.2','16.1','16.2','17'],
+    'C1 · Settore D': ['18.1','18.2','19.1','19.2','20.1','20.2','21.1','21.2','22.1','22.2','23.1','23.2'],
+    'C1 · Settore E': ['24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29','30']
+  },
+  c2: {
+    'C2 · Settore C': ['13.1','13.2','14.1','14.2','15 P','17.1','17.2','18.1','18.2','19.1','19.2'],
+    'C2 · Settore D': ['20.1','20.2','21.1','21.2','22.1','22.2','23.1','23.2','24.1','24.2','16 P']
+  }
+};
+const NOMI_REPARTO = { geriatria:'Geriatria', c1:'Medicina C1', c2:'Medicina C2' };
+// reparto di tutti i giorni: scelto in Impostazioni, sincronizzato con
+// l'account (ogni medico ha il suo)
+const REPARTO_KEY = 'eo_builder_reparto_v1';
+function getReparto(){
+  try{ const v = localStorage.getItem(REPARTO_KEY); return NOMI_REPARTO[v] ? v : 'geriatria'; } catch(e){ return 'geriatria'; }
+}
+function impostaReparto(v){
+  if(!NOMI_REPARTO[v]) return;
+  setLocalAndCloud(REPARTO_KEY, v);
+  if(typeof renderWardMap === 'function') renderWardMap();
+  if(typeof renderImpostazioniRepartoScelta === 'function') renderImpostazioniRepartoScelta();
+}
+// reparti aggiunti per la guardia di un festivo: valgono solo per il giorno
+// in cui vengono aggiunti (come le consegne), il giorno dopo spariscono
+const REPARTI_EXTRA_KEY = 'eo_builder_reparti_extra_v1';
+function getRepartiExtraOggi(){
+  try{
+    const v = JSON.parse(localStorage.getItem(REPARTI_EXTRA_KEY) || '{}');
+    if(v.__giorno !== chiaveGiorno(Date.now())) return [];
+    return (v.reparti || []).filter(r => NOMI_REPARTO[r] && r !== getReparto());
+  } catch(e){ return []; }
+}
+function impostaRepartiExtraOggi(lista){
+  setLocalAndCloud(REPARTI_EXTRA_KEY, JSON.stringify({ __giorno: chiaveGiorno(Date.now()), reparti: lista }));
+}
+function mappaReparto(r){
+  return r === 'geriatria' ? getWardMapGeriatria() : Object.fromEntries(Object.entries(WARD_MAP_MEDICINA[r] || {}).map(([s, letti]) => [s, letti.map(n => r.toUpperCase() + ':' + n)]));
+}
+function repartoDelSettore(s){
+  const m = /^(C[12]) · /.exec(s || '');
+  return m ? m[1].toLowerCase() : 'geriatria';
+}
+// FESTIVI: sabato, domenica e festività nazionali (Pasqua e Pasquetta
+// calcolate per l'anno)
+function eFestivo(d){
+  d = d || new Date();
+  if(d.getDay() === 0 || d.getDay() === 6) return true;
+  const mmgg = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  if(['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'].includes(mmgg)) return true;
+  const Y = d.getFullYear(), a = Y % 19, b = Math.floor(Y / 100), c = Y % 100, dd = Math.floor(b / 4), e = b % 4,
+    f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - dd - g + 15) % 30,
+    i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mese = Math.floor((h + l - 7 * m + 114) / 31), giorno = ((h + l - 7 * m + 114) % 31) + 1;
+  const pasqua = new Date(Y, mese - 1, giorno), pasquetta = new Date(Y, mese - 1, giorno + 1);
+  return [pasqua, pasquetta].some(x => x.getMonth() === d.getMonth() && x.getDate() === d.getDate());
+}
+
+// mappa IN USO: i settori del reparto scelto e, solo per oggi, quelli dei
+// reparti aggiunti per la guardia
 function getWardMap(){
+  const mappa = Object.assign({}, mappaReparto(getReparto()));
+  getRepartiExtraOggi().forEach(r => Object.assign(mappa, mappaReparto(r)));
+  return mappa;
+}
+// mappa della sola Geriatria (quella modificabile in Impostazioni)
+function getWardMapGeriatria(){
   try{
     const raw = localStorage.getItem(WARD_MAP_KEY);
     if(raw){
@@ -5623,7 +5732,12 @@ function getSettori(){ return Object.keys(getWardMap()); }
 // ma viene mostrato come pallino a parte nella barra dei settori, separato
 // dagli altri da un trattino — vedi renderWardMap()
 const SETTORE_EXTRA = 'Settore E';
-function bedName(n){ return 'Letto ' + n; }
+function bedName(n){
+  const m = /^(C[12]):(.+)$/.exec(String(n));
+  return m ? m[1] + ' · Letto ' + m[2] : 'Letto ' + n;
+}
+// numero da mostrare sul riquadro ("C2:15 P" → "15 P")
+function etichettaLetto(n){ return String(n).replace(/^C[12]:/, ''); }
 
 // salva la mappa modificata (locale + cloud) e rimette in sesto quello che
 // dipende da lei: se il settore attivo non esiste più tra quelli rimasti
@@ -5632,8 +5746,8 @@ function bedName(n){ return 'Letto ' + n; }
 // fantasma
 function salvaWardMap(map){
   setLocalAndCloud(WARD_MAP_KEY, JSON.stringify(map));
-  if(settoreAttivo !== SETTORE_EXTRA && !map[settoreAttivo]){
-    settoreAttivo = Object.keys(map)[0] || SETTORE_EXTRA;
+  if(settoreAttivo !== SETTORE_EXTRA && !getWardMap()[settoreAttivo]){
+    settoreAttivo = Object.keys(getWardMap())[0] || SETTORE_EXTRA;
     try{ localStorage.setItem(LAST_SETTORE_KEY, settoreAttivo); }catch(e){}
   }
   if(typeof renderImpostazioniReparto === 'function') renderImpostazioniReparto();
@@ -5668,11 +5782,21 @@ function impostazioniArma(id){
   return false; // secondo click: procedi
 }
 
+function renderImpostazioniRepartoScelta(){
+  const sel = document.getElementById('impostazioni-reparto-scelta');
+  if(sel) sel.value = getReparto();
+  // in Consegne WE si parte dal proprio reparto (poi si può cambiare)
+  const selC = document.getElementById('consegne-reparto');
+  if(selC && !selC.dataset.toccato) selC.value = getReparto();
+}
+document.addEventListener('DOMContentLoaded', renderImpostazioniRepartoScelta);
+
 function renderImpostazioniReparto(){
+  renderImpostazioniRepartoScelta();
   const container = document.getElementById('impostazioni-reparto-lista');
   if(!container) return;
   container.innerHTML = '';
-  const map = getWardMap();
+  const map = getWardMapGeriatria();
   const settori = Object.keys(map);
 
   settori.forEach((settore, idx) => {
@@ -5693,7 +5817,7 @@ function renderImpostazioniReparto(){
     btnDel.onclick = (e) => {
       e.stopPropagation();
       if(impostazioniArma(idArmatoSettore)) return;
-      const m = getWardMap();
+      const m = getWardMapGeriatria();
       delete m[settore];
       salvaWardMap(m);
       showToast('Settore "' + settore + '" eliminato (le eventuali schede restano, si spostano nel Settore E)');
@@ -5718,7 +5842,7 @@ function renderImpostazioniReparto(){
       chip.onclick = (e) => {
         e.stopPropagation();
         if(impostazioniArma(idArmatoLetto)) return;
-        const m = getWardMap();
+        const m = getWardMapGeriatria();
         if(m[settore]) m[settore] = m[settore].filter(n => n !== numero);
         salvaWardMap(m);
         showToast('Letto "' + numero + '" eliminato (l\'eventuale scheda resta, si sposta nel Settore E)');
@@ -5760,7 +5884,7 @@ function aggiungiSettore(){
   const nome = (input.value || '').trim();
   if(!nome){ showToast('Scrivi un nome per il nuovo settore'); return; }
   if(nome === SETTORE_EXTRA){ showToast('Quel nome è già riservato alle schede extra'); return; }
-  const map = getWardMap();
+  const map = getWardMapGeriatria();
   if(map[nome]){ showToast('Esiste già un settore con questo nome'); return; }
   map[nome] = [];
   salvaWardMap(map);
@@ -5771,7 +5895,7 @@ function aggiungiSettore(){
 function aggiungiLetto(settore, valoreGrezzo){
   const numero = (valoreGrezzo || '').trim();
   if(!numero){ showToast('Scrivi un numero di letto'); return; }
-  const map = getWardMap();
+  const map = getWardMapGeriatria();
   if(!map[settore]){ showToast('Settore non più esistente'); return; }
   const giaEsistente = Object.values(map).some(lista => lista.includes(numero));
   if(giaEsistente){ showToast('Esiste già un letto "' + numero + '" nella mappa'); return; }
@@ -6061,7 +6185,10 @@ function toggleAppFarmaciSottogruppo(nome){
   chev.classList.toggle('aperto', !aperto);
 }
 function apriRicoveri(){ mostraVista('ricoveri'); }
-function apriVitaliSettore(){ mostraVista('vitali'); }
+// settore della pagina Parametri vitali: quello del reparto principale,
+// oppure (dal pulsante del blocco di un reparto aggiunto) un suo settore
+let settoreVitali = null;
+function apriVitaliSettore(settore){ settoreVitali = settore || null; mostraVista('vitali'); }
 function chiudiVitaliSettore(){ mostraVista('wardmap'); }
 
 // tira giù dal cloud le schede più recenti (utile se un altro dispositivo
@@ -6181,9 +6308,9 @@ function confermaSvuotaSettore(){
 // nome del letto, lettere V/E/S/C (accese = da fare; toccandole si
 // aggiungono o tolgono a mano) e, toccando il nome, il testo della consegna
 let consegnaSettoreAperta = null;
-function renderConsegneSettore(nomiLetti, consegne){
-  const group = document.getElementById('consegne-settore-group');
-  const lista = document.getElementById('consegne-settore-lista');
+function renderConsegneSettore(nomiLetti, consegne, group, lista){
+  group = group || document.getElementById('consegne-settore-group');
+  lista = lista || document.getElementById('consegne-settore-lista');
   if(!group || !lista) return;
   const nomi = nomiLetti.filter(n => consegne[n]);
   group.style.display = nomi.length ? '' : 'none';
@@ -6196,7 +6323,7 @@ function renderConsegneSettore(nomiLetti, consegne){
     nomeEl.className = 'ric-lista-nome';
     nomeEl.textContent = nome + (consegnaSettoreAperta === nome ? ' ▾' : ' ▸');
     nomeEl.style.cursor = 'pointer';
-    nomeEl.onclick = () => { consegnaSettoreAperta = consegnaSettoreAperta === nome ? null : nome; renderConsegneSettore(nomiLetti, loadConsegne()); };
+    nomeEl.onclick = () => { consegnaSettoreAperta = consegnaSettoreAperta === nome ? null : nome; renderConsegneSettore(nomiLetti, loadConsegne(), group, lista); };
     riga.appendChild(nomeEl);
     const lettere = document.createElement('div');
     lettere.style.cssText = 'display:flex; gap:6px; flex-shrink:0;';
@@ -6275,7 +6402,7 @@ function posizionaTondoAppoggio(inExtra){
     tondo.textContent = '+';
     tondo.title = 'Aggiungi un appoggio al settore';
     tondo.setAttribute('aria-label', tondo.title);
-    tondo.onclick = iniziaNuovoAppoggio;
+    tondo.onclick = () => eFestivo() ? apriSceltaAggiunta() : iniziaNuovoAppoggio();
   }
   riga.style.display = 'none';
   if(inExtra){ tondo.remove(); return; }
@@ -6317,6 +6444,46 @@ function posizionaTondoAppoggio(inExtra){
 }
 window.addEventListener('resize', () => { if(document.getElementById('bed-grid')) posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA); });
 
+// FESTIVI: il "+" chiede "Letto o Reparto?". Reparto → quali reparti
+// aggiungere per la guardia di oggi (gli altri due, o entrambi): i loro
+// settori compaiono sotto quelli di tutti i giorni, ciascuno coi suoi
+// letti e parametri vitali, e spariscono domani
+function apriSceltaAggiunta(passo){
+  const ov = document.getElementById('aggiunta-overlay');
+  const corpo = document.getElementById('aggiunta-corpo');
+  const altri = Object.keys(NOMI_REPARTO).filter(r => r !== getReparto());
+  const attivi = getRepartiExtraOggi();
+  if(passo !== 'reparto'){
+    corpo.innerHTML = '<div class="aggiunta-domanda">Letto o Reparto?</div>';
+    const riga = document.createElement('div'); riga.className = 'aggiunta-scelte';
+    const bL = document.createElement('button'); bL.className = 'btn'; bL.textContent = 'Letto';
+    bL.onclick = () => { chiudiSceltaAggiunta(); iniziaNuovoAppoggio(); };
+    const bR = document.createElement('button'); bR.className = 'btn primary'; bR.textContent = 'Reparto';
+    bR.onclick = () => apriSceltaAggiunta('reparto');
+    riga.appendChild(bL); riga.appendChild(bR); corpo.appendChild(riga);
+  } else {
+    const sigla = r => r === 'geriatria' ? 'Geriatria' : r.toUpperCase();
+    corpo.innerHTML = `<div class="aggiunta-domanda">${altri.map(sigla).join(', ').replace(/, ([^,]*)$/, ' / $1')} / entrambi?</div>`;
+    const riga = document.createElement('div'); riga.className = 'aggiunta-scelte';
+    const scegli = (lista) => { impostaRepartiExtraOggi(lista); chiudiSceltaAggiunta(); renderWardMap(); showToast('Aggiunti per oggi: ' + lista.map(r => NOMI_REPARTO[r]).join(' e ')); };
+    altri.forEach(r => {
+      const b = document.createElement('button'); b.className = 'btn' + (attivi.includes(r) && attivi.length === 1 ? ' primary' : '');
+      b.textContent = sigla(r); b.onclick = () => scegli([r]); riga.appendChild(b);
+    });
+    const bE = document.createElement('button'); bE.className = 'btn' + (attivi.length === altri.length ? ' primary' : '');
+    bE.textContent = 'Entrambi'; bE.onclick = () => scegli(altri); riga.appendChild(bE);
+    corpo.appendChild(riga);
+    if(attivi.length){
+      const togli = document.createElement('button'); togli.className = 'btn'; togli.style.cssText = 'width:100%; margin-top:8px;';
+      togli.textContent = 'Togli i reparti aggiunti';
+      togli.onclick = () => { impostaRepartiExtraOggi([]); chiudiSceltaAggiunta(); renderWardMap(); };
+      corpo.appendChild(togli);
+    }
+  }
+  ov.classList.add('show');
+}
+function chiudiSceltaAggiunta(){ document.getElementById('aggiunta-overlay').classList.remove('show'); }
+
 // tocco sul tondo "+": nella sezione Appoggi compare un riquadro nuovo,
 // come un letto, con il campo per le iniziali ("MR") o il numero ("15.1")
 let appoggioInCreazione = null;
@@ -6346,7 +6513,7 @@ function creaTileNuovoAppoggio(settore){
 // etichetta corta per un riquadro: "Letto 15.1" → 15.1, "Mario Rossi" → MR,
 // "Appoggio 1" → A1, "MR" resta MR
 function inizialiLetto(nome){
-  const m = (nome || '').match(/^letto\s+(.+)$/i);
+  const m = (nome || '').match(/^(?:C[12] · )?letto\s+(.+)$/i);
   if(m) return m[1];
   const parole = (nome || '').trim().split(/\s+/).filter(Boolean);
   if(parole.length === 1) return parole[0].length <= 4 ? parole[0].toUpperCase() : parole[0].slice(0, 2).toUpperCase();
@@ -6359,6 +6526,8 @@ function altreSchedeE(patients, wardMap){
   return Object.entries(patients).filter(([id, p]) => !nomi.has(p.name));
 }
 
+// settore scelto in ciascun reparto aggiunto per la guardia (c1/c2/geriatria)
+const settoreAttivoExtra = {};
 function renderWardMap(){
   const patients = loadPatients();
   const consegneCorrenti = loadConsegne();
@@ -6367,8 +6536,8 @@ function renderWardMap(){
   // se il settore attivo non esiste più (eliminato qui o arrivato via sync
   // da un altro dispositivo che ha modificato la mappa), si passa al primo
   // rimasto invece di restare bloccati su un settore fantasma
-  if(settoreAttivo !== SETTORE_EXTRA && !wardMap[settoreAttivo]){
-    settoreAttivo = settori[0] || SETTORE_EXTRA;
+  if(settoreAttivo !== SETTORE_EXTRA && (!wardMap[settoreAttivo] || repartoDelSettore(settoreAttivo) !== getReparto())){
+    settoreAttivo = settori.find(x => repartoDelSettore(x) === getReparto()) || SETTORE_EXTRA;
     try{ localStorage.setItem(LAST_SETTORE_KEY, settoreAttivo); }catch(e){}
   }
 
@@ -6378,10 +6547,38 @@ function renderWardMap(){
   // ricoveri fuori mappa) separato dagli altri da un trattino
   const tabsEl = document.getElementById('settore-tabs');
   tabsEl.innerHTML = '';
-  settori.forEach(s => {
+  // il primo gruppo è il reparto di tutti i giorni (con il settore E delle
+  // schede extra); i reparti aggiunti per la guardia hanno una riga loro
+  const repPrincipale = getReparto();
+  const labelSettori = document.getElementById('settori-label');
+  if(labelSettori) labelSettori.textContent = 'Settori ' + NOMI_REPARTO[repPrincipale];
+  const extraEl = document.getElementById('settori-extra');
+  if(extraEl) extraEl.innerHTML = '';
+  const creaDotSettore = (s) => {
     const tab = document.createElement('div');
     tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
-    tab.textContent = s.replace('Settore ', '');
+    tab.textContent = s.replace(/^.*Settore\s+/, '');
+    tab.title = s;
+    tab.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderWardMap(); };
+    return tab;
+  };
+  // (i reparti aggiunti per la guardia non stanno più qui: hanno un blocco
+  // intero più sotto, in #reparti-extra-blocchi)
+  [].forEach(r => {
+    if(!extraEl) return;
+    const lab = document.createElement('div');
+    lab.className = 'group-label';
+    lab.style.marginTop = '10px';
+    lab.textContent = 'Settori ' + NOMI_REPARTO[r];
+    const riga = document.createElement('div');
+    riga.className = 'settore-dots';
+    settori.filter(s => repartoDelSettore(s) === r).forEach(s => riga.appendChild(creaDotSettore(s)));
+    extraEl.appendChild(lab); extraEl.appendChild(riga);
+  });
+  settori.filter(s => repartoDelSettore(s) === repPrincipale).forEach(s => {
+    const tab = document.createElement('div');
+    tab.className = 'settore-dot' + (s === settoreAttivo ? ' active' : '');
+    tab.textContent = s.replace(/^.*Settore\s+/, '');
     tab.title = s;
     tab.onclick = () => {
       // se il tocco era una pressione prolungata (vedi attivaPressioneProlungata),
@@ -6398,7 +6595,9 @@ function renderWardMap(){
   tabsEl.appendChild(separatore);
   const tabExtra = document.createElement('div');
   tabExtra.className = 'settore-dot' + (settoreAttivo === SETTORE_EXTRA ? ' active' : '');
-  tabExtra.textContent = 'E';
+  // in Medicina C1 esiste un vero "Settore E": lì il pallino delle schede
+  // extra diventa "Ex" per non confonderli
+  tabExtra.textContent = settori.some(s => /Settore E$/.test(s) && s !== SETTORE_EXTRA && repartoDelSettore(s) === repPrincipale) ? 'Ex' : 'E';
   tabExtra.title = SETTORE_EXTRA + ' (appoggi/ricoveri fuori mappa)';
   tabExtra.onclick = () => { settoreAttivo = SETTORE_EXTRA; try{ localStorage.setItem(LAST_SETTORE_KEY, SETTORE_EXTRA); }catch(e){} renderWardMap(); };
   tabsEl.appendChild(tabExtra);
@@ -6514,7 +6713,7 @@ function renderWardMap(){
   };
 
   if(!inExtra){
-    wardMap[settoreAttivo].forEach(n => gridEl.appendChild(creaTileLetto(bedName(n), n)));
+    wardMap[settoreAttivo].forEach(n => gridEl.appendChild(creaTileLetto(bedName(n), etichettaLetto(n))));
   } else {
     // settore E: anche qui i riquadri, con le iniziali ("Mario Rossi" → MR),
     // così si vedono verde/copiato/pallini come per i letti veri
@@ -6553,6 +6752,63 @@ function renderWardMap(){
   }
 
   renderConsegneSettore(inExtra ? [] : wardMap[settoreAttivo].map(bedName).concat(loadAppoggi()[settoreAttivo] || []), consegneCorrenti);
+
+  // REPARTI AGGIUNTI PER LA GUARDIA (festivi): sotto il reparto di tutti i
+  // giorni, ciascuno con i suoi pallini dei settori, i letti del settore
+  // scelto lì (indipendente da quello sopra), gli appoggi, i Parametri
+  // vitali e il riepilogo delle consegne del settore
+  const blocchiEl = document.getElementById('reparti-extra-blocchi');
+  if(blocchiEl){
+    blocchiEl.innerHTML = '';
+    getRepartiExtraOggi().forEach(r => {
+      const settoriR = settori.filter(x => repartoDelSettore(x) === r);
+      if(!settoriR.length) return;
+      let attivoR = settoreAttivoExtra[r];
+      if(!settoriR.includes(attivoR)) attivoR = settoreAttivoExtra[r] = settoriR[0];
+      const blocco = document.createElement('div');
+      blocco.className = 'reparto-extra-blocco';
+      const lab = document.createElement('div');
+      lab.className = 'group-label';
+      lab.textContent = 'Settori ' + NOMI_REPARTO[r];
+      blocco.appendChild(lab);
+      const dots = document.createElement('div');
+      dots.className = 'settore-dots';
+      settoriR.forEach(x => {
+        const d = document.createElement('div');
+        d.className = 'settore-dot' + (x === attivoR ? ' active' : '');
+        d.textContent = x.replace(/^.*Settore\s+/, '');
+        d.title = x;
+        d.onclick = () => { settoreAttivoExtra[r] = x; renderWardMap(); };
+        dots.appendChild(d);
+      });
+      blocco.appendChild(dots);
+      const griglia = document.createElement('div');
+      griglia.className = 'bed-grid';
+      griglia.style.marginTop = '12px';
+      wardMap[attivoR].forEach(n => griglia.appendChild(creaTileLetto(bedName(n), etichettaLetto(n))));
+      blocco.appendChild(griglia);
+      const appR = loadAppoggi()[attivoR] || [];
+      if(appR.length){
+        const labA = document.createElement('div'); labA.className = 'group-label'; labA.style.marginTop = '10px'; labA.textContent = 'Appoggi';
+        const gA = document.createElement('div'); gA.className = 'bed-grid';
+        appR.forEach(nome => { const t = creaTileLetto(nome, inizialiLetto(nome)); t.title = nome + ' (appoggio)'; gA.appendChild(t); });
+        blocco.appendChild(labA); blocco.appendChild(gA);
+      }
+      const bV = document.createElement('button');
+      bV.className = 'btn primary';
+      bV.style.cssText = 'width:100%; margin-top:12px;';
+      bV.innerHTML = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg>Parametri vitali';
+      bV.onclick = () => apriVitaliSettore(attivoR);
+      blocco.appendChild(bV);
+      const gC = document.createElement('div'); gC.style.marginTop = '10px';
+      const labC = document.createElement('div'); labC.className = 'group-label'; labC.textContent = 'Consegne del settore';
+      const listaC = document.createElement('div');
+      gC.appendChild(labC); gC.appendChild(listaC);
+      blocco.appendChild(gC);
+      renderConsegneSettore(wardMap[attivoR].map(bedName).concat(appR), consegneCorrenti, gC, listaC);
+      blocchiEl.appendChild(blocco);
+    });
+  }
 
   // form "Scheda libera" per crearne una nuova: visibile solo nel settore E
   const formLibera = document.getElementById('scheda-libera-group');
@@ -6601,19 +6857,20 @@ function renderWardMap(){
 // in un campo salva subito quella scheda (o ne crea una vuota se il letto
 // non è ancora occupato), senza dover passare dalla scheda clinica intera.
 function renderVitaliSettore(){
-  const inExtra = settoreAttivo === SETTORE_EXTRA;
-  document.getElementById('vitali-settore-nome').textContent = inExtra ? '' : settoreAttivo;
+  const settoreV = settoreVitali || settoreAttivo;
+  const inExtra = settoreV === SETTORE_EXTRA;
+  document.getElementById('vitali-settore-nome').textContent = inExtra ? '' : settoreV;
   const lista = document.getElementById('vitali-settore-lista');
   lista.innerHTML = '';
   if(inExtra) return; // il Settore E non ha letti fissi, vedi renderWardMap
 
   const wardMap = getWardMap();
-  if(!wardMap[settoreAttivo]) return; // settore eliminato nel frattempo: niente da mostrare qui
+  if(!wardMap[settoreV]) return; // settore eliminato nel frattempo: niente da mostrare qui
 
   const patients = loadPatients();
   // letti del settore e, in coda, i suoi appoggi ("MR", "Letto 15.1")
-  const voci = wardMap[settoreAttivo].map(n => ({ nome: bedName(n), chiave: String(n) }))
-    .concat((loadAppoggi()[settoreAttivo] || []).map(a => ({ nome: a, chiave: 'app-' + a })));
+  const voci = wardMap[settoreV].map(n => ({ nome: bedName(n), chiave: String(n) }))
+    .concat((loadAppoggi()[settoreV] || []).map(a => ({ nome: a, chiave: 'app-' + a })));
   voci.forEach(({ nome, chiave }) => {
     const entry = Object.entries(patients).find(([id,p]) => p.name === nome);
     const occupato = entry && schedaHaDati(entry[1].state);
@@ -7216,6 +7473,10 @@ function toggleTestoConsegnaVisibile(nomeLetto){
 // 9.1" (perché "1" < "9" come primo carattere) — qui si estraggono i due
 // numeri (letto e sotto-letto) e si confrontano come numeri, non come testo
 function confrontaNomiLetto(a, b){
+  // prima il reparto (Geriatria, poi C1, poi C2), poi il numero
+  const ra = (/^(C[12]) · /.exec(a) || [,''])[1], rb = (/^(C[12]) · /.exec(b) || [,''])[1];
+  if(ra !== rb) return ra.localeCompare(rb);
+  a = a.replace(/^C[12] · /, ''); b = b.replace(/^C[12] · /, '');
   const parse = (nome) => {
     const m = nome.match(/(\d+)(?:\.(\d+))?/);
     return m ? [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0] : [Infinity, 0];
@@ -7337,7 +7598,7 @@ function estraiConsegnePerLetto(testoCompleto){
   marcatori.forEach((mk, i) => {
     const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].pos : testoCompleto.length;
     const blocco = testoCompleto.slice(mk.pos, fine);
-    const mConsegne = blocco.match(/Consegne\s*:([\s\S]*?)(?:(?:Tel\s*)?Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
+    const mConsegne = blocco.match(/Consegne\s*:([\s\S]*?)(?:(?:Tel\.?\s*)?Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
     if(mConsegne){
       const testoConsegne = mConsegne[1].trim();
       if(testoConsegne) risultato[mk.nome] = testoConsegne;
@@ -7551,11 +7812,56 @@ function classificaConsegna(testo){
 // "Analizza consegne": sostituisce del tutto l'elenco precedente (ogni
 // spunta "fatto" riparte da capo) — le consegne sono per definizione quelle
 // di oggi, non un archivio da accumulare turno dopo turno
+// consegne di un reparto di Medicina: i letti si riconoscono anche senza la
+// parola "Letto" (nelle tabelle spesso c'è solo "13.1" o "15 P" da solo
+// su una riga), ma solo se esistono davvero nella mappa di quel reparto —
+// così un numero qualunque nel testo non viene preso per un letto. "1.1"
+// in un reparto dove il letto è singolo ("1") diventa "1", e viceversa
+function estraiConsegnePerLettoReparto(testoCompleto, rep){
+  const letti = new Set(Object.values(WARD_MAP_MEDICINA[rep] || {}).flat());
+  const normalizza = (num, dec, p) => {
+    let t = num + (dec ? '.' + dec : '') + (p ? ' P' : '');
+    if(letti.has(t)) return t;
+    if(!p && dec === '1' && letti.has(num)) return num;
+    if(!p && !dec && letti.has(num + '.1')) return num + '.1';
+    return null;
+  };
+  const marcatori = [];
+  const aggiungi = (pos, num, dec, p) => {
+    const t = normalizza(num, dec, p);
+    if(t && !marcatori.some(m => Math.abs(m.pos - pos) < 3)) marcatori.push({ pos, nome: bedName(rep.toUpperCase() + ':' + t) });
+  };
+  let m;
+  const reLetto = /\bletto\s+(\d{1,2})\s*(?:\.\s*(\d))?\s*(P\b)?/gi;
+  while((m = reLetto.exec(testoCompleto))) aggiungi(m.index, m[1], m[2], m[3]);
+  const reSolo = /(^|\n)[ \t|]*(\d{1,2})\s*(?:\.\s*(\d))?\s*(P)?(?=[ \t|]*(?:\n|$))/gi;
+  while((m = reSolo.exec(testoCompleto))) aggiungi(m.index + m[1].length, m[2], m[3], m[4]);
+  marcatori.sort((a, b) => a.pos - b.pos);
+  const risultato = {};
+  marcatori.forEach((mk, i) => {
+    const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].pos : testoCompleto.length;
+    const blocco = testoCompleto.slice(mk.pos, fine);
+    const mc = blocco.match(/Consegne\s*:([\s\S]*?)(?:(?:Tel\.?\s*)?Familiari\s*:|Data\s*(?:colloquio|agg)\s*:|$)/i);
+    if(mc && mc[1].trim() && !risultato[mk.nome]) risultato[mk.nome] = mc[1].trim();
+  });
+  return risultato;
+}
+
 function analizzaConsegne(){
   const testo = document.getElementById('consegne-testo-incollato').value;
   if(!testo.trim()){ showToast('Incolla prima il testo delle consegne'); return; }
-  const perLetto = estraiConsegnePerLetto(testo);
+  // reparto a cui appartengono le consegne incollate: si possono caricare
+  // quelle di più reparti nello stesso giorno, ognuna sostituisce solo le
+  // consegne del proprio reparto
+  const selRep = document.getElementById('consegne-reparto');
+  const rep = (selRep && selRep.value) || 'geriatria';
+  const perLetto = rep === 'geriatria' ? estraiConsegnePerLetto(testo) : estraiConsegnePerLettoReparto(testo, rep);
   const nuovoElenco = {};
+  const esistenti = loadConsegne();
+  Object.keys(esistenti).forEach(k => {
+    const repK = (/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase();
+    if(repK !== rep) nuovoElenco[k] = esistenti[k];
+  });
   Object.keys(perLetto).forEach(nomeLetto => {
     const testoConsegna = perLetto[nomeLetto];
     // niente da segnalare oggi: consegna vuota, "su chiamata" senz'altro,
@@ -7572,8 +7878,8 @@ function analizzaConsegne(){
   saveConsegne(nuovoElenco);
   renderConsegneLista();
   renderWardMap();
-  const nLetti = Object.keys(nuovoElenco).length;
-  showToast(nLetti ? `Trovate consegne per ${nLetti} letti` : 'Nessuna consegna da segnalare per oggi nel testo incollato');
+  const nLetti = Object.keys(nuovoElenco).filter(k => ((/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase()) === rep).length;
+  showToast(nLetti ? `${NOMI_REPARTO[rep]}: consegne per ${nLetti} letti` : `${NOMI_REPARTO[rep]}: nessuna consegna da segnalare oggi`);
 }
 
 function cancellaTutteConsegne(){
@@ -12375,6 +12681,11 @@ try{
     <div id="farmaco-vfg-info"></div>
     <div id="farmaco-corpo"></div>
   </div>
+</div>
+
+<!-- "+" nei festivi: Letto o Reparto? (vedi apriSceltaAggiunta) -->
+<div id="aggiunta-overlay" onclick="if(event.target===this) chiudiSceltaAggiunta()">
+  <div id="aggiunta-box"><div id="aggiunta-corpo"></div></div>
 </div>
 
 <!-- TC CON MDC E VFG < 30: box informativo, vedi mdcControllaTrigger -->
