@@ -7472,7 +7472,16 @@ function frasiConsegna(testo){
   return (testo || '').replace(/\bsu\s+chiamata\b/gi, '').split(/[.;\n]|\s[-–]\s|^[-–]\s|^-(?=\S)/);
 }
 function eCondizionale(frase){
-  const f = frase.replace(/^[\s\-–>,:]+/, '');
+  const f = frase.replace(/^[\s\-–>,:]+/, '').replace(/[.\s]+$/, '');
+  // indicazioni per l'infermiere che non sono consegne per il medico:
+  // "feci in visione" (e urine/vomito/espettorato/drenaggio in visione)
+  if(/^(?:(?:tenere|lasciare)\s+)?(?:le\s+)?(?:feci|urine|vomito|espettorato|drenaggio|ristagno)?\s*in\s+visione$/i.test(f)) return true;
+  // esito già disponibile e negativo/nella norma, riportato solo come
+  // informazione ("sonda BK su espettorato negativa", "Rx torace nella
+  // norma"): niente da fare. Resta invece se c'è un'azione ("vedi
+  // emocolture: se negative sospendere ATB", "controllare se negativa")
+  if(/\b(?:negativ[oaie]|neg|nella\s+norma|nei\s+limiti(?:\s+della\s+norma)?|non\s+significativ[oaie])\b/i.test(f)
+     && !/\b(?:vedi|vd|vedere|controll\w*|ricontroll\w*|se|sospend\w*|inizi\w*|richied\w*|ripet\w*|valut\w*|rivalut\w*|visit\w*|in\s+corso|in\s+attesa|attendere|chiamare|avvisare)\b/i.test(f)) return true;
   return /^se\b/i.test(f) && !CONSEGNA_VISITA_RE.test(f);
 }
 // testo senza le frasi condizionate (per le lettere E/S/C)
