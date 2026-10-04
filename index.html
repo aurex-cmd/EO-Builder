@@ -322,6 +322,12 @@
   .diario-consegna-pallino.info{ background:#4a9fd9; color:#fff; font-style:italic; }
   .diario-consegna-testo{ margin:2px 0 8px; white-space:pre-wrap; font-size:13px; }
   .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.4); }
+  /* paziente critico: alone viola scuro (diverso dal lilla dei letti fatti
+     da pochi giorni); con anche una consegna: azzurro dentro, viola fuori */
+  .bed-tile.critico{ box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.65); }
+  .bed-tile.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 0 4px #6a1fb0, 0 0 12px rgba(106,31,176,.6); }
+  .referto-block.critico{ box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.5); }
+  .referto-block.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 0 4px #6a1fb0, 0 0 12px rgba(106,31,176,.45); }
   .bed-tile-dimissione-badge{
     position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
     border-radius:50%; background:#4a9fd9; border:2px solid var(--panel-2);
@@ -6530,6 +6536,7 @@ function altreSchedeE(patients, wardMap){
 const settoreAttivoExtra = {};
 function renderWardMap(){
   const patients = loadPatients();
+  const criticiCorrenti = loadCritici();
   const consegneCorrenti = loadConsegne();
   const wardMap = getWardMap();
   const settori = Object.keys(wardMap);
@@ -6685,6 +6692,7 @@ function renderWardMap(){
     // illumina in azzurro se il letto è segnalato, anche quando non si
     // riconosce nessuna lettera specifica (vedi haQualcosaDaSegnalareOggi)
     const consegnaLetto = consegneCorrenti[nome];
+    if(criticiCorrenti[nome]){ tile.classList.add('critico'); tile.title = (tile.title ? tile.title + ' · ' : '') + 'Paziente critico'; }
     if(consegnaLetto){
       tile.classList.add('ha-consegne');
       const daFare = ['V','E','S','C'].filter(l => consegnaLetto[l] && !consegnaLetto['fatto' + l]);
@@ -7555,12 +7563,22 @@ function loadConsegne(){
   Object.keys(dati).forEach(k => { if(!k.startsWith('__')) pulite[k] = dati[k]; });
   return pulite;
 }
-function saveConsegne(consegne){
+function saveConsegne(consegne, critici){
   // come le altre chiavi cliniche: sincronizzata col cloud, non solo
   // salvata in locale — altrimenti analizzare le consegne sul telefono
-  // non le farebbe comparire anche sul PC (e viceversa)
-  const daSalvare = Object.assign({}, consegne, { __giorno: chiaveGiorno(Date.now()) });
+  // non le farebbe comparire anche sul PC (e viceversa). I pazienti critici
+  // (__critici: { nomeLetto: testo }) viaggiano con le consegne del giorno;
+  // se non vengono passati si conservano quelli già salvati
+  const daSalvare = Object.assign({}, consegne, { __giorno: chiaveGiorno(Date.now()), __critici: critici || loadCritici() });
   setLocalAndCloud(CONSEGNE_KEY, JSON.stringify(daSalvare));
+}
+// pazienti critici del giorno (stessa scadenza delle consegne)
+function loadCritici(){
+  try{
+    const dati = JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}') || {};
+    if(dati.__giorno !== chiaveGiorno(Date.now())) return {};
+    return dati.__critici || {};
+  } catch(e){ return {}; }
 }
 // assegna/toglie a mano una lettera (V/E/S/C) a un letto consegnato: il
 // programma non sempre capisce dal testo cosa va fatto, o si vuole anche
@@ -7728,10 +7746,20 @@ function testoRilevanteOggi(testo){
 // fare. Una frase che inizia con \"se\" non conta, TRANNE se chiede di
 // visitare/rivalutare il paziente (\"se agitato, visitare\" → resta, con V)
 const CONSEGNA_VISITA_RE = /\bvisit\w*|\brivalut\w*|\briveder\w*|\brived[oi]\b|controllo\s+clinico|valutar\w*\s+clinicamente|valutazione\s+clinica/i;
+const CONSEGNA_INFORMATIVA_RE = /^(?:paziente\s+|pz\.?\s+)?(?:molto\s+)?(?:grave|critic[oa]|terminale|in\s+fase\s+terminale)\b|^(?:dnr|dnar|dni|no\s+rcp|non\s+rianimare)\b|\bprognosi\s+(?:infausta|riservata|severa)\b|\bfamiliari\b[^.]*\b(?:consapevol\w*|informat\w*|avvisat\w*|avvertit\w*|present\w*|al\s+corrente)\b|\b(?:cure|terapia)\s+(?:di\s+fine\s+vita|palliativ\w*|di\s+comfort|compassionevol\w*)\b|\bfine\s+vita\b|\bsedazione\s+palliativa\b|^(?:in\s+)?(?:pompa|elastomero|infusione)\s+(?:di\s+|con\s+)?(?:morfina|midazolam)\b|^in\s+(?:morfina|midazolam)\b|^(?:morfina|midazolam)\b[^.]*\b(?:pompa|infusione|ev|sc|e\s+midazolam|e\s+morfina)\b|\b(?:sdo|lettera(?:\s+di\s+dimissione)?)\s+(?:ok|fatta|pronta|compilata|scritta|chiusa|validata)\b/i;
+// PAZIENTE CRITICO (alone viola scuro in Reparto e in Diari): grave/critico,
+// DNR, terminale, fine vita/palliazione, morfina/midazolam in infusione
+const CONSEGNA_CRITICO_RE = /\b(?:grave|critic[oa]|terminale|dnr|dnar|non\s+rianimare|no\s+rcp|prognosi\s+(?:infausta|riservata)|fine\s+vita|palliativ\w*|sedazione\s+palliativa|(?:pompa|elastomero|infusione)\s+(?:di\s+|con\s+)?(?:morfina|midazolam)|in\s+(?:morfina|midazolam)|morfina\s+e\s+midazolam|midazolam\s+e\s+morfina)\b/i;
+function eCritico(testoConsegna){
+  // "non grave", "non critico" non contano
+  return CONSEGNA_CRITICO_RE.test(testoConsegna || '') && !/\bnon\s+(?:è\s+)?(?:grave|critic[oa])\b/i.test(testoConsegna || '');
+}
+
 // divide in frasi (punto, punto e virgola, a capo, trattino separatore)
 function frasiConsegna(testo){
   return (testo || '').replace(/\bsu\s+chiamata\b/gi, '').split(/[.;\n]|\s[-–]\s|^[-–]\s|^-(?=\S)/);
 }
+function eSeIniziale(frase){ return /^[\s\-–>,:]*se\b/i.test(frase || ''); }
 function eCondizionale(frase){
   const f = frase.replace(/^[\s\-–>,:]+/, '').replace(/[.\s]+$/, '');
   // indicazioni per l'infermiere che non sono consegne per il medico:
@@ -7743,6 +7771,11 @@ function eCondizionale(frase){
   // emocolture: se negative sospendere ATB", "controllare se negativa")
   if(/\b(?:negativ[oaie]|neg|nella\s+norma|nei\s+limiti(?:\s+della\s+norma)?|non\s+significativ[oaie])\b/i.test(f)
      && !/\b(?:vedi|vd|vedere|controll\w*|ricontroll\w*|se|sospend\w*|inizi\w*|richied\w*|ripet\w*|valut\w*|rivalut\w*|visit\w*|in\s+corso|in\s+attesa|attendere|chiamare|avvisare)\b/i.test(f)) return true;
+  // informazioni di contesto, non compiti: DNR, paziente grave/critico,
+  // prognosi infausta, familiari consapevoli/informati, cure di fine vita,
+  // terapia con morfina/midazolam o in pompa, SDO/lettera già fatte. (I
+  // pazienti critici hanno invece un alone viola scuro — vedi eCritico)
+  if(CONSEGNA_INFORMATIVA_RE.test(f) && !/\b(?:rivalut\w*|visit\w*|controll\w*|modul\w*|aument\w*|ridur\w*|riduc\w*|titol\w*|chiamare|avvisare|contattare|telefonare|sentire|vedere|vedi|vd)\b/i.test(f)) return true;
   return /^se\b/i.test(f) && !CONSEGNA_VISITA_RE.test(f);
 }
 // testo senza le frasi condizionate (per le lettere E/S/C)
@@ -7750,7 +7783,7 @@ function togliCondizionali(testo){
   return frasiConsegna(testo).map(f => {
     // anche a metà frase dopo una virgola: \"vedi URO, se febbre emo\"
     return f.split(',').filter(p => !eCondizionale(p)).join(',');
-  }).filter(f => !eCondizionale(f)).join('. ');
+  }).filter(f => !(eSeIniziale(f) && eCondizionale(f))).join('. ');
 }
 function haQualcosaDaSegnalareOggi(testoConsegna){
   const rilevante = (testoConsegna || '').trim();
@@ -7765,7 +7798,10 @@ function haQualcosaDaSegnalareOggi(testoConsegna){
   const oggiChiave = chiaveGiorno(Date.now());
   const pezzi = [];
   frasiConsegna(rilevante).forEach(frase => {
-    if(eCondizionale(frase)) return;          // la virgola dopo \"se febbre,\" non la spezza
+    // una frase che inizia con "se" si scarta intera (la virgola dopo "se
+    // febbre," non la spezza); le altre si valutano pezzo per pezzo, così
+    // "emo in corso, familiari consapevoli" tiene "emo in corso"
+    if(eSeIniziale(frase) && eCondizionale(frase)) return;
     frase.split(',').forEach(p => { if(!eCondizionale(p)) pezzi.push(p); });
   });
   const puliti = pezzi.map(x => x.replace(/[:\-–>]/g, ' ').trim()).filter(Boolean);
@@ -7862,8 +7898,12 @@ function analizzaConsegne(){
     const repK = (/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase();
     if(repK !== rep) nuovoElenco[k] = esistenti[k];
   });
+  const repDi = k => ((/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase());
+  const critici = {};
+  Object.entries(loadCritici()).forEach(([k, v]) => { if(repDi(k) !== rep) critici[k] = v; });
   Object.keys(perLetto).forEach(nomeLetto => {
     const testoConsegna = perLetto[nomeLetto];
+    if(eCritico(testoConsegna)) critici[nomeLetto] = testoConsegna;
     // niente da segnalare oggi: consegna vuota, "su chiamata" senz'altro,
     // o tutto riferito a un giorno diverso da oggi (es. "EE lunedì" letto
     // di martedì) — vedi haQualcosaDaSegnalareOggi
@@ -7875,7 +7915,7 @@ function analizzaConsegne(){
       testo: testoConsegna
     };
   });
-  saveConsegne(nuovoElenco);
+  saveConsegne(nuovoElenco, critici);
   renderConsegneLista();
   renderWardMap();
   const nLetti = Object.keys(nuovoElenco).filter(k => ((/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase()) === rep).length;
@@ -7883,7 +7923,7 @@ function analizzaConsegne(){
 }
 
 function cancellaTutteConsegne(){
-  saveConsegne({});
+  saveConsegne({}, {});
   renderConsegneLista();
   renderWardMap();
   showToast('Consegne cancellate');
@@ -8153,7 +8193,7 @@ function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
 // viene visitato, compare il suo diario normale al posto di questo box
 function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const block = document.createElement('div');
-  block.className = 'referto-block ha-consegne consegna-da-vedere';
+  block.className = 'referto-block ha-consegne consegna-da-vedere' + (loadCritici()[nome] ? ' critico' : '');
   const titleRow = document.createElement('div');
   titleRow.className = 'bed-title-row';
   const titleWrap = document.createElement('div');
@@ -8214,6 +8254,7 @@ function renderRiepilogo(){
   // consegne di oggi: i letti consegnati senza un diario di oggi compaiono
   // comunque, come box "da vedere" (vedi sotto, p.__consegna)
   const consegneOggi = diariMostraIeri ? {} : loadConsegne();
+  const criticiOggi = diariMostraIeri ? {} : loadCritici();
   if(!diariMostraIeri){
     const presenti = new Set(entries.map(([, p]) => p.name));
     Object.keys(consegneOggi).forEach(nome => {
@@ -8254,7 +8295,8 @@ function renderRiepilogo(){
 
     const block = document.createElement('div');
     block.className = 'referto-block' + (!diariMostraIeri && p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '')
-      + (consegneOggi[p.name] ? ' ha-consegne' : '');
+      + (consegneOggi[p.name] ? ' ha-consegne' : '')
+      + (!diariMostraIeri && criticiOggi[p.name] ? ' critico' : '');
 
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
