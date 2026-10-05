@@ -8894,6 +8894,10 @@ const AGG_CONS_ABBREVIAZIONI = [
   // solo ("il figlio chiede se...", "chiede di parlare col medico")
   [/\bsi\s+richied\w*\s+|\brichiest[aoie]\s+|\brichied(?:o|e|ere|iamo)\s+|\bsi\s+chied(?:e|ono)\s+|\bchied(?:o|iamo)\s+|\bchiest[aoie]\s+/gi, 'R '],
   [/\bda\s+R\s+/gi, 'R '],
+  // "si richiede inoltre/anche/altresì…": dopo la R non serve
+  [/\bR\s+(?:inoltre|anche|altres[iì]|pure|quindi|poi|infine|contestualmente)\s+/g, 'R '],
+  // "ecografia dell'addome" → "Eco addome"
+  [/\becografi[ae]\s+(?:dell['’]\s*|della\s+|del\s+|dello\s+|degli\s+|dei\s+|delle\s+)?/gi, 'Eco '],
   [/\bterapia\s+antibiotica\b|\bantibioticoterapia\b/gi, 'ATB'],
   [/\besami\s+(?:ematochimici|ematici|di\s+laboratorio)(?:\s+di\s+controllo)?\b|\besami\s+di\s+controllo\b/gi, 'EE'],
   [/\bsi\s+sospende\b|\bsospes[oaie]\b|\bsospend[oe]\b|\bsospendere\b/gi, 'stop'],
@@ -8906,7 +8910,6 @@ const AGG_CONS_ABBREVIAZIONI = [
   [/\btroponina\b|\btropo\b|\btni\b/gi, 'TnI'],
   [/\bsodio\b/gi, 'Na'],
   [/\bpotassio\b/gi, 'K'],
-  [/\bvisita\s+(?=\p{L})/giu, 'v. '],
   [/\bvalutazione\s+(?=\p{L})/giu, 'val. '],
   [/\bconsulenza\s+(?=\p{L})/giu, 'cons. '],
   [/\bnegativa\s+la\s+ricerca\s+(?:di|del|della|dello|dei|degli|delle)\s+/gi, 'neg ricerca '],
@@ -9009,7 +9012,7 @@ function aggConsTogliProgrammati(riga){
   // richieste). In \"si richiede RX torace ed esami per domani\" sparisce
   // solo \"ed esami per domani\", la richiesta di RX resta
   const reEsami = new RegExp(
-    String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo))\s+|\b(?:richiest|chiest)[aoie]\s+)?\b(?:esami|ee|eec|` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'giu');
+    String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo))\s+|\b(?:richiest|chiest)[aoie]\s+)?(?:(?:la\s+|il\s+)?(?:ripetizione|ripeter[e]?|controllo|ricontrollo|rivalutazione)\s+(?:di\s+|degli\s+|dei\s+|del\s+|della\s+)?)?(?:gli\s+|i\s+)?\b(?:esami|ee|eec|` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'giu');
   return riga
     .replace(reEsami, '')
     // \"giovedì pv trasferito presso OdC...\", \"trasferimento in RSA mercoledì\"
@@ -9037,6 +9040,11 @@ function aggConsSintesi(extra, righeIeri, includiIeri){
     if(x) pezzi.push(x);
   });
   // una consegna per riga, col trattino, iniziale maiuscola
+  // "R Eco addome e visita epatologica" → "R Eco addome, R visita
+  // epatologica": due richieste distinte (gialle e in sospeso ciascuna per sé)
+  const ESAME_KW = String.raw`(?:rx|tc|tac|angio\S*|uro-?tc|colangio\S*|entero\S*|rmn?|eco\S*|doppler|ecocolordoppler|visita|v\.|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|rss|rettosigmoidoscopia|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia|emocoltur\S*|uro|urinocoltur\S*|tampone|esame)(?![\p{L}])`;
+  const reSepara = new RegExp(String.raw`(\bR\s+[^,;\n]+?)(?:\s*,\s*|\s+(?:e|ed)\s+)(?=` + ESAME_KW + ')', 'giu');
+  pezzi.forEach((x, i) => { let y = x, prima; do { prima = y; y = y.replace(reSepara, '$1, R '); } while(y !== prima); pezzi[i] = y.replace(/\bR\s+eco\b/g, 'R Eco'); });
   let testo = pezzi.map(x => '- ' + x.charAt(0).toUpperCase() + x.slice(1)).join('\n');
   return { testo, esami };
 }
