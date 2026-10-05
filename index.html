@@ -344,11 +344,27 @@
   .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
   /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
   .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#5dff7e; color:#5dff7e; }
+  /* livello normale: pillola chiara verde menta con la capsula */
+  .diario-aiuti .aiuto.atb.liv0{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#dcf3eb; border-color:#bfe6d8; color:#1f5f50; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.atb.liv0 svg{ width:15px; height:15px; flex-shrink:0; }
+  /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
+  .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
+  .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
   .diario-aiuti .aiuto.atb.liv1{ border-color:#e0a030; color:#e0a030; }
   .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#ff7070; font-weight:700; }
-  .diario-aiuti .aiuto.richiesta .r{ background:#ffff00; color:#12181e; padding:0 3px; border-radius:3px; }
-  .diario-aiuti .aiuto.richiesta .gg{ color:var(--ink-dim); font-size:11px; }
-  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--signal); font-weight:700; padding-left:2px; }
+  /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
+  .diario-aiuti .aiuto.richiesta{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
+  }
+  .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
+  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
   .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.35); }
   .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
@@ -563,6 +579,29 @@
     background:var(--panel-2); color:var(--folder); cursor:pointer; white-space:nowrap;
   }
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
+  /* intestazione del diario: tondo con l'icona del letto, nome grande,
+     orario sotto, pulsante Copia con icona */
+  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:8px; }
+  .referto-block .bed-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+  /* da copiare: arancio (folder), come prima; copiato: verde */
+  .referto-block .bed-avatar{
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:var(--folder-dim); color:var(--folder); display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .referto-block .bed-avatar svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .bed-avatar svg .pieno{ fill:currentColor; stroke:none; }
+  .referto-block.copiato .bed-avatar{ background:#24423c; color:#8fe8cc; }
+  .referto-block .bed-head-testo{ min-width:0; }
+  .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:15.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
+  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:1px 0 0; color:var(--ink-dim); }
+  /* stesse misure del Copia di prima, più l'icona */
+  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; gap:5px; }
+  .referto-block.copiato .copia-btn.copia-grande{ border-color:rgba(53,208,174,.38); color:#8fe8cc; }
+  .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
+  .referto-block .copia-btn.copia-grande svg{ width:13px; height:13px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
@@ -590,7 +629,14 @@
   table.agg-cons td{ vertical-align:top; background:var(--panel-2); padding:8px; border-top:1px solid var(--clay-border); border-bottom:1px solid var(--clay-border); color:var(--ink); }
   table.agg-cons td:first-child{ border-left:1px solid var(--clay-border); border-radius:12px 0 0 12px; font-weight:700; font-size:13.5px; overflow-wrap:anywhere; }
   table.agg-cons td:first-child > div:first-child{ margin-bottom:6px; }
-  table.agg-cons .agg-cons-righe{ cursor:text; overflow-wrap:anywhere; }
+  table.agg-cons .agg-cons-righe{ cursor:text; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; touch-action:manipulation; }
+  table.agg-cons .agg-cons-righe .r-copia{
+    display:inline-flex; align-items:center; justify-content:center; vertical-align:-3px;
+    width:20px; height:18px; margin-left:3px; padding:0; border:none; border-radius:5px;
+    background:transparent; color:var(--ink-dim); cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  table.agg-cons .agg-cons-righe .r-copia:hover{ color:var(--ink); background:var(--panel); }
+  table.agg-cons .agg-cons-righe .r-copia svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   table.agg-cons td:last-child{ border-right:1px solid var(--clay-border); border-radius:0 12px 12px 0; }
   table.agg-cons textarea.agg-cons-testo{ width:100%; min-height:44px; resize:vertical; font-size:13.5px; line-height:1.45; padding:6px 8px;
     border-radius:9px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); font-family:inherit; box-sizing:border-box; }
@@ -1564,7 +1610,6 @@
 
 <!-- MAPPA REPARTO (settori/letti) -->
 <div class="card" id="wardmap-view" style="display:none; background:var(--panel-2);">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 8h4M12 6v4"/><path d="M9.5 21v-3.2a1 1 0 011-1h3a1 1 0 011 1V21"/></svg> Reparto</h2>
 
   <div class="group sync-box" id="sync-group">
     <div class="sync-header-row">
@@ -1656,7 +1701,6 @@
 
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="1.5"/><rect x="9" y="2.3" width="6" height="3" rx="1"/><line x1="9" y1="10.5" x2="15" y2="10.5"/><line x1="9" y1="13.8" x2="15" y2="13.8"/><line x1="9" y1="17.1" x2="13" y2="17.1"/></svg> Diari</h2>
   <div class="group">
     <div class="inline-fields" style="flex-wrap:nowrap;">
       <button class="btn primary" style="flex:1;" id="diari-esporta-btn" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
@@ -1674,7 +1718,6 @@
      alcun diario/paziente collegato, quindi nessuna scrittura automatica
      alla chiusura (vedi apriAppEga/apriAppVfg/apriAppFarmaco) -->
 <div class="card" id="app-view" style="display:none; background:var(--panel-3);">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg> App</h2>
   <div class="group">
     <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
   </div>
@@ -1965,7 +2008,6 @@
 
 <!-- RICOVERI -->
 <div class="card" id="ricoveri-view" style="display:none;">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricoveri</h2>
 
   <div class="group">
     <div class="inline-fields" style="flex-wrap:nowrap;">
@@ -8310,26 +8352,42 @@ function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
 // dell'ospedale. La nota sta con le consegne di oggi, non tocca la scheda
 // del paziente, e sparisce con esse il giorno dopo. Se poi il paziente
 // viene visitato, compare il suo diario normale al posto di questo box
+// icone dell'intestazione dei diari (tondo del letto e pulsante Copia),
+// condivise dai diari normali e dai box "consegnato · non visitato"
+const SVG_LETTO_DIARIO = '<svg viewBox="0 0 24 24"><path d="M3 6v13M3 15.5h18V19"/><rect class="pieno" x="5.6" y="9.6" width="4.4" height="3.6" rx="1.2"/><path d="M11.5 15.5V11h6.5a3 3 0 013 3v1.5"/></svg>';
+const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005 6.5v13a2 2 0 002 2h10a2 2 0 002-2v-13a2 2 0 00-2-2h-1.5"/><rect x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/></svg>Copia';
+
 function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const block = document.createElement('div');
   block.className = 'referto-block ha-consegne consegna-da-vedere' + (loadCritici()[nome] ? ' critico' : '');
   const titleRow = document.createElement('div');
   titleRow.className = 'bed-title-row';
+  // stessa intestazione dei diari: tondo col letto, nome + pallini, sotto la dicitura
   const titleWrap = document.createElement('div');
-  titleWrap.style.cssText = 'display:flex; align-items:baseline; flex-wrap:wrap;';
+  titleWrap.className = 'bed-head';
+  const avatar = document.createElement('div');
+  avatar.className = 'bed-avatar';
+  avatar.innerHTML = SVG_LETTO_DIARIO;
+  titleWrap.appendChild(avatar);
+  const titleCol = document.createElement('div');
+  titleCol.className = 'bed-head-testo';
+  const titleLine = document.createElement('div');
+  titleLine.className = 'bed-head-riga';
+  titleCol.appendChild(titleLine);
+  titleWrap.appendChild(titleCol);
   const title = document.createElement('div');
   title.className = 'bed-title';
   title.textContent = nome;
-  titleWrap.appendChild(title);
+  titleLine.appendChild(title);
+  aggiungiPalliniConsegnaDiari(titleLine, block, voce);
   const sotto = document.createElement('div');
   sotto.className = 'bed-date';
   sotto.textContent = 'consegnato · non visitato';
-  titleWrap.appendChild(sotto);
-  aggiungiPalliniConsegnaDiari(titleWrap, block, voce);
+  titleCol.appendChild(sotto);
   titleRow.appendChild(titleWrap);
   const copiaBtn = document.createElement('button');
-  copiaBtn.className = 'copia-btn';
-  copiaBtn.textContent = 'Copia';
+  copiaBtn.className = 'copia-btn copia-grande';
+  copiaBtn.innerHTML = SVG_COPIA_DIARIO;
   titleRow.appendChild(copiaBtn);
   block.appendChild(titleRow);
   const body = document.createElement('textarea');
@@ -8522,7 +8580,7 @@ function antibioticiInCorso(p, idPaziente){
       if(g){ n = g + giorniTra(giorni[i].giorno, oggi); break; }
       if(giorni[i].giorno < inizio) break;
     }
-    risultati.push({ nome, giorni: n, etichetta: `${nome} ${n === 1 ? 'g' : 'gg'}${n}`, livello: n >= 14 ? 2 : n >= 7 ? 1 : 0 });
+    risultati.push({ nome, giorni: n, etichetta: `${nome} ${numeroRomano(n)} ${n === 1 ? 'g' : 'gg'}`, livello: n >= 14 ? 2 : n >= 7 ? 1 : 0 });
   });
   return risultati;
 }
@@ -8593,6 +8651,15 @@ function avvisiReneFarmaci(p, idPaziente){
   return out;
 }
 
+// 1 -> I, 4 -> IV, 14 -> XIV (giornate di antibiotico)
+function numeroRomano(n){
+  n = Math.max(1, Math.floor(n || 1));
+  const v = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let r = '';
+  v.forEach(([k, l]) => { while(n >= k){ r += l; n -= k; } });
+  return r;
+}
+
 // riga di "etichette" sotto il titolo del diario: antibiotici, richieste in
 // sospeso (✓ per chiuderle) e avvisi rene/farmaci
 function rigaAiutiDiario(p, id){
@@ -8605,7 +8672,16 @@ function rigaAiutiDiario(p, id){
   atb.forEach(a => {
     const c = document.createElement('span');
     c.className = 'aiuto atb' + (a.livello === 2 ? ' liv2' : a.livello === 1 ? ' liv1' : '');
-    c.textContent = (a.livello ? '⚠ ' : '') + a.etichetta;
+    // giornata in numeri romani, piccola e più tenue come "oggi"/"2 g" delle
+    // richieste: "Amoxi/clav IV gg" (solo a video: a.etichetta, "gg4", resta
+    // com'è per le consegne)
+    const gg = `<span class="gg">${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</span>`;
+    if(a.livello) c.innerHTML = '⚠ ' + aggConsEsc(a.nome) + ' ' + gg;
+    else {
+      c.classList.add('liv0');
+      // capsula in diagonale: metà piena verde scuro, metà chiara
+      c.innerHTML = '<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="3" y="7.5" width="18" height="9" rx="4.5" fill="#cfeee3" stroke="#1f5f50" stroke-width="1.6"/><path d="M7.5 7.5H12v9H7.5a4.5 4.5 0 010-9z" fill="#1f5f50"/></g></svg>' + aggConsEsc(a.nome) + ' ' + gg;
+    }
     c.title = a.livello === 2 ? 'Oltre 14 giorni di antibiotico: valutare sospensione' : a.livello === 1 ? '7 giorni di antibiotico: valutare durata o de-escalation' : 'Giorni di terapia antibiotica';
     riga.appendChild(c);
   });
@@ -8613,7 +8689,8 @@ function rigaAiutiDiario(p, id){
     const c = document.createElement('span');
     c.className = 'aiuto richiesta';
     c.title = 'Richiesta ancora senza esito — tocca ✓ se fatta';
-    c.innerHTML = `<span class="r">${aggConsEsc(r.testo)}</span> <span class="gg">${r.giorni ? r.giorni + ' g' : 'oggi'}</span> <span class="ok">✓</span>`;
+    // icona: modulo di richiesta (cartellina con righe), piena in giallo scuro
+    c.innerHTML = `<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17.5" rx="2.6" fill="#6a5210"/><rect x="8.6" y="2.4" width="6.8" height="3.6" rx="1.3" fill="#6a5210" stroke="#fbf1c4" stroke-width="1.2"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4" stroke="#fbf1c4" stroke-width="1.7" stroke-linecap="round"/></svg><span class="r">${aggConsEsc(r.testo)}</span> <span class="gg">${r.giorni ? r.giorni + ' g' : 'oggi'}</span> <span class="ok">✓</span>`;
     c.querySelector('.ok').onclick = (e) => { e.stopPropagation(); chiudiRichiesta(id, r); renderRiepilogo(); };
     riga.appendChild(c);
   });
@@ -8703,16 +8780,25 @@ function renderRiepilogo(){
     const titleRow = document.createElement('div');
     titleRow.className = 'bed-title-row';
 
+    // tondo con l'icona del letto + colonna (nome e pallini, sotto l'orario)
     const titleWrap = document.createElement('div');
-    titleWrap.style.display = 'flex';
-    titleWrap.style.alignItems = 'baseline';
-    titleWrap.style.flexWrap = 'wrap';
+    titleWrap.className = 'bed-head';
+    const avatar = document.createElement('div');
+    avatar.className = 'bed-avatar';
+    avatar.innerHTML = SVG_LETTO_DIARIO;
+    titleWrap.appendChild(avatar);
+    const titleCol = document.createElement('div');
+    titleCol.className = 'bed-head-testo';
+    const titleLine = document.createElement('div');
+    titleLine.className = 'bed-head-riga';
+    titleCol.appendChild(titleLine);
+    titleWrap.appendChild(titleCol);
 
     const title = document.createElement('div');
     title.className = 'bed-title';
     title.textContent = p.name;
-    titleWrap.appendChild(title);
-    if(consegneOggi[p.name]) aggiungiPalliniConsegnaDiari(titleWrap, block, consegneOggi[p.name]);
+    titleLine.appendChild(title);
+    if(consegneOggi[p.name]) aggiungiPalliniConsegnaDiari(titleLine, block, consegneOggi[p.name]);
 
     // orario del PRIMO salvataggio dell'esame di oggi (non l'ultimo tocco):
     // per schede più vecchie di quando esiste questo campo, si torna
@@ -8723,20 +8809,20 @@ function renderRiepilogo(){
       const dateEl = document.createElement('div');
       dateEl.className = 'bed-date';
       dateEl.textContent = p.archiviato ? 'versione di ieri' : 'ieri';
-      titleWrap.appendChild(dateEl);
+      titleCol.appendChild(dateEl);
     } else {
       const orarioCompilazione = formattaOrarioData(p.esameIniziatoOggiIl || p.esameAggiornatoIl || p.savedAt);
       if(orarioCompilazione){
         const dateEl = document.createElement('div');
         dateEl.className = 'bed-date';
-        dateEl.textContent = orarioCompilazione;
-        titleWrap.appendChild(dateEl);
+        dateEl.textContent = orarioCompilazione.replace(', ', ' · ');
+        titleCol.appendChild(dateEl);
       }
     }
 
     const copiaBtn = document.createElement('button');
-    copiaBtn.className = 'copia-btn';
-    copiaBtn.textContent = 'Copia';
+    copiaBtn.className = 'copia-btn copia-grande';
+    copiaBtn.innerHTML = SVG_COPIA_DIARIO;
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
       if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); }
@@ -9338,7 +9424,8 @@ function renderAggiornaConsegne(container, entries){
     // prefestivo, se non citati, si aggiungono come voce a sé
     antibioticiInCorso(p, id).forEach(a => {
       const re = ANTIBIOTICI.find(x => x[0] === a.nome)[1];
-      const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)(?!\s*gg?\s?\d)`, 'i');
+      // (non se la giornata c'è già: "gg5", "IV gg", "in V giornata")
+      const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)(?!\s*(?:gg?\s?\d|[IVXL]+\s+gg?\b|(?:in\s+)?(?:[IVXL]+|\d+°?)\s+giornata))`, 'i');
       if(reG.test(sintesi)) sintesi = sintesi.replace(reG, a.etichetta);
       else if(prefestivo) sintesi += (sintesi ? '\n' : '') + '- ' + a.etichetta;
     });
@@ -9367,15 +9454,45 @@ function renderAggiornaConsegne(container, entries){
     let corrente = aggConsModifiche.has(id) ? aggConsModifiche.get(id) : sintesi;
     const vista = document.createElement('div');
     vista.className = 'agg-cons-righe';
-    vista.title = 'Tocca per modificare';
+    vista.title = 'Doppio tocco per modificare';
     const disegna = () => {
       const pz = aggConsPezzi(corrente);
       vista.innerHTML = pz.length
         ? pz.map(p => `<div class="riga"><span class="tr">${p.trattino ? '-' : ''}</span><span class="tx">${aggConsRichiesteHtml(p.testo, '<span class="r">', '</span>')}</span></div>`).join('')
-        : '<span class="agg-cons-vuoto">Nessuna novità rispetto a ieri — tocca per scrivere</span>';
+        : '<span class="agg-cons-vuoto">Nessuna novità rispetto a ieri — doppio tocco per scrivere</span>';
+      // dopo ogni richiesta in giallo, un'iconcina per copiarla da sola
+      // (formattata, come le etichette EE). È un SVG: selezionando il testo
+      // non finisce nel copiato
+      vista.querySelectorAll('.r').forEach(r => {
+        const t = r.textContent.trim();
+        const b = document.createElement('button');
+        b.className = 'r-copia';
+        b.title = 'Copia richiesta';
+        b.innerHTML = '<svg viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"/><path d="M15.5 8.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7.5a2 2 0 002 2h2.5"/></svg>';
+        // conferma con una spunta al posto dell'icona ("Copiato ✓" non ci sta)
+        b.onclick = async (e) => {
+          e.stopPropagation();
+          await aggConsCopia(aggConsHtmlEtichetta(t, '#ffff00', false), t, null);
+          const prima = b.innerHTML;
+          b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+          b.style.color = 'var(--signal)';
+          setTimeout(() => { b.innerHTML = prima; b.style.color = ''; }, 1200);
+        };
+        r.insertAdjacentElement('afterend', b);
+      });
       bCopia.style.display = pz.length ? '' : 'none';
     };
-    vista.onclick = () => {
+    // un tocco: niente (si può selezionare il testo); doppio tocco o doppio
+    // click: si apre per modificare. Il doppio tocco è contato a mano perché
+    // su iPhone il dblclick non è affidabile
+    let ultimoTocco = 0;
+    vista.addEventListener('click', (e) => {
+      if(e.target.closest('.r-copia')) return;
+      const ora = Date.now();
+      if(ora - ultimoTocco < 400){ ultimoTocco = 0; apriModifica(); }
+      else ultimoTocco = ora;
+    });
+    const apriModifica = () => {
       const ta = document.createElement('textarea');
       ta.className = 'agg-cons-testo';
       ta.value = corrente;
