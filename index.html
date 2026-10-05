@@ -814,6 +814,9 @@
     background:var(--panel-2); color:var(--signal); cursor:pointer; white-space:nowrap;
   }
   .admit-copy-btn:hover{ border-color:var(--signal); }
+  /* "Copia consegna" in fondo al ricovero: pieno, è l'azione finale */
+  .admit-copy-btn.primary{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); padding:7px 16px; font-size:13px; }
+  .admit-copy-btn.primary:hover{ filter:brightness(1.08); }
   .admit-editable{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
@@ -1134,6 +1137,26 @@
   }
   #score-modal-overlay.show{ display:flex; }
   .reparto-extra-blocco{ margin-top:18px; padding-top:14px; border-top:1px solid var(--clay-border); }
+  /* link "‹ Sezione" in cima alle sottopagine: risale di un livello
+     (es. Impostazioni → Strumenti). Uscire dalla sezione lo fa la nav bar */
+  .back-link{
+    display:inline-flex; align-items:center; gap:3px; margin:0 0 8px -2px; padding:2px 6px 2px 2px;
+    background:none; border:none; border-radius:8px; cursor:pointer;
+    font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--signal);
+  }
+  .back-link .ch{ font-size:22px; line-height:1; margin-top:-2px; }
+  .back-link:hover{ background:var(--panel-2); }
+  /* Diari: selettore Oggi · Ieri · Consegne */
+  .diari-seg{ display:flex; gap:3px; padding:3px; border-radius:12px; background:var(--panel); border:1px solid var(--clay-border); }
+  .diari-seg button{
+    flex:1 1 0; padding:8px 4px; border:none; border-radius:9px; background:transparent; cursor:pointer;
+    font-family:var(--font-body); font-size:13.5px; font-weight:600; color:var(--ink-dim);
+  }
+  .diari-seg button.attivo{ background:var(--signal); color:var(--on-signal); }
+  .diari-fondo{ display:flex; gap:8px; margin-top:14px; }
+  .diari-fondo .btn{ flex:1 1 0; }
+  /* Strumenti: etichetta di gruppo */
+  .strumenti-gruppo{ font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); margin:4px 2px 2px; }
   #rubrica-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
     display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; overflow-x:hidden;
     scrollbar-width:none; -ms-overflow-style:none; }
@@ -1611,7 +1634,7 @@
     </div>
     <button class="topnav-btn" id="topnav-reparto" onclick="toggleWardMap()"><svg class="topnav-icon" viewBox="0 0 24 24"><path d="M2.5 6v13M2.5 15.5h19V19"/><path class="pieno" d="M6.2 10.4a1.7 1.7 0 113.4 0 1.7 1.7 0 01-3.4 0z"/><path d="M11.5 15.5V11h7a3 3 0 013 3v1.5"/></svg>Reparto</button>
     <button class="topnav-btn" id="topnav-ricoveri" onclick="apriRicoveri()"><svg class="topnav-icon" viewBox="0 0 24 24"><rect class="pieno" x="4.8" y="3" width="14.4" height="18" rx="2.4"/><path class="su-pieno" d="M8.6 8h6.8M8.6 12h6.8M8.6 16h4.2"/></svg>Ricoveri</button>
-    <button class="topnav-btn" id="topnav-app" onclick="apriAppTools()"><svg class="topnav-icon" viewBox="0 0 24 24"><rect class="pieno" x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>App</button>
+    <button class="topnav-btn" id="topnav-app" onclick="apriAppTools()"><svg class="topnav-icon" viewBox="0 0 24 24"><rect class="pieno" x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect class="pieno" x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>Strumenti</button>
   </div>
 </header>
 
@@ -1696,10 +1719,10 @@
      pagina, per aggiornare rapidamente SpO2/PA/FC/TC di ogni paziente dal
      giro dell'infermiera, senza dover aprire una scheda alla volta -->
 <div class="card" id="vitali-settore-view" style="display:none; background:var(--panel-2);">
+  <button class="back-link" onclick="chiudiVitaliSettore()"><span class="ch">‹</span>Reparto</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 12h4l2-6.5 4 13 2-6.5h7"/></svg> Parametri vitali — <span id="vitali-settore-nome"></span></h2>
   <div class="group">
     <div class="inline-fields">
-      <button class="btn" onclick="chiudiVitaliSettore()">← Torna al reparto</button>
       <button class="btn primary" id="vitali-aggiorna-btn" onclick="aggiornaVitaliSettore()"><svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px;stroke:currentColor;" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 012-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 01-2 2H3"/></svg>Aggiorna</button>
     </div>
   </div>
@@ -1709,10 +1732,10 @@
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
   <div class="group">
-    <div class="inline-fields" style="flex-wrap:nowrap;">
-      <button class="btn primary" style="flex:1;" id="diari-esporta-btn" onclick="esportaRiepilogoTxt()">Esporta (.txt)</button>
-      <button class="btn" style="flex:1;" id="diari-toggle-giorno-btn" onclick="toggleDiariGiorno()">Diari di ieri</button>
-      <button class="btn" style="flex:1;" onclick="diariIndietro()" title="Indietro" aria-label="Indietro">Indietro ←</button>
+    <div class="diari-seg" role="tablist">
+      <button id="diari-seg-oggi" onclick="setDiariModo('oggi')">Oggi</button>
+      <button id="diari-seg-ieri" onclick="setDiariModo('ieri')">Ieri</button>
+      <button id="diari-seg-consegne" onclick="setDiariModo('consegne')">Consegne</button>
     </div>
   </div>
   <div class="group" id="riepilogo-lista"></div>
@@ -1725,10 +1748,9 @@
      alcun diario/paziente collegato, quindi nessuna scrittura automatica
      alla chiusura (vedi apriAppEga/apriAppVfg/apriAppFarmaco) -->
 <div class="card" id="app-view" style="display:none; background:var(--panel-3);">
+  <!-- tre gruppi: Reparto, Clinici, Sistema -->
   <div class="group">
-    <button class="btn" onclick="chiudiWardMap()">← Torna alla scheda</button>
-  </div>
-  <div class="group">
+    <div class="strumenti-gruppo">Reparto</div>
     <div class="ric-lista-minimale">
       <div class="ric-lista-riga" onclick="mostraVista('dimissioni')">
         <span class="ric-lista-nome">Calendario dimissioni</span>
@@ -1736,20 +1758,19 @@
       <div class="ric-lista-riga" onclick="mostraVista('consegne')">
         <span class="ric-lista-nome">Consegne WE</span>
       </div>
-      <div class="ric-lista-riga" onclick="mostraVista('backup')">
-        <span class="ric-lista-nome">Backup</span>
+      <div class="ric-lista-riga" onclick="apriRubrica()">
+        <span class="ric-lista-nome">Rubrica numeri</span>
       </div>
-      <div class="ric-lista-riga" onclick="mostraVista('impostazioni')">
-        <span class="ric-lista-nome">Impostazioni</span>
-      </div>
+    </div>
+  </div>
+  <div class="group">
+    <div class="strumenti-gruppo">Clinici</div>
+    <div class="ric-lista-minimale">
       <div class="ric-lista-riga" onclick="apriAppEga()">
         <span class="ric-lista-nome">EGA Analyzer</span>
       </div>
       <div class="ric-lista-riga" onclick="apriAppVfg()">
         <span class="ric-lista-nome">VFG Calc (Cockcroft-Gault)</span>
-      </div>
-      <div class="ric-lista-riga" onclick="apriRubrica()">
-        <span class="ric-lista-nome">Rubrica numeri</span>
       </div>
       <div class="ric-lista-riga" onclick="apriAppEcg()">
         <span class="ric-lista-nome">ECG Simulator</span>
@@ -1864,6 +1885,17 @@
       </div>
       </div>
     </div>
+  <div class="group">
+    <div class="strumenti-gruppo">Sistema</div>
+    <div class="ric-lista-minimale">
+      <div class="ric-lista-riga" onclick="mostraVista('backup')">
+        <span class="ric-lista-nome">Backup</span>
+      </div>
+      <div class="ric-lista-riga" onclick="mostraVista('impostazioni')">
+        <span class="ric-lista-nome">Impostazioni</span>
+      </div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -1872,10 +1904,8 @@
      esame nuovo. Spostate qui da Reparto perché sono impostazioni
      dell'app, non della mappa reparto. -->
 <div class="card" id="impostazioni-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2.5a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2.5a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21.5a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Impostazioni</h2>
-  <div class="group">
-    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
-  </div>
 
   <div class="group">
     <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
@@ -1933,7 +1963,7 @@
          toggleImpostazioniReparto) -->
     <div id="impostazioni-reparto-sotto" style="display:none; padding-left:14px; border-left:2px solid var(--signal); margin-left:6px; margin-top:6px;">
       <div id="impostazioni-reparto-loggato-fuori" style="font-size:12.5px; color:var(--ink-dim); text-align:center; padding:6px 4px;">
-        Per aggiungere o eliminare settori e letti devi prima accedere al tuo account (scheda App → Sincronizzazione): la disposizione del reparto è condivisa con tutti i dispositivi collegati allo stesso account, non è una preferenza di questo dispositivo.
+        Per aggiungere o eliminare settori e letti devi prima accedere al tuo account (in cima a Reparto): la disposizione del reparto è condivisa con tutti i dispositivi collegati allo stesso account, non è una preferenza di questo dispositivo.
       </div>
       <div id="impostazioni-reparto-editor" style="display:none;">
         <div id="impostazioni-reparto-lista"></div>
@@ -1950,10 +1980,8 @@
      App — spostato in una vista a sé, aperta solo a richiesta, per non
      appesantire la pagina App con qualcosa che si guarda raramente -->
 <div class="card" id="backup-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg> Backup</h2>
-  <div class="group">
-    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
-  </div>
   <div class="group">
     <div class="group-label" style="margin-bottom:10px; opacity:.8;">Ogni tanto (al massimo una volta ogni 15 minuti) l'app tiene da parte una copia di tutte le schede pazienti, qui sotto — solo su questo dispositivo. Serve come rete di sicurezza: se mai qualcosa andasse storto (un bug, un salvataggio finito male), da qui puoi tornare a una versione precedente.</div>
     <div id="backup-lista"></div>
@@ -1967,10 +1995,8 @@
      un'interpretazione perfetta (il linguaggio delle consegne è molto
      abbreviato e personale), solo un aiuto per orientarsi in fretta. -->
 <div class="card" id="consegne-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> Consegne WE</h2>
-  <div class="group">
-    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
-  </div>
   <div class="group">
     <div class="group-label" style="opacity:.8; margin-bottom:8px;">Incolla qui sotto tutto il testo delle consegne (copiato da Word), oppure allega direttamente il file qui sotto. Lo strumento cerca, nella riga "Consegne:" di ciascun letto, parole come "visitare" (V), "EE"/"EEC"/"EGA"/"PCR" (E), "RX"/"TC"/"ecografia"/"RMN" (S), "emo"/"uro"/"colturali"/"antibiogramma"/"ATB" (C) — e riconosce anche "sab"/"dom" o una data (es. 13/09): se una parola è legata a un giorno diverso da oggi, non compare. Non è infallibile: controlla sempre col testo originale in caso di dubbio.</div>
     <div class="inline-fields" style="margin-bottom:8px;">
@@ -2004,10 +2030,8 @@
      "domani") — utile per organizzarsi con le lettere di dimissione senza
      dover riaprire ogni singolo diario -->
 <div class="card" id="dimissioni-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/></svg> Calendario dimissioni</h2>
-  <div class="group">
-    <button class="btn" onclick="apriAppTools()">← Torna ad App</button>
-  </div>
   <div class="group">
     <div id="dimissioni-lista"></div>
   </div>
@@ -2019,7 +2043,6 @@
   <div class="group">
     <div class="inline-fields" style="flex-wrap:nowrap;">
       <button class="btn primary" style="flex:1;" onclick="apriNuovoRicoveroSingolo()">+ Nuovo ricovero</button>
-      <button class="btn" style="flex:1;" onclick="chiudiWardMap()">← Torna alla scheda</button>
     </div>
   </div>
 
@@ -2036,11 +2059,8 @@
 </div>
 
 <div class="card" id="ricovero-singolo-view" style="display:none;">
+  <button class="back-link" onclick="apriRicoveri()"><span class="ch">‹</span>Ricoveri</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricovero</h2>
-
-  <div class="group">
-    <button class="btn" onclick="apriRicoveri()">← Torna a Ricoveri</button>
-  </div>
 
   <div class="card admit-form-card" style="margin:0 0 14px;">
     <div class="admit-form-header-row">
@@ -2183,7 +2203,8 @@
   <div id="ricovero-singolo-box"></div>
 
   <div id="ricovero-eo-inline" style="display:none; margin-top:14px;">
-    <div class="group" style="display:flex; justify-content:flex-end; margin:0 0 8px;">
+    <!-- in fondo: #clinical-view viene inserito PRIMA di questo gruppo -->
+    <div class="group" id="ricovero-eo-chiudi" style="display:flex; justify-content:flex-end; margin:10px 0 0;">
       <button class="btn" onclick="chiudiEsameObiettivoInline()">✕ Chiudi esame obiettivo</button>
     </div>
   </div>
@@ -4319,7 +4340,8 @@ function apriEsameObiettivoInline(ricoveroId){
 
   const contenitore = document.getElementById('ricovero-eo-inline');
   const clinical = document.getElementById('clinical-view');
-  contenitore.appendChild(clinical);
+  // l'esame va sopra, il pulsante "Chiudi esame obiettivo" resta in fondo
+  contenitore.insertBefore(clinical, document.getElementById('ricovero-eo-chiudi'));
   clinical.style.display = '';
   contenitore.style.display = '';
   esameObiettivoInlineAperto = true;
@@ -4591,7 +4613,8 @@ function renderRicoveroSingoloBox(){
   delBtn.textContent = 'Elimina';
   delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
   actions.appendChild(linkEOBtn);
-  actions.appendChild(copiaConsegnaBtn);
+  // "Copia consegna" non sta più qui in alto: è in fondo al ricovero, accanto
+  // ad "Aggiorna tutto", dove si arriva a lavoro finito
   actions.appendChild(esportaBtn);
   actions.appendChild(delBtn);
 
@@ -4717,13 +4740,16 @@ function renderRicoveroSingoloBox(){
     // ritardo, che è stato risolto alla radice qui sopra)
     if(campo === 'problemi'){
       const aggiornaWrap = document.createElement('div');
-      aggiornaWrap.style.cssText = 'padding:0 13px 12px;';
+      aggiornaWrap.style.cssText = 'padding:0 13px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;';
       const aggiornaBtn = document.createElement('button');
       aggiornaBtn.className = 'admit-copy-btn';
       aggiornaBtn.textContent = '↻ Aggiorna tutto';
       aggiornaBtn.title = 'Ricarica il box con le ultime modifiche salvate';
       aggiornaBtn.onclick = () => { renderRicoveroSingoloBox(); showToast('Aggiornato'); };
       aggiornaWrap.appendChild(aggiornaBtn);
+      copiaConsegnaBtn.classList.add('primary');
+      copiaConsegnaBtn.style.marginLeft = 'auto';
+      aggiornaWrap.appendChild(copiaConsegnaBtn);
       block.appendChild(aggiornaWrap);
     }
   });
@@ -8719,18 +8745,12 @@ function renderRiepilogo(){
   // oggi: appoggi prima dei letti del settore, in ordine di compilazione
   if(!diariMostraIeri){ const o = ordinaPazientiPerLetto(entries, true); entries.length = 0; o.forEach(e => entries.push(e)); }
 
-  // il pulsante per passare da oggi a ieri e viceversa ora è fisso in alto
-  // (stessa riga di "Esporta"/"Torna alla scheda", vedi HTML): qui si
-  // aggiorna solo il testo, non se ne crea uno nuovo a ogni render
-  const toggleGiornoBtn = document.getElementById('diari-toggle-giorno-btn');
-  if(toggleGiornoBtn){
-    toggleGiornoBtn.textContent = diariMostraIeri ? 'Diari di oggi' : 'Diari di ieri';
-    // nella tabella "Aggiorna consegne" non serve
-    toggleGiornoBtn.style.display = (diariVistaConsegne && !diariMostraIeri) ? 'none' : '';
-  }
-  // nemmeno l'esportazione dei diari in .txt
-  const esportaBtn = document.getElementById('diari-esporta-btn');
-  if(esportaBtn) esportaBtn.style.display = (diariVistaConsegne && !diariMostraIeri) ? 'none' : '';
+  // selettore in alto Oggi · Ieri · Consegne: evidenzia la vista attuale
+  const modo = diariMostraIeri ? 'ieri' : (diariVistaConsegne ? 'consegne' : 'oggi');
+  ['oggi', 'ieri', 'consegne'].forEach(m => {
+    const b = document.getElementById('diari-seg-' + m);
+    if(b){ b.classList.toggle('attivo', m === modo); b.setAttribute('aria-selected', m === modo ? 'true' : 'false'); }
+  });
 
   if(diariVistaConsegne && !diariMostraIeri && entries.length){
     renderAggiornaConsegne(container, entries);
@@ -9022,14 +9042,32 @@ function renderRiepilogo(){
   // la riga vuota — comodo per scorrere solo i provvedimenti quando si
   // aggiornano le consegne
   // (prima: "Nascondi E.O.") — apre la tabella per aggiornare le consegne
+  // in fondo: "Consegne" (solo oggi: è dove si arriva a fine giro) ed
+  // "Esporta (.txt)" dei diari mostrati (oggi o ieri)
+  const fondo = document.createElement('div');
+  fondo.className = 'diari-fondo';
   if(!diariMostraIeri){
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'btn primary';
-    toggleBtn.style.cssText = 'display:block; width:100%; margin-top:14px;';
-    toggleBtn.textContent = 'Aggiorna consegne';
-    toggleBtn.onclick = () => { diariVistaConsegne = true; diariSoloConsegneAttivo = false; renderRiepilogo(); window.scrollTo(0, 0); };
-    container.appendChild(toggleBtn);
+    const bCons = document.createElement('button');
+    bCons.className = 'btn primary';
+    bCons.textContent = 'Consegne →';
+    bCons.onclick = () => setDiariModo('consegne');
+    fondo.appendChild(bCons);
   }
+  const bEsp = document.createElement('button');
+  bEsp.className = 'btn';
+  bEsp.textContent = 'Esporta (.txt)';
+  bEsp.onclick = () => esportaRiepilogoTxt();
+  fondo.appendChild(bEsp);
+  container.appendChild(fondo);
+}
+
+// selettore Oggi · Ieri · Consegne in cima a Diari
+function setDiariModo(m){
+  diariMostraIeri = (m === 'ieri');
+  diariVistaConsegne = (m === 'consegne');
+  if(diariVistaConsegne) diariSoloConsegneAttivo = false;
+  renderRiepilogo();
+  window.scrollTo(0, 0);
 }
 
 // vedi il pulsante in fondo a renderRiepilogo()
