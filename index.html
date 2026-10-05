@@ -456,6 +456,10 @@
     fill:none; stroke:var(--signal); stroke-width:1.8;
     stroke-linecap:round; stroke-linejoin:round;
   }
+  /* titoli dei box strumento (EGA, VFG, ECG, Soffi, Rubrica): stessa icona
+     della voce in Strumenti, a sinistra del nome */
+  h2.tool-titolo{ display:flex; align-items:center; gap:9px; }
+  h2.tool-titolo .hicon .pieno, .card h2 .hicon .pieno{ fill:var(--signal); stroke:none; }
   .card h2 .eyebrow{
     font-family:var(--font-mono); font-size:11px; font-weight:500;
     color:var(--signal); background:var(--signal-dim);
@@ -2001,7 +2005,7 @@
      abbreviato e personale), solo un aiuto per orientarsi in fretta. -->
 <div class="card" id="consegne-view" style="display:none; background:var(--panel-3);">
   <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> Consegne WE</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 3h6v3H9z"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg> Consegne WE</h2>
   <div class="group">
     <div class="group-label" style="opacity:.8; margin-bottom:8px;">Incolla qui sotto tutto il testo delle consegne (copiato da Word), oppure allega direttamente il file qui sotto. Lo strumento cerca, nella riga "Consegne:" di ciascun letto, parole come "visitare" (V), "EE"/"EEC"/"EGA"/"PCR" (E), "RX"/"TC"/"ecografia"/"RMN" (S), "emo"/"uro"/"colturali"/"antibiogramma"/"ATB" (C) — e riconosce anche "sab"/"dom" o una data (es. 13/09): se una parola è legata a un giorno diverso da oggi, non compare. Non è infallibile: controlla sempre col testo originale in caso di dubbio.</div>
     <div class="inline-fields" style="margin-bottom:8px;">
@@ -2036,7 +2040,7 @@
      dover riaprire ogni singolo diario -->
 <div class="card" id="dimissioni-view" style="display:none; background:var(--panel-3);">
   <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
-  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/></svg> Calendario dimissioni</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9 15l2 2 4-4"/></svg> Calendario dimissioni</h2>
   <div class="group">
     <div id="dimissioni-lista"></div>
   </div>
@@ -13148,7 +13152,7 @@ try{
   <div id="ega-modal">
     <div class="ega-modal-header">
       <div>
-        <h2>EGA Analyzer</h2>
+        <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2c3.4 4.1 6 7.6 6 10.8a6 6 0 01-12 0c0-3.2 2.6-6.7 6-10.8z"/><path d="M9.3 14.5a2.8 2.8 0 002.7 2.6"/></svg>EGA Analyzer</h2>
         <div class="sub">interpretazione equilibrio acido-base (EGA)</div>
       </div>
       <button id="ega-chiudi-btn" onclick="chiudiEgaAnalyzer()">✕</button>
@@ -13237,7 +13241,7 @@ try{
   <div id="vfg-modal">
     <div class="vfg-modal-header">
       <div>
-        <h2>VFG Calc</h2>
+        <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M15.5 4.2c-3 0-5.5 2.6-5.5 6.2 0 1.5.9 2.2.9 3.4 0 1.5-1.6 2.3-1.6 3.9 0 1.7 1.4 2.8 3.4 2.8 4.2 0 6.8-4.4 6.8-9.4 0-4.2-1.4-6.9-4-6.9z"/><path d="M10 12H6.5a2 2 0 00-2 2v6"/></svg>VFG Calc</h2>
         <div class="sub">clearance creatinina — Cockcroft-Gault</div>
       </div>
       <button id="vfg-chiudi-btn" onclick="chiudiVfgCalc()">✕</button>
@@ -13292,7 +13296,7 @@ try{
   <div id="ecgsim-modal">
     <div class="ecgsim-modal-header">
       <div>
-        <h2>ECG Simulator</h2>
+        <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12.5h4l2-5 3.5 10 2.5-7 1.5 2h5.5"/></svg>ECG Simulator</h2>
         <div class="sub">Simula in tempo reale l'effetto di elettroliti e farmaci sulla morfologia del battito.</div>
       </div>
       <button id="ecgsim-chiudi-btn" onclick="chiudiAppEcg()">✕</button>
@@ -13362,7 +13366,7 @@ try{
 <div id="soffi-modal-overlay" onclick="if(event.target===this) chiudiAppSoffi()">
   <div id="soffi-modal">
     <div class="soffi-modal-header">
-      <h2>Soffi cardiaci</h2>
+      <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0112 7.3 4.3 4.3 0 0119.5 10c0 5.6-7.5 10-7.5 10z"/><path d="M8.5 12.2h2l1-2 1.5 4 1-2h1.5"/></svg>Soffi cardiaci</h2>
       <button id="soffi-chiudi-btn" onclick="chiudiAppSoffi()">✕</button>
     </div>
     <div id="soffi-info"></div>
@@ -13445,7 +13449,7 @@ try{
 <div id="rubrica-overlay" onclick="if(event.target===this) chiudiRubrica()">
   <div id="rubrica-box">
     <div class="farmaco-modal-header">
-      <h2>Rubrica</h2>
+      <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4-2 1.4a12 12 0 006.5 6.5l1.4-2 4 1.4v2.6A2 2 0 0118.5 20 15.5 15.5 0 014 5.5a2 2 0 012-2z"/></svg>Rubrica</h2>
       <button id="rubrica-chiudi-btn" onclick="chiudiRubrica()">✕</button>
     </div>
     <input type="search" id="rubrica-cerca" placeholder="Cerca (es. cardio, TC, Zanella…)" autocomplete="off">
