@@ -2464,7 +2464,7 @@ const state = {
   // parte generata torna quella vera (vedi refreshUI/update più in basso)
   outputEsameManuale: '',
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
-  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false },
+  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false },
   cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
   torace: { mv:'presente', mvLoc:[new Set()], mvSel:['presente'], mvLocPerTipo:{}, reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
@@ -5192,7 +5192,7 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false },
+    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false },
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
@@ -10276,16 +10276,19 @@ function renderRespiroTipo(){
     const active = state.respiro.tipo === opt.value;
     const onClickChip = () => {
       state.respiro.tipo = active ? '' : opt.value;
-      if(!active && opt.value !== 'dispnoico') state.respiro.dispnoicoRiferita = false;
+      if(!active && opt.value !== 'dispnoico'){ state.respiro.dispnoicoRiferita = false; state.respiro.dispnoicoEloquio = false; state.respiro.dispnoicoSforzo = false; }
       if(!active && opt.value !== 'tachipnoico') state.respiro.tachipnoicoBilancia = false;
       update();
     };
     let builder = null;
     if(opt.value === 'dispnoico'){
       builder = (inner) => {
-        renderGruppoChipInline(inner, null, [{value:'riferita', label:'Riferita'}],
-          v => state.respiro.dispnoicoRiferita,
-          (v, vAttivo) => { state.respiro.dispnoicoRiferita = !vAttivo; update(); });
+        // "Riferita" (→ "Riferita dispnea"), "All'eloquio", "Sotto sforzo"
+        // (→ "Dispnoica all'eloquio", "Dispnoica sotto sforzo"); combinabili
+        const campi = { riferita:'dispnoicoRiferita', eloquio:'dispnoicoEloquio', sforzo:'dispnoicoSforzo' };
+        renderGruppoChipInline(inner, null, [{value:'riferita', label:'Riferita'}, {value:'eloquio', label:'All\'eloquio'}, {value:'sforzo', label:'Sotto sforzo'}],
+          v => !!state.respiro[campi[v]],
+          (v, vAttivo) => { state.respiro[campi[v]] = !vAttivo; update(); });
       };
     } else if(opt.value === 'tachipnoico'){
       builder = (inner) => {
@@ -11648,7 +11651,13 @@ function composeRespiro(r){
   });
   const tipoOpt = OPT.respiroTipo.find(o => o.value === r.tipo);
   const bilanciaAttiva = (r.tipo === 'tachipnoico' && r.tachipnoicoBilancia);
-  const tipoText = r.tipo ? ((r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt)) : '';
+  let tipoText = r.tipo ? ((r.tipo === 'dispnoico' && r.dispnoicoRiferita) ? 'Riferita dispnea' : g(tipoOpt)) : '';
+  // "Dispnoica all'eloquio" / "sotto sforzo" (o entrambi); con O2 segue la
+  // modalità: "Dispnoica all'eloquio in NC 1L/min"
+  if(r.tipo === 'dispnoico'){
+    const quando = [r.dispnoicoEloquio ? 'all\'eloquio' : '', r.dispnoicoSforzo ? 'sotto sforzo' : ''].filter(Boolean).join(' e ');
+    if(quando) tipoText += ' ' + quando;
+  }
   let o2text = '';
   if(r.o2 === 'AA') o2text = 'in AA';
   else if(r.o2 === 'NC') o2text = r.litri ? `in NC ${r.litri}L/min` : 'in NC';
