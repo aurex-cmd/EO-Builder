@@ -8743,6 +8743,8 @@ function renderRiepilogo(){
     // contano come "già visti", si apre solo scrivendone uno nuovo
     body.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, body.value).length);
     body.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, body.value).length);
+    body.addEventListener('blur', () => rinfrescaAiuti());
+    body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
     body.addEventListener('input', () => {
       if(diariSoloConsegneAttivo){
         // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
@@ -8777,8 +8779,23 @@ function renderRiepilogo(){
     });
 
     block.appendChild(titleRow);
-    const aiuti = rigaAiutiDiario(p, id);
-    if(aiuti) block.appendChild(aiuti);
+    // etichette (antibiotici, richieste in sospeso, avvisi rene) ricalcolate
+    // anche mentre si scrive (poco dopo l'ultimo tasto) e all'uscita dal
+    // campo: prima si aggiornavano solo ridisegnando Diari, quindi scrivendo
+    // "in V giornata" restava l'etichetta vecchia
+    let aiuti = rigaAiutiDiario(p, id);
+    const segnapostoAiuti = document.createElement('div');
+    segnapostoAiuti.style.display = 'contents';
+    if(aiuti) segnapostoAiuti.appendChild(aiuti);
+    block.appendChild(segnapostoAiuti);
+    let timerAiuti = null;
+    const rinfrescaAiuti = () => {
+      clearTimeout(timerAiuti);
+      const pAgg = loadPatients()[id] || p;
+      const nuovi = rigaAiutiDiario(pAgg, id);
+      segnapostoAiuti.innerHTML = '';
+      if(nuovi) segnapostoAiuti.appendChild(nuovi);
+    };
     const righeIeri = diarioRigheDiIeri(p);
     if(righeIeri.size){
       const wrap = document.createElement('div');
