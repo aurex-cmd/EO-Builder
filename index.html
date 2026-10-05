@@ -314,8 +314,7 @@
   .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
   .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
   /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
-  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); }
-  .diario-aiuti .aiuto.atb .hl{ background:#b7f0a8; color:#12181e; padding:0 3px; border-radius:3px; }
+  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#5dff7e; color:#5dff7e; }
   .diario-aiuti .aiuto.atb.liv1{ border-color:#e0a030; color:#e0a030; }
   .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#ff7070; font-weight:700; }
   .diario-aiuti .aiuto.richiesta .r{ background:#ffff00; color:#12181e; padding:0 3px; border-radius:3px; }
@@ -8566,9 +8565,7 @@ function rigaAiutiDiario(p, id){
   atb.forEach(a => {
     const c = document.createElement('span');
     c.className = 'aiuto atb' + (a.livello === 2 ? ' liv2' : a.livello === 1 ? ' liv1' : '');
-    // livello normale: evidenziato in verde chiaro come le richieste in giallo
-    if(a.livello) c.textContent = '⚠ ' + a.etichetta;
-    else c.innerHTML = `<span class="hl">${aggConsEsc(a.etichetta)}</span>`;
+    c.textContent = (a.livello ? '⚠ ' : '') + a.etichetta;
     c.title = a.livello === 2 ? 'Oltre 14 giorni di antibiotico: valutare sospensione' : a.livello === 1 ? '7 giorni di antibiotico: valutare durata o de-escalation' : 'Giorni di terapia antibiotica';
     riga.appendChild(c);
   });
