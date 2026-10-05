@@ -314,7 +314,8 @@
   .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
   .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
   /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
-  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#3fb950; color:#3fb950; }
+  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); }
+  .diario-aiuti .aiuto.atb .hl{ background:#b7f0a8; color:#12181e; padding:0 3px; border-radius:3px; }
   .diario-aiuti .aiuto.atb.liv1{ border-color:#e0a030; color:#e0a030; }
   .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#ff7070; font-weight:700; }
   .diario-aiuti .aiuto.richiesta .r{ background:#ffff00; color:#12181e; padding:0 3px; border-radius:3px; }
@@ -7206,7 +7207,8 @@ function eliminaSchedaDaLetto(id){
 // stesso ordine della mappa reparto (settore per settore); le schede che
 // non corrispondono a un letto fisso (appoggi, schede libere/extra) vanno
 // per prime, in ordine alfabetico
-function ordinaPazientiPerLetto(entries){
+function ordinaPazientiPerLetto(entries, appoggiPrima){
+  if(appoggiPrima) return ordinaConAppoggiPrima(entries);
   const nomiOrdinati = [];
   const wardMap = getWardMap();
   const appoggi = loadAppoggi();
@@ -7217,6 +7219,41 @@ function ordinaPazientiPerLetto(entries){
     if(ia !== -1 && ib !== -1) return ia - ib;
     if(ia !== -1) return 1;
     if(ib !== -1) return -1;
+    return a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' });
+  });
+}
+
+// variante per Diari e Aggiorna consegne: dentro ogni settore prima gli
+// appoggi, in ordine di primo salvataggio dell'esame obiettivo di oggi
+// (esameIniziatoOggiIl), poi i letti nell'ordine della mappa. Le schede
+// fuori mappa restano in testa, in ordine alfabetico, come prima
+function ordinaConAppoggiPrima(entries){
+  const wardMap = getWardMap();
+  const appoggi = loadAppoggi();
+  const posizione = new Map(); // nome -> [settore, 0 appoggio / 1 letto, indice letto]
+  Object.keys(wardMap).forEach((s, si) => {
+    wardMap[s].forEach((n, bi) => posizione.set(bedName(n), [si, 1, bi]));
+    (appoggi[s] || []).forEach(a => { if(!posizione.has(a)) posizione.set(a, [si, 0, 0]); });
+  });
+  const patients = loadPatients();
+  const oraInizio = (id, p) => {
+    const q = (p && p.state) ? p : (patients[id] || Object.values(patients).find(x => x.name === p.name));
+    if(!q) return Infinity;
+    const t = (q.esameIniziatoOggiIl && isOggi(q.esameIniziatoOggiIl)) ? q.esameIniziatoOggiIl : (q.esameAggiornatoIl || q.savedAt);
+    return (t && isOggi(t)) ? t : Infinity; // appoggio senza diario di oggi: in fondo agli appoggi
+  };
+  return entries.slice().sort((a, b) => {
+    const pa = posizione.get(a[1].name), pb = posizione.get(b[1].name);
+    if(pa && pb){
+      if(pa[0] !== pb[0]) return pa[0] - pb[0];
+      if(pa[1] !== pb[1]) return pa[1] - pb[1];
+      if(pa[1] === 1) return pa[2] - pb[2];
+      const ta = oraInizio(a[0], a[1]), tb = oraInizio(b[0], b[1]);
+      if(ta !== tb) return ta === Infinity ? 1 : tb === Infinity ? -1 : ta - tb;
+      return a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' });
+    }
+    if(pa) return 1;
+    if(pb) return -1;
     return a[1].name.localeCompare(b[1].name, 'it', { numeric:true, sensitivity:'base' });
   });
 }
@@ -8529,7 +8566,9 @@ function rigaAiutiDiario(p, id){
   atb.forEach(a => {
     const c = document.createElement('span');
     c.className = 'aiuto atb' + (a.livello === 2 ? ' liv2' : a.livello === 1 ? ' liv1' : '');
-    c.textContent = (a.livello ? '⚠ ' : '') + a.etichetta;
+    // livello normale: evidenziato in verde chiaro come le richieste in giallo
+    if(a.livello) c.textContent = '⚠ ' + a.etichetta;
+    else c.innerHTML = `<span class="hl">${aggConsEsc(a.etichetta)}</span>`;
     c.title = a.livello === 2 ? 'Oltre 14 giorni di antibiotico: valutare sospensione' : a.livello === 1 ? '7 giorni di antibiotico: valutare durata o de-escalation' : 'Giorni di terapia antibiotica';
     riga.appendChild(c);
   });
@@ -8556,6 +8595,8 @@ function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
   const entries = schedeConDatiPerGiorno(diariMostraIeri);
+  // oggi: appoggi prima dei letti del settore, in ordine di compilazione
+  if(!diariMostraIeri){ const o = ordinaPazientiPerLetto(entries, true); entries.length = 0; o.forEach(e => entries.push(e)); }
 
   // il pulsante per passare da oggi a ieri e viceversa ora è fisso in alto
   // (stessa riga di "Esporta"/"Torna alla scheda", vedi HTML): qui si
@@ -8584,7 +8625,7 @@ function renderRiepilogo(){
     Object.keys(consegneOggi).forEach(nome => {
       if(!presenti.has(nome)) entries.push(['__consegna__' + nome, { name: nome, __consegna: true }]);
     });
-    const ordinate = ordinaPazientiPerLetto(entries);
+    const ordinate = ordinaPazientiPerLetto(entries, true);
     entries.length = 0; ordinate.forEach(e => entries.push(e));
   }
 
