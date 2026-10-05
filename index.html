@@ -583,6 +583,10 @@
   table.agg-cons .agg-cons-etichetta .ee{ background:#edabee; color:#12181e; font-weight:700; padding:0 3px; border-radius:3px; }
   table.agg-cons .agg-cons-etichetta .dim{ background:#00ffff; color:#12181e; padding:0 3px; border-radius:3px; }
   table.agg-cons .agg-cons-vuoto{ font-size:12px; color:var(--ink-dim); }
+  /* riquadro del letto (come in Reparto) sotto il nome: solo da guardare.
+     Il margine lascia spazio ai pallini che sporgono dai bordi */
+  table.agg-cons .agg-cons-tile{ display:inline-block; margin:7px 7px 9px; }
+  table.agg-cons .agg-cons-tile .bed-tile{ display:inline-block; cursor:default; pointer-events:none; font-size:13.5px; }
 
   .bed-text-wrap{ position:relative; }
   .bed-text-specchio{ position:absolute; inset:0; pointer-events:none; overflow:hidden;
@@ -9169,6 +9173,59 @@ function aggConsDestinazione(extra){
   return 'Dimissione';
 }
 
+// riquadro del letto come in Reparto (verde/viola/grigio, spunta "copiato",
+// pallini E/D/i, V/E/S/C, alone consegne/critico), ma in sola lettura:
+// niente apertura del letto al tocco, niente × per eliminare. Stesse
+// condizioni di creaTileLetto in renderWardMap
+function tileLettoSolaLettura(id, p, consegne, critici){
+  const occupato = schedaHaDati(p.state);
+  const diOggi = occupato && isOggi(p.esameAggiornatoIl);
+  const giorniFa = occupato ? giorniDiDifferenza(p.esameAggiornatoIl) : null;
+  const classeStato = !occupato ? '' : diOggi ? ' occupied' : (giorniFa !== null && giorniFa > 3) ? ' occupied-vecchio' : ' occupied-old';
+  const tile = document.createElement('div');
+  tile.className = 'bed-tile' + classeStato;
+  const numero = document.createElement('span');
+  numero.textContent = inizialiLetto(p.name);
+  tile.appendChild(numero);
+  if(p.refertoCopiato && isOggi(p.refertoCopiatoIl)){
+    const spunta = document.createElement('div');
+    spunta.className = 'bed-tile-attiva-badge';
+    spunta.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+    tile.appendChild(spunta);
+  }
+  const extraTesto = (id === currentPatientId) ? state.outputExtra : p.state.outputExtra;
+  if(haEsamiDomani(extraTesto)){
+    const b = document.createElement('div');
+    b.className = 'bed-tile-esami-badge'; b.textContent = 'E';
+    tile.appendChild(b);
+  }
+  if(haDimissioneOggi(extraTesto) || haDimissioneDomani(extraTesto)){
+    const b = document.createElement('div');
+    b.className = 'bed-tile-dimissione-badge'; b.textContent = 'D';
+    tile.appendChild(b);
+  }
+  const coloreIso = coloreIsolamento((id === currentPatientId) ? state.isolamento : p.state.isolamento);
+  if(coloreIso){
+    const b = document.createElement('div');
+    b.className = 'bed-tile-isolamento-badge ' + coloreIso; b.textContent = 'i';
+    tile.appendChild(b);
+  }
+  if(critici[p.name]) tile.classList.add('critico');
+  const consegnaLetto = consegne[p.name];
+  if(consegnaLetto){
+    tile.classList.add('ha-consegne');
+    ['V','E','S','C'].filter(l => consegnaLetto[l] && !consegnaLetto['fatto' + l]).forEach(l => {
+      const b = document.createElement('div');
+      b.className = `bed-tile-consegna-badge ${l.toLowerCase()}`; b.textContent = l;
+      tile.appendChild(b);
+    });
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'agg-cons-tile';
+  wrap.appendChild(tile);
+  return wrap;
+}
+
 function renderAggiornaConsegne(container, entries){
   // giorno prima di un festivo (venerdì, vigilie): consegne complete
   const domani = new Date(); domani.setDate(domani.getDate() + 1);
@@ -9188,6 +9245,8 @@ function renderAggiornaConsegne(container, entries){
   tab.innerHTML = '<colgroup><col class="c-letto"><col></colgroup><thead><tr><th>Letto</th><th>Consegna</th></tr></thead>';
   const tbody = document.createElement('tbody');
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const consegneTile = loadConsegne();
+  const criticiTile = loadCritici();
 
   entries.forEach(([id, p]) => {
     const testo = getRefertoFor(p.state);
@@ -9219,6 +9278,7 @@ function renderAggiornaConsegne(container, entries){
     const nomeLetto = document.createElement('div');
     nomeLetto.textContent = p.name;
     tdLetto.appendChild(nomeLetto);
+    tdLetto.appendChild(tileLettoSolaLettura(id, p, consegneTile, criticiTile));
 
     const tdCons = document.createElement('td');
     // consegna mostrata già formattata (una riga per voce, richieste "R ..."
