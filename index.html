@@ -1053,6 +1053,28 @@
   }
   #score-modal-overlay.show{ display:flex; }
   .reparto-extra-blocco{ margin-top:18px; padding-top:14px; border-top:1px solid var(--clay-border); }
+  #rubrica-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  #rubrica-overlay.show{ display:flex; }
+  #rubrica-box{ width:100%; max-width:520px; background:var(--panel); border:1px solid var(--clay-border); border-radius:20px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #rubrica-chiudi-btn{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  #rubrica-cerca{ width:100%; font-size:16px; padding:10px 12px; border-radius:12px; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink); box-sizing:border-box; }
+  .rubrica-esterno{ font-size:12px; color:var(--ink-dim); margin:6px 2px 8px; font-family:var(--font-mono); }
+  #rubrica-lista{ max-height:58vh; overflow-y:auto; }
+  .rubrica-voce{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 4px; border-bottom:1px solid var(--clay-border); }
+  .rubrica-voce .nome{ font-size:13.5px; color:var(--ink); }
+  .rubrica-voce .nota{ font-size:11.5px; color:var(--ink-dim); }
+  .rubrica-voce .numeri{ text-align:right; font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--signal); white-space:nowrap; }
+  .rubrica-voce .numeri a{ color:inherit; text-decoration:none; }
+  .rubrica-voce .numeri .ext{ display:block; font-size:10.5px; font-weight:400; color:var(--ink-dim); }
+  /* durante la ricerca: numeri grandi, uno sotto l'altro */
+  #rubrica-lista.cercando .rubrica-voce{ display:block; padding:10px 4px; }
+  #rubrica-lista.cercando .rubrica-voce .nome{ font-size:15px; font-weight:600; }
+  #rubrica-lista.cercando .rubrica-voce .numeri{ text-align:left; font-size:28px; line-height:1.25; margin-top:4px; white-space:normal; }
+  #rubrica-lista.cercando .rubrica-voce .numeri span.n{ display:inline-block; margin-right:16px; }
+  #rubrica-lista.cercando .rubrica-voce .numeri .ext{ font-size:12px; }
+  .rubrica-piede{ margin-top:10px; text-align:right; }
+  .rubrica-vuota{ font-size:13px; color:var(--ink-dim); padding:12px 4px; }
   #aggiunta-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.5); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
     display:none; align-items:center; justify-content:center; padding:20px; }
   #aggiunta-overlay.show{ display:flex; }
@@ -1629,6 +1651,9 @@
       </div>
       <div class="ric-lista-riga" onclick="apriAppVfg()">
         <span class="ric-lista-nome">VFG Calc (Cockcroft-Gault)</span>
+      </div>
+      <div class="ric-lista-riga" onclick="apriRubrica()">
+        <span class="ric-lista-nome">Rubrica numeri</span>
       </div>
       <div class="ric-lista-riga" onclick="apriAppEcg()">
         <span class="ric-lista-nome">ECG Simulator</span>
@@ -8737,6 +8762,7 @@ function renderRiepilogo(){
       scoreControllaTrigger(body.value, body, id);
       mdcControllaTrigger(body.value, body, id);
       premedControllaTrigger(body.value, body, id);
+      rubricaControllaTrigger(body.value, body, id);
       ecgsimControllaTrigger(body.value, body);
       soffiControllaTrigger(body.value, body);
     });
@@ -13062,6 +13088,30 @@ try{
   </div>
 </div>
 
+<!-- RUBRICA: numeri dell'ospedale, con ricerca (vedi apriRubrica) -->
+<div id="rubrica-overlay" onclick="if(event.target===this) chiudiRubrica()">
+  <div id="rubrica-box">
+    <div class="farmaco-modal-header">
+      <h2>Rubrica</h2>
+      <button id="rubrica-chiudi-btn" onclick="chiudiRubrica()">✕</button>
+    </div>
+    <input type="search" id="rubrica-cerca" placeholder="Cerca (es. cardio, TC, Zanella…)" autocomplete="off">
+    <div id="rubrica-esterno" class="rubrica-esterno"></div>
+    <div id="rubrica-lista"></div>
+    <div class="rubrica-piede">
+      <button class="btn" id="rubrica-modifica-btn" onclick="rubricaModifica()">Modifica elenco</button>
+    </div>
+    <div id="rubrica-editor" style="display:none;">
+      <div class="score-nota" style="margin:8px 0 6px;">Incolla o modifica l'elenco: una voce per riga, nome e poi i numeri. Una riga "da fuori 042971..." indica il prefisso per chiamare i numeri interni dall'esterno. L'elenco resta nel tuo account (sincronizzato tra i tuoi dispositivi), non nel file dell'app.</div>
+      <textarea id="rubrica-testo" style="width:100%; min-height:260px; font-family:var(--font-mono); font-size:12.5px;"></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn primary" style="flex:1;" onclick="rubricaSalva()">Salva</button>
+        <button class="btn" style="flex:1;" onclick="rubricaAnnulla()">Annulla</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- "+" nei festivi: Letto o Reparto? (vedi apriSceltaAggiunta) -->
 <div id="aggiunta-overlay" onclick="if(event.target===this) chiudiSceltaAggiunta()">
   <div id="aggiunta-box"><div id="aggiunta-corpo"></div></div>
@@ -15152,6 +15202,139 @@ function chiudiMdcInfo(){
       if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
       salvaDiarioDaBox(el, c.patientId, nuovo);
     }
+  }
+}
+
+// ============================================================
+// RUBRICA dei numeri interni ed esterni dell'ospedale: si apre scrivendo
+// "/numeri" o "/rubrica" in Diari (alla chiusura il trigger sparisce dal
+// diario) o da App → Rubrica numeri. Barra di ricerca in alto: le voci
+// trovate mostrano i numeri in grande. L'elenco NON sta nel file dell'app
+// (che è pubblico): è salvato nell'account dell'utente e sincronizzato tra
+// i suoi dispositivi; si incolla/modifica con "Modifica elenco"
+// ============================================================
+const RUBRICA_KEY = 'eo_builder_rubrica_v1';
+let rubricaContesto = null;
+function rubricaTesto(){ try{ return localStorage.getItem(RUBRICA_KEY) || ''; } catch(e){ return ''; } }
+// voci dall'elenco libero: "Nome 1234 5678", righe di soli numeri unite alla
+// riga sopra senza numeri, intestazioni "Processi:" con sotto "- 5918 C2"
+function rubricaVoci(testo){
+  const righe = (testo || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+  const voci = [], viste = new Set();
+  let prefisso = null, sezione = null, inSospeso = null;
+  const haNumero = r => /\d{3,}/.test(r);
+  const soloNumeri = r => /^[\d\s,;\/\-–o]+$/i.test(r);
+  righe.forEach(r => {
+    const mf = r.match(/^da\s+fuori\s*:?\s*(\d{3,})/i);
+    if(mf){ prefisso = mf[1]; return; }
+    if(!haNumero(r)){
+      if(/:\s*$/.test(r)){ sezione = r.replace(/:\s*$/, ''); inSospeso = null; return; }
+      inSospeso = r; return;
+    }
+    // riga di soli numeri sotto una voce già fatta: sono altri suoi numeri
+    if(soloNumeri(r) && !inSospeso && !/^[-–•]/.test(r) && voci.length && !sezione){
+      (r.match(/\d{3,}/g) || []).forEach(n => { if(!voci[voci.length - 1].numeri.includes(n)) voci[voci.length - 1].numeri.push(n); });
+      voci[voci.length - 1].riga += ' ' + r;
+      return;
+    }
+    let testoVoce = r, nome, resto;
+    if(/^[-–•]\s*/.test(r) && sezione){
+      // "- 5918 C2" sotto "Processi:" → "Processi · C2"
+      const x = r.replace(/^[-–•]\s*/, '');
+      nome = sezione + ' · ' + x.replace(/\b\d{3,}\b/g, ' ').replace(/[,;\/]+/g, ' ').replace(/\s+/g, ' ').trim();
+      resto = x; testoVoce = sezione + ' ' + x;
+    } else {
+      if(/^\d/.test(r) && inSospeso) testoVoce = inSospeso + ' ' + r;
+      sezione = null;
+      const i = testoVoce.search(/\d{3,}/);
+      nome = testoVoce.slice(0, i).replace(/[:\-–,(]+\s*$/, '').trim() || testoVoce;
+      resto = testoVoce.slice(i);
+    }
+    inSospeso = null;
+    const k = testoVoce.toLowerCase().replace(/\s+/g, ' ');
+    if(viste.has(k)) return; viste.add(k);
+    const numeri = [...new Set(resto.match(/\d{3,}/g) || [])];
+    // nota: quello che segue i numeri iniziali ("(se micro: 5426 -> Medico…)", "medico 65")
+    const nota = sezione && /^[-–•]/.test(r) ? '' : resto.replace(/^(?:[\d\s,;\/\-–]|\bo\b)+/i, '').trim();
+    voci.push({ nome, numeri, nota, riga: testoVoce });
+  });
+  return { voci, prefisso };
+}
+const rubricaNorm = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function renderRubrica(){
+  const lista = document.getElementById('rubrica-lista');
+  const q = rubricaNorm(document.getElementById('rubrica-cerca').value.trim());
+  const { voci, prefisso } = rubricaVoci(rubricaTesto());
+  document.getElementById('rubrica-esterno').textContent = prefisso ? `Da fuori: ${prefisso} + numero interno` : '';
+  lista.classList.toggle('cercando', !!q);
+  if(!voci.length){
+    lista.innerHTML = '<div class="rubrica-vuota">La rubrica è vuota: tocca "Modifica elenco" e incolla l\'elenco dei numeri.</div>';
+    return;
+  }
+  const parole = q.split(/\s+/).filter(Boolean);
+  const trovate = parole.length ? voci.filter(v => parole.every(w => rubricaNorm(v.riga).includes(w))) : voci;
+  if(!trovate.length){ lista.innerHTML = '<div class="rubrica-vuota">Nessun numero trovato.</div>'; return; }
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  lista.innerHTML = trovate.map(v => {
+    const nums = v.numeri.map(n => {
+      const lungo = n.length >= 9;
+      // interni a 4 cifre: sotto, il numero da chiamare dall'esterno
+      const ext = (!lungo && prefisso && n.length === 4) ? `<span class="ext">${prefisso}${n}</span>` : '';
+      return `<span class="n">${lungo ? `<a href="tel:${n}">${esc(n)}</a>` : esc(n)}${q ? ext : ''}</span>`;
+    }).join(q ? '' : ' · ');
+    return `<div class="rubrica-voce"><div><div class="nome">${esc(v.nome)}</div>${v.nota ? `<div class="nota">${esc(v.nota)}</div>` : ''}</div><div class="numeri">${nums}</div></div>`;
+  }).join('');
+}
+function apriRubrica(textareaEl, patientId){
+  rubricaContesto = { textareaEl: textareaEl || null, patientId: patientId || null };
+  const cerca = document.getElementById('rubrica-cerca');
+  cerca.value = '';
+  cerca.oninput = renderRubrica;
+  document.getElementById('rubrica-editor').style.display = 'none';
+  document.getElementById('rubrica-lista').style.display = '';
+  renderRubrica();
+  document.getElementById('rubrica-overlay').classList.add('show');
+  if(!rubricaTesto()) rubricaModifica(); else setTimeout(() => cerca.focus(), 50);
+}
+function chiudiRubrica(){
+  const c = rubricaContesto;
+  rubricaContesto = null;
+  document.getElementById('rubrica-overlay').classList.remove('show');
+  if(c && c.textareaEl){
+    const el = c.textareaEl;
+    const nuovo = el.value.replace(/[ \t]*\/(?:numeri|rubrica)\b[ \t]*/i, ' ').replace(/ +\n/g, '\n').replace(/^ +| +$/g, '');
+    el.dataset.rubricaAperta = '';
+    if(nuovo !== el.value){
+      el.value = nuovo;
+      if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+      salvaDiarioDaBox(el, c.patientId, nuovo);
+    }
+  }
+}
+function rubricaModifica(){
+  document.getElementById('rubrica-testo').value = rubricaTesto();
+  document.getElementById('rubrica-editor').style.display = '';
+  document.getElementById('rubrica-lista').style.display = 'none';
+  document.getElementById('rubrica-modifica-btn').style.display = 'none';
+}
+function rubricaAnnulla(){
+  document.getElementById('rubrica-editor').style.display = 'none';
+  document.getElementById('rubrica-lista').style.display = '';
+  document.getElementById('rubrica-modifica-btn').style.display = '';
+}
+function rubricaSalva(){
+  setLocalAndCloud(RUBRICA_KEY, document.getElementById('rubrica-testo').value.trim());
+  rubricaAnnulla();
+  renderRubrica();
+  showToast('Rubrica salvata');
+}
+function rubricaControllaTrigger(testoAttuale, elementoTextarea, patientId){
+  const presente = /\/(?:numeri|rubrica)\b/i.test(testoAttuale || '');
+  if(presente && elementoTextarea.dataset.rubricaAperta !== '1'){
+    elementoTextarea.dataset.rubricaAperta = '1';
+    apriRubrica(elementoTextarea, patientId);
+  } else if(!presente){
+    elementoTextarea.dataset.rubricaAperta = '';
   }
 }
 
