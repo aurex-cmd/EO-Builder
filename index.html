@@ -311,6 +311,16 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
+  .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
+  /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
+  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#3fb950; color:#3fb950; }
+  .diario-aiuti .aiuto.atb.liv1{ border-color:#e0a030; color:#e0a030; }
+  .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#ff7070; font-weight:700; }
+  .diario-aiuti .aiuto.richiesta .r{ background:#ffff00; color:#12181e; padding:0 3px; border-radius:3px; }
+  .diario-aiuti .aiuto.richiesta .gg{ color:var(--ink-dim); font-size:11px; }
+  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--signal); font-weight:700; padding-left:2px; }
+  .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.35); }
   .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
   .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
@@ -8228,6 +8238,287 @@ function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   areeTesto.push(body);
 }
 
+// ============================================================
+// AIUTI AL LAVORO DI REPARTO (calcolati dai diari: oggi + storico dei
+// giorni precedenti, nessun dato nuovo da inserire)
+//  1. RICHIESTE IN SOSPESO: "R RX torace", "R v. cardiologica"... restano
+//     aperte nei giorni successivi finché nel diario non compare il loro
+//     esito ("RX torace: ...", "eseguita RX torace", "v. cardiologica: ...")
+//     o non vengono spuntate a mano (✓)
+//  2. GIORNI DI ANTIBIOTICO: "Ceftriaxone gg5" ("g1" il primo giorno: "1 g"
+//     sembrerebbe 1 grammo),
+//     con avviso a 7 e a 14 giorni
+//  3. ANDAMENTO ESAMI: "Hb 114" → "Hb 121 -> 114" con il valore dell'ultimo
+//     diario precedente (freccia "->", che il programma dell'ospedale
+//     riproduce)
+//  4. AVVISI RENE/FARMACI: VFG nota + farmaco del Box farmaci citato nel
+//     diario o nella terapia, in una fascia che richiede aggiustamento
+// ============================================================
+const LAVORO_GIORNI_MAX = 21; // quanto indietro guardare nello storico
+
+// giorni con testo, dal più vecchio a oggi: [{ giorno:'YYYY-MM-DD', testo }]
+function diarioGiorniPaziente(p, idPaziente){
+  const oggi = chiaveGiorno(Date.now());
+  const limite = chiaveGiorno(Date.now() - LAVORO_GIORNI_MAX * 864e5);
+  const giorni = Object.keys((p && p.storico) || {}).filter(k => k < oggi && k >= limite).sort()
+    .map(k => ({ giorno: k, testo: p.storico[k] || '' }));
+  let testoOggi = '';
+  try{
+    const st = (idPaziente && typeof currentPatientId !== 'undefined' && idPaziente === currentPatientId) ? state : (p && p.state);
+    if(st && p && isOggi(p.esameAggiornatoIl || p.savedAt)){
+      try{ testoOggi = getRefertoFor(st); }
+      catch(e){ testoOggi = [(st.outputEsameManuale || '').trim(), (st.outputExtra || '').trim()].filter(Boolean).join('\n\n'); }
+    }
+  } catch(e){}
+  if(testoOggi) giorni.push({ giorno: oggi, testo: testoOggi });
+  return giorni;
+}
+const soloAggiunte = t => { const i = (t || '').indexOf('\n\n'); return i === -1 ? '' : t.slice(i + 2); };
+const giorniTra = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
+
+// ---------- 1. richieste in sospeso ----------
+// nome breve dell'esame/visita richiesto, per confrontarlo con gli esiti:
+// "R RX torace di controllo" → "rx torace", "R v. cardiologica" → "v. cardiologica"
+function chiaveRichiesta(testo){
+  const t = testo.toLowerCase().replace(/^r\s+/, '')
+    .replace(/\bvisita\s+/g, 'v. ').replace(/\bvalutazione\s+/g, 'val. ').replace(/\bconsulenza\s+/g, 'cons. ')
+    .replace(/[^\p{L}\p{N}.\s\/-]/gu, ' ').replace(/\s+/g, ' ').trim();
+  return t.split(' ').filter(w => !/^(di|del|della|dei|delle|per|in|con|e|urgente|controllo|ctrl|da|a)$/.test(w)).slice(0, 2).join(' ');
+}
+function richiesteDelTesto(testo){
+  const out = [];
+  aggConsSintesi(soloAggiunte(testo), null, true).testo.split('\n').forEach(riga => {
+    const r = riga.replace(/^[-–•]\s*/, '');
+    let html = aggConsRichiesteHtml(r, '\u0001', '\u0002');
+    const re = /\u0001([^\u0002]*)\u0002/g; let m;
+    while((m = re.exec(html))){
+      const t = m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+      if(t.length > 2) out.push(t);
+    }
+  });
+  return out;
+}
+// l'esito è nel testo? "rx torace: ...", "RX TORACE …:", "eseguita rx torace"
+function esitoPresente(chiave, testo){
+  if(!chiave) return false;
+  const t = (testo || '').toLowerCase().replace(/\bvisita\s+/g, 'v. ').replace(/\bvalutazione\s+/g, 'val. ').replace(/\bconsulenza\s+/g, 'cons. ');
+  const k = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  return new RegExp(String.raw`(?:^|\n|[.;]\s*)\s*(?:[-–•]\s*)?` + k + String.raw`[^\n:]{0,50}:|\beseguit[aoie]\s+(?:[a-zà-ù]+\s+){0,2}` + k + String.raw`|\b` + k + String.raw`\s+(?:eseguit|effettuat|refertat)\w*|\b` + k + String.raw`\s+(?:negativ|nella\s+norma|positiv)\w*`, 'i').test(t);
+}
+function richiesteInSospeso(p, idPaziente){
+  const giorni = diarioGiorniPaziente(p, idPaziente);
+  const chiuse = new Set((p && p.richiesteChiuse) || []);
+  const aperte = new Map(); // chiave → { testo, dal }
+  giorni.forEach(({ giorno, testo }) => {
+    // prima chi si chiude oggi (esito scritto), poi le richieste nuove
+    [...aperte.keys()].forEach(k => {
+      const senzaRichiesta = testo.split('\n').filter(r => !/\b(?:R|richied\w*|richiest\w*|chiest\w*|si\s+chiede)\b/i.test(r) || esitoPresente(k, r.replace(/^.*?\bR\s+[^,;]*[,;]?/, ''))).join('\n');
+      if(esitoPresente(k, senzaRichiesta)) aperte.delete(k);
+    });
+    richiesteDelTesto(testo).forEach(t => {
+      const k = chiaveRichiesta(t);
+      if(k && !aperte.has(k) && !esitoPresente(k, testo.replace(/[^\n]*\b(?:R|richied\w*|richiest\w*|chiest\w*)\b[^\n]*/gi, ''))) aperte.set(k, { testo: t, dal: giorno, chiave: k });
+    });
+  });
+  const oggi = chiaveGiorno(Date.now());
+  return [...aperte.values()].filter(r => !chiuse.has(r.chiave + '|' + r.dal)).map(r => Object.assign(r, { giorni: giorniTra(r.dal, oggi) }));
+}
+function chiudiRichiesta(idPaziente, r){
+  const patients = loadPatients();
+  const p = patients[idPaziente];
+  if(!p) return;
+  p.richiesteChiuse = (p.richiesteChiuse || []).concat(r.chiave + '|' + r.dal).slice(-200);
+  savePatients(patients);
+}
+
+// ---------- 2. giorni di antibiotico ----------
+const ANTIBIOTICI = [
+  ['Ceftriaxone', /ceftriaxon\w*|rocefin/], ['Tazocin', /tazocin|piperacillin\w*(?:\s*\/\s*tazobactam)?|pip\s*\/\s*tazo/],
+  ['Amoxi/clav', /amoxi\w*(?:\s*\/\s*clav\w*)?|augmentin/], ['Ampicillina/sulbactam', /unasyn|ampicillin\w*\s*\/\s*sulbactam/],
+  ['Ampicillina', /ampicillin\w*(?!\s*\/)/], ['Levofloxacina', /levofloxacin\w*|levoxacin|tavanic/], ['Ciprofloxacina', /ciprofloxacin\w*|ciproxin/],
+  ['Vancomicina', /vancomicin\w*/], ['Teicoplanina', /teicoplanin\w*|targosid/], ['Metronidazolo', /metronidazol\w*|flagyl/],
+  ['Meropenem', /meropenem|merrem/], ['Ertapenem', /ertapenem|invanz/], ['Azitromicina', /azitromicin\w*|zitromax/],
+  ['Claritromicina', /claritromicin\w*|klacid/], ['Linezolid', /linezolid|zyvoxid/], ['Clindamicina', /clindamicin\w*|dalacin/],
+  ['Cefazolina', /cefazolin\w*/], ['Cefepime', /cefepim\w*/], ['Ceftazidima', /ceftazidim\w*(?!\s*\/\s*avibactam)/],
+  ['Ceftazidima/avibactam', /ceftazidim\w*\s*\/\s*avibactam|zavicefta/], ['Cefotaxima', /cefotaxim\w*/], ['Daptomicina', /daptomicin\w*|cubicin/],
+  ['Fosfomicina', /fosfomicin\w*/], ['Cotrimossazolo', /cotrimossazol\w*|bactrim|trimetoprim\w*/], ['Doxiciclina', /doxiciclin\w*|bassado/],
+  ['Gentamicina', /gentamicin\w*/], ['Amikacina', /amikacin\w*/], ['Tigeciclina', /tigeciclin\w*/], ['Colistina', /colistin\w*/],
+  ['Nitrofurantoina', /nitrofurantoin\w*|furadantin/], ['Rifampicina', /rifampicin\w*/]
+];
+const ATB_ORDINALI = { prima:1, seconda:2, terza:3, quarta:4, quinta:5, sesta:6, settima:7, ottava:8, nona:9, decima:10,
+  undicesima:11, dodicesima:12, tredicesima:13, quattordicesima:14, quindicesima:15 };
+const ATB_ROMANI = { i:1, ii:2, iii:3, iv:4, v:5, vi:6, vii:7, viii:8, ix:9, x:10, xi:11, xii:12, xiii:13, xiv:14, xv:15 };
+function giornataScritta(frase){
+  const t = (frase || '').toLowerCase();
+  let m = t.match(/\b(prima|seconda|terza|quarta|quinta|sesta|settima|ottava|nona|decima|undicesima|dodicesima|tredicesima|quattordicesima|quindicesima)\s+(?:giornata|gg|giorno)\b/);
+  if(m) return ATB_ORDINALI[m[1]];
+  m = t.match(/\b(\d{1,2})\s*(?:°|ª|a|\^)?\s*(?:giornata|giorno|gg\b)/);
+  if(m && !/\b\d{1,2}\s*gg\s+(?:fa|prima)\b/.test(t)) return +m[1];
+  m = t.match(/\b(xv|xiv|xiii|xii|xi|x|ix|viii|vii|vi|v|iv|iii|ii|i)\s+(?:giornata|gg)\b/);
+  if(m) return ATB_ROMANI[m[1]];
+  m = t.match(/\b(?:giornata|giorno|day)\s*(\d{1,2})\b|\bgg?\s?(\d{1,2})\b(?!\s*\/)/);
+  if(m) return +(m[1] || m[2]);
+  return null;
+}
+const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|fine\s+terapia)\b/i;
+const RE_INIZIO_ATB = /\b(?:inizi\w*|avvi\w*|impost\w*|intrapres\w*|introdott\w*|aggiunt\w*|si\s+aggiunge|start)\b/i;
+// (aggiornato) l'antibiotico resta in corso anche nei giorni in cui il diario
+// non lo nomina più ("continua terapia in atto", o niente del tutto): il
+// conteggio prosegue finché non compare uno stop — del farmaco ("stop
+// Ceftriaxone", "sospeso Tazocin"), di tutta la terapia antibiotica
+// ("stop ATB", "sospesa antibioticoterapia") o un passaggio a un altro
+// antibiotico ("switch a Levofloxacina", "passa a Tazocin")
+const RE_STOP_TUTTI_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|conclus\w*)\b[^.;\n]{0,25}\b(?:atb|antibiotic\w*|antibioticoterapia|terapia\s+antibiotica)\b|\b(?:atb|antibiotic\w*|antibioticoterapia|terapia\s+antibiotica)\b[^.;\n]{0,15}\b(?:stop|sospes\w*|terminat\w*|conclus\w*)\b/i;
+const RE_SWITCH_ATB = /\b(?:switch|shift|passa(?:ggio)?\s+a|si\s+passa\s+a|sostituit\w*|in\s+sostituzione|al\s+posto\s+d\w*|cambio\s+(?:atb|antibiotico|terapia))\b/i;
+function antibioticiInCorso(p, idPaziente){
+  const giorni = diarioGiorniPaziente(p, idPaziente);
+  const oggi = chiaveGiorno(Date.now());
+  if(!giorni.length || giorni[giorni.length - 1].giorno !== oggi) return [];
+  const risultati = [];
+  ANTIBIOTICI.forEach(([nome, re]) => {
+    const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)`, 'i');
+    // (anche la virgola separa: in "prosegue Ceftriaxone, inizia Tazocin"
+    // l'"inizia" è del Tazocin, non del Ceftriaxone)
+    const frasi = t => (t || '').split(/[.;,\n]/).filter(f => reG.test(f));
+    const eStop = f => RE_STOP_ATB.test(f) && !RE_INIZIO_ATB.test(f);
+    // ultimo giorno in cui il farmaco è nominato
+    let ultimo = -1;
+    for(let i = giorni.length - 1; i >= 0; i--){ if(frasi(giorni[i].testo).length){ ultimo = i; break; } }
+    if(ultimo === -1 || frasi(giorni[ultimo].testo).some(eStop)) return;
+    // dopo l'ultima citazione (o lo stesso giorno, in un'altra frase): stop di
+    // tutta la terapia o passaggio a un altro antibiotico
+    for(let i = ultimo; i < giorni.length; i++){
+      const t = giorni[i].testo || '';
+      if(RE_STOP_TUTTI_ATB.test(t) && (i > ultimo || !frasi(t).some(f => RE_INIZIO_ATB.test(f)))) return;
+      if(i > ultimo && RE_SWITCH_ATB.test(t) && ANTIBIOTICI.some(([n2, r2]) => n2 !== nome && new RegExp(String.raw`\b(?:` + r2.source + String.raw`)`, 'i').test(t))) return;
+    }
+    // risalgo dall'ultima citazione ai giorni consecutivi (buchi fino a 3
+    // giorni: weekend senza diario) fino all'"inizia" o alla prima citazione
+    let inizio = giorni[ultimo].giorno;
+    for(let i = ultimo; i >= 0; i--){
+      const f = frasi(giorni[i].testo);
+      if(!f.length || f.some(eStop)) break;
+      if(i < ultimo && giorniTra(giorni[i].giorno, inizio) > 3) break;
+      inizio = giorni[i].giorno;
+      if(f.some(x => RE_INIZIO_ATB.test(x))) break; // "inizia": è il primo giorno
+    }
+    let n = giorniTra(inizio, oggi) + 1;
+    // giornata scritta nel diario ("continua Ceftriaxone in seconda giornata",
+    // "Tazocin 3° giornata", "II giornata", "giornata 4", "g5"): vale quella,
+    // riportata a oggi, perché la terapia può essere iniziata prima (PS,
+    // altro reparto) di quando compare nei diari
+    for(let i = ultimo; i >= 0; i--){
+      // qui conta la frase intera ("prosegue Levofloxacina, II giornata")
+      const g = (giorni[i].testo || '').split(/[.;\n]/).filter(f => reG.test(f)).map(giornataScritta).find(x => x);
+      if(g){ n = g + giorniTra(giorni[i].giorno, oggi); break; }
+      if(giorni[i].giorno < inizio) break;
+    }
+    risultati.push({ nome, giorni: n, etichetta: `${nome} ${n === 1 ? 'g' : 'gg'}${n}`, livello: n >= 14 ? 2 : n >= 7 ? 1 : 0 });
+  });
+  return risultati;
+}
+
+// ---------- 3. andamento esami ----------
+// riga degli esami di un testo e valori: { 'hb': '114', ... } (chiave
+// normalizzata del nome), dalla riga "Agli EE: ..." / "EE: ..." / "Esami: ..."
+function rigaEsami(testo){
+  return (testo || '').split('\n').find(r => AGG_CONS_RIGA_ESAMI.test(r) && !/^\s*(?:vfg|ega)\s*:/i.test(r)) || null;
+}
+function valoriEsami(riga){
+  const out = {};
+  if(!riga) return out;
+  riga.replace(/^[^:]*:\s*/, '').split(/[,;]/).forEach(pezzo => {
+    // "Hb 114 g/L", "Hb 121 -> 114 g/L": si tiene l'ULTIMO valore
+    const m = pezzo.trim().match(/^([\p{L}][\p{L}\p{N}.\s\/+-]*?)\s+((?:\d+(?:[.,]\d+)?\s*->\s*)*)(\d+(?:[.,]\d+)?)/u);
+    if(m) out[m[1].toLowerCase().replace(/\s+/g, ' ').trim()] = m[3];
+  });
+  return out;
+}
+// riga di oggi con le frecce: "Hb 114 g/L" → "Hb 121 -> 114 g/L" (solo per
+// i valori senza freccia e presenti in un diario precedente)
+function rigaEsamiConAndamento(p, idPaziente, rigaOggi){
+  const giorni = diarioGiorniPaziente(p, idPaziente).filter(g => g.giorno < chiaveGiorno(Date.now())).reverse();
+  const precedenti = {};
+  giorni.forEach(g => {
+    const v = valoriEsami(rigaEsami(soloAggiunte(g.testo) || g.testo));
+    Object.keys(v).forEach(k => { if(!(k in precedenti)) precedenti[k] = v[k]; });
+  });
+  let cambiati = 0;
+  const intestazione = rigaOggi.match(/^[^:]*:\s*/)[0];
+  const corpo = rigaOggi.slice(intestazione.length).split(/([,;])/).map(pezzo => {
+    if(/^[,;]$/.test(pezzo) || /->/.test(pezzo)) return pezzo;
+    const m = pezzo.match(/^(\s*)([\p{L}][\p{L}\p{N}.\s\/+-]*?)(\s+)(\d+(?:[.,]\d+)?)/u);
+    if(!m) return pezzo;
+    const prima = precedenti[m[2].toLowerCase().replace(/\s+/g, ' ').trim()];
+    if(prima === undefined) return pezzo;
+    cambiati++;
+    return m[1] + m[2] + m[3] + prima + ' -> ' + pezzo.slice(m[0].length - m[4].length);
+  }).join('');
+  return cambiati ? intestazione + corpo : null;
+}
+
+// ---------- 4. avvisi rene/farmaci ----------
+function avvisiReneFarmaci(p, idPaziente){
+  if(typeof mdcValutaRene !== 'function' || typeof FARMACI_DB === 'undefined') return [];
+  const giorni = diarioGiorniPaziente(p, idPaziente);
+  const oggi = giorni.length && giorni[giorni.length - 1].giorno === chiaveGiorno(Date.now()) ? giorni[giorni.length - 1].testo : '';
+  if(!oggi) return [];
+  const r = mdcValutaRene(idPaziente, oggi);
+  if(r.vfg === null || r.vfg === undefined) return [];
+  let terapia = oggi;
+  try{ const rec = loadRicoveri().find(x => x.esameObiettivoPatientId === idPaziente); if(rec && rec.campi) terapia += '\n' + (rec.campi.farmacologica || ''); } catch(e){}
+  terapia = terapia.toLowerCase();
+  const nomi = Object.keys(FARMACI_DB).concat(Object.keys(FARMACI_ALIAS || {}));
+  const visti = new Set(), out = [];
+  nomi.forEach(n => {
+    const chiave = (FARMACI_ALIAS && FARMACI_ALIAS[n]) || n;
+    const def = FARMACI_DB[chiave];
+    if(!def || !def.fasce || visti.has(chiave)) return;
+    if(!new RegExp(String.raw`\b` + n + String.raw`\w*`, 'i').test(terapia)) return;
+    const fasce = def.fasce;
+    const i = fasce.findIndex(f => r.vfg >= f.min && r.vfg < f.max);
+    if(i <= 0) return; // prima fascia (la più alta) = nessun aggiustamento
+    visti.add(chiave);
+    out.push({ chiave, nome: def.nome.replace(/\s*\(.*\)$/, ''), vfg: r.vfg, fascia: fasce[i].label });
+  });
+  return out;
+}
+
+// riga di "etichette" sotto il titolo del diario: antibiotici, richieste in
+// sospeso (✓ per chiuderle) e avvisi rene/farmaci
+function rigaAiutiDiario(p, id){
+  const atb = antibioticiInCorso(p, id), ric = richiesteInSospeso(p, id), ren = avvisiReneFarmaci(p, id);
+  if(!atb.length && !ric.length && !ren.length) return null;
+  const riga = document.createElement('div');
+  riga.className = 'diario-aiuti';
+  // etichetta dell'antibiotico con i giorni; dal 7° giorno diventa un avviso
+  // arancione, dal 14° rosso
+  atb.forEach(a => {
+    const c = document.createElement('span');
+    c.className = 'aiuto atb' + (a.livello === 2 ? ' liv2' : a.livello === 1 ? ' liv1' : '');
+    c.textContent = (a.livello ? '⚠ ' : '') + a.etichetta;
+    c.title = a.livello === 2 ? 'Oltre 14 giorni di antibiotico: valutare sospensione' : a.livello === 1 ? '7 giorni di antibiotico: valutare durata o de-escalation' : 'Giorni di terapia antibiotica';
+    riga.appendChild(c);
+  });
+  ric.forEach(r => {
+    const c = document.createElement('span');
+    c.className = 'aiuto richiesta';
+    c.title = 'Richiesta ancora senza esito — tocca ✓ se fatta';
+    c.innerHTML = `<span class="r">${aggConsEsc(r.testo)}</span> <span class="gg">${r.giorni ? r.giorni + ' g' : 'oggi'}</span> <span class="ok">✓</span>`;
+    c.querySelector('.ok').onclick = (e) => { e.stopPropagation(); chiudiRichiesta(id, r); renderRiepilogo(); };
+    riga.appendChild(c);
+  });
+  ren.forEach(a => {
+    const c = document.createElement('span');
+    c.className = 'aiuto rene';
+    c.textContent = `⚠ ${a.nome}: VFG ${String(a.vfg).replace('.', ',')}`;
+    c.title = `Fascia ${a.fascia}: dose da aggiustare — tocca per la scheda`;
+    c.onclick = () => apriFarmaco(a.chiave, '');
+    riga.appendChild(c);
+  });
+  return riga;
+}
+
 function renderRiepilogo(){
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
@@ -8383,6 +8674,25 @@ function renderRiepilogo(){
         rightWrap.appendChild(isolamentoBadge);
       }
     }
+    // "-> esami": aggiunge alla riga degli esami di oggi i valori dell'ultimo
+    // diario precedente ("Hb 121 -> 114"); compare solo se c'è qualcosa da fare
+    if(!diariMostraIeri){
+      const rigaOggi = rigaEsami(soloAggiunte(testo));
+      const nuova = rigaOggi ? rigaEsamiConAndamento(p, id, rigaOggi) : null;
+      if(nuova){
+        const b = document.createElement('button');
+        b.className = 'copia-btn';
+        b.textContent = '-> esami';
+        b.title = 'Aggiungi i valori precedenti agli esami di oggi';
+        b.onclick = () => {
+          const r = rigaEsami(body.value);
+          const n2 = r ? rigaEsamiConAndamento(p, id, r) : null;
+          if(n2){ body.value = body.value.replace(r, n2); body.dispatchEvent(new Event('input', { bubbles:true })); }
+          b.remove();
+        };
+        rightWrap.appendChild(b);
+      }
+    }
     rightWrap.appendChild(copiaBtn);
     titleRow.appendChild(rightWrap);
 
@@ -8441,6 +8751,8 @@ function renderRiepilogo(){
     });
 
     block.appendChild(titleRow);
+    const aiuti = rigaAiutiDiario(p, id);
+    if(aiuti) block.appendChild(aiuti);
     const righeIeri = diarioRigheDiIeri(p);
     if(righeIeri.size){
       const wrap = document.createElement('div');
@@ -8801,6 +9113,16 @@ function aggConsDestinazione(extra){
 }
 
 function renderAggiornaConsegne(container, entries){
+  // giorno prima di un festivo (venerdì, vigilie): consegne complete
+  const domani = new Date(); domani.setDate(domani.getDate() + 1);
+  const prefestivo = eFestivo(domani) && !eFestivo(new Date());
+  if(prefestivo){
+    const avviso = document.createElement('div');
+    avviso.className = 'note-box';
+    avviso.style.marginBottom = '10px';
+    avviso.textContent = 'Domani è festivo: consegne complete per tutti i letti, con richieste ancora in sospeso e giorni di antibiotico.';
+    container.appendChild(avviso);
+  }
 
   const scroll = document.createElement('div');
   scroll.className = 'agg-cons-scroll';
@@ -8815,8 +9137,23 @@ function renderAggiornaConsegne(container, entries){
     const sep = testo.indexOf('\n\n');
     const extra = sep === -1 ? '' : testo.slice(sep + 2);
     // le righe identiche a ieri sono già in consegna (che si aggiorna giorno
-    // per giorno): sempre escluse
-    const { testo: sintesi, esami } = aggConsSintesi(extra, diarioRigheDiIeri(p), false);
+    // per giorno): escluse — tranne il giorno prima di un festivo, quando
+    // le consegne del weekend vanno scritte complete
+    let { testo: sintesi, esami } = aggConsSintesi(extra, diarioRigheDiIeri(p), prefestivo);
+    // antibiotici con i giorni: "Ceftriaxone" → "Ceftriaxone 5 gg"; nel
+    // prefestivo, se non citati, si aggiungono come voce a sé
+    antibioticiInCorso(p, id).forEach(a => {
+      const re = ANTIBIOTICI.find(x => x[0] === a.nome)[1];
+      const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)(?!\s*gg?\s?\d)`, 'i');
+      if(reG.test(sintesi)) sintesi = sintesi.replace(reG, a.etichetta);
+      else if(prefestivo) sintesi += (sintesi ? '\n' : '') + '- ' + a.etichetta;
+    });
+    // prefestivo: anche le richieste ancora senza esito (in giallo)
+    if(prefestivo){
+      richiesteInSospeso(p, id).forEach(r => {
+        if(!sintesi.toLowerCase().includes(r.testo.toLowerCase())) sintesi += (sintesi ? '\n' : '') + '- ' + r.testo;
+      });
+    }
     const dEsami = aggConsDataEsami(extra);
     const dDim = aggConsDataDimissione(extra);
 
