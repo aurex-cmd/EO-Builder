@@ -785,6 +785,8 @@
   .inline-fields{ display:flex; flex-wrap:wrap; gap:11px; align-items:center; }
   .field{ display:flex; align-items:center; gap:7px; }
   .field label{ font-size:12.5px; color:var(--ink-dim); }
+  .field .unita-dopo{ font-size:12.5px; color:var(--ink-dim); }
+  #respiro-campo-altro input{ width:150px; }
   input[type=number], input[type=text]{
     background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
     border-radius:10px; padding:8px 10px; font-size:13px;
@@ -2170,9 +2172,11 @@
     <div class="chips" id="respiro-o2"></div>
     <div id="respiro-o2-dettagli" style="display:none;">
       <div class="inline-fields" style="margin-top:6px;">
-        <div class="field"><label>L/min (NC/MS/MR)</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
-        <div class="field"><label>FiO2 % (MV)</label><input type="number" id="respiro-fio2" min="0" max="100"></div>
-        <div class="field"><label>altro</label><input type="text" id="respiro-altro" placeholder="es. Venturi 31%"></div>
+        <!-- si vede solo il campo che serve: L/min per NC/MS/MR, FiO2 per
+             MV, un campo libero "O2/flusso" per HFNC -->
+        <div class="field" id="respiro-campo-litri"><label>L/min</label><input type="number" id="respiro-litri" min="0" step="0.5"></div>
+        <div class="field" id="respiro-campo-fio2"><label>FiO2 %</label><input type="number" id="respiro-fio2" min="0" max="100"></div>
+        <div class="field" id="respiro-campo-altro"><input type="text" id="respiro-altro" placeholder="O2/flusso"></div>
       </div>
     </div>
   </div>
@@ -2189,7 +2193,7 @@
     <!-- TC sulla stessa riga di Apiretica/Febbrile -->
     <div class="inline-fields">
       <div class="chips" id="temp-chips"></div>
-      <div class="field"><label>TC °C</label><input type="number" id="temp-valore" step="0.1"></div>
+      <div class="field field-temp"><label>TC</label><input type="number" id="temp-valore" step="0.1"><span class="unita-dopo">°C</span></div>
       <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
   </div>
@@ -11116,7 +11120,7 @@ const OPT = {
     {value:'MS', label:'in MS'},
     {value:'MR', label:'in MR'},
     {value:'MV', label:'in MV'},
-    {value:'ALTRO', label:'altro'}
+    {value:'HFNC', label:'in HFNC'}
   ],
   temp: [
     {value:'apiretico', m:'Apiretico', f:'Apiretica'},
@@ -11412,7 +11416,14 @@ function renderAll(){
 
   renderRespiroTipo();
   renderSingle('respiro-o2', OPT.respiroO2, ()=>state.respiro.o2, v=>state.respiro.o2=v);
-  document.getElementById('respiro-o2-dettagli').style.display = state.respiro.o2 !== 'AA' ? '' : 'none';
+  {
+    const o2 = state.respiro.o2;
+    const litri = ['NC','MS','MR'].includes(o2), fio2 = o2 === 'MV', libero = o2 === 'HFNC' || o2 === 'ALTRO';
+    document.getElementById('respiro-o2-dettagli').style.display = (litri || fio2 || libero) ? '' : 'none';
+    document.getElementById('respiro-campo-litri').style.display = litri ? '' : 'none';
+    document.getElementById('respiro-campo-fio2').style.display = fio2 ? '' : 'none';
+    document.getElementById('respiro-campo-altro').style.display = libero ? '' : 'none';
+  }
   // "PV stabili" in coda ai chip dell'ossigenoterapia, sulla stessa riga di
   // "altro": renderSingle svuota il contenitore a ogni aggiornamento, quindi
   // il chip si ricrea qui ogni volta (sempre visibile, qualunque O2)
@@ -11644,7 +11655,8 @@ function composeRespiro(r){
   else if(r.o2 === 'MS') o2text = r.litri ? `in MS ${r.litri}L/min` : 'in MS';
   else if(r.o2 === 'MR') o2text = r.litri ? `in MR ${r.litri}L/min` : 'in MR';
   else if(r.o2 === 'MV') o2text = r.fio2 ? `in MV FiO2 ${r.fio2}%` : 'in MV';
-  else if(r.o2 === 'ALTRO') o2text = (r.altro || 'in ossigenoterapia');
+  else if(r.o2 === 'HFNC') o2text = r.altro ? `in HFNC ${r.altro}` : 'in HFNC';
+  else if(r.o2 === 'ALTRO') o2text = (r.altro || 'in ossigenoterapia'); // schede salvate prima di HFNC
   // r.o2 === '' (nessuna modalità selezionata): o2text resta vuota, non si
   // inventa più "in ossigenoterapia" di default
   // niente più segnaposto "_L/min"/"_%" quando il valore non è stato
