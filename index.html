@@ -7196,6 +7196,7 @@ function aggiornaVitaleLetto(nome, campo, valore){
   if(entry[1].state.outputEsameManuale){
     const vecchioRespiro = composeRespiro(entry[1].state.respiro);
     entry[1].state.respiro[campo] = valore;
+    applicaRegolaTemperatura(entry[1].state.respiro);
     const nuovoRespiro = composeRespiro(entry[1].state.respiro);
     if(entry[1].state.outputEsameManuale.includes(vecchioRespiro)){
       entry[1].state.outputEsameManuale = entry[1].state.outputEsameManuale.replace(vecchioRespiro, nuovoRespiro);
@@ -7204,10 +7205,33 @@ function aggiornaVitaleLetto(nome, campo, valore){
     // lasciamo il testo manuale com'è, come in aggiornaVitale()
   } else {
     entry[1].state.respiro[campo] = valore;
+    applicaRegolaTemperatura(entry[1].state.respiro);
   }
 
   entry[1].savedAt = Date.now();
   savePatients(patients);
+}
+
+// TC > 37.5 → "Febbrile" selezionato da solo (tempAuto ricorda che l'ha
+// scelto l'app). Se poi la TC scende a ≤ 37.5 o si cancella, e Febbrile
+// era automatico, si torna ad Apiretico. Un click sul tag annulla
+// l'automatismo. La fascia 37.1-37.5 ("subpiretico") non tocca i tag: la
+// gestisce composeRespiro nel testo. Ritorna true se ha cambiato il tag
+function valoreTC(r){
+  const v = parseFloat(String((r && r.tempValore) || '').replace(',', '.'));
+  return isNaN(v) ? null : v;
+}
+function applicaRegolaTemperatura(r){
+  if(!r) return false;
+  const v = valoreTC(r);
+  if(v !== null && v > 37.5){
+    if(r.temp !== 'febbrile'){ r.temp = 'febbrile'; r.tempAuto = true; return true; }
+    return false;
+  }
+  if(r.tempAuto && r.temp === 'febbrile'){
+    r.temp = 'apiretico'; r.tempAuto = false; return true;
+  }
+  return false;
 }
 
 // i valori "vuoti" dei parametri vitali con cui si riparte quando cambia
@@ -11762,7 +11786,7 @@ function renderAll(){
     chipPvStabili.classList.toggle('active', state.respiro.pvStabili);
     chipPvStabili.onclick = () => { state.respiro.pvStabili = !state.respiro.pvStabili; update(); };
   }
-  renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>state.respiro.temp=v);
+  renderSingle('temp-chips', OPT.temp, ()=>state.respiro.temp, v=>{ state.respiro.temp = v; state.respiro.tempAuto = false; });
 
   renderSingle('cuore-ritmo', OPT.cuoreRitmo, ()=>state.cuore.ritmo, v => {
     state.cuore.ritmo = v;
@@ -12019,7 +12043,11 @@ function composeRespiro(r){
   if(s) s += '.';
 
   const tempOpt = OPT.temp.find(o => o.value === r.temp);
-  if(tempOpt){
+  const tc = valoreTC(r);
+  if(tc !== null && tc >= 37.1 && tc <= 37.5){
+    // 37.1-37.5: "Subpiretico, TC 37.3°C." qualunque tag sia cliccato (o nessuno)
+    s += ` ${g({ m:'Subpiretico', f:'Subpiretica' })}, TC ${r.tempValore}°C.`;
+  } else if(tempOpt){
     // "Febbrile" senza il valore scritto resta una frase completa da sola,
     // niente più segnaposto "TC _°C."
     s += (r.temp === 'febbrile' && r.tempValore) ? ` ${g(tempOpt)}, TC ${r.tempValore}°C.` : ` ${g(tempOpt)}.`;
@@ -12739,6 +12767,7 @@ function refreshUI(discardManuale = true){
 // resto — comprese eventuali modifiche manuali fatte altrove.
 function aggiornaVitale(){
   syncInputsToState();
+  applicaRegolaTemperatura(state.respiro);
   renderAll();
   const nuovoAuto = composeReferto();
   const nuovoRespiro = composeRespiro();
