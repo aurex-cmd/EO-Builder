@@ -3563,11 +3563,23 @@ function formattaStrumentale(testo){
 
 // elenco patologie (separate da "-" e/o a capo) -> unica riga separata da virgole
 function formattaAnamnesiRemota(testo){
+  return unisciVociSuUnaRiga(testo);
+}
+
+// elenco puntato -> una riga con le virgole: "- FA\n-BPCO\n• IRC" ->
+// "FA, BPCO, IRC". Toglie solo i trattini/pallini "da elenco" (a inizio
+// riga o subito dopo una virgola, con o senza spazio dopo); quelli dentro
+// le parole o i numeri restano: "2-3 anni", "post-operatorio"
+function unisciVociSuUnaRiga(testo){
   if(!testo) return '';
-  return testo.split(/[-\n]/)
-    .map(v => v.trim())
+  return testo.replace(/\r/g, '').split(/\n+/)
+    .map(r => r.replace(/^\s*[-–—•]+\s*/, '').trim().replace(/[,;]\s*$/, ''))
     .filter(Boolean)
-    .join(', ');
+    .join(', ')
+    .replace(/(^|,)\s*[-–—•]+\s*(?=\S)/g, (m, p) => p ? ', ' : '')
+    .replace(/\s*,\s*(,\s*)+/g, ', ')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
 }
 
 // elenco farmaci incollato con spaziature/virgole incoerenti (es. "cardioASA ,
@@ -3589,17 +3601,30 @@ function formattaElencoConVirgole(testo){
 // Il vero confine tra un farmaco e il successivo è il trattino puntato:
 // - si eliminano tutti i trattini puntati (a inizio riga o dopo virgola)
 // - tutto il testo va in minuscolo, TRANNE "UI" (unità internazionali) che
-//   resta sempre maiuscolo
+//   resta sempre maiuscolo, e l'iniziale del nome del farmaco, che diventa
+//   maiuscola: "RAMIPRIL 5 MG CP" -> "Ramipril 5 mg cp"
 // - gli asterischi (es. COSOPT*COLL) diventano uno spazio
+// Il nome del farmaco è la prima parola di ogni voce: a inizio testo, dopo
+// un trattino/pallino da elenco, o dopo una virgola se la parola che segue
+// era scritta tutta in maiuscolo e lunga almeno 4 lettere (così "ore 8, ORE
+// 20" non diventa "Ore 20")
 function formattaAnamnesiFarmacologica(testo){
   if(!testo) return '';
-  return testo
-    .replace(/(?:^|[,\n])\s*-\s+/g, (m, offset) => offset === 0 ? '' : ', ')
+  const M = '\u0001'; // segnaposto "qui inizia un farmaco"
+  let t = testo
+    // trattino "da elenco" anche senza spazio dopo ("-ramipril"), ma solo a
+    // inizio riga o dopo una virgola: "2-3 volte" resta com'è
+    .replace(/(?:^|[,\n])\s*[-–—•]+\s*(?=\S)/g, (m, offset) => offset === 0 ? M : ', ' + M)
+    .replace(/,\s*(?=[A-ZÀ-Ý]{4,}\b)/g, ', ' + M);
+  if(!t.trimStart().startsWith(M)) t = M + t.trimStart();
+  return t
     .replace(/\*/g, ' ')
     .replace(/[ \t]+/g, ' ')
     .trim()
     .toLowerCase()
-    .replace(/\bui\b/g, 'UI');
+    .replace(/\bui\b/g, 'UI')
+    .replace(new RegExp(M + '\\s*(\\S)', 'g'), (m, c) => c.toUpperCase())
+    .split(M).join('');
 }
 
 function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
@@ -4671,7 +4696,13 @@ function renderRicoveroSingoloBox(){
 
     const editable = document.createElement('div');
     editable.className = 'admit-editable';
-    editable.contentEditable = 'true';
+    // "plaintext-only": Invio inserisce un vero a capo nel testo invece di
+    // un <div> (che textContent perdeva, incollando tutte le righe — es. i
+    // Problemi attivi finivano su una sola riga e solo il primo andava in
+    // grassetto). Dove non è supportato si ripiega su 'true' e si legge
+    // con innerText, che converte comunque <div>/<br> in a capo
+    try { editable.contentEditable = 'plaintext-only'; } catch(e) { editable.contentEditable = 'true'; }
+    if(editable.contentEditable !== 'plaintext-only') editable.contentEditable = 'true';
     editable.setAttribute('spellcheck', 'true');
     editable.setAttribute('autocorrect', 'on');
     editable.setAttribute('autocapitalize', 'sentences');
@@ -4680,6 +4711,16 @@ function renderRicoveroSingoloBox(){
     if(campo === 'problemi'){
       editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
     }
+    // APR e farmaci restano su una riga sola, come li compone il modulo:
+    // un a capo scritto nel box diventa ", " (alla prossima uscita dal box
+    // si vede già unito). Gli altri box (Problemi attivi, diario, ecc.)
+    // tengono le righe
+    const SU_UNA_RIGA = (campo === 'remota' || campo === 'farmacologica');
+    const testoDelBox = () => {
+      const t = editable.innerText.replace(/\r/g, '').replace(/\n$/, '');
+      if(campo === 'farmacologica' && t.includes('\n')) return formattaAnamnesiFarmacologica(t).replace(/\s*\n+\s*/g, ', ');
+      return SU_UNA_RIGA ? unisciVociSuUnaRiga(t) : t;
+    };
     let debounceSalvataggio = null;
     const salvaSubito = () => {
       clearTimeout(debounceSalvataggio);
@@ -4701,7 +4742,7 @@ function renderRicoveroSingoloBox(){
       // aggiorna SUBITO l'oggetto in memoria (leggero: nessuna lettura da
       // disco, nessuna rete) — così i pulsanti Copia consegna/Esporta/ecc.
       // qui sotto vedono subito il testo aggiornato
-      rec[campo] = editable.textContent;
+      rec[campo] = testoDelBox();
       if(rec.copiati && rec.copiati[campo]){
         rec.copiati[campo] = false;
         sub.classList.remove('copiato');
@@ -4730,7 +4771,10 @@ function renderRicoveroSingoloBox(){
     // se si esce dal box (tocco altrove, es. per cliccare "Copia consegna")
     // prima che passino i 500ms, il salvataggio parte comunque subito,
     // così non si perde nulla
-    editable.addEventListener('blur', salvaSubito);
+    editable.addEventListener('blur', () => {
+      if(SU_UNA_RIGA && editable.innerText.includes('\n')) editable.textContent = rec[campo];
+      salvaSubito();
+    });
     // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
     // invece di usare il pulsante "Copia", il browser porterebbe con sé
     // anche lo sfondo scuro e la formattazione del box: qui forziamo la
@@ -4934,12 +4978,13 @@ function paraConEtichetta(etichetta, testo, opzioni){
 
 // paragrafo puntato (trattino + tab, con indentazione a bandiera: non usa
 // la numerazione automatica di Word per restare più semplice e robusto)
-function paraPuntato(testoGrassetto, testoResto){
+function paraPuntato(testoGrassetto, testoResto, sep = ':'){
   const runs = [];
+  const sepTesto = sep === ':' ? ':' : ' ' + sep;
   if(testoGrassetto){
     runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">-\t${escapeXml(testoGrassetto)}</w:t></w:r>`);
     if(testoResto){
-      runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">:</w:t></w:r>`);
+      runs.push(`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/></w:rPr><w:t xml:space="preserve">${escapeXml(sepTesto)}</w:t></w:r>`);
     }
   }
   if(testoResto){
@@ -4984,9 +5029,12 @@ function parseProblemiAttivi(testo){
     .map(riga => riga.trim().replace(/^-+\s*/, '')) // toglie un eventuale "-" già digitato
     .filter(Boolean)
     .map(riga => {
-      const idx = riga.indexOf(':');
-      if(idx === -1) return { forte: riga, resto: '' };
-      return { forte: riga.slice(0, idx).trim(), resto: riga.slice(idx + 1).trim() };
+      // in grassetto ciò che sta prima del primo ":" oppure della prima
+      // freccia ("->", "—>", "–>", "→"); il separatore viene conservato
+      const m = riga.match(/\s*(:|[-—–]+>|→)\s*/);
+      if(!m) return { forte: riga, resto: '', sep: ':' };
+      const sep = m[1] === ':' ? ':' : m[1];
+      return { forte: riga.slice(0, m.index).trim(), resto: riga.slice(m.index + m[0].length).trim(), sep };
     });
 }
 
@@ -5037,7 +5085,7 @@ function costruisciTabellaConsegna(rec){
   // (una riga per punto, "Etichetta: dettaglio") / Dieta-Mob-MdS (a destra,
   // da compilare)
   const puntiProblemi = [paraConEtichetta('Problemi attivi: ', '')];
-  d.problemi.forEach(p => puntiProblemi.push(paraPuntato(p.forte, p.resto)));
+  d.problemi.forEach(p => puntiProblemi.push(paraPuntato(p.forte, p.resto, p.sep)));
   if(puntiProblemi.length === 1) puntiProblemi.push(paraPuntato('', ''));
 
   righe.push(rigaTabella([
@@ -5089,8 +5137,8 @@ function etichettaHtml(etichetta, testo, valoreGrassetto){
   const txt = valoreGrassetto && txtEsc ? `<b>${txtEsc}</b>` : txtEsc;
   return `<div>${lab}${lab && txt ? ' ' : ''}${txt}</div>`;
 }
-function puntoHtml(grassetto, resto){
-  const g = grassetto ? `<b>${escapeHtml(grassetto)}</b>${resto ? ':' : ''}` : '';
+function puntoHtml(grassetto, resto, sep = ':'){
+  const g = grassetto ? `<b>${escapeHtml(grassetto)}</b>${resto ? (sep === ':' ? ':' : ' ' + escapeHtml(sep)) : ''}` : '';
   const r = resto ? ' ' + escapeHtml(resto) : '';
   return `<div style="margin-left:14px;">- ${g}${r}</div>`;
 }
@@ -5113,7 +5161,7 @@ function costruisciTabellaConsegnaHtml(rec){
   righe.push(`<tr>${celleHtml(etichettaHtml('Programma: ', d.programma), null, false, 4)}</tr>`);
 
   let problemiHtml = etichettaHtml('Problemi attivi: ', '');
-  d.problemi.forEach(p => { problemiHtml += puntoHtml(p.forte, p.resto); });
+  d.problemi.forEach(p => { problemiHtml += puntoHtml(p.forte, p.resto, p.sep); });
   const dietaHtml = etichettaHtml('Dieta: ', '') + etichettaHtml('Mob: ', '') + etichettaHtml('MdS: ', '');
   righe.push(`<tr>${celleHtml(problemiHtml, 61, false, 2)}${celleHtml(dietaHtml, 39, false, 2)}</tr>`);
 
