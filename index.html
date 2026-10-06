@@ -912,7 +912,7 @@
   }
   #output-card h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
   textarea#output{
-    width:100%; min-height:180px; resize:vertical;
+    width:100%; min-height:180px; resize:none; overflow:hidden;
     background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink);
     border-radius:13px; padding:13px; font-family:var(--font-mono);
     font-size:13px; line-height:1.65; box-shadow:var(--clay-in-sm);
@@ -13084,6 +13084,34 @@ function correggiItaliano(testo){
 // convenzioni ortografiche italiane che l'autocorrect di sistema spesso
 // non conosce (né/perché/più/già con l'accento giusto, "un po'" con
 // l'apostrofo, ecc.)
+// box "Esame obiettivo" (#output): si allunga sempre quanto il testo, così a
+// fine esame si legge tutto senza scorrere dentro il box. Il testo viene
+// scritto da molti punti (renderAll, diario, score, farmaci...): invece di
+// toccarli tutti, si intercetta l'assegnazione di .value su questo campo
+(function(){
+  const out = document.getElementById('output');
+  if(!out) return;
+  const desc = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+  const adatta = () => {
+    if(out.offsetParent === null) return; // nascosto: scrollHeight 0
+    autoResizeTextarea(out);
+    // + i bordi (box-sizing border-box), sennò l'ultima riga resta tagliata di 2px
+    out.style.height = (out.scrollHeight + out.offsetHeight - out.clientHeight) + 'px';
+  };
+  Object.defineProperty(out, 'value', {
+    configurable:true,
+    get(){ return desc.get.call(this); },
+    set(v){ desc.set.call(this, v); requestAnimationFrame(adatta); }
+  });
+  out.addEventListener('input', adatta);
+  // quando il box ricompare o cambia larghezza (rotazione, zoom testo)
+  let larghezza = 0;
+  if(window.ResizeObserver) new ResizeObserver(() => {
+    if(out.clientWidth !== larghezza){ larghezza = out.clientWidth; adatta(); }
+  }).observe(out);
+  adatta();
+})();
+
 document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea, #output').forEach(el => {
   el.addEventListener('blur', () => {
     const corretto = correggiItaliano(el.value);
