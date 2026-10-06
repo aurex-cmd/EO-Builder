@@ -1156,7 +1156,10 @@
     flex:1 1 0; padding:8px 4px; border:none; border-radius:9px; background:transparent; cursor:pointer;
     font-family:var(--font-body); font-size:13.5px; font-weight:600; color:var(--ink-dim);
   }
-  .diari-seg button.attivo{ background:var(--signal); color:var(--on-signal); }
+  /* stesso oro di "Consegne →" (#riepilogo-view .btn.primary) */
+  .diari-seg button.attivo{ background:var(--folder); color:var(--on-folder); }
+  /* Ieri resta nel verde di prima */
+  .diari-seg button#diari-seg-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
   .diari-fondo{ display:flex; gap:8px; margin-top:14px; }
   .diari-fondo .btn{ flex:1 1 0; }
   /* Strumenti: etichetta di gruppo */
