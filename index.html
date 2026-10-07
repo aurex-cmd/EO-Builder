@@ -17,6 +17,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
+    /* colore dei letti consegnati (bordo, velo, pulsante Consegne WE) */
+    --consegna:#4a9fd9; --consegna-rgb:74,159,217;
     --page:#eef1f3;
     --page-line:#d7dde1;
     --page-ink:#12181e;
@@ -163,7 +165,13 @@
     header .sub{ font-size:11.5px; }
     header h1{ font-size:22px; }
   }
-  .bed-grid{ display:flex; flex-wrap:wrap; column-gap:8px; row-gap:10px; }
+  /* griglia che occupa tutta la larghezza: le colonne (min. 52px) si
+     allargano quanto basta per lasciare a destra lo stesso margine che c'è
+     a sinistra, invece di un avanzo vuoto in fondo alla fila */
+  .bed-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); column-gap:8px; row-gap:10px; }
+  /* allargandosi, il letto cresce anche in altezza: stesse proporzioni
+     di prima (52×38), numero sempre centrato */
+  .bed-grid > .bed-tile{ min-width:0; aspect-ratio:52 / 38; display:flex; align-items:center; justify-content:center; padding-top:0; padding-bottom:0; }
   .appoggio-aggiungi-riga{ display:flex; justify-content:flex-end; margin-top:8px; }
   .appoggio-aggiungi{ width:26px; height:26px; border-radius:50%; border:1px dashed var(--clay-border); background:transparent;
     color:var(--ink-dim); font-size:16px; line-height:1; cursor:pointer; opacity:.55; transition:.15s; padding:0; }
@@ -371,7 +379,7 @@
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
   .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
   .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
-  .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.35); }
+  .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
   .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
   .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
     font-size:11px; font-weight:700; color:#111; font-family:var(--font-mono); }
@@ -381,13 +389,30 @@
   .diario-consegna-pallino.c{ background:#e08cc0; }
   .diario-consegna-pallino.info{ background:#4a9fd9; color:#fff; font-style:italic; }
   .diario-consegna-testo{ margin:2px 0 8px; white-space:pre-wrap; font-size:13px; }
-  .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 10px rgba(74,159,217,.4); }
-  /* paziente critico: alone viola scuro (diverso dal lilla dei letti fatti
-     da pochi giorni); con anche una consegna: azzurro dentro, viola fuori */
-  .bed-tile.critico{ box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.65); }
-  .bed-tile.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 0 4px #6a1fb0, 0 0 12px rgba(106,31,176,.6); }
+  /* letto consegnato (Reparto e riquadri-letto): bordo e alone azzurri,
+     sfondo vuoto, numero bianco — "da fare". Una volta scritto l'esame
+     obiettivo di oggi si riempie di teal ("fatto"), col bordo azzurro */
+  .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.4); }
+  .bed-tile.ha-consegne:not(.occupied){ border-color:transparent; background-color:transparent; color:var(--ink); }
+  /* numero sempre bianco anche nei letti grigi (visti da più di 3 giorni)
+     e nei critici */
+  .bed-tile.occupied-vecchio, .bed-tile.critico{ color:var(--ink); }
+  /* il critico consegnato non prende lo sfondo vuoto dei consegnati */
+  .bed-tile.critico.ha-consegne:not(.occupied){ background-color:var(--panel-3); }
+  .bed-tile.critico.ha-consegne.occupied-vecchio{ background-color:var(--line-soft); }
+  .bed-tile.critico.ha-consegne.occupied-old{ background-color:var(--violet-dim); }
+  /* paziente critico (consegnato o no, ha la precedenza): bordo e alone
+     viola scuro + bande diagonali viola, come quelle blu della dimissione */
+  .bed-tile.critico, .bed-tile.critico.ha-consegne:not(.occupied){
+    border:1px solid #6a1fb0;
+    box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.65);
+    background-image:repeating-linear-gradient(135deg, rgba(160,90,240,.32) 0 4px, transparent 4px 10px);
+  }
   .referto-block.critico{ box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.5); }
-  .referto-block.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #4a9fd9, 0 0 0 4px #6a1fb0, 0 0 12px rgba(106,31,176,.45); }
+  .referto-block.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.45), inset 0 0 16px rgba(160,90,240,.45); }
+  /* dimissione di OGGI: bande diagonali nel blu della "D" (la dimissione di
+     domani ha solo il pallino D); per un critico restano le bande viola */
+  .bed-tile.dimissione-oggi:not(.critico){ background-image:repeating-linear-gradient(135deg, rgba(74,159,217,.3) 0 4px, transparent 4px 10px); }
   .bed-tile-dimissione-badge{
     position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
     border-radius:50%; background:#4a9fd9; border:2px solid var(--panel-2);
@@ -1319,6 +1344,15 @@
   .diari-seg button.attivo{ background:var(--folder); color:var(--on-folder); }
   /* Ieri resta nel verde di prima */
   .diari-seg button#diari-seg-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
+  /* festivo con consegne analizzate: "Consegne WE" in blu (lo stesso
+     azzurro dell'alone dei letti consegnati in Reparto) */
+  .diari-seg button.we{ color:var(--consegna); }
+  .diari-seg button.we.attivo{ background:var(--consegna); color:#fff; }
+  .cons-we-barra{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .cons-we-barra .group-label{ margin:0; }
+  .cons-we-testo{ font-size:13.5px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; }
+  .cons-we-critico{ display:inline-block; margin-bottom:4px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:#fff; background:#6a1fb0; padding:1px 7px; border-radius:6px; }
   .diari-fondo{ display:flex; gap:8px; margin-top:14px; }
   .diari-fondo .btn{ flex:1 1 0; }
   /* Strumenti: etichetta di gruppo */
@@ -1431,6 +1465,25 @@
     padding:20px;
   }
   #isolamento-modal-overlay.show{ display:flex; }
+  .settori-label-riga{ display:flex; align-items:baseline; gap:6px; margin-bottom:7px; }
+  .settori-label-riga .group-label{ margin-bottom:0; }
+  /* discreto: una "i" (informazioni) piccola e tenue subito dopo il nome dei settori, senza
+     cerchio né ombra (la legenda serve di rado, non deve attirare l'occhio) */
+  .legenda-btn{
+    background:none; border:none; box-shadow:none; padding:8px 10px; margin:-8px -10px -8px -6px; cursor:pointer; align-self:center;
+    color:var(--ink-faint); font-family:var(--font-mono); font-size:11px; font-weight:600; line-height:1;
+    opacity:.7;
+  }
+  .legenda-btn:hover, .legenda-btn:active{ color:var(--signal); opacity:1; }
+  .legenda-btn svg{ width:13px; height:13px; display:block; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }
+  .legenda-btn svg .punto{ fill:currentColor; }
+  .legenda-sezione{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim); margin:12px 0 8px; font-weight:700; }
+  .legenda-sezione:first-child{ margin-top:0; }
+  .legenda-riga{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .legenda-demo{ width:92px; flex-shrink:0; display:flex; justify-content:center; padding:6px 0; }
+  .legenda-tile{ display:inline-block; pointer-events:none; min-width:46px; padding:8px 6px; }
+  .legenda-testo{ font-size:13.5px; line-height:1.4; color:var(--ink); }
+  .legenda-nota{ margin-top:6px; font-size:12.5px; color:var(--ink-dim); line-height:1.4; }
   #isolamento-modal{
     width:100%; max-width:400px; max-height:80vh; overflow-y:auto;
     background:var(--panel); border-radius:20px;
@@ -1843,7 +1896,10 @@
   </div>
 
   <div class="group">
-    <div class="group-label" id="settori-label">Settori</div>
+    <div class="settori-label-riga">
+      <div class="group-label" id="settori-label">Settori</div>
+      <button class="legenda-btn" onclick="apriLegendaReparto()" title="Legenda colori e pallini" aria-label="Legenda colori e pallini"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle class="punto" cx="12" cy="7.6" r="0.6"/></svg></button>
+    </div>
     <div class="settore-dots" id="settore-tabs"></div>
     <!-- reparti aggiunti per la guardia di un festivo (solo per oggi) -->
     <div id="settori-extra"></div>
@@ -2700,13 +2756,6 @@
   </div>
 </div>
 
-<div class="vitals-strip inline-fields" id="vitals-strip">
-  <div class="v pa"><label>PA</label><div class="pa-row"><input type="number" id="vs-pas" min="0" inputmode="numeric" placeholder="—"><span class="sep">/</span><input type="number" id="vs-pad" min="0" inputmode="numeric" placeholder="—"></div></div>
-  <div class="v spo2"><label>SpO₂</label><div class="val-row"><input type="number" id="vs-sat" min="0" max="100" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
-  <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="vs-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
-  <div class="v tc"><label>TC</label><input type="number" id="vs-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
-</div>
-
 <!-- OUTPUT -->
 <div class="card" id="output-card">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg> Esame obiettivo</h2>
@@ -3155,6 +3204,8 @@ async function cloudPullAll(){
     // ogni punto dell'app che chiama cloudPullAll, anche uno scritto in
     // futuro senza ricordarsi di questo problema.
     ultimoPullRiuscito = Date.now();
+    // pulizia del weekend: solo ora che le schede sono allineate al cloud
+    if(typeof pulisciSchedeWeekend === 'function') pulisciSchedeWeekend();
     // (prima bastava che la chiave ESISTESSE sul cloud per ricaricare la
     // scheda aperta: innocuo con un pull solo all'avvio, ma con quelli
     // automatici qui sotto ridisegnerebbe il form a ogni rientro nell'app)
@@ -3291,10 +3342,16 @@ async function aggiornaStatoSync(){
 // rendering iniziale (che parte comunque dal localStorage, per restare
 // affidabile anche senza rete)
 (async function initSyncSession(){
-  if(!supabaseClient) return;
-  const { data } = await supabaseClient.auth.getUser();
+  // senza account la pulizia del weekend parte appena l'app è caricata,
+  // sui dati locali (con l'account la fa cloudPullAll dopo il pull)
+  const pulisciAlCaricamento = () => {
+    if(document.readyState === 'complete') pulisciSchedeWeekend();
+    else window.addEventListener('load', () => pulisciSchedeWeekend(), { once:true });
+  };
+  if(!supabaseClient){ pulisciAlCaricamento(); return; }
+  const { data } = await supabaseClient.auth.getUser().catch(() => ({ data:null }));
   const user = data && data.user;
-  if(!user) return;
+  if(!user){ pulisciAlCaricamento(); return; }
   await cloudPullAll();
   if(typeof refreshUI === 'function') refreshUI(false);
   if(typeof renderWardMap === 'function') renderWardMap();
@@ -3365,6 +3422,9 @@ document.addEventListener('focusout', () => {
   setTimeout(() => { if(ridisegnoInSospeso && !campoAttivo()) ridisegnaVisteDopoPull(); }, 300);
 });
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') pullAutomatico('rientro'); });
+// app lasciata aperta a cavallo del venerdì notte, senza account: la
+// pulizia del weekend parte al rientro (con l'account ci pensa il pull)
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && !ultimoPullRiuscito && typeof pulisciSchedeWeekend === 'function') pulisciSchedeWeekend(); });
 window.addEventListener('focus', () => pullAutomatico('rientro'));
 window.addEventListener('online', () => pullAutomatico('rete'));
 setInterval(() => pullAutomatico('timer'), 60000);
@@ -6902,6 +6962,43 @@ function apriIsolamentoModal(isoStato){
     html += '<ul class="isolamento-modal-dpi">' + dpi.map(d => `<li>${escapeHtml(d)}</li>`).join('') + '</ul>';
   }
   if(haClostridium(germe)) html += '<div class="isolamento-modal-nota">Lavaggio mani con acqua e sapone — il gel idroalcolico non basta sulle spore.</div>';
+  document.getElementById('isolamento-modal-titolo').textContent = 'Isolamento';
+  document.getElementById('isolamento-modal-corpo').innerHTML = html;
+  document.getElementById('isolamento-modal-overlay').classList.add('show');
+}
+// legenda della mappa Reparto: colori dei letti e significato dei pallini,
+// con dei letti d'esempio disegnati con le stesse classi della mappa vera
+// (così se cambia lo stile cambia anche qui). Riusa il riquadro
+// dell'isolamento, cambiando solo titolo e contenuto
+function apriLegendaReparto(){
+  const tile = (classi, badges = '') => `<span class="bed-tile legenda-tile ${classi}">12${badges}</span>`;
+  const badge = (classe, testo) => `<span class="${classe}">${testo}</span>`;
+  const spunta = '<span class="bed-tile-attiva-badge"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>';
+  const righe = (lista) => lista.map(([demo, testo]) => `<div class="legenda-riga"><div class="legenda-demo">${demo}</div><div class="legenda-testo">${testo}</div></div>`).join('');
+  let html = '<div class="legenda-sezione">Colore del letto</div>';
+  html += righe([
+    [tile(''), 'Letto libero (nessuna scheda)'],
+    [tile('occupied'), 'Esame obiettivo aggiornato <b>oggi</b>'],
+    [tile('occupied-old'), 'Aggiornato negli ultimi 3 giorni'],
+    [tile('occupied-vecchio'), 'Aggiornato più di 3 giorni fa'],
+    [tile('ha-consegne'), 'Bordo azzurro, vuoto: letto consegnato, ancora da scrivere'],
+    [tile('critico ha-consegne'), 'Bande e alone viola: paziente critico'],
+    [tile('occupied dimissione-oggi', '<span class="bed-tile-dimissione-badge">D</span>'), 'Bande blu: dimissione di oggi']
+  ]);
+  html += '<div class="legenda-sezione">Pallini</div>';
+  html += righe([
+    [tile('occupied', spunta), 'Diario copiato oggi'],
+    [tile('occupied', badge('bed-tile-esami-badge', 'E')), 'Esami di controllo programmati per domani'],
+    [tile('occupied', badge('bed-tile-dimissione-badge', 'D')), 'Dimissione domani (oggi: anche le bande blu)'],
+    [tile('occupied', badge('bed-tile-isolamento-badge arancione', 'i')), 'Isolamento da contatto e/o droplet'],
+    [tile('occupied', badge('bed-tile-isolamento-badge blu', 'i')), 'Isolamento aereo'],
+    [tile('occupied', badge('bed-tile-isolamento-badge rosso', 'i')), 'Isolamento contatto + droplet + aereo'],
+    [tile('occupied', badge('bed-tile-isolamento-badge verde', 'i')), 'Clostridium (acqua e sapone)'],
+    [tile('ha-consegne', ['V','E','S','C'].map(l => badge('bed-tile-consegna-badge ' + l.toLowerCase(), l)).join('')),
+      'Consegne da fare: <b>V</b> visita, <b>E</b> esami ematochimici, <b>S</b> esame strumentale, <b>C</b> esame colturale']
+  ]);
+  html += '<div class="legenda-nota">La × su un letto elimina la scheda (due tocchi per confermare). Tenendo premuto un pallino del settore (1,5 s) si svuota l\'intero settore.</div>';
+  document.getElementById('isolamento-modal-titolo').textContent = 'Legenda';
   document.getElementById('isolamento-modal-corpo').innerHTML = html;
   document.getElementById('isolamento-modal-overlay').classList.add('show');
 }
@@ -7415,6 +7512,8 @@ function renderWardMap(){
       dimissioneBadge.title = haDimissioneOggi(extraTesto) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       tile.appendChild(dimissioneBadge);
+      // oggi: anche le bande diagonali blu sul letto
+      if(haDimissioneOggi(extraTesto)) tile.classList.add('dimissione-oggi');
     }
     // pallino "i" (isolamento): resta ogni giorno finché il paziente è
     // ricoverato, indipendentemente dal fatto che oggi compaia o no la
@@ -7893,6 +7992,48 @@ function chiudiPaziente(){
   resetFormToDefaults();
   refreshUI();
   renderWardMap();
+}
+
+// PULIZIA DEL WEEKEND: nei festivi (sabato, domenica, festività) le schede
+// non toccate dall'ultimo giorno feriale in poi si eliminano da sole — esame
+// obiettivo e diari compresi: sono troppo vecchie per la guardia e il letto
+// può avere ormai un altro paziente. Restano le schede scritte l'ultimo
+// giorno feriale (es. venerdì) e quelle scritte durante il festivo stesso.
+// Come ultima attività conta la più recente tra esame obiettivo e ultimo
+// salvataggio (un diario scritto venerdì tiene la scheda anche se l'esame è
+// di martedì). Con l'account collegato parte solo DOPO una sincronizzazione
+// riuscita, così non si decide su una copia locale rimasta indietro;
+// l'eliminazione arriva poi agli altri dispositivi come una normale
+// "Elimina scheda" (vedi fondiSchedePazienti)
+function inizioUltimoFeriale(oggi){
+  const d = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+  for(let i = 0; i < 14; i++){
+    d.setDate(d.getDate() - 1);
+    if(!eFestivo(d)) return chiaveGiorno(d.getTime());
+  }
+  return chiaveGiorno(d.getTime());
+}
+function pulisciSchedeWeekend(){
+  const oggi = new Date();
+  if(!eFestivo(oggi)) return 0;
+  const limite = inizioUltimoFeriale(oggi);
+  const patients = loadPatients();
+  const daEliminare = Object.keys(patients).filter(id => {
+    const p = patients[id];
+    const ultima = Math.max(p.esameAggiornatoIl || 0, p.savedAt || 0);
+    return ultima && chiaveGiorno(ultima) < limite;
+  });
+  if(!daEliminare.length) return 0;
+  daEliminare.forEach(id => { delete patients[id]; });
+  savePatients(patients);
+  if(currentPatientId && daEliminare.includes(currentPatientId)){
+    chiudiPaziente();
+  } else if(typeof renderWardMap === 'function'){
+    renderWardMap();
+  }
+  if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
+  showToast(daEliminare.length === 1 ? 'Weekend: 1 scheda vecchia eliminata' : `Weekend: ${daEliminare.length} schede vecchie eliminate`);
+  return daEliminare.length;
 }
 
 // elimina la scheda direttamente dal riquadro del letto in Reparto, senza
@@ -8591,6 +8732,18 @@ function eCondizionale(frase){
   // terapia con morfina/midazolam o in pompa, SDO/lettera già fatte. (I
   // pazienti critici hanno invece un alone viola scuro — vedi eCritico)
   if(CONSEGNA_INFORMATIVA_RE.test(f) && !/\b(?:rivalut\w*|visit\w*|controll\w*|modul\w*|aument\w*|ridur\w*|riduc\w*|titol\w*|chiamare|avvisare|contattare|telefonare|sentire|vedere|vedi|vd)\b/i.test(f)) return true;
+  // condizione messa DOPO la richiesta ("emocolture se febbre", "Rx torace
+  // se desatura"): vale come "se febbre emo", a meno che prima del "se" ci
+  // sia già un'azione da fare comunque ("controllare se negativa", "vedi
+  // emocolture: se negative sospendere ATB") o che il "se" riguardi solo il
+  // fatto che l'esame non sia stato ancora fatto ("EE se non fatti")
+  const mSe = /\bse\b/i.exec(f);
+  if(mSe && mSe.index > 0){
+    const prima = f.slice(0, mSe.index), dopo = f.slice(mSe.index);
+    const azione = /\b(?:vedi|vd|vedere|controll\w*|ricontroll\w*|verific\w*|rivalut\w*|visit\w*|valut\w*|ripet\w*|richied\w*|eseguir\w*|fare|chiamare|avvisare|contattare|sentire)\b/i;
+    const nonAncoraFatto = /^se\s+non\s+(?:ancora\s+|gi[àa]\s+)?(?:fatt|eseguit|ripetut|pervenut|arrivat|disponibil|refertat)/i;
+    if(!azione.test(prima) && !nonAncoraFatto.test(dopo) && !CONSEGNA_VISITA_RE.test(f)) return true;
+  }
   return /^se\b/i.test(f) && !CONSEGNA_VISITA_RE.test(f);
 }
 // testo senza le frasi condizionate (per le lettere E/S/C)
@@ -8656,7 +8809,10 @@ function classificaConsegna(testo){
     S: categoriaValidaOggi(togliCondizionali(testo), '\\b(rx|tc|eco\\w*|rmn|risonanza\\w*)\\b'),
     // le indicazioni condizionate ("se febbre emo", "se dolore RX") non
     // accendono E/S/C — vedi togliCondizionali
-    C: categoriaValidaOggi(togliCondizionali(testo), '\\bemo(?!cromo)\\w*|\\buro\\w*|\\bantibiogramma\\w*|\\batb\\b|colt\\w*')
+    // "emo"/"emoc"/"emocolture" e "uro"/"urocoltura", ma non le parole che
+    // cominciano allo stesso modo (emodinamica, emorragia, emotrasfusione,
+    // emoglobina, emocromo, urologo/urologica...)
+    C: categoriaValidaOggi(togliCondizionali(testo), '\\bemo(?:c(?!romo)\\w*)?\\b|\\buro(?:c\\w*)?\\b|\\bantibiogramma\\w*|\\batb\\b|\\bcolt\\w*')
   };
 }
 
@@ -9435,8 +9591,28 @@ function renderRiepilogo(){
     const b = document.getElementById('diari-seg-' + m);
     if(b){ b.classList.toggle('attivo', m === modo); b.setAttribute('aria-selected', m === modo ? 'true' : 'false'); }
   });
+  // festivo/weekend con le consegne già analizzate: "Consegne" diventa
+  // "Consegne WE" (blu) e mostra le consegne ricevute, letto per letto
+  const consegneWE = consegneWeekendAttive();
+  const bSegCons = document.getElementById('diari-seg-consegne');
+  if(bSegCons){
+    bSegCons.textContent = consegneWE ? 'Consegne WE' : 'Consegne';
+    bSegCons.classList.toggle('we', consegneWE);
+  }
 
+  if(diariVistaConsegne && !diariMostraIeri && consegneWE && !diariConsegneWEAggiorna){
+    renderConsegneWeekend(container);
+    return;
+  }
   if(diariVistaConsegne && !diariMostraIeri && entries.length){
+    if(consegneWE){
+      const torna = document.createElement('button');
+      torna.className = 'btn';
+      torna.style.marginBottom = '10px';
+      torna.textContent = '← Consegne WE ricevute';
+      torna.onclick = () => { diariConsegneWEAggiorna = false; renderRiepilogo(); window.scrollTo(0, 0); };
+      container.appendChild(torna);
+    }
     renderAggiornaConsegne(container, entries);
     return;
   }
@@ -9627,6 +9803,7 @@ function renderRiepilogo(){
     body.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, body.value).length);
     body.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, body.value).length);
     body.addEventListener('blur', () => rinfrescaAiuti());
+    attivaMenuComandi(body);
     body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
     body.addEventListener('input', () => {
       // salvataggio (localStorage + cloud dell'intero archivio pazienti)
@@ -9755,6 +9932,7 @@ function renderRiepilogo(){
 // selettore Oggi · Ieri · Consegne in cima a Diari
 function setDiariModo(m){
   diariMostraIeri = (m === 'ieri');
+  diariConsegneWEAggiorna = false;
   diariVistaConsegne = (m === 'consegne');
   if(diariVistaConsegne) diariSoloConsegneAttivo = false;
   renderRiepilogo();
@@ -9763,6 +9941,71 @@ function setDiariModo(m){
 
 // vedi il pulsante in fondo a renderRiepilogo()
 let diariSoloConsegneAttivo = false;
+
+// CONSEGNE WE: nei festivi (sabato, domenica, festività), una volta
+// incollate e analizzate le consegne in App → Consegne, il terzo pulsante
+// di Diari diventa "Consegne WE" e mostra, nello stesso stile della tabella
+// "Aggiorna consegne" dei feriali, i letti consegnati a sinistra (colori e
+// pallini come in Reparto) e a destra il testo della consegna ricevuta.
+// Da qui si può comunque passare alla tabella per scrivere le consegne
+let diariConsegneWEAggiorna = false;
+function consegneWeekendAttive(){
+  return eFestivo(new Date()) && (Object.keys(loadConsegne()).length > 0 || Object.keys(loadCritici()).length > 0);
+}
+function renderConsegneWeekend(container){
+  const consegne = loadConsegne();
+  const critici = loadCritici();
+  const patients = loadPatients();
+  const nomi = [...new Set([...Object.keys(consegne), ...Object.keys(critici)])].sort(confrontaNomiLetto);
+
+  const barra = document.createElement('div');
+  barra.className = 'cons-we-barra';
+  const titolo = document.createElement('div');
+  titolo.className = 'group-label';
+  titolo.textContent = nomi.length === 1 ? '1 letto consegnato' : nomi.length + ' letti consegnati';
+  barra.appendChild(titolo);
+  const bAgg = document.createElement('button');
+  bAgg.className = 'btn';
+  bAgg.textContent = 'Aggiorna consegne →';
+  bAgg.onclick = () => { diariConsegneWEAggiorna = true; renderRiepilogo(); window.scrollTo(0, 0); };
+  barra.appendChild(bAgg);
+  container.appendChild(barra);
+
+  const scroll = document.createElement('div');
+  scroll.className = 'agg-cons-scroll';
+  const tab = document.createElement('table');
+  tab.className = 'agg-cons';
+  tab.innerHTML = '<colgroup><col class="c-letto"><col></colgroup><thead><tr><th>Letto</th><th>Consegna</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+  nomi.forEach(nome => {
+    const entry = Object.entries(patients).find(([, p]) => p.name === nome);
+    const id = entry ? entry[0] : null;
+    const p = entry ? entry[1] : { name: nome, state: null };
+    const tr = document.createElement('tr');
+    const tdLetto = document.createElement('td');
+    const nomeLetto = document.createElement('div');
+    nomeLetto.textContent = nome;
+    tdLetto.appendChild(nomeLetto);
+    tdLetto.appendChild(tileLettoSolaLettura(id, p, consegne, critici));
+    const tdCons = document.createElement('td');
+    if(critici[nome]){
+      const c = document.createElement('div');
+      c.className = 'cons-we-critico';
+      c.textContent = 'Critico';
+      tdCons.appendChild(c);
+    }
+    const testo = document.createElement('div');
+    testo.className = 'cons-we-testo';
+    testo.textContent = (consegne[nome] && consegne[nome].testo) || critici[nome] || '';
+    tdCons.appendChild(testo);
+    tr.appendChild(tdLetto);
+    tr.appendChild(tdCons);
+    tbody.appendChild(tr);
+  });
+  tab.appendChild(tbody);
+  scroll.appendChild(tab);
+  container.appendChild(scroll);
+}
 
 // ============================================================
 // AGGIORNA CONSEGNE — al posto di "Nascondi E.O.": una tabella con una riga
@@ -10089,6 +10332,7 @@ function aggConsDestinazione(extra){
 // niente apertura del letto al tocco, niente × per eliminare. Stesse
 // condizioni di creaTileLetto in renderWardMap
 function tileLettoSolaLettura(id, p, consegne, critici){
+  const st = p.state || {};
   const occupato = schedaHaDati(p.state);
   const diOggi = occupato && isOggi(p.esameAggiornatoIl);
   const giorniFa = occupato ? giorniDiDifferenza(p.esameAggiornatoIl) : null;
@@ -10104,7 +10348,7 @@ function tileLettoSolaLettura(id, p, consegne, critici){
     spunta.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
     tile.appendChild(spunta);
   }
-  const extraTesto = (id === currentPatientId) ? state.outputExtra : p.state.outputExtra;
+  const extraTesto = (id === currentPatientId) ? state.outputExtra : st.outputExtra;
   if(haEsamiDomani(extraTesto)){
     const b = document.createElement('div');
     b.className = 'bed-tile-esami-badge'; b.textContent = 'E';
@@ -10114,8 +10358,9 @@ function tileLettoSolaLettura(id, p, consegne, critici){
     const b = document.createElement('div');
     b.className = 'bed-tile-dimissione-badge'; b.textContent = 'D';
     tile.appendChild(b);
+    if(haDimissioneOggi(extraTesto)) tile.classList.add('dimissione-oggi');
   }
-  const coloreIso = coloreIsolamento((id === currentPatientId) ? state.isolamento : p.state.isolamento);
+  const coloreIso = coloreIsolamento((id === currentPatientId) ? state.isolamento : st.isolamento);
   if(coloreIso){
     const b = document.createElement('div');
     b.className = 'bed-tile-isolamento-badge ' + coloreIso; b.textContent = 'i';
@@ -11154,7 +11399,7 @@ function renderAddomeAlvo(){
   if(!chip || !dataInput) return;
   const a = state.addome.alvo;
   chip.classList.toggle('active', a.attivo);
-  // come renderVitalsStrip: non tocca il valore del campo mentre l'utente
+  // non tocca il valore del campo mentre l'utente
   // ci sta interagendo. Su iPhone/Safari, riscrivere .value su un <input
   // type="date"> subito dopo che è stato lui stesso a impostarlo (qui
   // succede ad ogni re-render, quindi anche nello stesso istante della
@@ -13453,11 +13698,10 @@ function refreshUI(discardManuale = true){
   const esameText = state.outputEsameManuale || autoText;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
-  renderVitalsStrip();
 }
 
 // variante di refreshUI() dedicata SOLO ai parametri vitali (SpO2, PA, FC,
-// TC — striscia in alto e relativi campi duplicati più sotto): a differenza
+// TC in Respiro e parametri): a differenza
 // di un tag qualunque dell'esame obiettivo, inserire/correggere un
 // parametro vitale non deve MAI far perdere un'eventuale modifica manuale
 // al resto del testo. Invece di rigenerare tutto da capo, si individua la
@@ -13480,8 +13724,8 @@ function aggiornaVitale(){
     }
     // se la vecchia frase non si trova più (perché era stata riscritta a
     // mano anche quella), il testo manuale resta com'è: il valore digitato
-    // ora è comunque salvato in state.respiro e visibile nella striscia
-    // vitali, semplicemente non proviamo a indovinare dove infilarlo nel
+    // ora è comunque salvato in state.respiro e visibile nel campo,
+    // semplicemente non proviamo a indovinare dove infilarlo nel
     // testo per non rischiare di rovinare il resto della modifica manuale
   }
 
@@ -13490,32 +13734,10 @@ function aggiornaVitale(){
   const esameText = state.outputEsameManuale || nuovoAuto;
   const extra = (state.outputExtra || '').trim();
   document.getElementById('output').value = extra ? esameText + '\n\n' + extra : esameText;
-  renderVitalsStrip();
   autosaveCurrentPatient();
 }
 
 
-// striscia vitali fissa in cima alla scheda clinica: legge/scrive
-// direttamente su state.respiro, sempre visibile anche scorrendo giù nelle
-// altre sezioni, per non dimenticarsi di compilarli durante il giro visita
-function renderVitalsStrip(){
-  const r = state.respiro;
-  const campi = [
-    ['vs-sat', r.sat],
-    ['vs-pas', r.pas],
-    ['vs-pad', r.pad],
-    ['vs-fc', r.fc],
-    ['vs-temp', r.tempValore]
-  ];
-  campi.forEach(([id, valore]) => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    // non tocca il valore del campo su cui si sta scrivendo in questo momento,
-    // per non spostare il cursore mentre si digita
-    if(document.activeElement !== el && el.value !== (valore || '')) el.value = valore || '';
-    el.classList.toggle('filled', !!valore);
-  });
-}
 function update(discardManuale = true){
   refreshUI(discardManuale);
   autosaveCurrentPatient();
@@ -13656,13 +13878,12 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
 }
 
-// SpO2/PA sist./PA diast./FC/TC: i "veri" parametri vitali, sia nella
-// striscia in alto sia nei campi duplicati più sotto (vs-* e v-*/temp-valore
-// vedi blocco poco più sotto) — questi NON passano dal listener generico
+// SpO2/PA sist./PA diast./FC/TC: i "veri" parametri vitali in Respiro e
+// parametri (v-*/temp-valore, vedi blocco poco più sotto) — questi NON passano dal listener generico
 // qui sotto: hanno un proprio listener collegato a aggiornaVitale() invece
 // che a update(), per non scartare un'eventuale modifica manuale al resto
 // dell'esame obiettivo (vedi aggiornaVitale più sopra)
-const CAMPI_VITALI_IDS = ['vs-sat','vs-pas','vs-pad','vs-fc','vs-temp','v-sat','v-pas','v-pad','v-fc','temp-valore'];
+const CAMPI_VITALI_IDS = ['v-sat','v-pas','v-pad','v-fc','temp-valore'];
 // SOLO i campi della scheda clinica: prima il listener era agganciato a
 // tutti gli <input> della pagina (Ricoveri, login, ricerca, impostazioni...),
 // e scrivere lì cancellava la modifica manuale dell'esame aperto, lo
@@ -13814,34 +14035,12 @@ document.getElementById('admit-ematochimici')?.addEventListener('blur', function
   }
 });
 
-// la striscia vitali in alto è uno specchio dei campi già presenti più
-// sotto (SatO2/PA/FC/Temperatura): stesso dato, due punti dove inserirlo.
-// Non li mettiamo in TEXT_FIELD_MAP (che assume un solo id per ogni
-// percorso di stato: con due id sullo stesso percorso l'ultimo letto in
-// ordine sovrascriverebbe per sbaglio l'altro) — qui invece, digitando in
-// alto, si scrive subito lo stato e si copia il valore anche nel campo
-// sotto; il percorso inverso (digitare sotto -> aggiornare sopra) è già
-// coperto da renderVitalsStrip(), richiamata a ogni update().
-[
-  ['vs-sat', 'v-sat', 'sat'],
-  ['vs-pas', 'v-pas', 'pas'],
-  ['vs-pad', 'v-pad', 'pad'],
-  ['vs-fc', 'v-fc', 'fc'],
-  ['vs-temp', 'temp-valore', 'tempValore']
-].forEach(([idAlto, idBasso, campo]) => {
-  const alto = document.getElementById(idAlto);
-  const basso = document.getElementById(idBasso);
-  if(!alto || !basso) return;
-  alto.addEventListener('input', () => {
-    basso.value = alto.value;
-    state.respiro[campo] = alto.value;
-    aggiornaVitale();
-  });
-  // il campo duplicato più sotto non ha il listener generico (vedi
-  // CAMPI_VITALI_IDS più sopra): serve collegarlo qui esplicitamente,
-  // il percorso "sotto -> aggiorna sopra" resta coperto da
-  // renderVitalsStrip() dentro aggiornaVitale()
-  basso.addEventListener('input', aggiornaVitale);
+// campi dei parametri vitali (SatO2/PA/FC/Temperatura) in Respiro e parametri:
+// non stanno in TEXT_FIELD_MAP ma vengono letti da syncInputsToState().
+['v-sat','v-pas','v-pad','v-fc','temp-valore'].forEach(id => {
+  // niente listener generico per questi campi (vedi CAMPI_VITALI_IDS più
+  // sopra): vanno collegati qui a aggiornaVitale()
+  document.getElementById(id)?.addEventListener('input', aggiornaVitale);
 });
 
 // Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
@@ -14291,7 +14490,7 @@ try{
 <div id="isolamento-modal-overlay" onclick="if(event.target===this) chiudiIsolamentoModal()">
   <div id="isolamento-modal">
     <div class="isolamento-modal-header">
-      <h2>Isolamento</h2>
+      <h2 id="isolamento-modal-titolo">Isolamento</h2>
       <button id="isolamento-chiudi-btn" onclick="chiudiIsolamentoModal()">✕</button>
     </div>
     <div id="isolamento-modal-corpo"></div>
@@ -17116,6 +17315,177 @@ function soffiControllaTrigger(testoAttuale, elementoTextarea){
   }
 }
 
+</script>
+
+<!-- MENU "/" NEI DIARI: scrivendo "/" all'inizio di una parola compare
+     l'elenco di tutti i comandi disponibili (strumenti, score, farmaci),
+     filtrato mentre si scrive; toccandone uno si inserisce il comando
+     completo e parte lo stesso trigger che si avrebbe scrivendolo a mano -->
+<style>
+  #comandi-menu{
+    position:fixed; z-index:150; display:none;
+    max-height:min(260px, 40vh); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background:var(--panel); border:1px solid var(--clay-border); border-radius:14px;
+    box-shadow:var(--clay-out), 0 10px 30px rgba(0,0,0,.45);
+    padding:4px;
+  }
+  #comandi-menu.show{ display:block; }
+  .comandi-voce{
+    display:flex; align-items:baseline; gap:8px; padding:8px 10px; border-radius:10px;
+    cursor:pointer; user-select:none; -webkit-user-select:none;
+  }
+  .comandi-voce.attiva, .comandi-voce:hover{ background:var(--panel-3); }
+  .comandi-cmd{ font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--signal); white-space:nowrap; }
+  .comandi-desc{ font-size:12.5px; color:var(--ink-dim); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .comandi-tipo{ font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); white-space:nowrap; }
+</style>
+<div id="comandi-menu" role="listbox"></div>
+<script>
+// elenco costruito al primo uso (SCORE_DB/FARMACI_DB stanno in blocchi
+// <script> diversi): "inserisci" è il testo che sostituisce "/parziale",
+// "chiavi" le parole con cui si filtra mentre si scrive
+let comandiElenco = null;
+function comandiCostruisciElenco(){
+  if(comandiElenco) return comandiElenco;
+  const lista = [
+    { cmd:'EGA:', inserisci:'EGA: ', desc:'Emogasanalisi', tipo:'strumento', chiavi:['ega','emogas'] },
+    { cmd:'VFG', inserisci:'VFG ', desc:'Filtrato glomerulare (Cockcroft-Gault)', tipo:'strumento', chiavi:['vfg','cockcroft','cockroft'] },
+    { cmd:'/ecg', inserisci:'/ecg ', desc:'Simulatore ECG ed elettroliti', tipo:'strumento', chiavi:['ecg'] },
+    { cmd:'/soffio', inserisci:'/soffio ', desc:'Soffi cardiaci: cause', tipo:'strumento', chiavi:['soffio','soffi'] },
+    { cmd:'/numeri', inserisci:'/numeri ', desc:'Rubrica numeri utili', tipo:'strumento', chiavi:['numeri','rubrica'] },
+    { cmd:'/premedicazione', inserisci:'/premedicazione ', desc:'Premedicazione per MdC', tipo:'strumento', chiavi:['premedicazione'] }
+  ];
+  if(typeof SCORE_ALIAS !== 'undefined' && typeof SCORE_DB !== 'undefined'){
+    const perScore = {};
+    Object.entries(SCORE_ALIAS).forEach(([alias, k]) => { (perScore[k] = perScore[k] || []).push(alias); });
+    Object.entries(perScore).forEach(([k, alias]) => {
+      const def = SCORE_DB[k];
+      if(!def) return;
+      lista.push({ cmd:'/' + alias[0], inserisci:'/' + alias[0] + ' ', desc:def.nome + (def.sub ? ' · ' + def.sub : ''), tipo:'score', chiavi:alias });
+    });
+  }
+  if(typeof FARMACI_DB !== 'undefined'){
+    const aliasPer = {};
+    if(typeof FARMACI_ALIAS !== 'undefined') Object.entries(FARMACI_ALIAS).forEach(([a, k]) => { (aliasPer[k] = aliasPer[k] || []).push(a); });
+    if(typeof FARMACI_GRUPPI !== 'undefined') lista.push({ cmd:'/nao', inserisci:'/nao ', desc:'NAO/DOAC a confronto', tipo:'farmaco', chiavi:Object.keys(FARMACI_GRUPPI) });
+    Object.keys(FARMACI_DB).sort().forEach(k => {
+      lista.push({ cmd:'/' + k, inserisci:'/' + k + ' ', desc:FARMACI_DB[k].nome || k, tipo:'farmaco', chiavi:[k, ...(aliasPer[k] || [])] });
+    });
+  }
+  comandiElenco = lista;
+  return lista;
+}
+
+let comandiStato = null; // { el, inizio, fine, voci, attiva }
+
+function comandiNascondi(){
+  comandiStato = null;
+  const m = document.getElementById('comandi-menu');
+  m.classList.remove('show');
+  m.innerHTML = '';
+}
+
+// coordinate a schermo del cursore dentro la textarea: si ricopia il testo
+// fino al cursore in un <div> invisibile con lo stesso stile e si misura
+// dove cade un segnaposto messo subito dopo
+function comandiPosizioneCursore(el, pos){
+  const cs = getComputedStyle(el);
+  const div = document.createElement('div');
+  ['fontFamily','fontSize','fontWeight','fontStyle','letterSpacing','lineHeight','textTransform','wordSpacing','textIndent',
+   'paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth','boxSizing','overflowWrap','wordBreak','tabSize']
+    .forEach(p => { div.style[p] = cs[p]; });
+  div.style.position = 'absolute'; div.style.visibility = 'hidden'; div.style.top = '0'; div.style.left = '-9999px';
+  div.style.whiteSpace = 'pre-wrap'; div.style.width = el.offsetWidth + 'px';
+  div.textContent = el.value.slice(0, pos);
+  const marcatore = document.createElement('span');
+  marcatore.textContent = '​';
+  div.appendChild(marcatore);
+  document.body.appendChild(div);
+  const r = el.getBoundingClientRect();
+  const y = r.top + marcatore.offsetTop - el.scrollTop + marcatore.offsetHeight;
+  document.body.removeChild(div);
+  return { y, sinistra:r.left, larghezza:r.width };
+}
+
+function comandiAggiorna(el){
+  const pos = el.selectionStart;
+  if(pos !== el.selectionEnd){ comandiNascondi(); return; }
+  const prima = el.value.slice(0, pos);
+  const m = prima.match(/(^|\s)\/([a-z0-9]*)$/i);
+  if(!m){ comandiNascondi(); return; }
+  const q = m[2].toLowerCase();
+  const voci = comandiCostruisciElenco().filter(v => v.chiavi.some(c => c.startsWith(q)));
+  // comando già scritto per intero: il box si è aperto da solo, niente menu
+  if(!voci.length || (q && voci.length === 1 && voci[0].chiavi.includes(q) && voci[0].inserisci.startsWith('/'))){ comandiNascondi(); return; }
+  comandiStato = { el, inizio:pos - q.length - 1, fine:pos, voci, attiva:0 };
+  comandiDisegna();
+}
+
+function comandiDisegna(){
+  const st = comandiStato;
+  const menu = document.getElementById('comandi-menu');
+  menu.innerHTML = '';
+  st.voci.forEach((v, i) => {
+    const r = document.createElement('div');
+    r.className = 'comandi-voce' + (i === st.attiva ? ' attiva' : '');
+    r.setAttribute('role', 'option');
+    r.innerHTML = `<span class="comandi-cmd">${escapeHtml(v.cmd)}</span><span class="comandi-desc">${escapeHtml(v.desc)}</span><span class="comandi-tipo">${v.tipo}</span>`;
+    // pointerdown + preventDefault: la textarea non perde il focus (su
+    // iPhone si chiuderebbe la tastiera e il blur nasconderebbe il menu)
+    r.addEventListener('pointerdown', (e) => { e.preventDefault(); comandiScegli(i); });
+    menu.appendChild(r);
+  });
+  const p = comandiPosizioneCursore(st.el, st.fine);
+  const vv = window.visualViewport;
+  const altoVisibile = vv ? vv.offsetTop + vv.height : window.innerHeight;
+  menu.style.left = Math.max(8, p.sinistra) + 'px';
+  menu.style.width = Math.min(p.larghezza, window.innerWidth - 16) + 'px';
+  menu.classList.add('show');
+  const h = menu.offsetHeight;
+  // sotto la riga del cursore se c'è spazio (tastiera compresa), se no sopra
+  let top = p.y + 4;
+  if(top + h > altoVisibile - 8) top = Math.max(8, p.y - h - 26);
+  menu.style.top = top + 'px';
+  const attiva = menu.children[st.attiva];
+  if(attiva) attiva.scrollIntoView({ block:'nearest' });
+}
+
+function comandiScegli(i){
+  const st = comandiStato;
+  if(!st) return;
+  const v = st.voci[i];
+  const el = st.el;
+  const dopo = el.value.slice(st.fine).replace(/^[a-z0-9]*/i, '');
+  const testo = v.inserisci.endsWith(' ') && /^\s/.test(dopo) ? v.inserisci.trimEnd() : v.inserisci;
+  el.value = el.value.slice(0, st.inizio) + testo + dopo;
+  const cursore = st.inizio + testo.length;
+  el.setSelectionRange(cursore, cursore);
+  comandiNascondi();
+  // stesso evento di quando si scrive a mano: salvataggio e apertura del box
+  el.dispatchEvent(new Event('input', { bubbles:true }));
+}
+
+function attivaMenuComandi(el){
+  el.addEventListener('input', () => comandiAggiorna(el));
+  el.addEventListener('keydown', (e) => {
+    const st = comandiStato;
+    if(!st || st.el !== el) return;
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      st.attiva = (st.attiva + (e.key === 'ArrowDown' ? 1 : -1) + st.voci.length) % st.voci.length;
+      comandiDisegna();
+    } else if(e.key === 'Enter' || e.key === 'Tab'){
+      e.preventDefault();
+      comandiScegli(st.attiva);
+    } else if(e.key === 'Escape'){
+      e.preventDefault();
+      comandiNascondi();
+    }
+  });
+  el.addEventListener('blur', () => { if(comandiStato && comandiStato.el === el) comandiNascondi(); });
+  el.addEventListener('click', () => { if(comandiStato && comandiStato.el === el) comandiAggiorna(el); });
+}
+window.addEventListener('scroll', () => { if(comandiStato) comandiNascondi(); }, { passive:true });
 </script>
 
 <!-- EASTER EGG "Aurex": scrivendo Aurex in qualsiasi campo compare il
