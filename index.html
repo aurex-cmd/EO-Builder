@@ -875,7 +875,10 @@
   .ric-riga{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .ric-riga select{ width:100%; min-width:120px; }
   .ric-mini{ display:flex; flex-direction:column; gap:4px; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); min-width:0; }
-  .ric-mini input, .ric-mini select{ text-transform:none; letter-spacing:normal; }
+  .ric-mini input, .ric-mini select, .ric-mini textarea{ text-transform:none; letter-spacing:normal; }
+  /* diagnosi: si allunga col testo (autoResizeTextarea), ma resta una riga
+     logica — Invio non va a capo (vedi il listener sotto caricaRicovero) */
+  #ricovero-singolo-view textarea.ric-diagnosi{ min-height:0; font-size:14px; padding:9px 12px; }
   /* voce ancora vuota: niente "Copia", testo d'aiuto più discreto */
   .ric-voce.vuota .ric-voce-testa .admit-copy-btn{ display:none; }
   .ric-voce.vuota .ric-anteprima .admit-editable{ padding:8px 12px; font-size:12px; border-style:dashed; box-shadow:none; background:transparent; }
@@ -911,10 +914,42 @@
   .ric-pill.pieno::before{ content:'✓ '; color:var(--signal); opacity:1; }
   .ric-pill.aperto{ border-color:#8ab4f8; border-style:solid; box-shadow:0 0 0 1px #8ab4f8 inset; }
   .ric-pill.ric-pill-aggiungi::before{ content:''; }
+  /* anamnesi prossima come testo: fisso in bianco, campi in blu */
+  .ric-pross{
+    background:var(--panel); border:1px solid var(--clay-border); border-radius:12px; padding:11px 12px;
+    box-shadow:var(--clay-in-sm); font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+  }
+  .ric-pross-fisso{ margin:8px 0 4px; }
+  /* etichetta e campo sulla stessa riga; se il campo resterebbe troppo
+     stretto (schermo piccolo, etichetta lunga) va a capo sotto l'etichetta */
+  .ric-pross-riga{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 6px; margin-top:4px; }
+  .ric-pross-riga.opzionale{ display:none; }
+  .ric-pross-riga.opzionale.visibile{ display:flex; }
+  .ric-pross-et{ flex-shrink:0; padding-top:3px; white-space:nowrap; }
+  #ricovero-singolo-view .ric-pross textarea.ric-campo-blu,
+  #ricovero-singolo-view .ric-pross .altro-esame-row textarea,
+  #ricovero-singolo-view .ric-pross .altro-esame-row input{
+    flex:1 1 170px; min-width:0; min-height:0; width:100%; margin:0; padding:2px 7px; border-radius:6px; box-shadow:none;
+    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:#8ab4f8;
+    background:#1e2a3a; border:1px solid #2d4560;
+  }
+  #ricovero-singolo-view .ric-pross textarea.ric-campo-blu:placeholder-shown,
+  #ricovero-singolo-view .ric-pross .altro-esame-row textarea:placeholder-shown,
+  #ricovero-singolo-view .ric-pross .altro-esame-row input:placeholder-shown{ background:transparent; border-style:dashed; border-color:#3d5a80; }
+  #ricovero-singolo-view .ric-pross textarea::placeholder, #ricovero-singolo-view .ric-pross input::placeholder{ color:#6f93c6; }
+  #ricovero-singolo-view .ric-pross textarea:focus, #ricovero-singolo-view .ric-pross input:focus{ border-color:#8ab4f8; border-style:solid; outline:none; }
+  .ric-pross .ric-pross-aggiungi{ margin:8px 0 4px; }
+  .ric-pross .ric-pross-aggiungi .ric-pill{ font-size:12px; padding:3px 7px; }
+  /* altri esami (ECG, EGA...): "- [nome]: [referto]" come le altre righe */
+  .ric-pross .altro-esame-row{ display:flex; flex-wrap:nowrap; align-items:flex-start; gap:6px; margin:4px 0 0; padding:0; border:none; background:none; box-shadow:none; }
+  .ric-pross .altro-esame-row::before{ content:'-'; padding-top:3px; }
+  #ricovero-singolo-view .ric-pross .altro-esame-row .altro-esame-nome{ flex:0 0 92px; min-width:0; }
+  .ric-pross .altro-esame-del{ width:24px; height:24px; font-size:14px; flex:0 0 auto; }
+  .ric-pross-testo{ margin-top:8px; }
+  .ric-pross-testo summary{ font-size:12px; color:var(--ink-dim); cursor:pointer; padding:2px 0 6px; }
   .ric-editor{ display:none; margin-bottom:8px; }
   .ric-editor.aperto{ display:block; }
   .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#8ab4f8; margin:0 0 4px 2px; }
-  #admit-altri-esami .altro-esame-row{ margin:0 0 8px; }
   .ric-anteprima .admit-editable{ background:var(--panel); }
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
   /* 3. consegna: la tabella vera, in anteprima */
@@ -2205,7 +2240,7 @@
       <label class="ric-mini">Cognome<input type="text" class="wide" id="admit-cognome" placeholder="es. Rossi"></label>
       <label class="ric-mini">Nome<input type="text" class="wide" id="admit-nome" placeholder="es. Maria"></label>
     </div>
-    <label class="ric-mini">Diagnosi d'ingresso<input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale dx"></label>
+    <label class="ric-mini">Diagnosi d'ingresso<textarea id="admit-diagnosi" class="ric-diagnosi" rows="1" placeholder="es. polmonite basale dx"></textarea></label>
     <div class="ric-riga">
       <label class="ric-mini">Letto<input type="text" id="admit-letto" placeholder="es. 4.1" style="width:90px;"></label>
       <label class="ric-mini" style="flex:1;">Reparto
@@ -2273,29 +2308,35 @@
       <div class="ric-anteprima" data-slot="remota"></div>
     </div>
 
+    <!-- l'anamnesi prossima è il testo stesso: i campi blu stanno dove
+         finiranno nel testo copiato, il resto ("In PS ha eseguito:") è il
+         testo fisso. Gli esami facoltativi compaiono come "+ ..." in fondo
+         all'elenco e diventano una riga quando li si tocca -->
     <div class="ric-voce" data-sezione="prossima">
       <div class="ric-voce-testa"><span class="ric-num">6</span><span class="ric-voce-titolo">Anamnesi patologica prossima</span></div>
-      <div class="ric-campi">
-        <button type="button" class="ric-pill" data-campo-form="admit-prossima">racconto</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-ematochimici">esami ematochimici</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-rxtorace">Rx torace</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-rxaddome">Rx addome</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-tctorace">TC torace</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-tcaddome">TC addome</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-tccerebrale">TC cerebrale</button>
-        <button type="button" class="ric-pill ric-pill-aggiungi" onclick="aggiungiAltroEsame(); aggiornaPillRicovero(); document.querySelector('#admit-altri-esami .altro-esame-row:last-child .altro-esame-nome')?.focus();">+ altro esame</button>
-        <button type="button" class="ric-pill" data-campo-form="admit-provvedimenti">provvedimenti in PS</button>
+      <div class="ric-pross">
+        <textarea id="admit-prossima" class="ric-campo-blu" rows="1" placeholder="Racconto"></textarea>
+        <div class="ric-pross-fisso">In PS ha eseguito:</div>
+        <div class="ric-pross-riga"><span class="ric-pross-et">- Esami ematochimici:</span><textarea id="admit-ematochimici" class="ric-campo-blu" rows="1" placeholder="Hb, PCR, creatinina…"></textarea></div>
+        <div class="ric-pross-riga"><span class="ric-pross-et">- Rx torace:</span><textarea id="admit-rxtorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-rxaddome"><span class="ric-pross-et">- Rx addome:</span><textarea id="admit-rxaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tctorace"><span class="ric-pross-et">- TC torace:</span><textarea id="admit-tctorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tcaddome"><span class="ric-pross-et">- TC addome:</span><textarea id="admit-tcaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tccerebrale"><span class="ric-pross-et">- TC cerebrale:</span><textarea id="admit-tccerebrale" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div id="admit-altri-esami"></div>
+        <div class="ric-campi ric-pross-aggiungi">
+          <button type="button" class="ric-pill" data-mostra-riga="admit-rxaddome">Rx addome</button>
+          <button type="button" class="ric-pill" data-mostra-riga="admit-tctorace">TC torace</button>
+          <button type="button" class="ric-pill" data-mostra-riga="admit-tcaddome">TC addome</button>
+          <button type="button" class="ric-pill" data-mostra-riga="admit-tccerebrale">TC cerebrale</button>
+          <button type="button" class="ric-pill" onclick="aggiungiAltroEsame(); document.querySelector('#admit-altri-esami .altro-esame-row:last-child .altro-esame-nome')?.focus();">altro esame (ECG, EGA…)</button>
+        </div>
+        <div class="ric-pross-riga"><span class="ric-pross-et">In PS:</span><textarea id="admit-provvedimenti" class="ric-campo-blu" rows="1" placeholder="provvedimenti"></textarea></div>
       </div>
-      <div class="ric-editor" data-editor="admit-prossima"><div class="ric-editor-label">Racconto</div><textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-ematochimici"><div class="ric-editor-label">Esami ematochimici</div><textarea id="admit-ematochimici" placeholder="Hb 90, Gb 8.4, Na 127, K 4.4, creatinina 1.28, PCR 38…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-rxtorace"><div class="ric-editor-label">Rx torace</div><textarea id="admit-rxtorace" placeholder="Referto…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-rxaddome"><div class="ric-editor-label">Rx addome</div><textarea id="admit-rxaddome" placeholder="Referto…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-tctorace"><div class="ric-editor-label">TC torace</div><textarea id="admit-tctorace" placeholder="Referto…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-tcaddome"><div class="ric-editor-label">TC addome</div><textarea id="admit-tcaddome" placeholder="Referto…"></textarea></div>
-      <div class="ric-editor" data-editor="admit-tccerebrale"><div class="ric-editor-label">TC cerebrale</div><textarea id="admit-tccerebrale" placeholder="Referto…"></textarea></div>
-      <div id="admit-altri-esami"></div>
-      <div class="ric-editor" data-editor="admit-provvedimenti"><div class="ric-editor-label">Provvedimenti in PS</div><textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea></div>
-      <div class="ric-anteprima" data-slot="prossima"></div>
+      <details class="ric-pross-testo">
+        <summary>Testo che verrà copiato</summary>
+        <div class="ric-anteprima" data-slot="prossima"></div>
+      </details>
     </div>
 
     <div class="ric-voce" data-sezione="farmacologica">
@@ -4048,10 +4089,27 @@ function apriEditorRicovero(idCampo, apri){
 }
 function chiudiTuttiEditorRicovero(){
   document.querySelectorAll('#ricovero-singolo-view .ric-editor.aperto').forEach(ed => apriEditorRicovero(ed.dataset.editor, false));
+  document.querySelectorAll('#ricovero-singolo-view .ric-pross-riga.opzionale').forEach(r => delete r.dataset.aperta);
+  aggiornaRigheProssima();
+}
+// anamnesi prossima: gli esami facoltativi (Rx addome, TC...) sono una riga
+// del testo se compilati o appena aperti col loro "+", altrimenti restano
+// solo come "+ ..." in fondo all'elenco
+function aggiornaRigheProssima(){
+  document.querySelectorAll('#ricovero-singolo-view .ric-pross-riga.opzionale').forEach(riga => {
+    const campo = document.getElementById(riga.dataset.riga);
+    const visibile = !!(riga.dataset.aperta || (campo && campo.value.trim()));
+    const eraVisibile = riga.classList.contains('visibile');
+    riga.classList.toggle('visibile', visibile);
+    if(visibile && !eraVisibile && campo) autoResizeTextarea(campo);
+    const pill = document.querySelector(`#ricovero-singolo-view .ric-pill[data-mostra-riga="${riga.dataset.riga}"]`);
+    if(pill) pill.style.display = visibile ? 'none' : '';
+  });
 }
 function aggiornaPillRicovero(){
   const view = document.getElementById('ricovero-singolo-view');
   if(!view) return;
+  aggiornaRigheProssima();
   view.querySelectorAll('.ric-pill[data-campo-form], .ric-pill[data-vai]').forEach(pill => {
     const campo = document.getElementById(pill.dataset.campoForm || pill.dataset.vai);
     pill.classList.toggle('pieno', !!(campo && String(campo.value).trim()));
@@ -4068,12 +4126,24 @@ document.addEventListener('DOMContentLoaded', () => {
   view.addEventListener('click', (e) => {
     const pill = e.target.closest('.ric-pill');
     if(!pill) return;
+    if(pill.dataset.mostraRiga){
+      const riga = view.querySelector(`.ric-pross-riga[data-riga="${pill.dataset.mostraRiga}"]`);
+      if(riga){ riga.dataset.aperta = '1'; aggiornaRigheProssima(); document.getElementById(pill.dataset.mostraRiga)?.focus(); }
+      return;
+    }
     if(pill.dataset.campoForm){ apriEditorRicovero(pill.dataset.campoForm); return; }
     if(pill.dataset.vai){
       const campo = document.getElementById(pill.dataset.vai);
       if(campo){ campo.scrollIntoView({ behavior:'smooth', block:'center' }); campo.focus({ preventScroll:true }); }
     }
   });
+  // esame facoltativo aperto e lasciato vuoto: torna a essere solo "+ ..."
+  view.querySelectorAll('.ric-pross-riga.opzionale textarea').forEach(ta => ta.addEventListener('blur', () => {
+    setTimeout(() => {
+      const riga = ta.closest('.ric-pross-riga');
+      if(document.activeElement !== ta && !ta.value.trim() && riga){ delete riga.dataset.aperta; aggiornaRigheProssima(); }
+    }, 150);
+  }));
   // verbale del PS: la textarea dentro <details> chiuso ha altezza 0
   view.querySelector('.ric-verbale')?.addEventListener('toggle', (e) => {
     if(e.target.open) e.target.querySelectorAll('textarea').forEach(autoResizeTextarea);
@@ -4094,6 +4164,7 @@ function nuovoRicovero(){
   svuotaFormRicovero();
   chiudiTuttiEditorRicovero();
   renderRicoveroSingoloBox();
+  requestAnimationFrame(autoResizeTutteRicoveriTextarea);
 }
 function apriNuovoRicoveroSingolo(){
   nuovoRicovero();
@@ -4258,7 +4329,26 @@ function caricaRicovero(id){
 
   chiudiTuttiEditorRicovero();
   renderRicoveroSingoloBox();
+  // le altezze si leggono solo a schermata visibile: un fotogramma dopo
+  requestAnimationFrame(autoResizeTutteRicoveriTextarea);
 }
+// la diagnosi d'ingresso va tra virgolette nel diario: niente a capo (anche
+// incollata), e il box si allunga quanto il testo
+document.addEventListener('DOMContentLoaded', () => {
+  const diag = document.getElementById('admit-diagnosi');
+  if(!diag) return;
+  diag.addEventListener('keydown', (e) => { if(e.key === 'Enter') e.preventDefault(); });
+  diag.addEventListener('input', () => {
+    if(/[\r\n]/.test(diag.value)){
+      const pos = diag.selectionStart;
+      diag.value = diag.value.replace(/\s*[\r\n]+\s*/g, ' ');
+      diag.setSelectionRange(Math.min(pos, diag.value.length), Math.min(pos, diag.value.length));
+      aggiornaRicoveroDalForm();
+    }
+    autoResizeTextarea(diag);
+  });
+});
+
 function apriRicoveroSingolo(id){
   caricaRicovero(id);
   mostraVista('ricovero-singolo');
@@ -4421,6 +4511,13 @@ function toggleSelezioneRicovero(id, selezionato){
 // Ricliccando (una volta già collegato) si limita a rileggere lo stato
 // attuale di quello stesso esame, per aggiornare il box col progresso fatto
 // nel frattempo su quella scheda.
+// testo copiato con "Copia referto" mentre l'esame obiettivo è aperto
+// dentro un ricovero (id ricovero -> testo): vedi collegaEsameObiettivo
+const eoCopiatoNelRicovero = {};
+function segnaEoCopiatoNelRicovero(testo){
+  if(esameObiettivoInlineAperto && ricoveroIdEsameObiettivoInline) eoCopiatoNelRicovero[ricoveroIdEsameObiettivoInline] = (testo || '').trim();
+}
+
 function collegaEsameObiettivo(id){
   const list = loadRicoveri();
   const idx = list.findIndex(r => r.id === id);
@@ -4446,9 +4543,18 @@ function collegaEsameObiettivo(id){
   }
 
   const testo = getRefertoFor(patients[patientId].state);
+  const esameObiettivoPrima = list[idx].esameObiettivo;
   list[idx].esameObiettivo = testo;
   list[idx].esameObiettivoPatientId = patientId;
-  if(list[idx].copiati) list[idx].copiati.esameObiettivo = false;
+  // copiato da dentro l'esame obiettivo (Copia referto) e non più cambiato:
+  // la voce resta "copiata"; se invece il testo è cambiato, non lo è più
+  const copiatoDentro = eoCopiatoNelRicovero[id];
+  if(copiatoDentro !== undefined && copiatoDentro === (testo || '').trim()){
+    list[idx].copiati = list[idx].copiati || {};
+    list[idx].copiati.esameObiettivo = true;
+  } else if(list[idx].copiati && testo !== esameObiettivoPrima){
+    list[idx].copiati.esameObiettivo = false;
+  }
   saveRicoveri(list);
   ricoveriAperti.add(id);
   renderRicoveriLista();
@@ -4868,6 +4974,9 @@ function aggiornaIndicatoriManualiRicovero(){
     const campo = ind.dataset.voce;
     const el = view.querySelector(`.ric-anteprima [data-campo="${campo}"]`);
     const manuale = !!el && base[campo] !== undefined && el.textContent !== base[campo];
+    // anamnesi prossima: il testo da copiare sta in una tendina; se è stato
+    // scritto a mano la si apre, perché si veda cosa verrà copiato davvero
+    if(manuale && campo === 'prossima'){ const det = view.querySelector('.ric-pross-testo'); if(det && !det.open) det.open = true; }
     if(!manuale){ ind.innerHTML = ''; return; }
     if(ind.firstChild) return;
     ind.append('scritto a mano');
@@ -13347,7 +13456,7 @@ function copyOutput(){
   // può non esistere o rifiutare la richiesta.
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(out.value)
-      .then(()=>{ showToast('Copiato negli appunti'); segnaRefertoCopiato(); })
+      .then(()=>{ showToast('Copiato negli appunti'); segnaRefertoCopiato(); segnaEoCopiatoNelRicovero(out.value); })
       .catch(()=>fallbackCopy(out));
   } else {
     fallbackCopy(out);
@@ -13357,7 +13466,7 @@ function fallbackCopy(out){
   try{
     const ok = document.execCommand('copy');
     showToast(ok ? 'Copiato negli appunti' : 'Copia manualmente (Ctrl/Cmd+C)');
-    if(ok) segnaRefertoCopiato();
+    if(ok){ segnaRefertoCopiato(); segnaEoCopiatoNelRicovero(out.value); }
   } catch(e){
     showToast('Copia manualmente (Ctrl/Cmd+C)');
   }
