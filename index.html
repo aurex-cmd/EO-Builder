@@ -854,6 +854,92 @@
     background:transparent; color:var(--signal); cursor:pointer;
   }
   .admit-add-btn:hover{ border-color:var(--signal); border-style:solid; }
+  /* ---------- RICOVERO: una schermata in tre blocchi ---------- */
+  .ric-testata{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .ric-testata h2{ margin:0; }
+  .ric-testata-azioni{ display:flex; gap:6px; flex-wrap:wrap; }
+  .ric-blocco{ border-radius:16px; padding:13px 13px 14px; margin-bottom:16px; }
+  .ric-blocco:last-child{ margin-bottom:0; }
+  .ric-blocco-etichetta{
+    display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap;
+    margin-bottom:11px;
+  }
+  .ric-blocco-etichetta > span:first-child{
+    font-family:var(--font-mono); font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .ric-nota{ font-size:11.5px; color:var(--ink-faint); }
+  /* 1. paziente: tratteggiato e "spento", si vede che sta FUORI dal testo */
+  .ric-fuori{ border:1.5px dashed var(--line); background:transparent; }
+  .ric-fuori .ric-blocco-etichetta > span:first-child{ color:var(--ink-dim); }
+  .ric-fuori > * + *{ margin-top:9px; }
+  .ric-riga{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ric-riga select{ width:100%; min-width:120px; }
+  .ric-mini{ display:flex; flex-direction:column; gap:4px; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); min-width:0; }
+  .ric-mini input, .ric-mini select{ text-transform:none; letter-spacing:normal; }
+  /* voce ancora vuota: niente "Copia", testo d'aiuto più discreto */
+  .ric-voce.vuota .ric-voce-testa .admit-copy-btn{ display:none; }
+  .ric-voce.vuota .ric-anteprima .admit-editable{ padding:8px 12px; font-size:12px; border-style:dashed; box-shadow:none; background:transparent; }
+  .ric-anagrafica{ gap:9px; }
+  .ric-verbale summary{ font-size:12.5px; color:var(--signal); cursor:pointer; padding:4px 0; }
+  .ric-verbale[open] summary{ margin-bottom:8px; }
+  /* 2. ricovero: il prestampato, foglio con bordo oro */
+  .ric-doc{ background:var(--panel-2); border:1px solid var(--folder-dim); border-left:3px solid var(--folder); box-shadow:var(--clay-out-sm); }
+  .ric-doc .ric-blocco-etichetta > span:first-child{ color:var(--folder); }
+  .ric-voce{ padding:12px 0 13px; border-top:1px solid var(--line-soft); position:relative; }
+  .ric-blocco-etichetta + .ric-voce{ border-top:none; padding-top:2px; }
+  .ric-voce .admit-sub-copiato-badge{ display:none; }
+  .ric-voce-testa{ display:flex; align-items:center; gap:8px; margin-bottom:8px; min-height:28px; }
+  .ric-num{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--folder-dim); color:var(--folder);
+  }
+  .ric-voce-titolo{ font-family:var(--font-display); font-size:14.5px; font-weight:600; color:var(--ink); flex:1; min-width:0; }
+  .ric-voce-testa .admit-copy-btn{ flex-shrink:0; }
+  .ric-voce.copiato .ric-num{ background:var(--signal); color:var(--on-signal); }
+  .ric-voce.copiato .admit-editable{ border-color:var(--signal); }
+  .ric-manuale{ font-size:11px; color:var(--folder); white-space:nowrap; }
+  .ric-manuale button{ font:inherit; color:var(--signal); background:none; border:none; padding:0 0 0 4px; cursor:pointer; text-decoration:underline; }
+  /* i campi: pillole come il codice inline (mono, blu). Vuote: tratteggiate
+     con "+"; compilate: piene con ✓; aperte: bordo acceso */
+  .ric-campi{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .ric-pill{
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.2; color:#8ab4f8;
+    background:transparent; border:1px dashed #3d5a80; border-radius:7px; padding:4px 8px; cursor:pointer;
+  }
+  .ric-pill::before{ content:'+ '; opacity:.75; }
+  .ric-pill.pieno{ background:#1e2a3a; border:1px solid #2d4560; }
+  .ric-pill.pieno::before{ content:'✓ '; color:var(--signal); opacity:1; }
+  .ric-pill.aperto{ border-color:#8ab4f8; border-style:solid; box-shadow:0 0 0 1px #8ab4f8 inset; }
+  .ric-pill.ric-pill-aggiungi::before{ content:''; }
+  .ric-editor{ display:none; margin-bottom:8px; }
+  .ric-editor.aperto{ display:block; }
+  .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#8ab4f8; margin:0 0 4px 2px; }
+  #admit-altri-esami .altro-esame-row{ margin:0 0 8px; }
+  .ric-anteprima .admit-editable{ background:var(--panel); }
+  .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
+  /* 3. consegna: la tabella vera, in anteprima */
+  .ric-consegna{ background:var(--panel-2); border:1px solid var(--clay-border); box-shadow:var(--clay-out-sm); }
+  .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
+  table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
+  table.ric-cons td{ border:1px solid #3a4652; padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
+  table.ric-cons tr.testa td{ font-weight:700; color:#12181e; }
+  table.ric-cons b{ color:var(--ink); }
+  table.ric-cons .derivato{ color:var(--ink-dim); }
+  table.ric-cons .vuoto{ color:var(--ink-faint); font-style:italic; }
+  .ric-cons-campo{
+    display:block; width:100%; margin-top:3px; font-family:var(--font-mono); font-size:12px; color:#8ab4f8;
+    background:transparent; border:1px dashed #3d5a80; border-radius:6px; padding:3px 6px; outline:none;
+    min-height:1.6em; white-space:pre-wrap;
+  }
+  .ric-cons-campo:not(:empty){ border-style:solid; border-color:#2d4560; background:#1e2a3a; color:var(--ink); font-family:var(--font-body); }
+  .ric-cons-campo:focus{ border-color:#8ab4f8; border-style:solid; }
+  .ric-cons-campo:empty::before{ content:attr(data-placeholder); color:#5d7ea8; }
+  .ric-cons-inline{ display:flex; align-items:baseline; gap:6px; margin-top:4px; }
+  .ric-cons-inline:first-child{ margin-top:0; }
+  .ric-cons-inline > b{ flex-shrink:0; }
+  .ric-cons-inline .ric-cons-campo{ margin-top:0; }
+  .ric-cons-azioni{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:11px; }
+  .ric-cons-azioni label{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-dim); cursor:pointer; }
   .admit-altri-radio{
     margin-top:10px; border:1px dashed var(--line); border-radius:9px; padding:2px 11px;
   }
@@ -2084,156 +2170,151 @@
   </div>
 </div>
 
+<!-- RICOVERO: una sola schermata in tre blocchi
+     1. Paziente — dati di servizio (sesso, nome, età, diagnosi, letto,
+        reparto): compongono i testi ma non si copiano da soli
+     2. Ricovero — il "prestampato": le voci da incollare in cartella,
+        nell'ordine in cui si incollano. Ogni voce ha i suoi campi (le
+        pillole: tratteggiate se vuote, piene con ✓ se compilate; un tocco
+        apre/chiude il campo) e sotto il testo pronto da copiare
+     3. Consegna — anteprima della tabella di consegna, con i punti da
+        compilare direttamente lì (problemi attivi, dieta, mob, MdS...)
+     Gli id dei campi (admit-*) sono quelli di sempre: la logica di
+     salvataggio/sincronizzazione non cambia -->
 <div class="card" id="ricovero-singolo-view" style="display:none;">
   <button class="back-link" onclick="apriRicoveri()"><span class="ch">‹</span>Ricoveri</button>
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> Ricovero</h2>
+  <div class="ric-testata">
+    <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6"/><path d="M3 16h18"/><path d="M3 19v2M21 19v2"/><circle cx="7.5" cy="10" r="1.6"/><path d="M10.5 10H15"/></svg> <span id="admit-form-title">Nuovo ricovero</span></h2>
+    <div class="ric-testata-azioni" id="ric-testata-azioni"></div>
+  </div>
+  <div id="admit-form-body">
 
-  <div class="card admit-form-card" style="margin:0 0 14px;">
-    <div class="admit-form-header-row">
-      <h2 style="font-size:15px; margin:0;" id="admit-form-title">Nuovo ricovero</h2>
-      <button type="button" class="btn" id="admit-form-toggle-btn" onclick="toggleAdmitFormCompatto()" style="display:none;">Modifica</button>
-    </div>
-    <div class="admit-form-body" id="admit-form-body">
-
-    <div class="group admit-field">
-      <div class="field-label">Sesso</div>
-      <div class="chips admit-sesso-chips" id="admit-sesso-chips">
-        <div class="chip active" data-val="F">F</div>
-        <div class="chip" data-val="M">M</div>
-      </div>
-    </div>
-
-    <div class="admit-grid">
-      <div class="admit-field">
-        <div class="field-label">Cognome</div>
-        <input type="text" class="wide" id="admit-cognome" placeholder="es. Rossi">
-      </div>
-      <div class="admit-field">
-        <div class="field-label">Nome</div>
-        <input type="text" class="wide" id="admit-nome" placeholder="es. Maria">
-      </div>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Età (in anni)</div>
-      <input type="number" id="admit-eta" placeholder="es. 84">
-    </div>
-
-    <div class="group-label" style="margin-top:6px;">Dalla cartella del PS</div>
-
-    <div class="admit-field" style="background:var(--bg-soft, rgba(255,255,255,0.03)); border:1px dashed var(--line); border-radius:10px; padding:10px;">
-      <div class="field-label">Incolla qui il verbale del PS (opzionale)</div>
-      <textarea id="admit-smista-testo" placeholder="Incolla il testo intero del verbale: se contiene i marcatori A: / P: o APR: / TP: o TD: viene smistato automaticamente nei campi sottostanti (allergie, anamnesi remota, terapia). Il testo prima del primo marcatore trovato diventa anamnesi prossima."></textarea>
-      <button type="button" class="btn" style="margin-top:8px;" onclick="smistaTestoPSInCampi()">Smista nei campi</button>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Diagnosi d'ingresso</div>
-      <input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale destra">
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Anamnesi patologica prossima</div>
-      <textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Anamnesi patologica remota (prima bozza dal PS, si affina dopo)</div>
-      <textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia"></textarea>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Allergie</div>
-      <input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine">
-    </div>
-
-    <div class="group-label" style="margin-top:6px;">Esami eseguiti</div>
-
-    <div class="admit-field">
-      <div class="field-label">Esami ematochimici</div>
-      <textarea id="admit-ematochimici" placeholder="Hb 90, Gb 8.4, N 7.08, Na 127, K 4.4, creatinina 1.28, PCR 38, TnI 8, procalcitonina 2, bil tot 2, bil diretta 0.5, AST 12, ALT 3, GGT 25"></textarea>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Esami strumentali</div>
-      <div class="admit-field">
-        <div class="field-label">Rx torace</div>
-        <textarea id="admit-rxtorace" placeholder="Referto…"></textarea>
-      </div>
-      <details class="admit-altri-radio">
-        <summary class="admit-altri-radio-summary">Altri esami radiologici (Rx addome, TC addome/torace/cerebrale — facoltativi)</summary>
-        <div class="admit-grid" style="margin-top:10px;">
-          <div>
-            <div class="field-label">Rx addome</div>
-            <textarea id="admit-rxaddome" placeholder="Referto…"></textarea>
-          </div>
-          <div>
-            <div class="field-label">TC addome</div>
-            <textarea id="admit-tcaddome" placeholder="Referto…"></textarea>
-          </div>
-          <div>
-            <div class="field-label">TC torace</div>
-            <textarea id="admit-tctorace" placeholder="Referto…"></textarea>
-          </div>
-          <div>
-            <div class="field-label">TC cerebrale</div>
-            <textarea id="admit-tccerebrale" placeholder="Referto…"></textarea>
-          </div>
+  <!-- 1. PAZIENTE -->
+  <section class="ric-blocco ric-fuori">
+    <div class="ric-blocco-etichetta"><span>Paziente</span><span class="ric-nota">non si copia · compone i testi</span></div>
+    <div class="ric-riga">
+      <label class="ric-mini">Sesso
+        <div class="chips admit-sesso-chips" id="admit-sesso-chips">
+          <div class="chip active" data-val="F">F</div>
+          <div class="chip" data-val="M">M</div>
         </div>
-      </details>
-      <div id="admit-altri-esami"></div>
-      <button type="button" class="admit-add-btn" onclick="aggiungiAltroEsame()">+ Aggiungi esame (es. ECG, EGA, visite)</button>
+      </label>
+      <label class="ric-mini">Età<input type="number" id="admit-eta" placeholder="anni"></label>
     </div>
-
-    <div class="admit-field">
-      <div class="field-label">Provvedimenti in PS</div>
-      <textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea>
+    <div class="admit-grid ric-anagrafica">
+      <label class="ric-mini">Cognome<input type="text" class="wide" id="admit-cognome" placeholder="es. Rossi"></label>
+      <label class="ric-mini">Nome<input type="text" class="wide" id="admit-nome" placeholder="es. Maria"></label>
     </div>
-
-    <div class="group-label" style="margin-top:6px;">Dalla visita (esame obiettivo qui sotto, dopo aver generato) e dai parenti</div>
-
-    <div class="admit-field">
-      <div class="field-label">Anamnesi farmacologica (in dettaglio)</div>
-      <textarea id="admit-farmacologica" placeholder="Terapia domiciliare…"></textarea>
-    </div>
-
-    <div class="admit-field">
-      <div class="field-label">Anamnesi familiare e fisiologica</div>
-      <textarea id="admit-familiare" placeholder="…"></textarea>
-    </div>
-
-    <div class="group-label" style="margin-top:6px;">Destinazione</div>
-
-    <div class="admit-grid">
-      <div class="admit-field">
-        <div class="field-label">Letto</div>
-        <input type="text" id="admit-letto" placeholder="es. 4.1">
-      </div>
-      <div class="admit-field">
-        <div class="field-label">Reparto di ricovero</div>
+    <label class="ric-mini">Diagnosi d'ingresso<input type="text" class="wide" id="admit-diagnosi" placeholder="es. polmonite basale dx"></label>
+    <div class="ric-riga">
+      <label class="ric-mini">Letto<input type="text" id="admit-letto" placeholder="es. 4.1" style="width:90px;"></label>
+      <label class="ric-mini" style="flex:1;">Reparto
         <select id="admit-reparto">
           <option value="GERIATRIA">GERIATRIA</option>
           <option value="MED C2">MED C2</option>
           <option value="MED C1">MED C1</option>
         </select>
+      </label>
+    </div>
+    <details class="ric-verbale">
+      <summary>Incolla il verbale del PS e smistalo nei campi</summary>
+      <textarea id="admit-smista-testo" placeholder="Incolla il testo intero del verbale: con i marcatori A: / P: o APR: / TP: o TD: viene smistato in allergie, anamnesi remota e terapia. Il testo prima del primo marcatore va in anamnesi prossima."></textarea>
+      <button type="button" class="btn" style="margin-top:8px;" onclick="smistaTestoPSInCampi()">Smista nei campi</button>
+    </details>
+  </section>
+
+  <!-- 2. RICOVERO (prestampato) -->
+  <section class="ric-blocco ric-doc">
+    <div class="ric-blocco-etichetta"><span>Ricovero</span><span class="ric-nota">testi da incollare in cartella</span></div>
+
+    <div class="ric-voce" data-sezione="diario">
+      <div class="ric-voce-testa"><span class="ric-num">1</span><span class="ric-voce-titolo">Diario d'ingresso</span></div>
+      <div class="ric-campi">
+        <button type="button" class="ric-pill" data-vai="admit-cognome">cognome</button>
+        <button type="button" class="ric-pill" data-vai="admit-nome">nome</button>
+        <button type="button" class="ric-pill" data-vai="admit-eta">età</button>
+        <button type="button" class="ric-pill" data-vai="admit-diagnosi">diagnosi</button>
+      </div>
+      <div class="ric-anteprima" data-slot="diario"></div>
+    </div>
+
+    <div class="ric-voce" data-sezione="esameObiettivo">
+      <div class="ric-voce-testa"><span class="ric-num">2</span><span class="ric-voce-titolo">Esame obiettivo</span></div>
+      <div class="ric-campi">
+        <button type="button" class="ric-pill" id="ric-pill-eo" onclick="apriEsameObiettivoDalRicovero()">esame obiettivo</button>
+      </div>
+      <div class="ric-anteprima" data-slot="esameObiettivo"></div>
+      <div id="ricovero-eo-inline" style="display:none; margin-top:10px;">
+        <!-- #clinical-view viene inserito PRIMA di questo gruppo -->
+        <div class="group" id="ricovero-eo-chiudi" style="display:flex; justify-content:flex-end; margin:10px 0 0;">
+          <button class="btn" onclick="chiudiEsameObiettivoInline()">✓ Fatto: chiudi esame obiettivo</button>
+        </div>
       </div>
     </div>
 
-    <div class="row">
-      <button class="btn primary" id="admit-genera-btn" onclick="generaRicovero()">Genera ricovero</button>
-      <button class="btn" id="admit-nuovo-btn" onclick="nuovoRicovero()" style="display:none;">+ Nuovo ricovero</button>
+    <div class="ric-voce" data-sezione="familiare">
+      <div class="ric-voce-testa"><span class="ric-num">3</span><span class="ric-voce-titolo">Anamnesi familiare e fisiologica</span></div>
+      <div class="ric-campi"><button type="button" class="ric-pill" data-campo-form="admit-familiare">familiare e fisiologica</button></div>
+      <div class="ric-editor" data-editor="admit-familiare"><textarea id="admit-familiare" placeholder="Vive con…, autonomia, abitudini…"></textarea></div>
+      <div class="ric-anteprima" data-slot="familiare"></div>
     </div>
-    </div>
-  </div>
 
+    <div class="ric-voce" data-sezione="allergie">
+      <div class="ric-voce-testa"><span class="ric-num">4</span><span class="ric-voce-titolo">Allergie</span></div>
+      <div class="ric-campi"><button type="button" class="ric-pill" data-campo-form="admit-allergie">allergie</button></div>
+      <div class="ric-editor" data-editor="admit-allergie"><input type="text" class="wide" id="admit-allergie" placeholder="es. cefalosporine, oppure: nega allergie"></div>
+      <div class="ric-anteprima" data-slot="allergie"></div>
+    </div>
+
+    <div class="ric-voce" data-sezione="remota">
+      <div class="ric-voce-testa"><span class="ric-num">5</span><span class="ric-voce-titolo">Anamnesi patologica remota</span></div>
+      <div class="ric-campi"><button type="button" class="ric-pill" data-campo-form="admit-remota">patologie</button></div>
+      <div class="ric-editor" data-editor="admit-remota"><textarea id="admit-remota" placeholder="FA - diabete mellito - dislipidemia (anche una per riga)"></textarea></div>
+      <div class="ric-anteprima" data-slot="remota"></div>
+    </div>
+
+    <div class="ric-voce" data-sezione="prossima">
+      <div class="ric-voce-testa"><span class="ric-num">6</span><span class="ric-voce-titolo">Anamnesi patologica prossima</span></div>
+      <div class="ric-campi">
+        <button type="button" class="ric-pill" data-campo-form="admit-prossima">racconto</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-ematochimici">esami ematochimici</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-rxtorace">Rx torace</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-rxaddome">Rx addome</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-tctorace">TC torace</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-tcaddome">TC addome</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-tccerebrale">TC cerebrale</button>
+        <button type="button" class="ric-pill ric-pill-aggiungi" onclick="aggiungiAltroEsame(); aggiornaPillRicovero(); document.querySelector('#admit-altri-esami .altro-esame-row:last-child .altro-esame-nome')?.focus();">+ altro esame</button>
+        <button type="button" class="ric-pill" data-campo-form="admit-provvedimenti">provvedimenti in PS</button>
+      </div>
+      <div class="ric-editor" data-editor="admit-prossima"><div class="ric-editor-label">Racconto</div><textarea id="admit-prossima" placeholder="Racconto clinico dell'evento attuale…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-ematochimici"><div class="ric-editor-label">Esami ematochimici</div><textarea id="admit-ematochimici" placeholder="Hb 90, Gb 8.4, Na 127, K 4.4, creatinina 1.28, PCR 38…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-rxtorace"><div class="ric-editor-label">Rx torace</div><textarea id="admit-rxtorace" placeholder="Referto…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-rxaddome"><div class="ric-editor-label">Rx addome</div><textarea id="admit-rxaddome" placeholder="Referto…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-tctorace"><div class="ric-editor-label">TC torace</div><textarea id="admit-tctorace" placeholder="Referto…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-tcaddome"><div class="ric-editor-label">TC addome</div><textarea id="admit-tcaddome" placeholder="Referto…"></textarea></div>
+      <div class="ric-editor" data-editor="admit-tccerebrale"><div class="ric-editor-label">TC cerebrale</div><textarea id="admit-tccerebrale" placeholder="Referto…"></textarea></div>
+      <div id="admit-altri-esami"></div>
+      <div class="ric-editor" data-editor="admit-provvedimenti"><div class="ric-editor-label">Provvedimenti in PS</div><textarea id="admit-provvedimenti" placeholder="es. somministrato ceftriaxone, SF 500 ml"></textarea></div>
+      <div class="ric-anteprima" data-slot="prossima"></div>
+    </div>
+
+    <div class="ric-voce" data-sezione="farmacologica">
+      <div class="ric-voce-testa"><span class="ric-num">7</span><span class="ric-voce-titolo">Anamnesi farmacologica</span></div>
+      <div class="ric-campi"><button type="button" class="ric-pill" data-campo-form="admit-farmacologica">terapia domiciliare</button></div>
+      <div class="ric-editor" data-editor="admit-farmacologica"><textarea id="admit-farmacologica" placeholder="Terapia domiciliare (anche incollata dal verbale, con i trattini)…"></textarea></div>
+      <div class="ric-anteprima" data-slot="farmacologica"></div>
+    </div>
+  </section>
+
+  <!-- 3. CONSEGNA (anteprima) -->
+  <section class="ric-blocco ric-consegna">
+    <div class="ric-blocco-etichetta"><span>Consegna</span><span class="ric-nota">anteprima · i punti si compilano qui</span></div>
+    <div id="ric-consegna-anteprima"></div>
+  </section>
+
+  </div>
+  <!-- vecchio contenitore dei box generati: non più usato, resta vuoto -->
   <div id="ricovero-singolo-box"></div>
-
-  <div id="ricovero-eo-inline" style="display:none; margin-top:14px;">
-    <!-- in fondo: #clinical-view viene inserito PRIMA di questo gruppo -->
-    <div class="group" id="ricovero-eo-chiudi" style="display:flex; justify-content:flex-end; margin:10px 0 0;">
-      <button class="btn" onclick="chiudiEsameObiettivoInline()">✕ Chiudi esame obiettivo</button>
-    </div>
-  </div>
 </div>
 
 <div id="clinical-view">
@@ -3940,8 +4021,6 @@ function svuotaFormRicovero(){
   document.getElementById('admit-altri-esami').innerHTML = '';
   const repartoSel = document.getElementById('admit-reparto');
   if(repartoSel) repartoSel.value = 'GERIATRIA';
-  const dettagliRadioReset = document.querySelector('.admit-altri-radio');
-  if(dettagliRadioReset) dettagliRadioReset.open = false;
   const chipsEl = document.getElementById('admit-sesso-chips');
   if(chipsEl){
     chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -3949,37 +4028,71 @@ function svuotaFormRicovero(){
   }
 }
 
-// comprime/espande il form di compilazione del ricovero: una volta generato
-// (o aperto per la sola consultazione) si compatta da solo, così la scheda
-// vera e propria (ricovero-singolo-box) resta subito visibile senza dover
-// scorrere oltre il form. "Modifica" lo riapre per correggere i campi.
-function impostaAdmitFormCompatto(compatto){
-  const body = document.getElementById('admit-form-body');
-  const btn = document.getElementById('admit-form-toggle-btn');
-  if(!body) return;
-  body.style.display = compatto ? 'none' : '';
-  if(btn){
-    btn.style.display = compatto ? '' : 'none';
-    btn.textContent = 'Modifica';
+// CAMPI DEL PRESTAMPATO: ogni pillola (.ric-pill) apre/chiude il proprio
+// campo (.ric-editor con lo stesso id); "data-vai" invece porta a un campo
+// del riquadro Paziente (cognome, età... del Diario). Le pillole sono
+// tratteggiate se il campo è vuoto, piene con ✓ se compilato
+function apriEditorRicovero(idCampo, apri){
+  const ed = document.querySelector(`#ricovero-singolo-view .ric-editor[data-editor="${idCampo}"]`);
+  const pill = document.querySelector(`#ricovero-singolo-view .ric-pill[data-campo-form="${idCampo}"]`);
+  if(!ed) return;
+  const aperto = apri === undefined ? !ed.classList.contains('aperto') : apri;
+  ed.classList.toggle('aperto', aperto);
+  if(pill) pill.classList.toggle('aperto', aperto);
+  if(aperto){
+    // l'altezza giusta si legge solo a campo visibile
+    ed.querySelectorAll('textarea').forEach(autoResizeTextarea);
+    const campo = document.getElementById(idCampo);
+    if(campo && apri === undefined) campo.focus();
   }
-  // le altezze corrette si leggono solo a elemento visibile: qui copre sia
-  // "nuovo ricovero" (modulo aperto da subito) sia "Modifica" su un
-  // ricovero già caricato (modulo riaperto con testo già dentro)
-  if(!compatto) autoResizeTutteRicoveriTextarea();
 }
-function toggleAdmitFormCompatto(){
-  const body = document.getElementById('admit-form-body');
-  impostaAdmitFormCompatto(body && body.style.display !== 'none');
+function chiudiTuttiEditorRicovero(){
+  document.querySelectorAll('#ricovero-singolo-view .ric-editor.aperto').forEach(ed => apriEditorRicovero(ed.dataset.editor, false));
+}
+function aggiornaPillRicovero(){
+  const view = document.getElementById('ricovero-singolo-view');
+  if(!view) return;
+  view.querySelectorAll('.ric-pill[data-campo-form], .ric-pill[data-vai]').forEach(pill => {
+    const campo = document.getElementById(pill.dataset.campoForm || pill.dataset.vai);
+    pill.classList.toggle('pieno', !!(campo && String(campo.value).trim()));
+  });
+  const pillEo = document.getElementById('ric-pill-eo');
+  if(pillEo){
+    const rec = currentRicoveroId ? loadRicoveri().find(r => r.id === currentRicoveroId) : null;
+    pillEo.classList.toggle('pieno', !!(rec && (rec.esameObiettivo || '').trim()));
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const view = document.getElementById('ricovero-singolo-view');
+  if(!view) return;
+  view.addEventListener('click', (e) => {
+    const pill = e.target.closest('.ric-pill');
+    if(!pill) return;
+    if(pill.dataset.campoForm){ apriEditorRicovero(pill.dataset.campoForm); return; }
+    if(pill.dataset.vai){
+      const campo = document.getElementById(pill.dataset.vai);
+      if(campo){ campo.scrollIntoView({ behavior:'smooth', block:'center' }); campo.focus({ preventScroll:true }); }
+    }
+  });
+  // verbale del PS: la textarea dentro <details> chiuso ha altezza 0
+  view.querySelector('.ric-verbale')?.addEventListener('toggle', (e) => {
+    if(e.target.open) e.target.querySelectorAll('textarea').forEach(autoResizeTextarea);
+  });
+});
+// "esame obiettivo": serve un ricovero con almeno il nome (la scheda
+// dell'esame obiettivo viene creata tra gli Appoggi col nome del paziente)
+function apriEsameObiettivoDalRicovero(){
+  if(!currentRicoveroId){ showToast('Scrivi prima il nome del paziente'); return; }
+  eseguiSalvataggioRicoveroForm(); // il nome appena scritto deve essere già salvato
+  apriEsameObiettivoInline(currentRicoveroId);
 }
 
 function nuovoRicovero(){
   eseguiSalvataggioRicoveroForm(); // prima di lasciare il ricovero aperto
+  eseguiSalvataggiConsegna();
   currentRicoveroId = null;
   svuotaFormRicovero();
-  document.getElementById('admit-form-title').textContent = 'Nuovo ricovero';
-  document.getElementById('admit-genera-btn').textContent = 'Genera ricovero';
-  document.getElementById('admit-nuovo-btn').style.display = 'none';
-  impostaAdmitFormCompatto(false);
+  chiudiTuttiEditorRicovero();
   renderRicoveroSingoloBox();
 }
 function apriNuovoRicoveroSingolo(){
@@ -3987,12 +4100,8 @@ function apriNuovoRicoveroSingolo(){
   mostraVista('ricovero-singolo');
 }
 
-// crea SUBITO un ricovero (bozza) al primo carattere scritto nel modulo,
-// prima ancora di premere "Genera ricovero" — così compare da subito
-// nell'elenco Ricoveri e non c'è più bisogno di generare presto solo per
-// non perdere quello che si è scritto. "Genera ricovero"/"Aggiorna
-// ricovero" restano comunque utili per ricalcolare tutto a comando e
-// compattare il modulo quando si è pronti.
+// crea SUBITO un ricovero (bozza) al primo carattere scritto in un campo:
+// compare da subito nell'elenco Ricoveri, senza nessun pulsante da premere
 function creaBozzaRicovero(){
   const campi = raccogliCampiForm();
   const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || 'Ricovero';
@@ -4019,9 +4128,6 @@ function creaBozzaRicovero(){
   currentRicoveroId = record.id;
   ricoveriAperti.add(record.id);
   renderRicoveroSingoloBox();
-  document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
-  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
-  document.getElementById('admit-nuovo-btn').style.display = '';
   // così, se in quel momento si è anche sull'elenco Ricoveri (altra scheda/
   // finestra) o sulle tab del giorno qui sopra, la bozza compare subito
   renderRicoveriTabs();
@@ -4060,43 +4166,29 @@ function eseguiSalvataggioRicoveroForm(){
 // stati toccati a mano, lasciando intatto tutto il resto — stessa
 // filosofia di aggiornaVitale() per l'esame obiettivo
 function aggiornaRicoveroDalForm(){
+  aggiornaPillRicovero();
   if(!currentRicoveroId){ creaBozzaRicovero(); return; }
-  const box = document.getElementById('ricovero-singolo-box');
-  if(!box || !box.querySelector('.admit-block')) return;
+  const view = document.getElementById('ricovero-singolo-view');
+  if(!view) return;
 
   const campi = raccogliCampiForm();
-  const nuovi = {
-    diario: costruisciDiario(campi),
-    prossima: costruisciProssima(campi),
-    remota: costruisciRemota(campi),
-    farmacologica: costruisciFarmacologica(campi),
-    familiare: costruisciFamiliare(campi),
-    allergie: costruisciAllergie(campi)
-  };
+  const nuovi = calcolaTestiRicovero(campi);
   const baseline = ricoveroAutoUltimo[currentRicoveroId] || {};
   const cambiatiVergini = {};
-  // un campo appena comparso/scomparso (era vuoto e ora ha testo, o
-  // viceversa) fa comparire/sparire l'intero box: in quel caso serve un
-  // render completo, non basta aggiornare un testContent già a schermo
-  let serveRenderCompleto = false;
 
   Object.keys(nuovi).forEach(campo => {
-    const el = box.querySelector(`[data-campo="${campo}"]`);
+    const el = view.querySelector(`.ric-anteprima [data-campo="${campo}"]`);
     const eraVergine = !el || baseline[campo] === undefined || el.textContent === baseline[campo];
-    if(!eraVergine) return; // modificato a mano nel box: non lo tocchiamo
+    if(!eraVergine) return; // modificato a mano nel testo: non lo tocchiamo
 
     cambiatiVergini[campo] = nuovi[campo];
-    const nuovoVuoto = !nuovi[campo].trim();
-    if(!el){
-      if(!nuovoVuoto) serveRenderCompleto = true;
-    } else if(nuovoVuoto && campo !== 'problemi'){
-      serveRenderCompleto = true;
-    } else if(el.textContent !== nuovi[campo]){
+    if(el && el.textContent !== nuovi[campo]){
       el.textContent = nuovi[campo];
-      // stesso "sporca il badge copiato" fatto dal listener del box stesso
-      const sub = el.closest('.admit-sub');
-      sub?.classList.remove('copiato');
-      sub?.querySelector('.admit-sub-copiato-badge')?.remove();
+      if(el._rec) el._rec[campo] = nuovi[campo];
+      // il testo è cambiato: il segno "copiato" non vale più
+      const voce = el.closest('.ric-voce');
+      voce?.classList.remove('copiato');
+      voce?.querySelector('.admit-sub-copiato-badge')?.remove();
     }
   });
 
@@ -4108,99 +4200,29 @@ function aggiornaRicoveroDalForm(){
     campi,
     campiVergini: { ...(pendingStessoRicovero ? pendingSalvataggioRicoveroForm.campiVergini : null), ...cambiatiVergini }
   };
-
-  if(serveRenderCompleto){
-    eseguiSalvataggioRicoveroForm();
-    renderRicoveroSingoloBox();
-    return;
-  }
+  aggiornaIndicatoriManualiRicovero();
+  aggiornaConsegnaDerivati();
   // il salvataggio vero e proprio (localStorage + sync cloud) è più
-  // pesante: lo rimandiamo a quando l'utente smette di scrivere per un
-  // attimo, stessa ragione/stesso ritardo già usato per il box stesso
-  // (vedi salvaSubito dentro renderRicoveroSingoloBox)
+  // pesante: lo rimandiamo a quando l'utente smette di scrivere per un attimo
   clearTimeout(debounceSalvataggioRicoveroForm);
   debounceSalvataggioRicoveroForm = setTimeout(eseguiSalvataggioRicoveroForm, 500);
 }
 
-function generaRicovero(){
-  eseguiSalvataggioRicoveroForm();
-  const campi = raccogliCampiForm();
-
-  // se non c'è già una bozza (currentRicoveroId), qui stiamo per crearne
-  // una nuova ex-novo: serve almeno un nome. Se invece currentRicoveroId
-  // esiste già (la bozza è nata da sola al primo carattere scritto, vedi
-  // creaBozzaRicovero), non blocchiamo l'aggiornamento anche se nel
-  // frattempo cognome/nome sono rimasti vuoti: il ricovero esiste comunque
-  if(!currentRicoveroId && !campi.cognome.trim() && !campi.nome.trim()){
-    showToast('Inserisci almeno il nome del paziente');
-    return;
-  }
-
-  const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || 'Ricovero';
-  const diario = costruisciDiario(campi);
-  const prossima = costruisciProssima(campi);
-  const remota = costruisciRemota(campi);
-  const farmacologica = costruisciFarmacologica(campi);
-  const familiare = costruisciFamiliare(campi);
-  const allergie = costruisciAllergie(campi);
-
-  const list = loadRicoveri();
-
-  if(currentRicoveroId){
-    const idx = list.findIndex(r => r.id === currentRicoveroId);
-    if(idx !== -1){
-      // "problemi" non fa parte del form: si scrive solo a mano nel box del
-      // ricovero già generato, quindi qui non va toccato/sovrascritto
-      const nuoviCampi = { diario, prossima, remota, farmacologica, familiare, allergie };
-      const baseline = ricoveroAutoUltimo[currentRicoveroId] || {};
-      Object.keys(nuoviCampi).forEach(campo => {
-        const eraVergine = baseline[campo] === undefined || list[idx][campo] === baseline[campo];
-        // stessa regola dell'aggiornamento automatico dal form: un campo
-        // già modificato a mano nel box non viene sovrascritto nemmeno
-        // premendo "Aggiorna ricovero"
-        if(eraVergine) list[idx][campo] = nuoviCampi[campo];
-      });
-      list[idx] = { ...list[idx], campi, label };
-      ricoveroAutoUltimo[currentRicoveroId] = nuoviCampi;
-      saveRicoveri(list);
-      ricoveriAperti.add(currentRicoveroId);
-      renderRicoveroSingoloBox();
-      impostaAdmitFormCompatto(true);
-      showToast('Ricovero aggiornato');
-      return;
-    }
-  }
-
-  const record = {
-    id: 'ric_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-    seq: nextRicoveroSeq(),
-    creatoIl: Date.now(),
-    selezionato: true,
-    label,
-    campi,
-    diario,
-    prossima,
-    remota,
-    farmacologica,
-    familiare,
-    allergie,
-    problemi: ''
+// i sei testi del ricovero che si compongono dai campi
+function calcolaTestiRicovero(campi){
+  return {
+    diario: costruisciDiario(campi),
+    prossima: costruisciProssima(campi),
+    remota: costruisciRemota(campi),
+    farmacologica: costruisciFarmacologica(campi),
+    familiare: costruisciFamiliare(campi),
+    allergie: costruisciAllergie(campi)
   };
-  list.push(record);
-  ricoveroAutoUltimo[record.id] = { diario, prossima, remota, farmacologica, familiare, allergie };
-  saveRicoveri(list);
-  currentRicoveroId = record.id;
-  ricoveriAperti.add(record.id);
-  renderRicoveroSingoloBox();
-  showToast('Ricovero generato');
-  document.getElementById('admit-form-title').textContent = `Ricovero ${record.seq}`;
-  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
-  document.getElementById('admit-nuovo-btn').style.display = '';
-  impostaAdmitFormCompatto(true);
 }
 
 function caricaRicovero(id){
   eseguiSalvataggioRicoveroForm(); // prima di lasciare il ricovero aperto
+  eseguiSalvataggiConsegna();
   const rec = loadRicoveri().find(r => r.id === id);
   if(!rec) return;
   currentRicoveroId = id;
@@ -4221,8 +4243,6 @@ function caricaRicovero(id){
   document.getElementById('admit-tcaddome').value = c.tcaddome || '';
   document.getElementById('admit-tctorace').value = c.tctorace || '';
   document.getElementById('admit-tccerebrale').value = c.tccerebrale || '';
-  const dettagliRadio = document.querySelector('.admit-altri-radio');
-  if(dettagliRadio) dettagliRadio.open = !!(c.rxaddome || c.tcaddome || c.tctorace || c.tccerebrale);
   document.getElementById('admit-altri-esami').innerHTML = '';
   (c.altriEsami || []).forEach(es => aggiungiAltroEsame(es.nome, es.testo));
   document.getElementById('admit-remota').value = c.remota || '';
@@ -4236,10 +4256,7 @@ function caricaRicovero(id){
     });
   }
 
-  document.getElementById('admit-form-title').textContent = `Ricovero ${rec.seq}`;
-  document.getElementById('admit-genera-btn').textContent = 'Aggiorna ricovero';
-  document.getElementById('admit-nuovo-btn').style.display = '';
-  impostaAdmitFormCompatto(true);
+  chiudiTuttiEditorRicovero();
   renderRicoveroSingoloBox();
 }
 function apriRicoveroSingolo(id){
@@ -4481,6 +4498,7 @@ function apriEsameObiettivoInline(ricoveroId){
   // tocca davvero qualcosa — stessa ragione di selezionaPaziente()
   refreshUI(false);
 
+  renderRicoveroSingoloBox();
   const contenitore = document.getElementById('ricovero-eo-inline');
   const clinical = document.getElementById('clinical-view');
   // l'esame va sopra, il pulsante "Chiudi esame obiettivo" resta in fondo
@@ -4503,7 +4521,11 @@ function chiudiEsameObiettivoInline(){
 
   // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
   // già il pulsante "Aggiorna esame obiettivo") con le modifiche appena fatte
-  if(ricoveroIdEsameObiettivoInline) collegaEsameObiettivo(ricoveroIdEsameObiettivoInline);
+  if(ricoveroIdEsameObiettivoInline){
+    collegaEsameObiettivo(ricoveroIdEsameObiettivoInline);
+    // la voce "Esame obiettivo" del ricovero mostra subito il testo appena scritto
+    if(ricoveroIdEsameObiettivoInline === currentRicoveroId) renderRicoveroSingoloBox();
+  }
   ricoveroIdEsameObiettivoInline = null;
 
   if(patientIdPrimaInline){
@@ -4681,257 +4703,383 @@ function renderCalendarioRicoveri(listCompleta){
   container.appendChild(box);
 }
 
-// mostra (nella pagina dedicata al singolo ricovero) il box con Diario,
-// Esame obiettivo ecc. del ricovero attualmente caricato nel form — vuoto
-// se non è ancora stato generato nulla (form pulito, "Nuovo ricovero")
-function renderRicoveroSingoloBox(){
-  const container = document.getElementById('ricovero-singolo-box');
-  if(!container) return;
-  container.innerHTML = '';
-  if(!currentRicoveroId) return;
-  const rec = loadRicoveri().find(r => r.id === currentRicoveroId);
-  if(!rec) return;
+// disegna la schermata del ricovero aperto: titolo e azioni, il testo
+// pronto di ciascuna voce del prestampato (modificabile anche a mano) e
+// l'anteprima della consegna. I campi (admit-*) non vengono toccati qui:
+// li riempiono caricaRicovero/svuotaFormRicovero
+const VOCI_RICOVERO = ['diario', 'esameObiettivo', 'familiare', 'allergie', 'remota', 'prossima', 'farmacologica'];
+const SEGNAPOSTO_VOCE = {
+  diario: 'Si compone da sesso, nome, età e diagnosi del riquadro Paziente',
+  esameObiettivo: 'Tocca "esame obiettivo" per compilarlo qui sotto',
+  familiare: 'Tocca il campo qui sopra per scriverla',
+  allergie: 'Tocca il campo qui sopra per scriverle',
+  remota: 'Tocca il campo qui sopra: una patologia per riga o separate da trattini',
+  prossima: 'Racconto, esami e provvedimenti del PS: tocca i campi qui sopra',
+  farmacologica: 'Tocca il campo qui sopra e incolla la terapia domiciliare'
+};
+// corrispondenza testo -> campo del modulo, per i testi che sono la
+// semplice copia formattata di un solo campo: una modifica fatta a mano nel
+// testo torna anche nel campo, così riaprendo il ricovero non si perde
+const CAMPO_FORM_DI_VOCE = { remota:'admit-remota', farmacologica:'admit-farmacologica', familiare:'admit-familiare', allergie:'admit-allergie' };
+const CHIAVE_CAMPI_DI_VOCE = { remota:'remota', farmacologica:'farmacologica', familiare:'familiare', allergie:'allergie' };
 
-  // tiene traccia, per questo ricovero, dell'ultimo valore "generato dal
-  // form" per ciascuno dei 6 campi derivati: la prima volta che lo
-  // incontriamo in questa sessione assumiamo che il box mostri ancora
-  // esattamente quel valore (nessuna modifica a mano nota) — le volte
-  // successive questo tracciamento viene aggiornato solo da
-  // aggiornaRicoveroDalForm()/generaRicovero(), MAI qui, altrimenti un
-  // semplice ri-render "dimenticherebbe" una modifica a mano già fatta
-  if(ricoveroAutoUltimo[rec.id] === undefined){
-    ricoveroAutoUltimo[rec.id] = {
-      diario: rec.diario || '', prossima: rec.prossima || '', remota: rec.remota || '',
-      farmacologica: rec.farmacologica || '', familiare: rec.familiare || '', allergie: rec.allergie || ''
-    };
+function renderRicoveroSingoloBox(){
+  const view = document.getElementById('ricovero-singolo-view');
+  if(!view) return;
+  const rec = currentRicoveroId ? loadRicoveri().find(r => r.id === currentRicoveroId) : null;
+
+  // riferimento "generato dai campi" di ciascun testo: un testo diverso da
+  // questo è stato modificato a mano e non viene più riscritto dai campi
+  // (vedi aggiornaRicoveroDalForm), finché non si tocca "rigenera"
+  if(rec && ricoveroAutoUltimo[rec.id] === undefined){
+    ricoveroAutoUltimo[rec.id] = calcolaTestiRicovero(Object.assign({ sesso:'F' }, rec.campi || {}));
   }
 
-  const block = document.createElement('details');
-  block.className = 'admit-block';
-  block.open = ricoveriAperti.has(rec.id);
-  block.addEventListener('toggle', () => {
-    if(block.open) ricoveriAperti.add(rec.id);
-    else ricoveriAperti.delete(rec.id);
+  document.getElementById('admit-form-title').textContent = rec ? `Ricovero ${rec.seq}` : 'Nuovo ricovero';
+  renderAzioniRicovero(rec);
+
+  VOCI_RICOVERO.forEach(campo => {
+    const slot = view.querySelector(`.ric-anteprima[data-slot="${campo}"]`);
+    if(!slot) return;
+    const voce = slot.closest('.ric-voce');
+    const testa = voce.querySelector('.ric-voce-testa');
+    testa.querySelectorAll('.admit-copy-btn, .ric-manuale').forEach(e => e.remove());
+    voce.querySelector('.admit-sub-copiato-badge')?.remove();
+    voce.classList.toggle('copiato', !!(rec && rec.copiati && rec.copiati[campo]));
+    slot.innerHTML = '';
+    const editable = creaTestoVoceRicovero(rec, campo, voce);
+    slot.appendChild(editable);
+    if(!rec) return;
+    if(CAMPO_FORM_DI_VOCE[campo] !== undefined || ['diario','prossima'].includes(campo)){
+      const manuale = document.createElement('span');
+      manuale.className = 'ric-manuale';
+      manuale.dataset.voce = campo;
+      testa.appendChild(manuale);
+    }
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'admit-copy-btn';
+    copyBtn.textContent = 'Copia';
+    copyBtn.onclick = () => {
+      const testo = editable._testo();
+      if(!testo.trim()){ showToast('Niente da copiare: compila prima i campi'); return; }
+      copiaTesto(testo);
+      segnaBoxCopiato(rec.id, campo, voce);
+    };
+    testa.appendChild(copyBtn);
   });
 
-  const head = document.createElement('summary');
-  head.className = 'admit-block-head';
+  aggiornaIndicatoriManualiRicovero();
+  renderAnteprimaConsegna(rec);
+  aggiornaPillRicovero();
+}
 
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'admit-block-title-row';
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.className = 'admit-checkbox';
-  checkbox.checked = rec.selezionato !== false;
-  checkbox.title = 'Includi nel prossimo export delle consegne';
-  checkbox.onclick = (e) => { e.stopPropagation(); };
-  checkbox.onchange = () => toggleSelezioneRicovero(rec.id, checkbox.checked);
-  const chev = document.createElement('span');
-  chev.className = 'admit-chev';
-  chev.textContent = '›';
-  const title = document.createElement('div');
-  title.className = 'admit-block-title';
-  title.textContent = `Ricovero ${rec.seq} · ${rec.label}`;
-  titleWrap.appendChild(checkbox);
-  titleWrap.appendChild(chev);
-  titleWrap.appendChild(title);
+// testo pronto di una voce: si può correggere anche a mano (la modifica
+// resta finché non si tocca "rigenera")
+function creaTestoVoceRicovero(rec, campo, voce){
+  const editable = document.createElement('div');
+  editable.className = 'admit-editable';
+  editable.dataset.campo = campo;
+  editable._rec = rec;
+  if(!rec){
+    // nessun ricovero ancora: nasce al primo carattere scritto in un campo
+    editable.contentEditable = 'false';
+    editable.textContent = SEGNAPOSTO_VOCE[campo];
+    editable._testo = () => '';
+    return editable;
+  }
+  // "plaintext-only": Invio inserisce un vero a capo invece di un <div>;
+  // dove non è supportato si ripiega su 'true' e si legge con innerText
+  try { editable.contentEditable = 'plaintext-only'; } catch(e) { editable.contentEditable = 'true'; }
+  if(editable.contentEditable !== 'plaintext-only') editable.contentEditable = 'true';
+  editable.setAttribute('spellcheck', 'true');
+  editable.setAttribute('autocorrect', 'on');
+  editable.setAttribute('autocapitalize', 'sentences');
+  editable.dataset.placeholder = SEGNAPOSTO_VOCE[campo];
+  editable.textContent = rec[campo] || '';
+  // APR e farmaci restano su una riga sola, come li compone il modulo: un a
+  // capo scritto nel testo diventa ", "
+  const SU_UNA_RIGA = (campo === 'remota' || campo === 'farmacologica');
+  const testoDelBox = () => {
+    const t = editable.innerText.replace(/\r/g, '').replace(/\n$/, '');
+    if(campo === 'farmacologica' && t.includes('\n')) return formattaAnamnesiFarmacologica(t).replace(/\s*\n+\s*/g, ', ');
+    return SU_UNA_RIGA ? unisciVociSuUnaRiga(t) : t;
+  };
+  editable._testo = testoDelBox;
+  let debounceSalvataggio = null;
+  const salvaSubito = () => {
+    clearTimeout(debounceSalvataggio);
+    const list = loadRicoveri();
+    const idx = list.findIndex(r => r.id === rec.id);
+    if(idx === -1) return;
+    list[idx][campo] = rec[campo];
+    // solo lo stato "copiato" di QUESTO testo, non l'oggetto intero (vedi segnaBoxCopiato)
+    if(rec.copiati && rec.copiati[campo] === false && list[idx].copiati) list[idx].copiati[campo] = false;
+    const chiave = CHIAVE_CAMPI_DI_VOCE[campo];
+    if(chiave && list[idx].campi) list[idx].campi[chiave] = rec[campo];
+    saveRicoveri(list);
+  };
+  editable.addEventListener('input', () => {
+    rec[campo] = testoDelBox();
+    if(rec.copiati && rec.copiati[campo]){
+      rec.copiati[campo] = false;
+      voce.classList.remove('copiato');
+      voce.querySelector('.admit-sub-copiato-badge')?.remove();
+    }
+    const campoForm = CAMPO_FORM_DI_VOCE[campo] && document.getElementById(CAMPO_FORM_DI_VOCE[campo]);
+    if(campoForm && campoForm.value !== rec[campo]){
+      campoForm.value = rec[campo];
+      // il campo ora coincide col testo: il testo torna "generato"
+      if(ricoveroAutoUltimo[rec.id]) ricoveroAutoUltimo[rec.id][campo] = calcolaTestiRicovero(raccogliCampiForm())[campo];
+      aggiornaPillRicovero();
+    }
+    aggiornaIndicatoriManualiRicovero();
+    aggiornaConsegnaDerivati();
+    clearTimeout(debounceSalvataggio);
+    debounceSalvataggio = setTimeout(salvaSubito, 500);
+  });
+  editable.addEventListener('blur', () => {
+    if(SU_UNA_RIGA && editable.innerText.includes('\n')) editable.textContent = rec[campo];
+    salvaSubito();
+  });
+  // copia a mano (Cmd/Ctrl+C, iPhone): solo testo, senza lo sfondo del box
+  editable.addEventListener('copy', (e) => {
+    const selezione = window.getSelection().toString();
+    if(selezione && e.clipboardData){
+      e.clipboardData.setData('text/plain', selezione);
+      e.preventDefault();
+    }
+  });
+  return editable;
+}
 
-  const actions = document.createElement('div');
-  actions.className = 'admit-block-actions';
-  const linkEOBtn = document.createElement('button');
-  linkEOBtn.className = 'admit-copy-btn';
-  linkEOBtn.textContent = rec.esameObiettivoPatientId ? 'Apri esame obiettivo' : '+ Esame obiettivo';
-  linkEOBtn.title = 'Apre/modifica l\'esame obiettivo di questo paziente qui sotto, senza cambiare pagina';
-  linkEOBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); apriEsameObiettivoInline(rec.id); };
-  const copiaConsegnaBtn = document.createElement('button');
-  copiaConsegnaBtn.className = 'admit-copy-btn';
-  copiaConsegnaBtn.textContent = 'Copia consegna';
-  copiaConsegnaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); copiaConsegna(rec); };
+// "scritto a mano · rigenera": accanto ai testi che non coincidono più con
+// quello che i campi comporrebbero
+function aggiornaIndicatoriManualiRicovero(){
+  const view = document.getElementById('ricovero-singolo-view');
+  if(!view) return;
+  view.querySelectorAll('.ric-voce').forEach(voce => {
+    const el = voce.querySelector('.ric-anteprima .admit-editable');
+    voce.classList.toggle('vuota', !el || !el._testo || !el._testo().trim());
+  });
+  if(!currentRicoveroId) return;
+  const base = ricoveroAutoUltimo[currentRicoveroId] || {};
+  view.querySelectorAll('.ric-manuale').forEach(ind => {
+    const campo = ind.dataset.voce;
+    const el = view.querySelector(`.ric-anteprima [data-campo="${campo}"]`);
+    const manuale = !!el && base[campo] !== undefined && el.textContent !== base[campo];
+    if(!manuale){ ind.innerHTML = ''; return; }
+    if(ind.firstChild) return;
+    ind.append('scritto a mano');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '↺ rigenera';
+    b.title = 'Sostituisce il testo con quello composto dai campi';
+    b.onclick = () => rigeneraVoceRicovero(campo);
+    ind.appendChild(b);
+  });
+}
+function rigeneraVoceRicovero(campo){
+  if(!currentRicoveroId) return;
+  eseguiSalvataggioRicoveroForm();
+  const nuovo = calcolaTestiRicovero(raccogliCampiForm())[campo];
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === currentRicoveroId);
+  if(idx === -1) return;
+  list[idx][campo] = nuovo;
+  if(list[idx].copiati) list[idx].copiati[campo] = false;
+  saveRicoveri(list);
+  if(ricoveroAutoUltimo[currentRicoveroId]) ricoveroAutoUltimo[currentRicoveroId][campo] = nuovo;
+  renderRicoveroSingoloBox();
+  showToast('Testo rigenerato dai campi');
+}
+
+// in alto a destra: Esporta (.txt) ed Elimina (doppio tocco di conferma)
+function renderAzioniRicovero(rec){
+  const azioni = document.getElementById('ric-testata-azioni');
+  if(!azioni) return;
+  azioni.innerHTML = '';
+  if(!rec) return;
   const esportaBtn = document.createElement('button');
   esportaBtn.className = 'admit-copy-btn';
   esportaBtn.textContent = 'Esporta (.txt)';
-  esportaBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); esportaRicoveroSingoloTxt(rec); };
+  esportaBtn.onclick = () => {
+    eseguiSalvataggioRicoveroForm();
+    const aggiornato = loadRicoveri().find(r => r.id === rec.id);
+    if(aggiornato) esportaRicoveroSingoloTxt(aggiornato);
+  };
   const delBtn = document.createElement('button');
   delBtn.className = 'admit-del-btn';
   delBtn.textContent = 'Elimina';
-  // doppio click di conferma, come le altre eliminazioni dell'app
   let delArmatoTimer = null;
-  delBtn.onclick = (e) => {
-    e.preventDefault(); e.stopPropagation();
+  delBtn.onclick = () => {
     if(!delBtn.dataset.armato){
       delBtn.dataset.armato = '1';
-      delBtn.textContent = 'Confermi? Clicca di nuovo';
+      delBtn.textContent = 'Confermi? Tocca di nuovo';
       delArmatoTimer = setTimeout(() => { delete delBtn.dataset.armato; delBtn.textContent = 'Elimina'; }, 3000);
       return;
     }
     clearTimeout(delArmatoTimer);
     eliminaRicovero(rec.id);
   };
-  actions.appendChild(linkEOBtn);
-  // "Copia consegna" non sta più qui in alto: è in fondo al ricovero, accanto
-  // ad "Aggiorna tutto", dove si arriva a lavoro finito
-  actions.appendChild(esportaBtn);
-  actions.appendChild(delBtn);
+  azioni.appendChild(esportaBtn);
+  azioni.appendChild(delBtn);
+}
 
-  head.appendChild(titleWrap);
-  head.appendChild(actions);
-  block.appendChild(head);
+// ---------- ANTEPRIMA DELLA CONSEGNA ----------
+// la stessa tabella del documento delle consegne: intestazione colorata
+// del reparto, diagnosi/comorbidità/programma presi dal ricovero (si
+// aggiornano da soli) e i punti da compilare qui (problemi attivi, dieta,
+// mob, MdS, consegne, familiari, data del colloquio)
+const CAMPI_CONSEGNA = ['dieta', 'mob', 'mds', 'consegne', 'familiari', 'colloquio'];
+const salvataggiConsegnaInSospeso = new Map(); // "idRicovero|campo" -> { timer, salva }
+function salvaCampoConsegna(idRicovero, chiave, testo, subito){
+  const k = idRicovero + '|' + chiave;
+  const prima = salvataggiConsegnaInSospeso.get(k);
+  if(prima) clearTimeout(prima.timer);
+  const salva = () => {
+    salvataggiConsegnaInSospeso.delete(k);
+    const list = loadRicoveri();
+    const idx = list.findIndex(r => r.id === idRicovero);
+    if(idx === -1) return;
+    if(chiave === 'problemi') list[idx].problemi = testo;
+    else list[idx].consegna = Object.assign({}, list[idx].consegna || {}, { [chiave]: testo });
+    saveRicoveri(list);
+  };
+  if(subito){ salva(); return; }
+  salvataggiConsegnaInSospeso.set(k, { salva, timer: setTimeout(salva, 500) });
+}
+function eseguiSalvataggiConsegna(){
+  [...salvataggiConsegnaInSospeso.values()].forEach(v => { clearTimeout(v.timer); v.salva(); });
+}
+window.addEventListener('pagehide', () => { eseguiSalvataggiConsegna(); eseguiSalvataggioRicoveroForm(); });
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden'){ eseguiSalvataggiConsegna(); eseguiSalvataggioRicoveroForm(); }
+});
 
-  [
-    ['diario', 'Diario'],
-    ['esameObiettivo', 'Esame obiettivo'],
-    ['familiare', 'Anamnesi familiare e fisiologica'],
-    ['allergie', 'Allergie'],
-    ['remota', 'Anamnesi patologica remota'],
-    ['prossima', 'Anamnesi patologica prossima'],
-    ['farmacologica', 'Anamnesi farmacologica'],
-    ['problemi', 'Problemi attivi']
-  ].forEach(([campo, etichetta]) => {
-    if(campo !== 'problemi' && !(rec[campo] || '').trim()) return;
-
-    const sub = document.createElement('div');
-    sub.className = 'admit-sub' + (rec.copiati && rec.copiati[campo] ? ' copiato' : '');
-
-    const row = document.createElement('div');
-    row.className = 'admit-sub-title-row';
-    const subTitle = document.createElement('div');
-    subTitle.className = 'admit-sub-title';
-    subTitle.textContent = etichetta;
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'admit-copy-btn';
-    copyBtn.textContent = 'Copia';
-    copyBtn.onclick = () => { copiaTesto(rec[campo] || ''); segnaBoxCopiato(rec.id, campo, sub); };
-    row.appendChild(subTitle);
-    row.appendChild(copyBtn);
-
-    if(rec.copiati && rec.copiati[campo]){
-      const badge = document.createElement('div');
-      badge.className = 'admit-sub-copiato-badge';
-      badge.title = 'Copiato';
-      badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
-      sub.appendChild(badge);
-    }
-
-    const editable = document.createElement('div');
-    editable.className = 'admit-editable';
-    // "plaintext-only": Invio inserisce un vero a capo nel testo invece di
-    // un <div> (che textContent perdeva, incollando tutte le righe — es. i
-    // Problemi attivi finivano su una sola riga e solo il primo andava in
-    // grassetto). Dove non è supportato si ripiega su 'true' e si legge
-    // con innerText, che converte comunque <div>/<br> in a capo
-    try { editable.contentEditable = 'plaintext-only'; } catch(e) { editable.contentEditable = 'true'; }
-    if(editable.contentEditable !== 'plaintext-only') editable.contentEditable = 'true';
-    editable.setAttribute('spellcheck', 'true');
-    editable.setAttribute('autocorrect', 'on');
-    editable.setAttribute('autocapitalize', 'sentences');
-    editable.dataset.campo = campo;
-    editable.textContent = rec[campo] || '';
-    if(campo === 'problemi'){
-      editable.dataset.placeholder = 'Polmonite dx: ceftriaxone ev\nIVU: CV';
-    }
-    // APR e farmaci restano su una riga sola, come li compone il modulo:
-    // un a capo scritto nel box diventa ", " (alla prossima uscita dal box
-    // si vede già unito). Gli altri box (Problemi attivi, diario, ecc.)
-    // tengono le righe
-    const SU_UNA_RIGA = (campo === 'remota' || campo === 'farmacologica');
-    const testoDelBox = () => {
-      const t = editable.innerText.replace(/\r/g, '').replace(/\n$/, '');
-      if(campo === 'farmacologica' && t.includes('\n')) return formattaAnamnesiFarmacologica(t).replace(/\s*\n+\s*/g, ', ');
-      return SU_UNA_RIGA ? unisciVociSuUnaRiga(t) : t;
-    };
-    let debounceSalvataggio = null;
-    const salvaSubito = () => {
-      clearTimeout(debounceSalvataggio);
-      const list2 = loadRicoveri();
-      const idx = list2.findIndex(r => r.id === rec.id);
-      if(idx !== -1){
-        list2[idx][campo] = rec[campo];
-        // solo lo stato "copiato" di QUESTO box: l'intero oggetto copiati
-        // è quello del momento del disegno, e sovrascriverlo cancellerebbe i
-        // badge segnati nel frattempo sugli altri box (vedi segnaBoxCopiato)
-        if(rec.copiati && rec.copiati[campo] === false && list2[idx].copiati) list2[idx].copiati[campo] = false;
-        // stessa corrispondenza box -> form di poco sopra: salviamo anche
-        // dentro "campi" (l'istantanea del modulo), altrimenti riaprendo
-        // più tardi questo ricovero il modulo mostrerebbe di nuovo il
-        // vecchio testo, prima della modifica fatta qui nel box
-        const chiaveCampiCorrispondente = { remota:'remota', farmacologica:'farmacologica', familiare:'familiare', allergie:'allergie' }[campo];
-        if(chiaveCampiCorrispondente && list2[idx].campi) list2[idx].campi[chiaveCampiCorrispondente] = rec[campo];
-        saveRicoveri(list2);
-      }
-    };
-    editable.addEventListener('input', () => {
-      // aggiorna SUBITO l'oggetto in memoria (leggero: nessuna lettura da
-      // disco, nessuna rete) — così i pulsanti Copia consegna/Esporta/ecc.
-      // qui sotto vedono subito il testo aggiornato
-      rec[campo] = testoDelBox();
-      if(rec.copiati && rec.copiati[campo]){
-        rec.copiati[campo] = false;
-        sub.classList.remove('copiato');
-        sub.querySelector('.admit-sub-copiato-badge')?.remove();
-      }
-      // e viceversa: una modifica fatta QUI nel box, per i campi che hanno
-      // una corrispondenza diretta e univoca nel modulo sopra (non
-      // "diario"/"prossima", che sono composti anche da altri campi — es.
-      // esami, provvedimenti — e quindi non si potrebbero "invertire" senza
-      // rischiare di duplicare quella roba), compare subito anche lì, come
-      // già succede tra Diari ed Esame obiettivo
-      const idFormCorrispondente = { remota:'admit-remota', farmacologica:'admit-farmacologica', familiare:'admit-familiare', allergie:'admit-allergie' }[campo];
-      if(idFormCorrispondente){
-        const campoForm = document.getElementById(idFormCorrispondente);
-        if(campoForm && campoForm.value !== rec[campo]) campoForm.value = rec[campo];
-      }
-      // il salvataggio vero e proprio (rilettura/riscrittura di tutto
-      // l'elenco ricoveri + sincronizzazione cloud) è più pesante: lo
-      // rimandiamo a quando l'utente smette di scrivere per un attimo,
-      // invece di farlo ad ogni singola lettera — su iPhone, farlo ad ogni
-      // tasto può rallentare la tastiera proprio mentre l'autocorrezione
-      // sta completando una parola, ed è lì che si vedono le "ripetizioni"
-      clearTimeout(debounceSalvataggio);
-      debounceSalvataggio = setTimeout(salvaSubito, 500);
-    });
-    // se si esce dal box (tocco altrove, es. per cliccare "Copia consegna")
-    // prima che passino i 500ms, il salvataggio parte comunque subito,
-    // così non si perde nulla
-    editable.addEventListener('blur', () => {
-      if(SU_UNA_RIGA && editable.innerText.includes('\n')) editable.textContent = rec[campo];
-      salvaSubito();
-    });
-    // se l'utente seleziona e copia a mano (Cmd/Ctrl+C, copia da iPhone)
-    // invece di usare il pulsante "Copia", il browser porterebbe con sé
-    // anche lo sfondo scuro e la formattazione del box: qui forziamo la
-    // copia negli appunti come solo testo semplice
-    editable.addEventListener('copy', (e) => {
-      const selezione = window.getSelection().toString();
-      if(selezione && e.clipboardData){
-        e.clipboardData.setData('text/plain', selezione);
-        e.preventDefault();
-      }
-    });
-
-    sub.appendChild(row);
-    sub.appendChild(editable);
-    block.appendChild(sub);
-
-    // pulsante di sicurezza richiesto esplicitamente: forza un ricaricamento
-    // completo del box (anche se ormai non serve più per il problema del
-    // ritardo, che è stato risolto alla radice qui sopra)
-    if(campo === 'problemi'){
-      const aggiornaWrap = document.createElement('div');
-      aggiornaWrap.style.cssText = 'padding:0 13px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;';
-      const aggiornaBtn = document.createElement('button');
-      aggiornaBtn.className = 'admit-copy-btn';
-      aggiornaBtn.textContent = '↻ Aggiorna tutto';
-      aggiornaBtn.title = 'Ricarica il box con le ultime modifiche salvate';
-      aggiornaBtn.onclick = () => { renderRicoveroSingoloBox(); showToast('Aggiornato'); };
-      aggiornaWrap.appendChild(aggiornaBtn);
-      copiaConsegnaBtn.classList.add('primary');
-      copiaConsegnaBtn.style.marginLeft = 'auto';
-      aggiornaWrap.appendChild(copiaConsegnaBtn);
-      block.appendChild(aggiornaWrap);
-    }
+function creaCampoConsegna(rec, chiave, segnaposto){
+  const el = document.createElement('div');
+  el.className = 'ric-cons-campo';
+  try { el.contentEditable = 'plaintext-only'; } catch(e) { el.contentEditable = 'true'; }
+  if(el.contentEditable !== 'plaintext-only') el.contentEditable = 'true';
+  el.setAttribute('spellcheck', 'true');
+  el.setAttribute('autocapitalize', 'sentences');
+  el.dataset.placeholder = segnaposto;
+  el.textContent = chiave === 'problemi' ? (rec.problemi || '') : ((rec.consegna || {})[chiave] || '');
+  const leggi = () => el.innerText.replace(/\r/g, '').replace(/\n$/, '');
+  el.addEventListener('input', () => {
+    // un campo svuotato a mano può lasciare un <br>: va tolto, sennò il
+    // segnaposto (che compare solo a campo :empty) non torna
+    if(!el.textContent) el.innerHTML = '';
+    salvaCampoConsegna(rec.id, chiave, leggi());
   });
+  el.addEventListener('blur', () => salvaCampoConsegna(rec.id, chiave, leggi(), true));
+  return el;
+}
 
-  container.appendChild(block);
+function renderAnteprimaConsegna(rec){
+  const box = document.getElementById('ric-consegna-anteprima');
+  if(!box) return;
+  box.innerHTML = '';
+  if(!rec){
+    const v = document.createElement('div');
+    v.className = 'ric-nota';
+    v.textContent = 'Compare appena si comincia a scrivere il ricovero.';
+    box.appendChild(v);
+    return;
+  }
+  const tab = document.createElement('table');
+  tab.className = 'ric-cons';
+  tab.id = 'ric-cons-tabella';
+  tab.dataset.creatoIl = rec.creatoIl || '';
+  tab.innerHTML = '<colgroup><col style="width:19%"><col style="width:42%"><col style="width:39%"></colgroup>';
+  const riga = (...celle) => { const tr = document.createElement('tr'); celle.forEach(c => tr.appendChild(c)); tab.appendChild(tr); return tr; };
+  const cella = (colspan) => { const td = document.createElement('td'); if(colspan) td.colSpan = colspan; return td; };
+  const etichetta = (td, testo) => { const b = document.createElement('b'); b.textContent = testo; td.appendChild(b); return b; };
+  const derivato = (td, id) => { const s = document.createElement('span'); s.id = id; s.className = 'derivato'; td.append(' '); td.appendChild(s); };
+
+  const tLetto = cella(), tNome = cella(), tEta = cella();
+  tLetto.id = 'ric-cons-letto'; tNome.id = 'ric-cons-nome'; tEta.id = 'ric-cons-eta';
+  riga(tLetto, tNome, tEta).className = 'testa';
+
+  const tDiag = cella(3); etichetta(tDiag, 'Diagnosi:'); derivato(tDiag, 'ric-cons-diagnosi'); riga(tDiag);
+  const tCom = cella(3); etichetta(tCom, 'Comorbidità:'); derivato(tCom, 'ric-cons-comorbidita'); riga(tCom);
+  const tProg = cella(3); etichetta(tProg, 'Programma:'); derivato(tProg, 'ric-cons-programma'); riga(tProg);
+
+  const tProb = cella(2); etichetta(tProb, 'Problemi attivi:');
+  tProb.appendChild(creaCampoConsegna(rec, 'problemi', 'Polmonite dx: ceftriaxone ev ↵ IVU: CV'));
+  const tDieta = cella();
+  [['dieta', 'Dieta:'], ['mob', 'Mob:'], ['mds', 'MdS:']].forEach(([k, lab]) => {
+    const r = document.createElement('div'); r.className = 'ric-cons-inline';
+    etichetta(r, lab); r.appendChild(creaCampoConsegna(rec, k, '…'));
+    tDieta.appendChild(r);
+  });
+  riga(tProb, tDieta);
+
+  const tCons = cella(3); etichetta(tCons, 'Consegne:'); tCons.appendChild(creaCampoConsegna(rec, 'consegne', 'es. EE domani, vedere emocolture')); riga(tCons);
+  const tFam = cella(3); etichetta(tFam, 'Familiari:'); tFam.appendChild(creaCampoConsegna(rec, 'familiari', 'es. figlia Anna 333…')); riga(tFam);
+  const tColl = cella(2); etichetta(tColl, 'Data colloquio:'); tColl.appendChild(creaCampoConsegna(rec, 'colloquio', 'gg/mm'));
+  const tAgg = cella(); etichetta(tAgg, 'Data agg:'); derivato(tAgg, 'ric-cons-agg');
+  riga(tColl, tAgg);
+  box.appendChild(tab);
+
+  const azioni = document.createElement('div');
+  azioni.className = 'ric-cons-azioni';
+  const lab = document.createElement('label');
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'admit-checkbox';
+  cb.checked = rec.selezionato !== false;
+  cb.onchange = () => toggleSelezioneRicovero(rec.id, cb.checked);
+  lab.appendChild(cb);
+  lab.append('Includi in "Genera tutte le consegne"');
+  const copia = document.createElement('button');
+  copia.type = 'button';
+  copia.className = 'admit-copy-btn primary';
+  copia.textContent = 'Copia consegna';
+  copia.onclick = () => {
+    eseguiSalvataggiConsegna();
+    eseguiSalvataggioRicoveroForm();
+    const aggiornato = loadRicoveri().find(r => r.id === rec.id);
+    if(aggiornato) copiaConsegna(aggiornato);
+  };
+  azioni.appendChild(lab);
+  azioni.appendChild(copia);
+  box.appendChild(azioni);
+  aggiornaConsegnaDerivati();
+}
+
+// parti della consegna che vengono dal ricovero: si aggiornano mentre si
+// scrive, senza ridisegnare la tabella (i campi da compilare non perdono
+// il cursore)
+function aggiornaConsegnaDerivati(){
+  const tab = document.getElementById('ric-cons-tabella');
+  if(!tab) return;
+  const view = document.getElementById('ricovero-singolo-view');
+  const campi = raccogliCampiForm();
+  const testoVoce = campo => { const el = view.querySelector(`.ric-anteprima [data-campo="${campo}"]`); return el && el._testo ? el._testo().trim() : ''; };
+  const imposta = (id, testo) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = testo || '—';
+    el.classList.toggle('vuoto', !testo);
+  };
+  const colore = '#' + coloreIntestazioneConsegna(campi.reparto);
+  const creatoIl = parseInt(tab.dataset.creatoIl, 10) || Date.now();
+  const nome = `${(campi.cognome || '').trim().toUpperCase()} ${(campi.nome || '').trim().toUpperCase()}`.trim();
+  [['ric-cons-letto', campi.letto ? 'Letto ' + campi.letto.trim() : 'Letto'],
+   ['ric-cons-nome', nome || '—'],
+   ['ric-cons-eta', (campi.eta ? campi.eta + ' aa, ' : '') + 'IN ' + dataConsegnaBreve(creatoIl)]
+  ].forEach(([id, t]) => { const td = document.getElementById(id); if(td){ td.textContent = t; td.style.background = colore; } });
+  imposta('ric-cons-diagnosi', (campi.diagnosi || '').trim());
+  imposta('ric-cons-comorbidita', testoVoce('remota'));
+  imposta('ric-cons-programma', testoVoce('familiare'));
+  const oggi = new Date();
+  imposta('ric-cons-agg', oggi.getDate() + ' ' + ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][oggi.getMonth()]);
+}
+function dataConsegnaBreve(ts){
+  const d = new Date(ts);
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
 }
 
 function eliminaRicovero(id){
@@ -5164,7 +5312,9 @@ function preparaDatiConsegna(rec){
   const cognome = (c.cognome || '').trim().toUpperCase();
   const nome = (c.nome || '').trim().toUpperCase();
   const oggi = new Date();
-  const ddmm = String(oggi.getDate()).padStart(2,'0') + '/' + String(oggi.getMonth()+1).padStart(2,'0');
+  // "IN gg/mm" è la data d'ingresso (creazione del ricovero), non quella
+  // del giorno in cui si copia la consegna
+  const ddmm = dataConsegnaBreve(rec.creatoIl || Date.now());
   const meseAbbr = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][oggi.getMonth()];
   const dataAgg = oggi.getDate() + ' ' + meseAbbr;
   // comorbidità/programma/farmaci vengono dal contenuto del BOX (comprese
@@ -5176,8 +5326,18 @@ function preparaDatiConsegna(rec){
     comorbidita: (rec.remota || '').trim(),
     programma: (rec.familiare || '').trim(),
     farmaci: (rec.farmacologica || '').trim(),
-    problemi: parseProblemiAttivi(rec.problemi)
+    problemi: parseProblemiAttivi(rec.problemi),
+    // punti compilati nell'anteprima della consegna (dieta, mob, MdS...)
+    cons: rec.consegna || {}
   };
+}
+
+// testo su più righe (es. Consegne): la prima accanto all'etichetta, le
+// altre in paragrafi propri — in un <w:t> l'a capo diventerebbe uno spazio
+function paragrafiSuPiuRighe(etichetta, testo){
+  const righe = (testo || '').split('\n').map(r => r.trim()).filter(Boolean);
+  if(!righe.length) return [paraConEtichetta(etichetta, '')];
+  return [paraConEtichetta(etichetta, righe[0]), ...righe.slice(1).map(r => paraConEtichetta('', r))];
 }
 
 function costruisciTabellaConsegna(rec){
@@ -5211,13 +5371,13 @@ function costruisciTabellaConsegna(rec){
 
   righe.push(rigaTabella([
     celle(puntiProblemi, COL_SX, 2),
-    celle([paraConEtichetta('Dieta: ', ''), paraConEtichetta('Mob: ', ''), paraConEtichetta('MdS: ', '')], COL_DX, 2, 'FFFFFF')
+    celle([paraConEtichetta('Dieta: ', d.cons.dieta || ''), paraConEtichetta('Mob: ', d.cons.mob || ''), paraConEtichetta('MdS: ', d.cons.mds || '')], COL_DX, 2, 'FFFFFF')
   ]));
 
-  righe.push(rigaTabella([ celle([paraConEtichetta('Consegne: ', '')], COL_TOT, 4) ]));
-  righe.push(rigaTabella([ celle([paraConEtichetta('Familiari: ', '')], COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle(paragrafiSuPiuRighe('Consegne: ', d.cons.consegne), COL_TOT, 4) ]));
+  righe.push(rigaTabella([ celle(paragrafiSuPiuRighe('Familiari: ', d.cons.familiari), COL_TOT, 4) ]));
   righe.push(rigaTabella([
-    celle([paraConEtichetta('Data colloquio: ', '')], COL_SX, 2),
+    celle([paraConEtichetta('Data colloquio: ', d.cons.colloquio || '')], COL_SX, 2),
     celle([paraConEtichetta('Data agg: ', d.dataAgg)], COL_DX, 2)
   ]));
 
@@ -5283,12 +5443,12 @@ function costruisciTabellaConsegnaHtml(rec){
 
   let problemiHtml = etichettaHtml('Problemi attivi: ', '');
   d.problemi.forEach(p => { problemiHtml += puntoHtml(p.forte, p.resto, p.sep); });
-  const dietaHtml = etichettaHtml('Dieta: ', '') + etichettaHtml('Mob: ', '') + etichettaHtml('MdS: ', '');
+  const dietaHtml = etichettaHtml('Dieta: ', d.cons.dieta) + etichettaHtml('Mob: ', d.cons.mob) + etichettaHtml('MdS: ', d.cons.mds);
   righe.push(`<tr>${celleHtml(problemiHtml, 61, false, 2)}${celleHtml(dietaHtml, 39, false, 2)}</tr>`);
 
-  righe.push(`<tr>${celleHtml(etichettaHtml('Consegne: ', ''), null, false, 4)}</tr>`);
-  righe.push(`<tr>${celleHtml(etichettaHtml('Familiari: ', ''), null, false, 4)}</tr>`);
-  righe.push(`<tr>${celleHtml(etichettaHtml('Data colloquio: ', ''), 61, false, 2)}${celleHtml(etichettaHtml('Data agg: ', d.dataAgg), 39, false, 2)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Consegne: ', d.cons.consegne).replace(/\n/g, '<br>'), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Familiari: ', d.cons.familiari).replace(/\n/g, '<br>'), null, false, 4)}</tr>`);
+  righe.push(`<tr>${celleHtml(etichettaHtml('Data colloquio: ', d.cons.colloquio), 61, false, 2)}${celleHtml(etichettaHtml('Data agg: ', d.dataAgg), 39, false, 2)}</tr>`);
 
   return `<table style="border-collapse:collapse; width:100%;">${righe.join('')}</table>`;
 }
