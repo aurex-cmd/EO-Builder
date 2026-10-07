@@ -1170,6 +1170,13 @@
   #app-view .str-ico{ width:19px; height:19px; margin-right:11px; flex-shrink:0; fill:none; stroke:var(--signal); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   #app-view .str-ico .pieno{ fill:var(--signal); stroke:none; }
   .strumenti-gruppo{ font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); margin:4px 2px 2px; }
+  /* Ricoveri: ricerca per nome */
+  .ric-cerca-btn{ flex:0 0 auto; align-self:stretch; width:50px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+  .ric-cerca-btn svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  .ric-cerca-riga{ display:flex; align-items:center; gap:10px; }
+  #ricoveri-cerca{ flex:1; min-width:0; }
+  .ric-cerca-chiudi{ background:none; border:none; padding:6px 2px; cursor:pointer; font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--signal); }
+  .ric-cerca-data{ font-size:12px; color:var(--ink-dim); white-space:nowrap; margin-left:10px; flex-shrink:0; }
   #rubrica-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
     display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; overflow-x:hidden;
     scrollbar-width:none; -ms-overflow-style:none; }
@@ -2056,6 +2063,13 @@
   <div class="group">
     <div class="inline-fields" style="flex-wrap:nowrap;">
       <button class="btn primary" style="flex:1;" onclick="apriNuovoRicoveroSingolo()">+ Nuovo ricovero</button>
+      <!-- lente: trasforma questa riga nel campo di ricerca -->
+      <button class="btn ric-cerca-btn" onclick="apriCercaRicoveri()" title="Cerca un ricovero" aria-label="Cerca un ricovero"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg></button>
+    </div>
+    <!-- cerca tra TUTTI i ricoveri (non solo il giorno scelto nel calendario) -->
+    <div class="ric-cerca-riga" id="ricoveri-cerca-riga" style="display:none;">
+      <input type="text" id="ricoveri-cerca" placeholder="Nome del paziente…" autocomplete="off" enterkeyhint="search" oninput="renderRicoveriLista()">
+      <button class="ric-cerca-chiudi" onclick="chiudiCercaRicoveri()" aria-label="Chiudi ricerca">Annulla</button>
     </div>
   </div>
 
@@ -4232,11 +4246,48 @@ function renderRicoveriTabs(){
 
 function renderRicoveriLista(){
   const listCompleta = loadRicoveri();
-  renderCalendarioRicoveri(listCompleta);
 
   const group = document.getElementById('ricoveri-tabs-group');
   const label = document.getElementById('ricoveri-tabs-label');
   const tabsEl = document.getElementById('ricoveri-tabs');
+
+  // ricerca per nome: se c'è testo nel campo, al posto del calendario e dei
+  // ricoveri del giorno si vedono quelli (di qualsiasi giorno) col nome che
+  // contiene tutte le parole cercate, dal più recente. Tocco = apre la scheda
+  const campoCerca = document.getElementById('ricoveri-cerca');
+  const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const parole = norm(campoCerca ? campoCerca.value : '').split(/\s+/).filter(Boolean);
+  const calEl = document.getElementById('ricoveri-calendario');
+  if(parole.length){
+    if(calEl) calEl.style.display = 'none';
+    const trovati = listCompleta
+      .filter(r => { const n = norm(r.label || `Ricovero ${r.seq}`); return parole.every(w => n.includes(w)); })
+      .sort((a, b) => (b.creatoIl || 0) - (a.creatoIl || 0));
+    group.style.display = '';
+    label.textContent = trovati.length ? `${trovati.length} ricover${trovati.length === 1 ? 'o' : 'i'} trovat${trovati.length === 1 ? 'o' : 'i'}` : 'Nessun ricovero con questo nome.';
+    tabsEl.innerHTML = '';
+    const annoOggi = new Date().getFullYear();
+    trovati.forEach(rec => {
+      const riga = document.createElement('div');
+      riga.className = 'ric-lista-riga' + (rec.id === currentRicoveroId ? ' attivo' : '');
+      const nome = document.createElement('span');
+      nome.className = 'ric-lista-nome';
+      nome.textContent = rec.label || `Ricovero ${rec.seq}`;
+      const data = document.createElement('span');
+      data.className = 'ric-cerca-data';
+      if(rec.creatoIl){
+        const d = new Date(rec.creatoIl);
+        data.textContent = `${d.getDate()} ${MESI_ITALIANI[d.getMonth()]}` + (d.getFullYear() !== annoOggi ? ` ${d.getFullYear()}` : '');
+      }
+      riga.appendChild(nome);
+      riga.appendChild(data);
+      riga.onclick = () => apriRicoveroSingolo(rec.id);
+      tabsEl.appendChild(riga);
+    });
+    return;
+  }
+  if(calEl) calEl.style.display = '';
+  renderCalendarioRicoveri(listCompleta);
 
   const list = listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
 
@@ -4280,6 +4331,21 @@ function renderRicoveriLista(){
     riga.onclick = () => apriRicoveroSingolo(rec.id);
     tabsEl.appendChild(riga);
   });
+}
+// la lente accanto a "+ Nuovo ricovero" mostra il campo al posto della riga;
+// "Annulla" lo svuota e torna a calendario + elenco del giorno
+function apriCercaRicoveri(){
+  const riga = document.getElementById('ricoveri-cerca-riga');
+  riga.style.display = '';
+  riga.previousElementSibling.style.display = 'none';
+  document.getElementById('ricoveri-cerca').focus();
+}
+function chiudiCercaRicoveri(){
+  const riga = document.getElementById('ricoveri-cerca-riga');
+  document.getElementById('ricoveri-cerca').value = '';
+  riga.style.display = 'none';
+  riga.previousElementSibling.style.display = '';
+  renderRicoveriLista();
 }
 function tornaAOggiRicoveri(){
   filtroGiornoRicoveri = chiaveGiorno(Date.now());
