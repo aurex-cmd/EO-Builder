@@ -9530,7 +9530,18 @@ function aggConsTogliProgrammati(riga){
 function aggConsSintesi(extra, righeIeri, includiIeri){
   const esami = [];
   const pezzi = [];
+  // una parentesi aperta e non chiusa vuol dire che la riga continua sotto
+  // ("VFG: 19 mL/min ... (età 85 anni, peso 60 kg, creat 2.01" + a capo +
+  // "mg/dL)"): le righe si riuniscono prima di classificarle, altrimenti il
+  // pezzo dopo l'a capo finiva in consegna come voce a sé ("- Mg/dL)")
+  const righe = [];
   (extra || '').split('\n').forEach(r => {
+    const ultima = righe.length ? righe[righe.length - 1] : null;
+    const aperte = ultima === null ? 0 : (ultima.match(/\(/g) || []).length - (ultima.match(/\)/g) || []).length;
+    if(aperte > 0 && r.trim()) righe[righe.length - 1] = ultima.replace(/\s+$/, '') + ' ' + r.trim();
+    else righe.push(r);
+  });
+  righe.forEach(r => {
     const riga = r.trim();
     if(!riga) return;
     if(AGG_CONS_RIGA_ESAMI.test(riga)){ esami.push(riga); return; }
