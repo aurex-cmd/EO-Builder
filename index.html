@@ -2569,6 +2569,9 @@ window.addEventListener('error', function(e){
   // del browser). Non è mai un problema del nostro codice, quindi lo ignoriamo
   // per non allarmare inutilmente — un vero errore qui ha sempre file/riga.
   if(e.message === 'Script error.' && !e.lineno) return;
+  // avviso innocuo del browser (non un errore del codice): un ResizeObserver
+  // ha rimandato una notifica al fotogramma dopo. Nessun effetto sulla pagina
+  if(/^ResizeObserver loop/.test(e.message || '')) return;
   mostraErroreFatale(e.message + ' (script riga ' + e.lineno + ')');
 });
 
@@ -13165,8 +13168,11 @@ function correggiItaliano(testo){
   out.addEventListener('input', adatta);
   // quando il box ricompare o cambia larghezza (rotazione, zoom testo)
   let larghezza = 0;
+  // l'adattamento va al fotogramma dopo: cambiare l'altezza dentro la
+  // notifica stessa (es. compare la barra di scorrimento, cambia la
+  // larghezza) faceva scattare l'avviso "ResizeObserver loop"
   if(window.ResizeObserver) new ResizeObserver(() => {
-    if(out.clientWidth !== larghezza){ larghezza = out.clientWidth; adatta(); }
+    if(out.clientWidth !== larghezza){ larghezza = out.clientWidth; requestAnimationFrame(adatta); }
   }).observe(out);
   adatta();
 })();
