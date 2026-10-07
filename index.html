@@ -952,14 +952,24 @@
   }
   .ric-pross .in-lettura > .ric-pross-et{ margin-right:5px; }
   .ric-pross .altro-esame-row:not(.in-lettura) > .ric-pross-et-altro{ display:none; }
+  /* doppio tocco gestito da noi (vedi il click su .ric-pross): niente zoom */
+  .ric-pross{ touch-action:manipulation; }
+  /* anamnesi prossima copiata: contorno teal come le altre voci, e il testo
+     si mostra come è stato incollato — tutto bianco, senza righe vuote né
+     "+ ...". Doppio tocco: torna modificabile (.in-modifica) */
+  .ric-voce.copiato .ric-pross{ border-color:var(--signal); }
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .in-lettura > .ric-lettura{ background:none; border-color:transparent; color:var(--ink); padding:0; }
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .ric-pross-aggiungi,
+  .ric-voce.copiato:not(.in-modifica) .ric-pross [data-tipo]:not(.piena),
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .ric-pross-fisso:not(.piena){ display:none !important; }
   .ric-pross .altro-esame-row.in-lettura::before{ content:'- '; padding:0; }
   #ricovero-singolo-view .ric-pross textarea.ric-campo-blu,
   #ricovero-singolo-view .ric-pross .altro-esame-row textarea,
   #ricovero-singolo-view .ric-pross .altro-esame-row input{
     flex:1 1 170px; min-width:0; min-height:0; width:100%; margin:0; padding:1px 6px; border-radius:6px; box-shadow:none;
     font-family:var(--font-body); font-size:14px; line-height:1.45;
-    /* compilato: testo bianco come il resto, il bordo compare solo toccandolo */
-    color:var(--ink); background:transparent; border:1px solid transparent;
+    /* compilato (in modifica): testo azzurro come i valori, bordo solo toccandolo */
+    color:var(--ric-valore-ink); background:transparent; border:1px solid transparent;
   }
   /* vuoto: campo blu tratteggiato, da compilare */
   #ricovero-singolo-view .ric-pross textarea.ric-campo-blu:placeholder-shown,
@@ -4227,13 +4237,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // sono due campi della stessa riga) torna in lettura
   const pross = view.querySelector('.ric-pross');
   pross?.addEventListener('click', (e) => {
+    const voce = pross.closest('.ric-voce');
+    // copiata: un tocco non fa nulla (si può selezionare il testo), il
+    // doppio tocco la riapre in modifica — contato a mano perché su iPhone
+    // il dblclick non è affidabile
+    if(voce.classList.contains('copiato') && !voce.classList.contains('in-modifica')){
+      const ora = Date.now();
+      if(ora - (pross._ultimoTocco || 0) > 400){ pross._ultimoTocco = ora; return; }
+      pross._ultimoTocco = 0;
+      voce.classList.add('in-modifica');
+    }
     const riga = e.target.closest('.in-lettura');
     if(!riga) return;
     riga.classList.remove('in-lettura');
     const campo = riga.dataset.tipo === 'altro' ? riga.querySelector('.altro-esame-testo') : riga.querySelector('textarea');
     if(campo){ autoResizeTextarea(campo); campo.focus(); }
   });
-  pross?.addEventListener('focusout', () => setTimeout(aggiornaRigheProssima, 120));
+  pross?.addEventListener('focusout', () => setTimeout(() => {
+    aggiornaRigheProssima();
+    // uscendo dalla voce: se è ancora copiata (testo non cambiato) torna
+    // all'aspetto del testo definitivo
+    if(!pross.contains(document.activeElement)) pross.closest('.ric-voce')?.classList.remove('in-modifica');
+  }, 120));
   // esame facoltativo aperto e lasciato vuoto: torna a essere solo "+ ..."
   view.querySelectorAll('.ric-pross-riga.opzionale textarea').forEach(ta => ta.addEventListener('blur', () => {
     setTimeout(() => {
