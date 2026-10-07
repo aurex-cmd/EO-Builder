@@ -69,6 +69,10 @@
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', -apple-system, sans-serif;
     --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+    /* valori compilati nel prestampato del ricovero: sfondo "main" e testo
+       azzurro, lo stesso blu dei campi vuoti (blu = campo da compilare/tuo) */
+    --ric-valore-bg:#2a3038;
+    --ric-valore-ink:#8ab4f8;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -917,26 +921,51 @@
   /* anamnesi prossima come testo: fisso in bianco, campi in blu */
   .ric-pross{
     background:var(--panel); border:1px solid var(--clay-border); border-radius:12px; padding:11px 12px;
-    box-shadow:var(--clay-in-sm); font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+    box-shadow:var(--clay-in-sm); font-family:var(--font-body); font-size:14px; line-height:1.45; color:var(--ink);
   }
   .ric-pross-fisso{ margin:8px 0 4px; }
+  /* testo fisso allineato al testo dei campi (che hanno 7px di margine interno) */
+  .ric-pross-fisso, .ric-pross-et{ padding-left:7px; }
+  .ric-pross .altro-esame-row::before{ padding-left:7px; }
+  /* righe che NON verranno copiate (campo vuoto): etichetta in grigio */
+  .ric-pross-fisso:not(.piena), .ric-pross-riga:not(.piena) > .ric-pross-et{ color:var(--ink-faint); }
+  .ric-pross-manuale{ display:none; margin-top:8px; }
+  .ric-pross-manuale.visibile{ display:block; }
   /* etichetta e campo sulla stessa riga; se il campo resterebbe troppo
      stretto (schermo piccolo, etichetta lunga) va a capo sotto l'etichetta */
   .ric-pross-riga{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 6px; margin-top:4px; }
   .ric-pross-riga.opzionale{ display:none; }
   .ric-pross-riga.opzionale.visibile{ display:flex; }
   .ric-pross-et{ flex-shrink:0; padding-top:3px; white-space:nowrap; }
+  /* riga compilata e non in modifica: testo che scorre dopo l'etichetta,
+     come nel testo copiato (referti tra virgolette); un tocco la riapre */
+  .ric-lettura{ display:none; }
+  /* !important: le righe facoltative visibili e gli "altro esame" hanno un display:flex più specifico */
+  .ric-pross .in-lettura{ display:block !important; cursor:text; padding-left:7px !important; }
+  .ric-pross .in-lettura > .ric-pross-et{ display:inline; padding:0; white-space:normal; }
+  .ric-pross .in-lettura > textarea, .ric-pross .in-lettura > input, .ric-pross .in-lettura > .altro-esame-del{ display:none !important; }
+  /* il valore compilato: sfondo "main" (anche quando va a capo) */
+  .ric-pross .in-lettura > .ric-lettura{
+    display:inline; background:var(--ric-valore-bg); color:var(--ric-valore-ink);
+    border:1px solid rgba(255,255,255,.09); border-radius:6px; padding:1px 6px;
+    -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  }
+  .ric-pross .in-lettura > .ric-pross-et{ margin-right:5px; }
+  .ric-pross .altro-esame-row:not(.in-lettura) > .ric-pross-et-altro{ display:none; }
+  .ric-pross .altro-esame-row.in-lettura::before{ content:'- '; padding:0; }
   #ricovero-singolo-view .ric-pross textarea.ric-campo-blu,
   #ricovero-singolo-view .ric-pross .altro-esame-row textarea,
   #ricovero-singolo-view .ric-pross .altro-esame-row input{
-    flex:1 1 170px; min-width:0; min-height:0; width:100%; margin:0; padding:2px 7px; border-radius:6px; box-shadow:none;
-    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:#8ab4f8;
-    background:#1e2a3a; border:1px solid #2d4560;
+    flex:1 1 170px; min-width:0; min-height:0; width:100%; margin:0; padding:1px 6px; border-radius:6px; box-shadow:none;
+    font-family:var(--font-body); font-size:14px; line-height:1.45;
+    /* compilato: testo bianco come il resto, il bordo compare solo toccandolo */
+    color:var(--ink); background:transparent; border:1px solid transparent;
   }
+  /* vuoto: campo blu tratteggiato, da compilare */
   #ricovero-singolo-view .ric-pross textarea.ric-campo-blu:placeholder-shown,
   #ricovero-singolo-view .ric-pross .altro-esame-row textarea:placeholder-shown,
-  #ricovero-singolo-view .ric-pross .altro-esame-row input:placeholder-shown{ background:transparent; border-style:dashed; border-color:#3d5a80; }
-  #ricovero-singolo-view .ric-pross textarea::placeholder, #ricovero-singolo-view .ric-pross input::placeholder{ color:#6f93c6; }
+  #ricovero-singolo-view .ric-pross .altro-esame-row input:placeholder-shown{ border-style:dashed; border-color:#3d5a80; font-family:var(--font-mono); font-size:13px; }
+  #ricovero-singolo-view .ric-pross textarea::placeholder, #ricovero-singolo-view .ric-pross input::placeholder{ color:#8ab4f8; }
   #ricovero-singolo-view .ric-pross textarea:focus, #ricovero-singolo-view .ric-pross input:focus{ border-color:#8ab4f8; border-style:solid; outline:none; }
   .ric-pross .ric-pross-aggiungi{ margin:8px 0 4px; }
   .ric-pross .ric-pross-aggiungi .ric-pill{ font-size:12px; padding:3px 7px; }
@@ -945,12 +974,10 @@
   .ric-pross .altro-esame-row::before{ content:'-'; padding-top:3px; }
   #ricovero-singolo-view .ric-pross .altro-esame-row .altro-esame-nome{ flex:0 0 92px; min-width:0; }
   .ric-pross .altro-esame-del{ width:24px; height:24px; font-size:14px; flex:0 0 auto; }
-  .ric-pross-testo{ margin-top:8px; }
-  .ric-pross-testo summary{ font-size:12px; color:var(--ink-dim); cursor:pointer; padding:2px 0 6px; }
   .ric-editor{ display:none; margin-bottom:8px; }
   .ric-editor.aperto{ display:block; }
   .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#8ab4f8; margin:0 0 4px 2px; }
-  .ric-anteprima .admit-editable{ background:var(--panel); }
+  .ric-anteprima .admit-editable{ background:var(--panel); font-family:var(--font-body); font-size:14px; line-height:1.5; }
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
   /* 3. consegna: la tabella vera, in anteprima */
   .ric-consegna{ background:var(--panel-2); border:1px solid var(--clay-border); box-shadow:var(--clay-out-sm); }
@@ -2308,21 +2335,22 @@
       <div class="ric-anteprima" data-slot="remota"></div>
     </div>
 
-    <!-- l'anamnesi prossima è il testo stesso: i campi blu stanno dove
-         finiranno nel testo copiato, il resto ("In PS ha eseguito:") è il
-         testo fisso. Gli esami facoltativi compaiono come "+ ..." in fondo
-         all'elenco e diventano una riga quando li si tocca -->
+    <!-- l'anamnesi prossima è il testo stesso: i campi stanno dove finiranno
+         nel testo copiato (blu se vuoti, bianchi una volta compilati), il
+         resto ("In PS ha eseguito:") è il testo fisso. Le righe in grigio non
+         vengono copiate (campo vuoto). Gli esami facoltativi compaiono come
+         "+ ..." in fondo all'elenco e diventano una riga quando li si tocca -->
     <div class="ric-voce" data-sezione="prossima">
       <div class="ric-voce-testa"><span class="ric-num">6</span><span class="ric-voce-titolo">Anamnesi patologica prossima</span></div>
       <div class="ric-pross">
-        <textarea id="admit-prossima" class="ric-campo-blu" rows="1" placeholder="Racconto"></textarea>
-        <div class="ric-pross-fisso">In PS ha eseguito:</div>
-        <div class="ric-pross-riga"><span class="ric-pross-et">- Esami ematochimici:</span><textarea id="admit-ematochimici" class="ric-campo-blu" rows="1" placeholder="Hb, PCR, creatinina…"></textarea></div>
-        <div class="ric-pross-riga"><span class="ric-pross-et">- Rx torace:</span><textarea id="admit-rxtorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
-        <div class="ric-pross-riga opzionale" data-riga="admit-rxaddome"><span class="ric-pross-et">- Rx addome:</span><textarea id="admit-rxaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
-        <div class="ric-pross-riga opzionale" data-riga="admit-tctorace"><span class="ric-pross-et">- TC torace:</span><textarea id="admit-tctorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
-        <div class="ric-pross-riga opzionale" data-riga="admit-tcaddome"><span class="ric-pross-et">- TC addome:</span><textarea id="admit-tcaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
-        <div class="ric-pross-riga opzionale" data-riga="admit-tccerebrale"><span class="ric-pross-et">- TC cerebrale:</span><textarea id="admit-tccerebrale" class="ric-campo-blu" rows="1" placeholder="referto"></textarea></div>
+        <div class="ric-pross-riga ric-pross-racconto" data-tipo="racconto"><textarea id="admit-prossima" class="ric-campo-blu" rows="1" placeholder="Racconto"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-fisso" id="ric-pross-eseguito">In PS ha eseguito:</div>
+        <div class="ric-pross-riga" data-tipo="esami"><span class="ric-pross-et">- Esami ematochimici:</span><textarea id="admit-ematochimici" class="ric-campo-blu" rows="1" placeholder="Hb, PCR, creatinina…"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-riga" data-tipo="referto"><span class="ric-pross-et">- Rx torace:</span><textarea id="admit-rxtorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-rxaddome" data-tipo="referto"><span class="ric-pross-et">- Rx addome:</span><textarea id="admit-rxaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tctorace" data-tipo="referto"><span class="ric-pross-et">- TC torace:</span><textarea id="admit-tctorace" class="ric-campo-blu" rows="1" placeholder="referto"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tcaddome" data-tipo="referto"><span class="ric-pross-et">- TC addome:</span><textarea id="admit-tcaddome" class="ric-campo-blu" rows="1" placeholder="referto"></textarea><span class="ric-lettura"></span></div>
+        <div class="ric-pross-riga opzionale" data-riga="admit-tccerebrale" data-tipo="referto"><span class="ric-pross-et">- TC cerebrale:</span><textarea id="admit-tccerebrale" class="ric-campo-blu" rows="1" placeholder="referto"></textarea><span class="ric-lettura"></span></div>
         <div id="admit-altri-esami"></div>
         <div class="ric-campi ric-pross-aggiungi">
           <button type="button" class="ric-pill" data-mostra-riga="admit-rxaddome">Rx addome</button>
@@ -2331,12 +2359,14 @@
           <button type="button" class="ric-pill" data-mostra-riga="admit-tccerebrale">TC cerebrale</button>
           <button type="button" class="ric-pill" onclick="aggiungiAltroEsame(); document.querySelector('#admit-altri-esami .altro-esame-row:last-child .altro-esame-nome')?.focus();">altro esame (ECG, EGA…)</button>
         </div>
-        <div class="ric-pross-riga"><span class="ric-pross-et">In PS:</span><textarea id="admit-provvedimenti" class="ric-campo-blu" rows="1" placeholder="provvedimenti"></textarea></div>
+        <div class="ric-pross-riga ric-pross-provv" data-tipo="provvedimenti"><span class="ric-pross-et">In PS:</span><textarea id="admit-provvedimenti" class="ric-campo-blu" rows="1" placeholder="provvedimenti"></textarea><span class="ric-lettura"></span></div>
       </div>
-      <details class="ric-pross-testo">
-        <summary>Testo che verrà copiato</summary>
+      <!-- il testo composto si vede qui solo se in passato è stato corretto a
+           mano (e quindi non coincide più con i campi qui sopra) -->
+      <div class="ric-pross-manuale">
+        <div class="ric-editor-label">Testo corretto a mano (è quello che viene copiato)</div>
         <div class="ric-anteprima" data-slot="prossima"></div>
-      </details>
+      </div>
     </div>
 
     <div class="ric-voce" data-sezione="farmacologica">
@@ -3911,7 +3941,8 @@ function aggiungiAltroEsame(nome, testo){
   textareaTesto.setAttribute('autocapitalize', 'sentences');
   textareaTesto.addEventListener('input', () => { autoResizeTextarea(textareaTesto); aggiornaRicoveroDalForm(); });
   textareaTesto.addEventListener('blur', () => {
-    const corretto = correggiItaliano(textareaTesto.value);
+    // referto su una riga sola, come finirà nel testo copiato
+    const corretto = formattaStrumentale(correggiItaliano(textareaTesto.value));
     if(corretto !== textareaTesto.value){ textareaTesto.value = corretto; autoResizeTextarea(textareaTesto); aggiornaRicoveroDalForm(); }
   });
 
@@ -3936,9 +3967,20 @@ function aggiungiAltroEsame(nome, testo){
     if(eNomeEga() && !textareaTesto.value.trim()){ textareaTesto.blur(); apriEgaEsame(); }
   });
 
+  // nel ricovero, compilata e non in modifica, la riga si legge come nel
+  // testo copiato: - Nome: "referto" (vedi aggiornaRigheProssima)
+  // in lettura il nome è testo fisso bianco ("ECG:", come "Rx torace:") e
+  // solo il referto è il valore azzurro
+  const etichetta = document.createElement('span');
+  etichetta.className = 'ric-pross-et ric-pross-et-altro';
+  const lettura = document.createElement('span');
+  lettura.className = 'ric-lettura';
+  row.dataset.tipo = 'altro';
   row.appendChild(inputNome);
   row.appendChild(textareaTesto);
   row.appendChild(delBtn);
+  row.appendChild(etichetta);
+  row.appendChild(lettura);
   container.appendChild(row);
   // scrollHeight corretto si legge solo a elemento già nel DOM
   autoResizeTextarea(textareaTesto);
@@ -4096,6 +4138,34 @@ function chiudiTuttiEditorRicovero(){
 // del testo se compilati o appena aperti col loro "+", altrimenti restano
 // solo come "+ ..." in fondo all'elenco
 function aggiornaRigheProssima(){
+  // righe compilate in bianco (finiranno nel testo copiato), vuote in grigio;
+  // compilate e non in modifica si leggono come testo ("lettura"), col
+  // valore come verrà copiato (referti su una riga, tra virgolette)
+  const val = el => (el && el.value || '').trim();
+  let unEsame = false;
+  document.querySelectorAll('#ricovero-singolo-view .ric-pross [data-tipo]').forEach(riga => {
+    const tipo = riga.dataset.tipo;
+    let testo = '';
+    if(tipo === 'altro'){
+      const nome = val(riga.querySelector('.altro-esame-nome')), ref = formattaStrumentale(val(riga.querySelector('.altro-esame-testo')));
+      testo = nome && ref ? `"${ref}"` : '';
+      const et = riga.querySelector('.ric-pross-et-altro');
+      if(et) et.textContent = nome + ':';
+    } else if(tipo === 'referto'){
+      const ref = formattaStrumentale(val(riga.querySelector('textarea')));
+      testo = ref ? `"${ref}"` : '';
+    } else {
+      testo = val(riga.querySelector('textarea'));
+    }
+    const ok = !!testo;
+    riga.classList.toggle('piena', ok);
+    if(ok && (tipo === 'esami' || tipo === 'referto' || tipo === 'altro')) unEsame = true;
+    const lettura = riga.querySelector(':scope > .ric-lettura');
+    if(lettura) lettura.textContent = testo;
+    riga.classList.toggle('in-lettura', ok && !riga.contains(document.activeElement));
+  });
+  document.getElementById('ric-pross-eseguito')?.classList.toggle('piena', unEsame);
+
   document.querySelectorAll('#ricovero-singolo-view .ric-pross-riga.opzionale').forEach(riga => {
     const campo = document.getElementById(riga.dataset.riga);
     const visibile = !!(riga.dataset.aperta || (campo && campo.value.trim()));
@@ -4137,6 +4207,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if(campo){ campo.scrollIntoView({ behavior:'smooth', block:'center' }); campo.focus({ preventScroll:true }); }
     }
   });
+  // il testo nei campi è già quello che verrà copiato: i referti su una
+  // riga sola (senza a capo né spazi doppi), il racconto chiuso dal punto
+  // (le unità di misura degli esami le aggiunge già il listener di
+  // admit-ematochimici, vedi formattaEsamiEmatochimici)
+  ['admit-rxtorace','admit-rxaddome','admit-tctorace','admit-tcaddome','admit-tccerebrale'].forEach(id => {
+    document.getElementById(id)?.addEventListener('blur', function(){
+      const pulito = formattaStrumentale(this.value);
+      if(pulito !== this.value){ this.value = pulito; autoResizeTextarea(this); this.dispatchEvent(new Event('input', { bubbles:true })); }
+    });
+  });
+  document.getElementById('admit-prossima')?.addEventListener('blur', function(){
+    const t = this.value.replace(/\s+$/, '');
+    const pulito = t && !/[.!?]$/.test(t) ? t + '.' : t;
+    if(pulito !== this.value){ this.value = pulito; autoResizeTextarea(this); this.dispatchEvent(new Event('input', { bubbles:true })); }
+  });
+  // anamnesi prossima: un tocco su una riga in lettura la riapre in modifica;
+  // uscendo dalla riga (non solo dal campo: nome e referto di "altro esame"
+  // sono due campi della stessa riga) torna in lettura
+  const pross = view.querySelector('.ric-pross');
+  pross?.addEventListener('click', (e) => {
+    const riga = e.target.closest('.in-lettura');
+    if(!riga) return;
+    riga.classList.remove('in-lettura');
+    const campo = riga.dataset.tipo === 'altro' ? riga.querySelector('.altro-esame-testo') : riga.querySelector('textarea');
+    if(campo){ autoResizeTextarea(campo); campo.focus(); }
+  });
+  pross?.addEventListener('focusout', () => setTimeout(aggiornaRigheProssima, 120));
   // esame facoltativo aperto e lasciato vuoto: torna a essere solo "+ ..."
   view.querySelectorAll('.ric-pross-riga.opzionale textarea').forEach(ta => ta.addEventListener('blur', () => {
     setTimeout(() => {
@@ -4880,6 +4977,16 @@ function renderRicoveroSingoloBox(){
   aggiornaPillRicovero();
 }
 
+// testo di un box modificabile: innerText converte gli eventuali <div>/<br>
+// in a capo, ma per un elemento non visualizzato (es. dentro la tendina
+// chiusa "Testo che verrà copiato" dell'anamnesi prossima) restituisce una
+// stringa vuota — lì vale textContent, che con "plaintext-only" conserva
+// comunque gli a capo
+function testoVisibile(el){
+  const t = el.innerText;
+  return (t || !el.textContent) ? t : el.textContent;
+}
+
 // testo pronto di una voce: si può correggere anche a mano (la modifica
 // resta finché non si tocca "rigenera")
 function creaTestoVoceRicovero(rec, campo, voce){
@@ -4907,7 +5014,7 @@ function creaTestoVoceRicovero(rec, campo, voce){
   // capo scritto nel testo diventa ", "
   const SU_UNA_RIGA = (campo === 'remota' || campo === 'farmacologica');
   const testoDelBox = () => {
-    const t = editable.innerText.replace(/\r/g, '').replace(/\n$/, '');
+    const t = testoVisibile(editable).replace(/\r/g, '').replace(/\n$/, '');
     if(campo === 'farmacologica' && t.includes('\n')) return formattaAnamnesiFarmacologica(t).replace(/\s*\n+\s*/g, ', ');
     return SU_UNA_RIGA ? unisciVociSuUnaRiga(t) : t;
   };
@@ -4945,7 +5052,7 @@ function creaTestoVoceRicovero(rec, campo, voce){
     debounceSalvataggio = setTimeout(salvaSubito, 500);
   });
   editable.addEventListener('blur', () => {
-    if(SU_UNA_RIGA && editable.innerText.includes('\n')) editable.textContent = rec[campo];
+    if(SU_UNA_RIGA && testoVisibile(editable).includes('\n')) editable.textContent = rec[campo];
     salvaSubito();
   });
   // copia a mano (Cmd/Ctrl+C, iPhone): solo testo, senza lo sfondo del box
@@ -4976,7 +5083,10 @@ function aggiornaIndicatoriManualiRicovero(){
     const manuale = !!el && base[campo] !== undefined && el.textContent !== base[campo];
     // anamnesi prossima: il testo da copiare sta in una tendina; se è stato
     // scritto a mano la si apre, perché si veda cosa verrà copiato davvero
-    if(manuale && campo === 'prossima'){ const det = view.querySelector('.ric-pross-testo'); if(det && !det.open) det.open = true; }
+    // anamnesi prossima: il testo composto si mostra solo se è stato
+    // corretto a mano, perché solo allora differisce da quello che si vede
+    // nei campi (ed è quello che viene copiato)
+    if(campo === 'prossima') view.querySelector('.ric-pross-manuale')?.classList.toggle('visibile', manuale);
     if(!manuale){ ind.innerHTML = ''; return; }
     if(ind.firstChild) return;
     ind.append('scritto a mano');
@@ -5075,7 +5185,7 @@ function creaCampoConsegna(rec, chiave, segnaposto){
   el.setAttribute('autocapitalize', 'sentences');
   el.dataset.placeholder = segnaposto;
   el.textContent = chiave === 'problemi' ? (rec.problemi || '') : ((rec.consegna || {})[chiave] || '');
-  const leggi = () => el.innerText.replace(/\r/g, '').replace(/\n$/, '');
+  const leggi = () => testoVisibile(el).replace(/\r/g, '').replace(/\n$/, '');
   el.addEventListener('input', () => {
     // un campo svuotato a mano può lasciare un <br>: va tolto, sennò il
     // segnaposto (che compare solo a campo :empty) non torna
