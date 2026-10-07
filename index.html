@@ -1916,7 +1916,6 @@
       </div>
     </div>
   </div>
-  </div>
 </div>
 
 <!-- IMPOSTAZIONI: preferenze di questo dispositivo (non cliniche, non
@@ -2733,6 +2732,7 @@ let ultimoPullCambi = new Set();
 // di rischiare di tirare giù una versione ancora vecchia e sovrascrivere
 // in locale un parametro appena digitato ma non ancora inviato.
 let codaCloudPush = Promise.resolve();
+const ritentativiPush = {}; // chiave -> timer del prossimo ritentativo
 function cloudPush(key, rawValue){
   // se il contenuto è IDENTICO all'ultimo che sappiamo sincronizzato, non
   // c'è nulla di nuovo da inviare: e soprattutto NON bisogna inviarlo lo
@@ -2796,7 +2796,16 @@ function cloudPush(key, rawValue){
       // e va ritentato da solo, invece di aspettare passivamente il
       // prossimo salvataggio dell'utente (che potrebbe non arrivare per
       // minuti, se nel frattempo sta solo leggendo/guardando la scheda)
-      setTimeout(() => cloudPush(key, rawValue), 20000);
+      // un solo ritentativo in attesa per chiave, e col valore ATTUALE
+      // in locale: rimandare quello di 20 s fa rischiava di sovrascrivere
+      // sul cloud una versione più recente già inviata nel frattempo
+      clearTimeout(ritentativiPush[key]);
+      ritentativiPush[key] = setTimeout(() => {
+        delete ritentativiPush[key];
+        let attuale = null;
+        try{ attuale = localStorage.getItem(key); } catch(err){}
+        if(attuale !== null) cloudPush(key, attuale);
+      }, 20000);
     }
   };
   codaCloudPush = codaCloudPush.then(invio, invio);
@@ -2815,7 +2824,10 @@ function setLocalAndCloud(key, rawValue){
 }
 
 // le chiavi che l'app tiene in memoria e sincronizza col cloud
-const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1'];
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1',
+  // anche queste passano da setLocalAndCloud: senza elencarle qui, quelle
+  // create prima del login non arriverebbero mai sul cloud
+  'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1'];
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -2887,6 +2899,9 @@ function ricaricaSchedaApertaDopoSync(rawPrima, rawDopo){
 let ritentativoPullTimer = null;
 async function cloudPullAll(){
   if(!supabaseClient) return;
+  // modifiche ai diari ancora in attesa di salvataggio: prima in locale,
+  // così il confronto col cloud parte dal testo vero
+  if(typeof eseguiTuttiSalvataggiDiario === 'function') eseguiTuttiSalvataggiDiario();
   try{
     const { data: userData, error: erroreUtente } = await supabaseClient.auth.getUser();
     const user = userData && userData.user;
@@ -2995,8 +3010,13 @@ async function cloudPullAll(){
         applyStateObject(pAggiornato.state);
         if(pAggiornato.savedAt && !isOggi(pAggiornato.savedAt)){
           archiviaGiornoSeNecessario(currentPatientId, pAggiornato);
-          Object.assign(state.respiro, respiroVuotoDiOggi());
-          state.outputEsameManuale = '';
+          // stesso azzeramento di selezionaPaziente (reset completo se attivo)
+          if(resetGiornalieroAttivo()){
+            applicaResetGiornalieroCompleto();
+          } else {
+            Object.assign(state.respiro, respiroVuotoDiOggi());
+            state.outputEsameManuale = '';
+          }
         }
         if(typeof populateInputsFromState === 'function') populateInputsFromState();
         if(typeof refreshUI === 'function') refreshUI(false);
@@ -3065,7 +3085,7 @@ async function aggiornaStatoSync(){
     outEl.style.display = 'none';
     inEl.style.display = '';
     if(badge) badge.style.display = '';
-    const testoLogin = document.getElementById('sync-logged-in-text');
+    const testoLogin = document.getElementById('sync-logged-in-text') || { style:{} };
     // avviso visibile se l'ultimo invio O scaricamento non è riuscito
     // (prima entrambi restavano silenziosi, vedi cloudPush/cloudPullAll):
     // finché non va a buon fine, questo dispositivo può avere dati non
@@ -3232,7 +3252,13 @@ function aggiornaBackupLocale(rawValue, forza){
 function savePatients(patients){
   const raw = JSON.stringify(patients);
   try{ localStorage.setItem(PATIENTS_KEY, raw); }
-  catch(e){ showToast('Salvataggio locale non disponibile'); }
+  catch(e){
+    // spazio pieno: si sacrificano i backup locali (sono solo un extra)
+    // e si riprova, invece di perdere il salvataggio vero
+    let riuscito = false;
+    try{ localStorage.removeItem(BACKUP_KEY); localStorage.setItem(PATIENTS_KEY, raw); riuscito = true; } catch(e2){}
+    showToast(riuscito ? 'Spazio quasi esaurito: backup locali eliminati' : 'Salvataggio locale non disponibile');
+  }
   aggiornaBackupLocale(raw);
   cloudPush(PATIENTS_KEY, raw);
 }
@@ -3947,6 +3973,7 @@ function toggleAdmitFormCompatto(){
 }
 
 function nuovoRicovero(){
+  eseguiSalvataggioRicoveroForm(); // prima di lasciare il ricovero aperto
   currentRicoveroId = null;
   svuotaFormRicovero();
   document.getElementById('admit-form-title').textContent = 'Nuovo ricovero';
@@ -4003,15 +4030,19 @@ function creaBozzaRicovero(){
 // vedi il commento dentro renderRicoveroSingoloBox() per il significato
 let ricoveroAutoUltimo = {};
 let debounceSalvataggioRicoveroForm = null;
-let pendingSalvataggioRicoveroForm = null; // {campi, campiVergini}
+let pendingSalvataggioRicoveroForm = null; // {id, campi, campiVergini}
 
+// il salvataggio in sospeso porta con sé l'id del ricovero a cui
+// appartiene: se nel frattempo si è aperto un altro ricovero, non deve
+// finire scritto lì (vedi anche caricaRicovero/nuovoRicovero, che lo
+// eseguono subito prima di cambiare ricovero)
 function eseguiSalvataggioRicoveroForm(){
   clearTimeout(debounceSalvataggioRicoveroForm);
   if(!pendingSalvataggioRicoveroForm) return;
-  const { campi, campiVergini } = pendingSalvataggioRicoveroForm;
+  const { id, campi, campiVergini } = pendingSalvataggioRicoveroForm;
   pendingSalvataggioRicoveroForm = null;
   const list = loadRicoveri();
-  const idx = list.findIndex(r => r.id === currentRicoveroId);
+  const idx = list.findIndex(r => r.id === id);
   if(idx === -1) return;
   const label = `${(campi.cognome||'').trim().toUpperCase()} ${(campi.nome||'').trim().toUpperCase()}`.trim() || list[idx].label;
   list[idx].campi = campi;
@@ -4070,9 +4101,12 @@ function aggiornaRicoveroDalForm(){
   });
 
   ricoveroAutoUltimo[currentRicoveroId] = nuovi;
+  const pendingStessoRicovero = pendingSalvataggioRicoveroForm && pendingSalvataggioRicoveroForm.id === currentRicoveroId;
+  if(pendingSalvataggioRicoveroForm && !pendingStessoRicovero) eseguiSalvataggioRicoveroForm();
   pendingSalvataggioRicoveroForm = {
+    id: currentRicoveroId,
     campi,
-    campiVergini: { ...(pendingSalvataggioRicoveroForm ? pendingSalvataggioRicoveroForm.campiVergini : null), ...cambiatiVergini }
+    campiVergini: { ...(pendingStessoRicovero ? pendingSalvataggioRicoveroForm.campiVergini : null), ...cambiatiVergini }
   };
 
   if(serveRenderCompleto){
@@ -4089,6 +4123,7 @@ function aggiornaRicoveroDalForm(){
 }
 
 function generaRicovero(){
+  eseguiSalvataggioRicoveroForm();
   const campi = raccogliCampiForm();
 
   // se non c'è già una bozza (currentRicoveroId), qui stiamo per crearne
@@ -4165,6 +4200,7 @@ function generaRicovero(){
 }
 
 function caricaRicovero(id){
+  eseguiSalvataggioRicoveroForm(); // prima di lasciare il ricovero aperto
   const rec = loadRicoveri().find(r => r.id === id);
   if(!rec) return;
   currentRicoveroId = id;
@@ -4718,7 +4754,19 @@ function renderRicoveroSingoloBox(){
   const delBtn = document.createElement('button');
   delBtn.className = 'admit-del-btn';
   delBtn.textContent = 'Elimina';
-  delBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); eliminaRicovero(rec.id); };
+  // doppio click di conferma, come le altre eliminazioni dell'app
+  let delArmatoTimer = null;
+  delBtn.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if(!delBtn.dataset.armato){
+      delBtn.dataset.armato = '1';
+      delBtn.textContent = 'Confermi? Clicca di nuovo';
+      delArmatoTimer = setTimeout(() => { delete delBtn.dataset.armato; delBtn.textContent = 'Elimina'; }, 3000);
+      return;
+    }
+    clearTimeout(delArmatoTimer);
+    eliminaRicovero(rec.id);
+  };
   actions.appendChild(linkEOBtn);
   // "Copia consegna" non sta più qui in alto: è in fondo al ricovero, accanto
   // ad "Aggiorna tutto", dove si arriva a lavoro finito
@@ -4798,7 +4846,10 @@ function renderRicoveroSingoloBox(){
       const idx = list2.findIndex(r => r.id === rec.id);
       if(idx !== -1){
         list2[idx][campo] = rec[campo];
-        list2[idx].copiati = rec.copiati;
+        // solo lo stato "copiato" di QUESTO box: l'intero oggetto copiati
+        // è quello del momento del disegno, e sovrascriverlo cancellerebbe i
+        // badge segnati nel frattempo sugli altri box (vedi segnaBoxCopiato)
+        if(rec.copiati && rec.copiati[campo] === false && list2[idx].copiati) list2[idx].copiati[campo] = false;
         // stessa corrispondenza box -> form di poco sopra: salviamo anche
         // dentro "campi" (l'istantanea del modulo), altrimenti riaprendo
         // più tardi questo ricovero il modulo mostrerebbe di nuovo il
@@ -6556,7 +6607,9 @@ function schedeDelSettore(settore){
   const patients = loadPatients();
   return Object.entries(patients)
     .filter(([id, p]) => nomi.has(p.name))
-    .sort((a, b) => letti.indexOf(a[1].name.replace('Letto ', '')) - letti.indexOf(b[1].name.replace('Letto ', '')));
+    // per nome completo ("Letto 4.1", "C2 · Letto 15 P"): togliendo solo
+    // "Letto " non funzionava per i letti di Medicina
+    .sort((a, b) => letti.map(bedName).indexOf(a[1].name) - letti.map(bedName).indexOf(b[1].name));
 }
 let settoreDaSvuotare = null;
 function apriSvuotaSettore(settore){
@@ -7190,7 +7243,7 @@ function renderVitaliSettore(){
     label.className = 'riga-label';
     let stato = 'vuoto';
     if(occupato) stato = diOggi ? 'occupato' : 'non aggiornato oggi';
-    label.innerHTML = `<span>${nome}</span><span class="riga-stato">${stato}</span>`;
+    label.innerHTML = `<span>${escapeHtml(nome)}</span><span class="riga-stato">${stato}</span>`;
     riga.appendChild(label);
 
     const campi = document.createElement('div');
@@ -7730,7 +7783,9 @@ function estraiDimissioniProgrammate(testoExtra){
   // intende quello della settimana dopo
   // (gli a capo restano: righe diverse sono frasi diverse — "- Esami lunedì"
   // e "- Dimesso martedì pv" non vanno lette come "lunedì … dimesso")
-  const testoG = testoExtra.toLowerCase().replace(/[ \t]+/g, ' ').replace(/\bp\.\s?v\./g, 'pv').replace(/\b([a-zà-ù])\.(?=\s)/g, '$1') // "s. tecla".replace(/\blunedi\b/g, 'lunedì').replace(/\bmartedi\b/g, 'martedì')
+  const testoG = testoExtra.toLowerCase().replace(/[ \t]+/g, ' ').replace(/\bp\.\s?v\./g, 'pv')
+    .replace(/\b([a-zà-ù])\.(?=\s)/g, '$1') // iniziali puntate: "s. tecla"
+    .replace(/\blunedi\b/g, 'lunedì').replace(/\bmartedi\b/g, 'martedì')
     .replace(/\bmercoledi\b/g, 'mercoledì').replace(/\bgiovedi\b/g, 'giovedì').replace(/\bvenerdi\b/g, 'venerdì');
   const PAROLA = String.raw`(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)`;
   const GIORNO = String.raw`(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-zà-ù])((?:\s+(?:prossimo\s+venturo|prossimo|pv))?)`;
@@ -7993,7 +8048,9 @@ function dataPiuVicinaPerGiorno(nomeGiorno, daData){
 
 function trovaMarcatoriGiorno(testo){
   const marcatori = [];
-  const re = /\b(lun(?:edì)?|mar(?:tedì)?|mer(?:coledì)?|gio(?:vedì)?|ven(?:erdì)?|sab(?:ato)?|dom(?:enica)?)(?![a-zà-ù])|\b(\d{1,2})[\/.](\d{1,2})\b/gi;
+  // date: "13/09", "5/10" oppure "13.09" (col punto il mese va scritto a due
+  // cifre: "K 3.8" o "Hb 9.5" sono valori, non date)
+  const re = /\b(lun(?:edì)?|mar(?:tedì)?|mer(?:coledì)?|gio(?:vedì)?|ven(?:erdì)?|sab(?:ato)?|dom(?:enica)?)(?![a-zà-ù])|\b(\d{1,2})(?:\/(\d{1,2})|\.(\d{2}))(?![.,]?\d)/gi;
   const ABBREVIAZIONE_A_NOME = { lun:'lunedì', mar:'martedì', mer:'mercoledì', gio:'giovedì', ven:'venerdì', sab:'sabato', dom:'domenica' };
   let m;
   while((m = re.exec(testo))){
@@ -8011,9 +8068,15 @@ function trovaMarcatoriGiorno(testo){
       const chiave3 = m[1].toLowerCase().slice(0, 3);
       const nomeCompleto = ABBREVIAZIONE_A_NOME[chiave3];
       if(nomeCompleto) data = dataPiuVicinaPerGiorno(nomeCompleto);
-    } else if(m[2] && m[3]){
+    } else if(m[2] && (m[3] || m[4])){
+      const giorno = parseInt(m[2], 10), mese = parseInt(m[3] || m[4], 10);
+      // non una data plausibile, o un numero subito dopo il nome di un esame
+      // ("PCR 12.05", "Na 13/10" non sono date)
+      if(giorno < 1 || giorno > 31 || mese < 1 || mese > 12) continue;
+      const primaNum = testo.slice(Math.max(0, m.index - 25), m.index).toLowerCase().replace(/\./g, '');
+      if(Object.keys(DIZ_EMATOCHIMICI).some(k => new RegExp('(?:^|[^a-zà-ù])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[:=]?\\s*$').test(primaNum))) continue;
       const oggi = new Date();
-      data = new Date(oggi.getFullYear(), parseInt(m[3], 10) - 1, parseInt(m[2], 10));
+      data = new Date(oggi.getFullYear(), mese - 1, giorno);
       data.setHours(0, 0, 0, 0);
     }
     if(data) marcatori.push({ pos: m.index, data });
@@ -8408,13 +8471,6 @@ function isIeri(timestamp){
     d.getDate() === ieri.getDate();
 }
 
-// "2026-09-08" — chiave stabile per un giorno di calendario, usata per
-// archiviare uno scatto del diario per data (vedi archiviaGiornoSeNecessario)
-function chiaveGiorno(timestamp){
-  const d = new Date(timestamp);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-
 // da chiamare ogni volta che si apre/tocca un paziente il cui ultimo
 // salvataggio risale a un giorno diverso da oggi, PRIMA di azzerare i
 // parametri vitali per ripartire con la giornata nuova: salva uno scatto
@@ -8429,14 +8485,28 @@ function archiviaGiornoSeNecessario(patientId, p){
   p.storico = p.storico || {};
   if(p.storico[chiave] !== undefined) return;
   p.storico[chiave] = getRefertoFor(p.state);
+  potaStorico(p.storico);
   const patients = loadPatients();
   if(patients[patientId]){
     patients[patientId].storico = patients[patientId].storico || {};
     if(patients[patientId].storico[chiave] === undefined){
       patients[patientId].storico[chiave] = p.storico[chiave];
+      potaStorico(patients[patientId].storico);
       savePatients(patients);
     }
   }
+}
+
+// lo storico serve al massimo per LAVORO_GIORNI_MAX giorni (aiuti in Diari,
+// "Diari di ieri"): oltre STORICO_GIORNI_MAX gli scatti si eliminano, così
+// i dati pazienti in localStorage (tenuti in più copie: dato, ultima
+// versione sincronizzata, backup) non crescono senza limite fino a
+// riempire lo spazio disponibile
+const STORICO_GIORNI_MAX = 30;
+function potaStorico(storico){
+  if(!storico) return;
+  const limite = chiaveGiorno(Date.now() - STORICO_GIORNI_MAX * 864e5);
+  Object.keys(storico).forEach(k => { if(k < limite) delete storico[k]; });
 }
 
 // numero di giorni di calendario tra oggi e il timestamp dato (0 = oggi,
@@ -8582,10 +8652,13 @@ function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   body.value = voce.nota || '';
   body.placeholder = 'Nota (es. Emocolture in corso)';
   body.addEventListener('input', () => {
-    const c = loadConsegne();
-    if(c[nome]){ c[nome].nota = body.value; saveConsegne(c); }
+    rimandaSalvataggioDiario(body, () => {
+      const c = loadConsegne();
+      if(c[nome]){ c[nome].nota = body.value; saveConsegne(c); }
+    });
     autoResizeTextarea(body);
   });
+  body.addEventListener('blur', () => eseguiSalvataggioDiario(body));
   copiaBtn.onclick = () => { if(body.value.trim()){ copiaTesto(body.value); block.classList.add('copiato'); } };
   block.appendChild(body);
   container.appendChild(block);
@@ -8834,7 +8907,12 @@ function avvisiReneFarmaci(p, idPaziente){
     if(i <= 0) return; // prima fascia (la più alta) = nessun aggiustamento
     visti.add(chiave);
     const scritta = reneDoseScritta(terapia, n);
-    const ok = !!scritta && reneDoseCompatibile(scritta, fasce[i].dose);
+    // la dose può essere una funzione delle opzioni cliniche (Tazocin,
+    // Levofloxacina...): va risolta in testo (schema standard), altrimenti
+    // il confronto finirebbe sul codice sorgente della funzione, con le
+    // dosi di tutte le varianti insieme
+    const doseFascia = typeof farmacoRisolvi === 'function' ? farmacoRisolvi(fasce[i].dose, {}) : fasce[i].dose;
+    const ok = !!scritta && typeof doseFascia === 'string' && reneDoseCompatibile(scritta, doseFascia);
     out.push({ chiave, nome: def.nome.replace(/\s*\(.*\)$/, ''), vfg: r.vfg, fonte: r.fonte, fascia: fasce[i].label, scritta, ok });
   });
   return out;
@@ -8938,6 +9016,9 @@ function rigaAiutiDiario(p, id){
 }
 
 function renderRiepilogo(){
+  // prima di rileggere i dati: le modifiche ancora in attesa vanno salvate,
+  // altrimenti l'elenco ridisegnato mostrerebbe il testo precedente
+  eseguiTuttiSalvataggiDiario();
   const container = document.getElementById('riepilogo-lista');
   container.innerHTML = '';
   const entries = schedeConDatiPerGiorno(diariMostraIeri);
@@ -9144,14 +9225,20 @@ function renderRiepilogo(){
     body.addEventListener('blur', () => rinfrescaAiuti());
     body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
     body.addEventListener('input', () => {
-      if(diariSoloConsegneAttivo){
-        // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
-        // tasto premuto aggiorna SOLO quella, senza toccare né rischiare
-        // di corrompere l'esame obiettivo nascosto in questo momento
-        aggiornaDiarioSoloExtra(id, body.value);
-      } else {
-        aggiornaDiarioTesto(id, body.value);
-      }
+      // salvataggio (localStorage + cloud dell'intero archivio pazienti)
+      // poco dopo l'ultimo tasto, non a ogni carattere: vedi
+      // rimandaSalvataggioDiario. All'uscita dal campo parte subito
+      const soloExtra = diariSoloConsegneAttivo;
+      rimandaSalvataggioDiario(body, () => {
+        if(soloExtra){
+          // qui si vede solo la parte "aggiunte" (dopo la riga vuota): un
+          // tasto premuto aggiorna SOLO quella, senza toccare né rischiare
+          // di corrompere l'esame obiettivo nascosto in questo momento
+          aggiornaDiarioSoloExtra(id, body.value);
+        } else {
+          aggiornaDiarioTesto(id, body.value);
+        }
+      });
       autoResizeTextarea(body);
       // i trigger valgono anche con "Nascondi E.O." attivo (prima no): i
       // box, alla chiusura, riscrivono il testo e rilanciano questo stesso
@@ -9174,6 +9261,7 @@ function renderRiepilogo(){
         autoResizeTextarea(body);
         body.dispatchEvent(new Event('input', { bubbles:true }));
       }
+      eseguiSalvataggioDiario(body);
     });
 
     block.appendChild(titleRow);
@@ -9884,6 +9972,28 @@ function diarioRigheDiIeri(p){
 // campo, così salva il gestore di Diari, che sa se il campo contiene il
 // diario intero o — con "Nascondi E.O." — solo le aggiunte (scrivere quel
 // testo parziale con aggiornaDiarioTesto cancellerebbe l'esame obiettivo)
+// salvataggi dei box di Diari in attesa (uno per box): partono poco dopo
+// l'ultimo tasto, all'uscita dal campo, prima di ridisegnare Diari e
+// quando la pagina va in background/si chiude
+const salvataggiDiarioInSospeso = new Map(); // elemento -> funzione di salvataggio
+function rimandaSalvataggioDiario(el, salva){
+  clearTimeout(el._timerSalvataggio);
+  salvataggiDiarioInSospeso.set(el, salva);
+  el._timerSalvataggio = setTimeout(() => eseguiSalvataggioDiario(el), 400);
+}
+function eseguiSalvataggioDiario(el){
+  clearTimeout(el._timerSalvataggio);
+  const salva = salvataggiDiarioInSospeso.get(el);
+  if(!salva) return;
+  salvataggiDiarioInSospeso.delete(el);
+  salva();
+}
+function eseguiTuttiSalvataggiDiario(){
+  [...salvataggiDiarioInSospeso.keys()].forEach(eseguiSalvataggioDiario);
+}
+window.addEventListener('pagehide', eseguiTuttiSalvataggiDiario);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') eseguiTuttiSalvataggiDiario(); });
+
 function salvaDiarioDaBox(el, patientId, testo){
   if(el && el.isConnected){ el.dispatchEvent(new Event('input', { bubbles:true })); return; }
   if(patientId && !diariSoloConsegneAttivo) aggiornaDiarioTesto(patientId, testo);
@@ -10228,9 +10338,7 @@ function grigliaToraceABlocchi(g){
   ['sx','dx'].forEach(l => { if(ZONE_TORACE.every(z => g.celle[z][l])) emi[l] = true; });
   if(emi.sx && emi.dx) return [new Set(['su_tap', ...extra])];
   const blocchi = [];
-  if(emi.sx && emi.dx){
-    blocchi.push(new Set(['emitorace_dx','emitorace_sx']));
-  } else {
+  {
     const cella = (z, l) => !emi[l] && g.celle[z][l];
     const entrambi = ZONE_TORACE.filter(z => cella(z,'sx') && cella(z,'dx'));
     const soloDx = ZONE_TORACE.filter(z => cella(z,'dx') && !cella(z,'sx'));
@@ -13140,8 +13248,15 @@ function showToast(msg){
 // che a update(), per non scartare un'eventuale modifica manuale al resto
 // dell'esame obiettivo (vedi aggiornaVitale più sopra)
 const CAMPI_VITALI_IDS = ['vs-sat','vs-pas','vs-pad','vs-fc','vs-temp','v-sat','v-pas','v-pad','v-fc','temp-valore'];
-document.querySelectorAll('input').forEach(el => {
-  if(CAMPI_VITALI_IDS.includes(el.id)) return;
+// SOLO i campi della scheda clinica: prima il listener era agganciato a
+// tutti gli <input> della pagina (Ricoveri, login, ricerca, impostazioni...),
+// e scrivere lì cancellava la modifica manuale dell'esame aperto, lo
+// segnava come aggiornato oggi o creava una scheda "Paziente N" vuota.
+// Germe dell'isolamento e data dell'alvo hanno già un gestore proprio
+// (vedi renderIsolamentoToggle/renderAddomeAlvo)
+const CAMPI_CON_GESTORE_PROPRIO = ['isolamento-germe', 'addome-alvo-data'];
+document.querySelectorAll('#clinical-view input').forEach(el => {
+  if(CAMPI_VITALI_IDS.includes(el.id) || CAMPI_CON_GESTORE_PROPRIO.includes(el.id)) return;
   el.addEventListener('input', update);
 });
 
@@ -13356,8 +13471,13 @@ try{
     applyStateObject(p.state);
     if(p.savedAt && !isOggi(p.savedAt)){
       archiviaGiornoSeNecessario(lastId, p);
-      Object.assign(state.respiro, respiroVuotoDiOggi());
-      state.outputEsameManuale = '';
+      // stesso azzeramento di selezionaPaziente (reset completo se attivo)
+      if(resetGiornalieroAttivo()){
+        applicaResetGiornalieroCompleto();
+      } else {
+        Object.assign(state.respiro, respiroVuotoDiOggi());
+        state.outputEsameManuale = '';
+      }
     }
     populateInputsFromState();
     refreshUI(false);
@@ -13767,7 +13887,6 @@ try{
 // ============================================================
 // EGA ANALYZER — tool standalone dell'utente, integrato come modale.
 // Logica clinica IDENTICA all'originale (Winter, Narins-Emmett, anion gap,
-
 // delta ratio, lattati): qui solo id/nomi con prefisso "ega" e l'aggiunta
 // di apertura/chiusura del modale + riconoscimento/estrazione dal diario.
 // ============================================================
@@ -13966,7 +14085,7 @@ function egaAnalyze(){
 
   const na = parseFloat(document.getElementById('ega-na').value);
   const cl = parseFloat(document.getElementById('ega-cl').value);
-  const alb = parseFloat(document.getElementById('ega-alb').value);
+  let alb = parseFloat(document.getElementById('ega-alb').value);
   const agSection = document.getElementById('ega-agSection');
 
   if (!isNaN(na) && !isNaN(cl)){
@@ -13976,6 +14095,9 @@ function egaAnalyze(){
 
     let agForDelta = ag;
     const agCorrLine = document.getElementById('ega-agCorrLine');
+    // il campo è in g/dL, ma nel resto dell'app l'albumina è in g/L:
+    // un valore da 10 in su ("35") è chiaramente in g/L e va convertito
+    if (!isNaN(alb) && alb >= 10) alb = alb / 10;
     if (!isNaN(alb)){
       const agCorr = ag + 2.5*(4.0 - alb);
       agCorrLine.style.display='flex';
@@ -13997,7 +14119,7 @@ function egaAnalyze(){
         } else if (deltaRatio <= 0.8){
           agNote += 'Delta ratio 0.4–0.8 → possibile combinazione di acidosi ad AG elevato + acidosi normocloremica (AG normale).';
         } else if (deltaRatio <= 2){
-          agNote += 'Delta ratio 1–2 → acidosi metabolica ad anion gap elevato "pura" (consumo di HCO₃⁻ proporzionale all\'accumulo di acidi).';
+          agNote += 'Delta ratio 0.8–2 → acidosi metabolica ad anion gap elevato "pura" (consumo di HCO₃⁻ proporzionale all\'accumulo di acidi).';
         } else {
           agNote += 'Delta ratio &gt;2 → suggerisce alcalosi metabolica concomitante o HCO₃⁻ basale elevato (es. compenso di acidosi respiratoria cronica preesistente).';
         }
@@ -15981,12 +16103,18 @@ function premedControllaTrigger(testoAttuale, elementoTextarea, patientId){
 // MdC viene cancellata e riscritta
 function mdcControllaTrigger(testoAttuale, elementoTextarea, patientId){
   const richiesta = mdcRichiestaTc(testoAttuale);
+  clearTimeout(elementoTextarea._timerMdc);
   if(!richiesta){ elementoTextarea.dataset.mdcAvvisato = ''; return; }
   if(elementoTextarea.dataset.mdcAvvisato === '1') return;
-  const r = mdcValutaRene(patientId, testoAttuale);
-  if(r.vfg === null || r.vfg >= 30) return;
-  elementoTextarea.dataset.mdcAvvisato = '1';
-  apriMdcInfo(r);
+  // la ricerca della VFG rilegge schede, ricoveri e storico: la si fa
+  // quando si smette di scrivere, non a ogni tasto
+  elementoTextarea._timerMdc = setTimeout(() => {
+    if(elementoTextarea.dataset.mdcAvvisato === '1' || !mdcRichiestaTc(elementoTextarea.value)) return;
+    const r = mdcValutaRene(patientId, elementoTextarea.value);
+    if(r.vfg === null || r.vfg >= 30) return;
+    elementoTextarea.dataset.mdcAvvisato = '1';
+    apriMdcInfo(r);
+  }, 600);
 }
 
 // scritto "/nomefarmaco" nel diario (in Diari) -> apre il box del
@@ -16499,9 +16627,11 @@ const SOFFI_DB = {
 // sistolico|diastolico N/6 sec. Levine su focolaio X" oppure "...in
 // mesocardio" — il punto di "sec." impedisce di usare un semplice "tutto
 // tranne un punto" come separatore, quindi il pattern ricalca la frase
-// per intero invece di una ricerca generica. Ritorna {focolaio, tipo} o null
+// per intero invece di una ricerca generica. La scala "N/6 sec. Levine" è
+// facoltativa: senza grado scelto composeCuore non la scrive.
+// Ritorna {focolaio, tipo} o null
 function soffiEstraiChiave(testoCompleto){
-  const m = (testoCompleto || '').match(/soffio\s+(sistolico|diastolico)\s+[\d_]+\s*\/\s*6\s+sec\.\s+levine\s+(?:su focolaio ([a-zà-ù-]+)|in (mesocardio))/i);
+  const m = (testoCompleto || '').match(/soffio\s+(sistolico|diastolico)\s+(?:[\d_]+\s*\/\s*6\s+sec\.\s+levine\s+)?(?:su focolaio ([a-zà-ù-]+)|in (mesocardio))/i);
   if(!m) return null;
   const tipo = m[1].toLowerCase();
   const focolaio = (m[2] || m[3] || '').toLowerCase();
@@ -16740,7 +16870,11 @@ document.addEventListener('paste', (e) => {
   // solo dopo "Rx/TC/Eco...:" sulla stessa riga del cursore). Più referti
   // incollati insieme, ciascuno con la sua intestazione, restano su righe
   // separate. Ctrl+Z / Annulla riporta il testo com'era
-  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto || boxDiario);
+  // un testo con righe vuote in mezzo (es. un diario intero: esame
+  // obiettivo + riga vuota + aggiunte) non è un singolo referto: si uniscono
+  // solo i blocchi con un'intestazione riconosciuta, il resto resta com'è
+  const piuParagrafi = /\n[ \t]*\n/.test(incollato.replace(/\r\n?/g, '\n').trim());
+  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto || (boxDiario && !piuParagrafi));
   let finale = correggiAccenti(formattato === null ? incollato : formattato);
   // intestazione scritta a mano e poi "a capo" prima di incollare
   // ("AngioTC dell'aorta toracica:" + Invio + incolla): il referto va
