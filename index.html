@@ -6957,6 +6957,7 @@ function apriIsolamentoModal(isoStato){
   let html = '';
   if(tipiLabels.length) html += `<div class="isolamento-modal-riga"><b>Isolamento:</b> ${escapeHtml(joinIt(tipiLabels))}</div>`;
   if(germe) html += `<div class="isolamento-modal-riga"><b>Germe:</b> ${escapeHtml(germe)}</div>`;
+  if(iso.testo) html += `<div class="isolamento-modal-riga" style="color:var(--ink-dim); font-size:13px;">Dalle consegne: ${escapeHtml(iso.testo)}</div>`;
   if(dpi.length){
     html += '<div class="isolamento-modal-riga"><b>DPI:</b></div>';
     html += '<ul class="isolamento-modal-dpi">' + dpi.map(d => `<li>${escapeHtml(d)}</li>`).join('') + '</ul>';
@@ -7518,13 +7519,15 @@ function renderWardMap(){
     // pallino "i" (isolamento): resta ogni giorno finché il paziente è
     // ricoverato, indipendentemente dal fatto che oggi compaia o no la
     // frase in fondo al referto (vedi coloreIsolamento/composeIsolamento)
-    if(entry){
-      const isoStato = (entry[0] === currentPatientId) ? state.isolamento : entry[1].state.isolamento;
+    // (anche senza scheda: l'isolamento può arrivare dalle consegne)
+    {
+      const isoScheda = entry ? ((entry[0] === currentPatientId) ? state.isolamento : entry[1].state.isolamento) : null;
+      const isoStato = isolamentoPerLetto(nome, isoScheda);
       const coloreIso = coloreIsolamento(isoStato);
       if(coloreIso){
         const isolamentoBadge = document.createElement('div');
         isolamentoBadge.className = 'bed-tile-isolamento-badge ' + coloreIso;
-        isolamentoBadge.title = 'Isolamento';
+        isolamentoBadge.title = 'Isolamento' + (isoStato.testo ? ' (dalle consegne): ' + isoStato.testo : '');
         isolamentoBadge.textContent = 'i';
         tile.appendChild(isolamentoBadge);
       }
@@ -8511,14 +8514,31 @@ function loadConsegne(){
   Object.keys(dati).forEach(k => { if(!k.startsWith('__')) pulite[k] = dati[k]; });
   return pulite;
 }
-function saveConsegne(consegne, critici){
+function saveConsegne(consegne, critici, isolamenti){
   // come le altre chiavi cliniche: sincronizzata col cloud, non solo
   // salvata in locale — altrimenti analizzare le consegne sul telefono
   // non le farebbe comparire anche sul PC (e viceversa). I pazienti critici
   // (__critici: { nomeLetto: testo }) viaggiano con le consegne del giorno;
   // se non vengono passati si conservano quelli già salvati
-  const daSalvare = Object.assign({}, consegne, { __giorno: chiaveGiorno(Date.now()), __critici: critici || loadCritici() });
+  const daSalvare = Object.assign({}, consegne, { __giorno: chiaveGiorno(Date.now()), __critici: critici || loadCritici(), __isolamenti: isolamenti || loadIsolamentiConsegne() });
   setLocalAndCloud(CONSEGNE_KEY, JSON.stringify(daSalvare));
+}
+// isolamenti letti dalle consegne (stessa scadenza): { nomeLetto: { attivo,
+// tipi, germe, testo } } — vedi isolamentoDaIntestazione
+function loadIsolamentiConsegne(){
+  try{
+    const dati = JSON.parse(localStorage.getItem(CONSEGNE_KEY) || '{}') || {};
+    if(dati.__giorno !== chiaveGiorno(Date.now())) return {};
+    return dati.__isolamenti || {};
+  } catch(e){ return {}; }
+}
+// isolamento da mostrare per un letto: quello impostato nella scheda, se
+// c'è; altrimenti quello ricavato dalle consegne di oggi (solo il pallino
+// "i": nessuna frase viene aggiunta al diario)
+function isolamentoPerLetto(nomeLetto, isoScheda){
+  if(coloreIsolamento(isoScheda)) return isoScheda;
+  const daConsegne = loadIsolamentiConsegne()[nomeLetto];
+  return coloreIsolamento(daConsegne) ? daConsegne : null;
 }
 // pazienti critici del giorno (stessa scadenza delle consegne)
 function loadCritici(){
@@ -8553,6 +8573,156 @@ const NOMI_LETTERE_CONSEGNA = { V:'visita', E:'esami ematochimici', S:'esame str
 // successivo noto ("Familiari:"/"Data colloquio:"/"Data agg:") o alla fine
 // del blocco — le altre righe (Diagnosi/Comorbidità/Programma) non vengono
 // considerate, per non prendere parole chiave fuori contesto
+// ISOLAMENTO DALLE CONSEGNE: accanto al nome del paziente (riga del nome
+// ed età, prima di "Diagnosi:") si scrive l'isolamento o il germe del
+// tampone rettale: "ISOLAMENTO CONTATTO", "isolamento aereo+contatto",
+// "tampone rettale pos a P aeruginosa MDR", "isolamento per quantiferon
+// positivo". Da lì:
+//  - "aereo"/"contatto"/"droplet" scritti esplicitamente → quel tipo
+//  - un germe multiresistente (MDR, ESBL, KPC, carbapenemasi, VRE, MRSA,
+//    Acinetobacter…) o un tampone rettale positivo → contatto
+//  - Clostridium/C. difficile → contatto, pallino verde (acqua e sapone)
+//  - "isolamento" con TBC/quantiferon/BK → aereo; "isolamento" e basta →
+//    contatto
+// (un "quantiferon +" senza la parola isolamento non basta: aereo solo se
+// scritto). Il germe citato altrove (es. nelle comorbidità) non conta
+const GERMI_ISOLAMENTO_RE = /clostridi\w*|\bcl?\.?\s?diff\w*|\bkpc\b|\besbl\b|\bcre\b|\b[mx]dr\b|\bvre\b|\bmrsa\b|carbapenem\w*|\bndm\b|\boxa[\s-]?48\b|acinetobacter(?:\s+baumannii)?|tampone\s+rettale\s+pos\w*/i;
+function isolamentoDaIntestazione(intestazione){
+  const t = (intestazione || '').replace(/\s+/g, ' ').trim();
+  if(!t) return null;
+  const tipi = new Set();
+  const haIsolamento = /isolament/i.test(t);
+  if(/\baere\w*/i.test(t) && (haIsolamento || /\bisol/i.test(t))) tipi.add('aereo');
+  if(/\bcontatt\w*/i.test(t)) tipi.add('contatto');
+  if(/\bdroplet\w*/i.test(t)) tipi.add('droplets');
+  const g = GERMI_ISOLAMENTO_RE.exec(t);
+  if(g) tipi.add('contatto');
+  // quantiferon positivo / TBC accanto al nome: isolamento aereo anche
+  // senza la parola "isolamento"
+  if(/quantiferon|\btbc\b|tubercol\w*/i.test(t)) tipi.add('aereo');
+  if(haIsolamento && !tipi.size){
+    if(/\btb\b|\bbk\b/i.test(t)) tipi.add('aereo');
+    else tipi.add('contatto');
+  }
+  if(!tipi.size) return null;
+  let germe = '';
+  if(g){
+    if(/clostridi|diff/i.test(g[0])) germe = 'Clostridioides difficile';
+    else{
+      // il germe vero e proprio: dopo "tampone rettale positivo (a/per)",
+      // oppure le parole subito prima della sigla ("P aeruginosa MDR")
+      const tr = /tampone\s+rettale\s+pos\w*\s*(?:a|per)?\s*([^,;()]+)/i.exec(t);
+      if(tr) germe = tr[1];
+      else{
+        // (andando indietro ci si ferma al COGNOME NOME in maiuscolo)
+        const parole = t.slice(0, g.index).split(/\s+/).filter(Boolean);
+        const germeParole = [];
+        while(parole.length && germeParole.length < 3){
+          const w = parole.pop();
+          if(w.length > 2 && w === w.toUpperCase()) break;
+          germeParole.unshift(w);
+        }
+        const prima = germeParole.join(' ');
+        germe = /^(?:mdr|xdr|esbl|kpc|cre|vre|carbapenem)/i.test(g[0]) ? (prima + ' ' + g[0]).trim() : g[0];
+      }
+      germe = nomeEstesoGerme(germe.replace(/\s*\d+\s*(?:→\s*\d+\s*)?aa\b.*$/i, '').trim());
+    }
+  }
+  return { attivo: true, tipi: [...tipi], germe, testo: t.replace(/\s*\d+\s*(?:→\s*\d+\s*)?aa\b.*$/i, '').trim() };
+}
+// NOMI DEI GERMI PER ESTESO: genere abbreviato ("S.", "St.", "Staph.",
+// "Strep.", "K", "P", "E"…) + specie → nome completo ("S. epidermidis" →
+// "Staphylococcus epidermidis", "St. pneumoniae" → "Streptococcus
+// pneumoniae", "P aerigonosa" → "Pseudomonas aeruginosa"). Il genere si
+// ricava dall'abbreviazione (deve esserne l'inizio) INSIEME alla specie,
+// che è quella che scioglie i casi ambigui (S./St. = Staphylococcus o
+// Streptococcus, E. = Escherichia, Enterococcus o Enterobacter). Specie:
+// esatta, con un refuso (da 6 lettere in su) o abbreviata ("K pn")
+const GERMI_SPECIE = {
+  Staphylococcus: ['aureus','epidermidis','haemolyticus','hominis','capitis','caprae','saprophyticus','lugdunensis','warneri','simulans','cohnii','xylosus','schleiferi','pettenkoferi','pseudintermedius','sciuri','auricularis','saccharolyticus','condimenti','massiliensis','argenteus'],
+  Streptococcus: ['pneumoniae','pyogenes','agalactiae','dysgalactiae','anginosus','constellatus','intermedius','mitis','oralis','sanguinis','parasanguinis','gordonii','mutans','sobrinus','salivarius','vestibularis','bovis','gallolyticus','infantarius','equinus','suis','canis','equi'],
+  Enterococcus: ['faecalis','faecium','gallinarum','casseliflavus','avium','durans','hirae','raffinosus'],
+  Escherichia: ['coli'],
+  Klebsiella: ['pneumoniae','oxytoca','aerogenes','variicola'],
+  Enterobacter: ['cloacae','asburiae','hormaechei'],
+  Pseudomonas: ['aeruginosa','putida','fluorescens','stutzeri'],
+  Acinetobacter: ['baumannii','lwoffii','pittii','junii'],
+  Proteus: ['mirabilis','vulgaris','penneri'],
+  Morganella: ['morganii'],
+  Serratia: ['marcescens','liquefaciens'],
+  Citrobacter: ['freundii','koseri','braakii'],
+  Providencia: ['stuartii','rettgeri'],
+  Haemophilus: ['influenzae','parainfluenzae'],
+  Moraxella: ['catarrhalis'],
+  Stenotrophomonas: ['maltophilia'],
+  Burkholderia: ['cepacia'],
+  Legionella: ['pneumophila'],
+  Neisseria: ['meningitidis','gonorrhoeae'],
+  Listeria: ['monocytogenes'],
+  Salmonella: ['enterica','typhi','paratyphi','enteritidis','typhimurium'],
+  Shigella: ['sonnei','flexneri'],
+  Campylobacter: ['jejuni','coli'],
+  Helicobacter: ['pylori'],
+  Clostridioides: ['difficile'],
+  Clostridium: ['perfringens','septicum','tertium'],
+  Bacteroides: ['fragilis'],
+  Corynebacterium: ['striatum','jeikeium'],
+  Cutibacterium: ['acnes'],
+  Mycobacterium: ['tuberculosis','avium'],
+  Candida: ['albicans','glabrata','auris','parapsilosis','tropicalis','krusei'],
+  Aspergillus: ['fumigatus','flavus','niger']
+};
+function distanzaParole(a, b){
+  if(Math.abs(a.length - b.length) > 2) return 3;
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for(let j = 1; j <= b.length; j++) d[0][j] = j;
+  for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function nomeEstesoGerme(g){
+  return (g || '').replace(/\b([A-Za-z]{1,16})\.?\s+([A-Za-z]{2,20})\b/g, (tutto, abbr, parola) => {
+    // anche il genere scritto all'italiana: "Stafilo", "Stafilococco",
+    // "Streptococco", "Enterococco" → Staphylo-/Streptococcus/Enterococcus
+    const ab = abbr.toLowerCase().replace(/^staf/, 'staph').replace(/^staphi/, 'staphy').replace(/cocc[oh]i?$/, 'coccus'), sp = parola.toLowerCase();
+    const generi = Object.keys(GERMI_SPECIE).filter(gen => gen.toLowerCase().startsWith(ab));
+    if(!generi.length) return tutto;
+    // prima la specie esatta, poi con un refuso, poi abbreviata
+    const prove = [
+      (spec) => spec === sp,
+      (spec) => sp.length >= 6 && distanzaParole(spec, sp) <= 2,
+      (spec) => sp.length >= 2 && sp.length < spec.length && spec.startsWith(sp)
+    ];
+    for(const prova of prove){
+      const trovati = [];
+      generi.forEach(gen => GERMI_SPECIE[gen].forEach(spec => { if(prova(spec)) trovati.push(gen + ' ' + spec); }));
+      // ambiguo (es. "S. intermedius" non c'è: solo Streptococcus): se più
+      // generi vanno bene si lascia com'è scritto
+      if(trovati.length === 1) return trovati[0];
+      if(trovati.length > 1) return tutto;
+    }
+    return tutto;
+  });
+}
+// intestazione di un blocco-letto: dal numero del letto a "Diagnosi:"
+function intestazioneBloccoLetto(blocco){
+  const fine = blocco.search(/Diagnosi\s*:/i);
+  return blocco.slice(0, fine === -1 ? Math.min(blocco.length, 300) : fine).replace(/^\s*letto\s+\S+/i, '');
+}
+function estraiIsolamentiPerLetto(testoCompleto){
+  const risultato = {};
+  const reLetto = /Letto\s+(\d+(?:\.\d+)?)/gi;
+  const marcatori = [];
+  let m;
+  while((m = reLetto.exec(testoCompleto))) marcatori.push({ pos: m.index, nome: 'Letto ' + m[1] });
+  marcatori.forEach((mk, i) => {
+    const fine = (i + 1 < marcatori.length) ? marcatori[i + 1].pos : testoCompleto.length;
+    const iso = isolamentoDaIntestazione(intestazioneBloccoLetto(testoCompleto.slice(mk.pos, fine)));
+    if(iso && !risultato[mk.nome]) risultato[mk.nome] = iso;
+  });
+  return risultato;
+}
+
 function estraiConsegnePerLetto(testoCompleto){
   const risultato = {};
   const reLetto = /Letto\s+(\d+(?:\.\d+)?)/gi;
@@ -8886,7 +9056,11 @@ function analizzaConsegne(){
       testo: testoConsegna
     };
   });
-  saveConsegne(nuovoElenco, critici);
+  // isolamenti scritti accanto al nome (per ora solo il formato di Geriatria)
+  const isolamenti = {};
+  Object.entries(loadIsolamentiConsegne()).forEach(([k, v]) => { if(repDi(k) !== rep) isolamenti[k] = v; });
+  if(rep === 'geriatria') Object.assign(isolamenti, estraiIsolamentiPerLetto(testo));
+  saveConsegne(nuovoElenco, critici, isolamenti);
   renderConsegneLista();
   renderWardMap();
   const nLetti = Object.keys(nuovoElenco).filter(k => ((/^(C[12]) · /.exec(k) || [, 'geriatria'])[1].toLowerCase()) === rep).length;
@@ -8894,7 +9068,7 @@ function analizzaConsegne(){
 }
 
 function cancellaTutteConsegne(){
-  saveConsegne({}, {});
+  saveConsegne({}, {}, {});
   renderConsegneLista();
   renderWardMap();
   showToast('Consegne cancellate');
@@ -9746,7 +9920,7 @@ function renderRiepilogo(){
     // "ieri" (lì le voci sono testo congelato, senza uno stato strutturato
     // da consultare per i tipi di isolamento — vedi schedeConDatiPerGiorno)
     if(!diariMostraIeri){
-      const isoStato = (id === currentPatientId) ? state.isolamento : p.state.isolamento;
+      const isoStato = isolamentoPerLetto(p.name, (id === currentPatientId) ? state.isolamento : (p.state && p.state.isolamento));
       const coloreIso = coloreIsolamento(isoStato);
       if(coloreIso){
         const isolamentoBadge = document.createElement('div');
@@ -10360,7 +10534,7 @@ function tileLettoSolaLettura(id, p, consegne, critici){
     tile.appendChild(b);
     if(haDimissioneOggi(extraTesto)) tile.classList.add('dimissione-oggi');
   }
-  const coloreIso = coloreIsolamento((id === currentPatientId) ? state.isolamento : st.isolamento);
+  const coloreIso = coloreIsolamento(isolamentoPerLetto(p.name, (id === currentPatientId) ? state.isolamento : st.isolamento));
   if(coloreIso){
     const b = document.createElement('div');
     b.className = 'bed-tile-isolamento-badge ' + coloreIso; b.textContent = 'i';
@@ -11345,6 +11519,11 @@ function renderIsolamentoToggle(){
       iso.germe = germeInput.value || '';
       iso.dataAttivazione = chiaveGiorno(Date.now());
       update();
+    };
+    // uscendo dal campo: "S. epidermidis" → "Staphylococcus epidermidis"
+    germeInput.onblur = () => {
+      const esteso = nomeEstesoGerme(germeInput.value);
+      if(esteso !== germeInput.value){ germeInput.value = esteso; germeInput.oninput(); }
     };
   }
   renderIsolamentoTipi();
