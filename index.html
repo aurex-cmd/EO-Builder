@@ -1372,9 +1372,45 @@
   .pd-testo .pd-paz{ font-weight:600; }
   .pd-testo .pd-manca{ color:var(--ink-dim); }
   .pd-data{ flex:0 0 auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .pd-data.scaduta{ color:#e9a23b; }
+  #strumento-overlay{ position:fixed; inset:0; z-index:205; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  #strumento-overlay.show{ display:flex; }
+  #strumento-box{ width:100%; max-width:520px; min-width:0; background:var(--panel); border:1px solid var(--clay-border); border-radius:20px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #strumento-chiudi{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  #strumento-slot #editor-lettere-testo{ min-height:38vh; }
+  #pd-avviso-overlay{ position:fixed; inset:0; z-index:210; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  #pd-avviso-overlay.show{ display:flex; }
+  #pd-avviso-box{ width:100%; max-width:480px; background:var(--panel); border:1px solid var(--clay-border); border-radius:20px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #pd-avviso-chiudi{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  .pd-avviso-voce{ padding:10px 2px; border-bottom:1px solid var(--line-soft); }
+  .pd-avviso-voce .pd-testo{ cursor:default; }
+  .pd-avviso-quando{ font-size:12px; color:var(--ink-dim); margin:3px 0 7px; }
+  .pd-avviso-tasti{ display:flex; flex-wrap:wrap; gap:6px; }
+  .pd-avviso-tasti .btn{ padding:5px 10px; font-size:12.5px; }
   .pd-vuota{ font-size:13px; color:var(--ink-dim); text-align:center; padding:10px 4px; }
   #editor-lettere-testo{ width:100%; min-height:55vh; resize:vertical; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
     border-radius:12px; padding:12px 13px; font-family:var(--font-body); font-size:14px; line-height:1.6; box-shadow:var(--clay-in-sm); }
+  body.solo-editor header, body.solo-editor #editor-view .back-link{ display:none !important; }
+  /* finestrella sul PC, in stile Ubuntu: barra in alto con titolo e due
+     tondi (copia, chiudi), sotto solo il box */
+  .editor-barra{ display:none; }
+  body.solo-editor{ margin:0; padding:5px; box-sizing:border-box; height:100vh; overflow:hidden; }
+  body.solo-editor #editor-view{ margin:0; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--line-soft); box-shadow:none; height:100%; box-sizing:border-box; display:flex; flex-direction:column; }
+  body.solo-editor #editor-view > h2, body.solo-editor #editor-view .diari-fondo{ display:none; }
+  body.solo-editor .editor-barra{ display:flex; align-items:center; gap:8px; flex:0 0 auto; height:34px; padding:0 8px 0 12px;
+    background:var(--panel); border-bottom:1px solid var(--line-soft); user-select:none; }
+  .editor-barra-titolo{ flex:1; font-family:var(--font-body); font-size:13px; font-weight:700; color:var(--signal); letter-spacing:.01em; }
+  .editor-barra-tondo{ width:22px; height:22px; padding:0; border-radius:50%; border:none; cursor:pointer; flex:0 0 auto;
+    background:var(--panel-2); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; transition:background .12s, color .12s; }
+  .editor-barra-tondo svg{ width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .editor-barra-tondo:hover{ background:var(--signal); color:var(--on-signal); }
+  .editor-barra-tondo.chiudi:hover{ background:#e95420; color:#fff; }
+  body.solo-editor #editor-view > .group{ flex:1; display:flex; flex-direction:column; margin:0; padding:0; min-height:0; }
+  /* tutta l'area sotto la barra è il foglio: niente bordo né cornice */
+  body.solo-editor #editor-lettere-testo, body.solo-editor #editor-lettere-testo:focus{ flex:1; min-height:0; resize:none; font-size:13px; padding:10px 12px;
+    border:none; border-radius:0; box-shadow:none; outline:none; background:var(--panel-2); }
   #editor-lettere-testo:focus{ outline:none; border-color:var(--signal); }
   .strumenti-gruppo{ font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); margin:4px 2px 2px; }
   /* Ricoveri: ricerca per nome */
@@ -2014,7 +2050,7 @@
         <span class="ric-lista-nome"><svg class="str-ico" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>Post-degenze</span>
         <span class="pd-conteggio" id="pd-conteggio"></span>
       </div>
-      <div class="ric-lista-riga" onclick="mostraVista('editor')">
+      <div class="ric-lista-riga" onclick="apriEditorTesto()">
         <span class="ric-lista-nome"><svg class="str-ico" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7M8.5 19h4"/></svg>Editor di testo</span>
       </div>
     </div>
@@ -2238,6 +2274,8 @@
 <div class="card" id="postdegenze-view" style="display:none; background:var(--panel-3);">
   <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg> Post-degenze</h2>
+  <!-- pd-contenuto si sposta nel riquadro di Diari quando lo si apre con /postdegenze -->
+  <div id="pd-contenuto">
   <div class="group">
     <input type="text" id="pd-paziente" placeholder="Nome Cognome, data di nascita" autocomplete="off" style="width:100%; margin-bottom:6px;">
     <div class="inline-fields" style="align-items:center;">
@@ -2247,6 +2285,7 @@
     <div id="pd-modifica-nota" class="group-label" style="display:none; margin-top:6px; opacity:.8;">Stai modificando una voce · <span style="color:var(--signal); cursor:pointer;" onclick="postDegenzaAnnullaModifica()">annulla</span></div>
   </div>
   <div class="group" id="pd-lista"></div>
+  </div>
 </div>
 
 <!-- EDITOR LETTERE: un box di testo libero per scrivere le lettere, con le
@@ -2255,7 +2294,13 @@
 <div class="card" id="editor-view" style="display:none; background:var(--panel-3);">
   <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7M8.5 19h4"/></svg> Editor di testo</h2>
-  <div class="group">
+  <!-- barra della finestrella sul PC (solo con ?editor, vedi apriEditorTesto) -->
+  <div class="editor-barra">
+    <span class="editor-barra-titolo">Editor di testo</span>
+    <button class="editor-barra-tondo" onclick="editorLettereCopia()" title="Copia tutto" aria-label="Copia tutto"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg></button>
+    <button class="editor-barra-tondo chiudi" onclick="window.close()" title="Chiudi" aria-label="Chiudi"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+  </div>
+  <div class="group" id="editor-contenuto">
     <textarea id="editor-lettere-testo" spellcheck="true" placeholder="Scrivi o incolla qui. I referti incollati vanno su una riga, le unità di misura degli esami si aggiungono da sole."></textarea>
     <div class="diari-fondo">
       <button class="btn" onclick="editorLettereCopia()">Copia tutto</button>
@@ -6942,7 +6987,7 @@ function mostraVista(v){
   // bootstrap in fondo al file, che altrimenti finiva sempre sulla scheda
   // clinica dell'ultimo paziente, anche se ci si trovava altrove (Diari,
   // Ricoveri, App) prima di ricaricare
-  try{ localStorage.setItem(LAST_VIEW_KEY, v); } catch(e){}
+  if(!document.body.classList.contains('solo-editor')){ try{ localStorage.setItem(LAST_VIEW_KEY, v); } catch(e){} }
   // se il riquadro inline dell'esame obiettivo è aperto e si sta per
   // uscire da Ricovero, richiudiamolo prima: #clinical-view va rimesso al
   // suo posto originale, altrimenti mostraVista('clinical') altrove non lo
@@ -10103,6 +10148,7 @@ function renderRiepilogo(){
       mdcControllaTrigger(body.value, body, id);
       premedControllaTrigger(body.value, body, id);
       rubricaControllaTrigger(body.value, body, id);
+      if(typeof strumentiControllaTrigger === 'function') strumentiControllaTrigger(body.value, body, id);
       ecgsimControllaTrigger(body.value, body);
       soffiControllaTrigger(body.value, body);
     });
@@ -14403,7 +14449,16 @@ try{
   try{ lastView = localStorage.getItem(LAST_VIEW_KEY); } catch(e){}
   if(lastView === 'ricovero-singolo') lastView = 'ricoveri';
   if(lastView === 'vitali') lastView = 'wardmap';
-  mostraVista(lastView || 'wardmap');
+  // finestrella dell'Editor di testo aperta dal PC (vedi apriEditorTesto)
+  if(new URLSearchParams(location.search).has('editor')){
+    document.body.classList.add('solo-editor');
+    document.title = 'Editor di testo';
+    mostraVista('editor');
+    // si scrive subito, senza dover prima cliccare nel box
+    setTimeout(() => { const ta = document.getElementById('editor-lettere-testo'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
+  } else {
+    mostraVista(lastView || 'wardmap');
+  }
 } catch(err){
   mostraErroreFatale((err && err.message) + ' | ' + (err && err.stack ? err.stack.split('\n').slice(0,3).join(' » ') : ''));
 }
@@ -14710,6 +14765,28 @@ try{
 </div>
 
 <!-- RUBRICA: numeri dell'ospedale, con ricerca (vedi apriRubrica) -->
+<!-- riquadro con cui Diari apre Post-degenze ed Editor di testo ("/"):
+     ci si sposta dentro il contenuto della loro pagina, e alla chiusura
+     torna al suo posto (vedi apriStrumentoDiario) -->
+<div id="strumento-overlay" onclick="if(event.target===this) chiudiStrumentoDiario()">
+  <div id="strumento-box">
+    <div class="farmaco-modal-header">
+      <h2 class="tool-titolo" id="strumento-titolo"></h2>
+      <button id="strumento-chiudi" onclick="chiudiStrumentoDiario()">✕</button>
+    </div>
+    <div id="strumento-slot"></div>
+  </div>
+</div>
+<!-- avviso delle post-degenze: dal 10° giorno dall'inserimento, dalle 12 -->
+<div id="pd-avviso-overlay" onclick="if(event.target===this) chiudiAvvisoPostDegenze()">
+  <div id="pd-avviso-box">
+    <div class="farmaco-modal-header">
+      <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>Post-degenze da controllare</h2>
+      <button id="pd-avviso-chiudi" onclick="chiudiAvvisoPostDegenze()" title="Chiudi (te lo ricorda domani)">✕</button>
+    </div>
+    <div id="pd-avviso-lista"></div>
+  </div>
+</div>
 <div id="rubrica-overlay" onclick="if(event.target===this) chiudiRubrica()">
   <div id="rubrica-box">
     <div class="farmaco-modal-header">
@@ -17644,7 +17721,9 @@ function comandiCostruisciElenco(){
     { cmd:'/ecg', inserisci:'/ecg ', desc:'Simulatore ECG ed elettroliti', tipo:'strumento', chiavi:['ecg'] },
     { cmd:'/soffio', inserisci:'/soffio ', desc:'Soffi cardiaci: cause', tipo:'strumento', chiavi:['soffio','soffi'] },
     { cmd:'/numeri', inserisci:'/numeri ', desc:'Rubrica numeri utili', tipo:'strumento', chiavi:['numeri','rubrica'] },
-    { cmd:'/premedicazione', inserisci:'/premedicazione ', desc:'Premedicazione per MdC', tipo:'strumento', chiavi:['premedicazione'] }
+    { cmd:'/premedicazione', inserisci:'/premedicazione ', desc:'Premedicazione per MdC', tipo:'strumento', chiavi:['premedicazione'] },
+    { cmd:'/postdegenze', inserisci:'/postdegenze ', desc:'Promemoria post-degenze', tipo:'strumento', chiavi:['postdegenze','degenze'] },
+    { cmd:'/editor', inserisci:'/editor ', desc:'Editor di testo', tipo:'strumento', chiavi:['editor','testo'] }
   ];
   if(typeof SCORE_ALIAS !== 'undefined' && typeof SCORE_DB !== 'undefined'){
     const perScore = {};
@@ -18004,13 +18083,14 @@ function renderPostDegenze(){
   if(conteggio) conteggio.textContent = ids.length ? String(ids.length) : '';
   const lista = document.getElementById('pd-lista');
   if(!lista) return;
+  if(document.getElementById('pd-avviso-overlay')?.classList.contains('show') && typeof renderAvvisoPostDegenze === 'function') renderAvvisoPostDegenze();
   if(!ids.length){ lista.innerHTML = '<div class="pd-vuota">Nessuna post-degenza in sospeso.</div>'; return; }
   lista.innerHTML = ids.map(id => {
     const v = voci[id];
     return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}">` +
       `<button class="pd-pallino" aria-label="Risolta" title="Risolta">✓</button>` +
       `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
-      `<span class="pd-data" title="Inserita il">${dataBreve(v.inseritoIl || v.savedAt || Date.now())}</span></div>`;
+      `<span class="pd-data${avvisoPostDegenza(v) <= Date.now() ? ' scaduta' : ''}" title="Inserita il">${dataBreve(v.inseritoIl || v.savedAt || Date.now())}</span></div>`;
   }).join('');
 }
 function postDegenzaSalva(){
@@ -18022,7 +18102,7 @@ function postDegenzaSalva(){
   const voci = caricaPostDegenze();
   const ora = Date.now();
   const id = (postDegenzaInModifica && voci[postDegenzaInModifica]) ? postDegenzaInModifica : 'pd' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
-  voci[id] = { paziente, manca: cosa, inseritoIl: voci[id] ? voci[id].inseritoIl : ora, savedAt: ora };
+  voci[id] = Object.assign({}, voci[id], { paziente, manca: cosa, inseritoIl: voci[id] ? voci[id].inseritoIl : ora, savedAt: ora });
   salvaPostDegenze(voci);
   postDegenzaAnnullaModifica();
   renderPostDegenze();
@@ -18074,7 +18154,87 @@ document.getElementById('pd-lista').addEventListener('click', (e) => {
     else postDegenzaSalva();
   });
 });
+
+// AVVISO: ogni voce si fa ricordare dal 10° giorno dopo l'inserimento,
+// dalle 12 in poi, alla prima apertura dell'app (o subito, se l'app è già
+// aperta a mezzogiorno). "Posticipa" sposta l'avviso a quel giorno, sempre
+// alle 12; chiudere senza scegliere vale come "domani". Il giorno
+// dell'avviso sta nella voce stessa (avvisoDal), quindi è sincronizzato:
+// posticipato dal PC, non ricompare sul telefono
+const POSTDEGENZA_GIORNI_AVVISO = 10;
+function mezzogiornoTra(ts, giorni){
+  const d = new Date(ts);
+  d.setDate(d.getDate() + giorni);
+  d.setHours(12, 0, 0, 0);
+  return d.getTime();
+}
+function avvisoPostDegenza(v){
+  return v.avvisoDal || mezzogiornoTra(v.inseritoIl || v.savedAt || Date.now(), POSTDEGENZA_GIORNI_AVVISO);
+}
+let avvisoPostDegenzeMostrato = [];
+function controllaAvvisoPostDegenze(){
+  if(document.body.classList.contains('solo-editor')) return;
+  if(document.getElementById('pd-avviso-overlay').classList.contains('show')) return;
+  const voci = caricaPostDegenze();
+  const ora = Date.now();
+  const scadute = Object.keys(voci).filter(id => avvisoPostDegenza(voci[id]) <= ora && !postDegenzeInUscita[id])
+    .sort((a, b) => (voci[a].inseritoIl || 0) - (voci[b].inseritoIl || 0));
+  if(!scadute.length) return;
+  avvisoPostDegenzeMostrato = scadute;
+  renderAvvisoPostDegenze();
+  document.getElementById('pd-avviso-overlay').classList.add('show');
+}
+function renderAvvisoPostDegenze(){
+  const voci = caricaPostDegenze();
+  // risolte o posticipate nel frattempo da un altro dispositivo: via
+  const ids = avvisoPostDegenzeMostrato.filter(id => voci[id] && avvisoPostDegenza(voci[id]) <= Date.now());
+  if(!ids.length){ document.getElementById('pd-avviso-overlay').classList.remove('show'); return; }
+  const giorni = ts => Math.round((mezzogiornoTra(Date.now(), 0) - mezzogiornoTra(ts, 0)) / 86400000);
+  document.getElementById('pd-avviso-lista').innerHTML = ids.map(id => {
+    const v = voci[id];
+    const g = giorni(v.inseritoIl || v.savedAt || Date.now());
+    return `<div class="pd-avviso-voce" data-id="${escapeHtml(id)}">` +
+      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
+      `<div class="pd-avviso-quando">Inserita il ${dataBreve(v.inseritoIl || v.savedAt || Date.now())} · ${g === 1 ? '1 giorno fa' : g + ' giorni fa'}</div>` +
+      `<div class="pd-avviso-tasti"><button class="btn" data-pd-posticipa="1">Domani</button><button class="btn" data-pd-posticipa="3">Fra 3 giorni</button>` +
+      `<button class="btn" data-pd-posticipa="7">Fra una settimana</button><button class="btn primary" data-pd-risolta="1">✓ Risolta</button></div></div>`;
+  }).join('');
+}
+function posticipaPostDegenza(id, giorni){
+  const voci = caricaPostDegenze();
+  if(!voci[id]) return;
+  voci[id] = Object.assign({}, voci[id], { avvisoDal: mezzogiornoTra(Date.now(), giorni), savedAt: Date.now() });
+  salvaPostDegenze(voci);
+}
+document.getElementById('pd-avviso-lista').addEventListener('click', (e) => {
+  const voce = e.target.closest('.pd-avviso-voce');
+  if(!voce) return;
+  const id = voce.dataset.id;
+  const tastoPost = e.target.closest('[data-pd-posticipa]');
+  if(tastoPost){
+    const g = Number(tastoPost.dataset.pdPosticipa);
+    posticipaPostDegenza(id, g);
+    showToast(g === 1 ? 'Te lo ricordo domani alle 12' : `Te lo ricordo fra ${g === 7 ? 'una settimana' : g + ' giorni'}, alle 12`);
+  } else if(e.target.closest('[data-pd-risolta]')){
+    const voci = caricaPostDegenze();
+    if(voci[id]){ delete voci[id]; salvaPostDegenze(voci); }
+    showToast('Post-degenza risolta');
+  } else return;
+  avvisoPostDegenzeMostrato = avvisoPostDegenzeMostrato.filter(x => x !== id);
+  renderAvvisoPostDegenze();
+  renderPostDegenze();
+});
+function chiudiAvvisoPostDegenze(){
+  // chiuso senza scegliere: ricompare domani alle 12, non a ogni apertura
+  avvisoPostDegenzeMostrato.forEach(id => posticipaPostDegenza(id, 1));
+  avvisoPostDegenzeMostrato = [];
+  document.getElementById('pd-avviso-overlay').classList.remove('show');
+  renderPostDegenze();
+}
 renderPostDegenze();
+setTimeout(controllaAvvisoPostDegenze, 1500);
+setInterval(controllaAvvisoPostDegenze, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') setTimeout(controllaAvvisoPostDegenze, 1500); });
 
 // ============================================================
 // EDITOR LETTERE: testo libero salvato solo su questo dispositivo. Le
@@ -18127,6 +18287,87 @@ function editorLettereUnita(ta){
   window.addEventListener('pagehide', editorLettereSalvaOra);
   if(document.getElementById('editor-view').style.display !== 'none') editorLettereApri();
 })();
+// sul PC (schermo largo, mouse) l'editor si apre in una finestrella a sé,
+// da spostare dove serve; se il browser blocca la finestra, o sul
+// telefono, si apre come prima dentro l'app
+function apriEditorFinestra(){
+  const pc = window.matchMedia('(pointer:fine)').matches && window.innerWidth >= 900;
+  if(!pc) return false;
+  const w = window.open(location.pathname + '?editor', 'eo-editor-testo', 'popup=yes,width=360,height=290');
+  if(w){ w.focus(); return true; }
+  return false;
+}
+function apriEditorTesto(){
+  if(!apriEditorFinestra()) mostraVista('editor');
+}
+
+// ============================================================
+// "/postdegenze" e "/editor" in Diari: come /numeri, aprono lo strumento
+// sopra il diario (sul PC l'editor apre direttamente la finestrella); alla
+// chiusura il comando sparisce dal diario
+// ============================================================
+const STRUMENTI_DIARIO = {
+  postdegenze: { re:/\/post-?degenze\b/i, titolo:'Post-degenze', contenuto:'pd-contenuto', casa:'postdegenze-view',
+    icona:'<svg class="hicon" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>' },
+  editor: { re:/\/(?:editor|testo)\b/i, titolo:'Editor di testo', contenuto:'editor-contenuto', casa:'editor-view',
+    icona:'<svg class="hicon" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7M8.5 19h4"/></svg>' }
+};
+let strumentoContesto = null;
+function togliComandoDalDiario(el, patientId, re){
+  const reTogli = new RegExp('[ \\t]*' + re.source + '[ \\t]*', 'i');
+  const nuovo = el.value.replace(reTogli, ' ').replace(/ +\n/g, '\n').replace(/^ +| +$/g, '');
+  if(nuovo !== el.value){
+    el.value = nuovo;
+    if(typeof autoResizeTextarea === 'function') autoResizeTextarea(el);
+    salvaDiarioDaBox(el, patientId, nuovo);
+  }
+}
+function apriStrumentoDiario(chiave, el, patientId){
+  const def = STRUMENTI_DIARIO[chiave];
+  if(chiave === 'editor' && apriEditorFinestra()){
+    togliComandoDalDiario(el, patientId, def.re);
+    el.dataset['strumento_' + chiave] = '';
+    return;
+  }
+  if(strumentoContesto) chiudiStrumentoDiario();
+  strumentoContesto = { chiave, el, patientId };
+  document.getElementById('strumento-titolo').innerHTML = def.icona + def.titolo;
+  document.getElementById('strumento-slot').appendChild(document.getElementById(def.contenuto));
+  if(chiave === 'postdegenze') renderPostDegenze();
+  if(chiave === 'editor') editorLettereApri();
+  document.getElementById('strumento-overlay').classList.add('show');
+  setTimeout(() => document.getElementById(chiave === 'editor' ? 'editor-lettere-testo' : 'pd-paziente').focus(), 50);
+}
+function chiudiStrumentoDiario(){
+  const c = strumentoContesto;
+  if(!c) return;
+  strumentoContesto = null;
+  const def = STRUMENTI_DIARIO[c.chiave];
+  if(c.chiave === 'editor') editorLettereSalvaOra();
+  document.getElementById('strumento-overlay').classList.remove('show');
+  document.getElementById(def.casa).appendChild(document.getElementById(def.contenuto));
+  c.el.dataset['strumento_' + c.chiave] = '';
+  togliComandoDalDiario(c.el, c.patientId, def.re);
+}
+function strumentiControllaTrigger(testo, el, patientId){
+  Object.keys(STRUMENTI_DIARIO).forEach(chiave => {
+    const presente = STRUMENTI_DIARIO[chiave].re.test(testo || '');
+    const flag = 'strumento_' + chiave;
+    if(presente && el.dataset[flag] !== '1'){
+      el.dataset[flag] = '1';
+      apriStrumentoDiario(chiave, el, patientId);
+    } else if(!presente){
+      el.dataset[flag] = '';
+    }
+  });
+}
+// stesso testo in due finestre (app e finestrella): quella che non si sta
+// usando si aggiorna con quello scritto nell'altra
+window.addEventListener('storage', (e) => {
+  if(e.key !== EDITOR_LETTERE_KEY) return;
+  const ta = document.getElementById('editor-lettere-testo');
+  if(document.activeElement !== ta) ta.value = e.newValue || '';
+});
 function editorLettereCopia(){
   const ta = document.getElementById('editor-lettere-testo');
   ta.dispatchEvent(new Event('blur'));
