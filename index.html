@@ -3814,7 +3814,9 @@ const TEMA_KEY = 'eo_builder_tema_v1';
 function temaAttuale(){
   let t = null;
   try{ t = localStorage.getItem(TEMA_KEY); } catch(e){}
-  return t === 'scuro' ? 'scuro' : 'chiaro';
+  // predefinito: scuro (anche senza scelta salvata), qualunque sia il
+  // tema del telefono — non si guarda prefers-color-scheme
+  return t === 'chiaro' ? 'chiaro' : 'scuro';
 }
 function applicaTema(t){
   const chiaro = t !== 'scuro';
