@@ -1441,12 +1441,18 @@
   .rubrica-voce .numeri a{ color:inherit; text-decoration:none; }
   .rubrica-voce .numeri .ext{ display:block; font-size:10.5px; font-weight:400; color:var(--ink-dim); }
   /* durante la ricerca: numeri grandi, uno sotto l'altro */
-  #rubrica-lista.cercando .rubrica-voce{ display:block; padding:10px 4px; }
-  #rubrica-lista.cercando .rubrica-voce .nome{ font-size:15px; font-weight:600; }
-  #rubrica-lista.cercando .rubrica-voce .numeri{ text-align:left; font-size:clamp(20px, 7vw, 28px); line-height:1.25; margin-top:4px; white-space:normal; max-width:none; }
-  #rubrica-lista.cercando .rubrica-voce .numeri span.n{ max-width:100%; overflow-wrap:anywhere; }
-  #rubrica-lista.cercando .rubrica-voce .numeri span.n{ display:inline-block; margin-right:16px; }
-  #rubrica-lista.cercando .rubrica-voce .numeri .ext{ font-size:12px; }
+  /* voce "aperta" (toccata nell'elenco) o trovata cercando: numeri in grande */
+  .rubrica-voce{ cursor:pointer; }
+  #rubrica-lista.cercando .rubrica-voce, .rubrica-voce.aperta{ display:block; padding:10px 4px; }
+  .rubrica-voce.aperta{ background:var(--panel-2); border-radius:10px; padding:10px 8px; }
+  #rubrica-lista.cercando .rubrica-voce .nome, .rubrica-voce.aperta .nome{ font-size:15px; font-weight:600; }
+  #rubrica-lista.cercando .rubrica-voce .numeri, .rubrica-voce.aperta .numeri{ text-align:left; font-size:clamp(20px, 7vw, 28px); line-height:1.25; margin-top:4px; white-space:normal; max-width:none; }
+  #rubrica-lista.cercando .rubrica-voce .numeri span.n, .rubrica-voce.aperta .numeri span.n{ display:inline-block; margin-right:16px; max-width:100%; overflow-wrap:anywhere; }
+  #rubrica-lista.cercando .rubrica-voce .numeri .ext, .rubrica-voce.aperta .numeri .ext{ font-size:12px; }
+  /* elenco da scorrere: numeri piccoli e non cliccabili, così scorrendo
+     non parte per sbaglio una chiamata */
+  #rubrica-lista:not(.cercando) .rubrica-voce:not(.aperta) .numeri{ font-size:12.5px; font-weight:600; opacity:.75; }
+  #rubrica-overlay{ overscroll-behavior:contain; }
   .rubrica-piede{ margin-top:10px; text-align:right; }
   .rubrica-vuota{ font-size:13px; color:var(--ink-dim); padding:12px 4px; }
   #aggiunta-overlay{ position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.5); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
@@ -12800,6 +12806,7 @@ const OPT = {
     {value:'non_rumori', label:'Non rumori aggiunti', frag:'non rumori aggiunti', negativo:true},
     {value:'non_franchi', label:'Non franchi rumori patologici', frag:'non franchi rumori patologici', negativo:true},
     {value:'crepitii', label:'Crepitii', frag:'crepitii', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
+    {value:'velcro', label:'Velcro', frag:'rumori a velcro', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
     {value:'ronchi', label:'Ronchi', frag:'ronchi', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
     {value:'rantoli', label:'Rantoli', frag:'rantoli', hasLoc:true, diffusoParola:'diffusi', sparsiSenzaSede:true},
     {value:'soffio_bronchiale', label:'Soffio bronchiale', frag:'soffio bronchiale', hasLoc:true, diffusoParola:'diffuso'},
@@ -16962,6 +16969,18 @@ function rubricaVoci(testo){
   });
   return { voci, prefisso };
 }
+// voce toccata nell'elenco (senza ricerca): si apre con i numeri in
+// grande; ritoccandola, o toccandone un'altra, si richiude
+let rubricaVoceAperta = null;
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rubrica-lista')?.addEventListener('click', (e) => {
+    if(e.target.closest('a')) return;
+    const voce = e.target.closest('.rubrica-voce');
+    if(!voce || document.getElementById('rubrica-lista').classList.contains('cercando')) return;
+    rubricaVoceAperta = rubricaVoceAperta === voce.dataset.riga ? null : voce.dataset.riga;
+    renderRubrica();
+  });
+});
 const rubricaNorm = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 function renderRubrica(){
   const lista = document.getElementById('rubrica-lista');
@@ -16984,17 +17003,20 @@ function renderRubrica(){
   if(!trovate.length){ lista.innerHTML = '<div class="rubrica-vuota">Nessun numero trovato.</div>'; return; }
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   lista.innerHTML = trovate.map(v => {
+    // in grande (e chiamabili) solo cercando o nella voce toccata
+    const grande = !!q || v.riga === rubricaVoceAperta;
     const nums = v.numeri.map(n => {
       const lungo = n.length >= 9;
       // interni a 4 cifre: sotto, il numero da chiamare dall'esterno
       const ext = (!lungo && prefisso && n.length === 4) ? `<span class="ext">${prefisso}${n}</span>` : '';
-      return `<span class="n">${lungo ? `<a href="tel:${n}">${esc(n)}</a>` : esc(n)}${q ? ext : ''}</span>`;
-    }).join(q ? '' : ' · ');
-    return `<div class="rubrica-voce"><div><div class="nome">${esc(v.nome)}</div>${v.nota ? `<div class="nota">${esc(v.nota)}</div>` : ''}</div><div class="numeri">${nums}</div></div>`;
+      return `<span class="n">${lungo && grande ? `<a href="tel:${n}">${esc(n)}</a>` : esc(n)}${grande ? ext : ''}</span>`;
+    }).join(grande ? '' : ' · ');
+    return `<div class="rubrica-voce${!q && grande ? ' aperta' : ''}" data-riga="${esc(v.riga).replace(/"/g, '&quot;')}"><div><div class="nome">${esc(v.nome)}</div>${v.nota ? `<div class="nota">${esc(v.nota)}</div>` : ''}</div><div class="numeri">${nums}</div></div>`;
   }).join('');
 }
 function apriRubrica(textareaEl, patientId){
   rubricaContesto = { textareaEl: textareaEl || null, patientId: patientId || null };
+  rubricaVoceAperta = null;
   const cerca = document.getElementById('rubrica-cerca');
   cerca.value = '';
   cerca.oninput = renderRubrica;
