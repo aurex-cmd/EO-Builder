@@ -1907,11 +1907,11 @@
        un piano: niente bagliori neon, niente rilievi scuri */
     /* colore dei letti consegnati (bordo, velo, pulsante Consegne WE) */
     --consegna:#4a86c5; --consegna-rgb:74,134,197;
-    --page:#e4d1ee;
-    --page-2:#d7c0e4;
-    --page-line:#d2bce0;
+    --page:#efe7f3;
+    --page-2:#e8def0;
+    --page-line:#e0d4e8;
     --page-ink:#2e2631;
-    --page-ink-dim:#6c5c76;
+    --page-ink-dim:#7d7083;
 
     --panel:#fffcf8;
     --panel-2:#f7f1ea;
@@ -1980,7 +1980,7 @@
   header{
     padding:16px 16px 10px; border-bottom:1px solid transparent;
     position:sticky; top:0; z-index:5;
-    background:rgba(228,209,238,.86);
+    background:rgba(239,231,243,.86);
     backdrop-filter:saturate(1.4) blur(16px); -webkit-backdrop-filter:saturate(1.4) blur(16px);
   }
   .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:nowrap; }
@@ -3822,7 +3822,7 @@ function applicaTema(t){
   document.getElementById('tema-scuro').media = chiaro ? 'not all' : 'all';
   document.documentElement.dataset.tema = chiaro ? 'chiaro' : 'scuro';
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.content = chiaro ? '#e4d1ee' : '#0a0e13';
+  if(meta) meta.content = chiaro ? '#efe7f3' : '#0a0e13';
 }
 function impostaTema(t){
   try{ localStorage.setItem(TEMA_KEY, t); } catch(e){}
