@@ -9521,6 +9521,30 @@ function giornataScritta(frase){
   if(m) return +(m[1] || m[2]);
   return null;
 }
+// data d'inizio scritta nella frase dell'antibiotico: "iniziato il 03/10",
+// "dal 3.10", "in terapia dal 03/10/26", "avviato il 3 ottobre", "start
+// 3/10". La data deve seguire da vicino "dal"/"iniziato"/"avviato"/… (una
+// data qualunque nella frase, es. "emocolture del 01/10", non conta). Senza
+// anno: quello del diario, o il precedente se la data cadrebbe dopo il
+// diario stesso (inizio a dicembre letto a gennaio). Ritorna 'AAAA-MM-GG'
+function dataInizioScritta(frase, giornoDiario){
+  const t = (frase || '').toLowerCase();
+  const mesi = 'gen(?:naio)?|feb(?:braio)?|mar(?:zo)?|apr(?:ile)?|mag(?:gio)?|giu(?:gno)?|lug(?:lio)?|ago(?:sto)?|set(?:tembre)?|ott(?:obre)?|nov(?:embre)?|dic(?:embre)?';
+  const re = new RegExp(String.raw`\b(?:dal|da|dall'|iniziat\w*|inizio|avviat\w*|impostat\w*|intrapres\w*|introdott\w*|start)\b[^.;\n\d]{0,12}?(\d{1,2})(?:\s*[\/.-]\s*(\d{1,2})(?:\s*[\/.-]\s*(\d{2,4}))?|\s+(` + mesi + String.raw`)\b)`);
+  const m = re.exec(t);
+  if(!m) return null;
+  const g = +m[1];
+  const mese = m[2] ? +m[2] : ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'].indexOf(m[4].slice(0, 3)) + 1;
+  if(!(g >= 1 && g <= 31 && mese >= 1 && mese <= 12)) return null;
+  const rif = giornoDiario || chiaveGiorno(Date.now());
+  let anno = m[3] ? +m[3] : +rif.slice(0, 4);
+  if(anno < 100) anno += 2000;
+  const chiave = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  let d = new Date(anno, mese - 1, g);
+  if(d.getMonth() !== mese - 1) return null;
+  if(!m[3] && chiave(d) > rif) d = new Date(anno - 1, mese - 1, g);
+  return chiave(d) > rif ? null : chiave(d);
+}
 const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|fine\s+terapia)\b/i;
 const RE_INIZIO_ATB = /\b(?:inizi\w*|avvi\w*|impost\w*|intrapres\w*|introdott\w*|aggiunt\w*|si\s+aggiunge|start)\b/i;
 // (aggiornato) l'antibiotico resta in corso anche nei giorni in cui il diario
@@ -9569,8 +9593,14 @@ function antibioticiInCorso(p, idPaziente){
     // riportata a oggi, perché la terapia può essere iniziata prima (PS,
     // altro reparto) di quando compare nei diari
     for(let i = ultimo; i >= 0; i--){
-      // qui conta la frase intera ("prosegue Levofloxacina, II giornata")
-      const g = (giorni[i].testo || '').split(/[.;\n]/).filter(f => reG.test(f)).map(giornataScritta).find(x => x);
+      // qui conta la frase intera ("prosegue Levofloxacina, II giornata");
+      // il punto spezza la frase solo se non è dentro una data ("3.10")
+      const frasiIntere = (giorni[i].testo || '').split(/[;\n]|\.(?!\d)/).filter(f => reG.test(f));
+      // data d'inizio scritta ("Tazocin iniziato il 03/10"): si contano i
+      // giorni da lì a oggi, il giorno d'inizio è la I giornata
+      const dInizio = frasiIntere.map(f => dataInizioScritta(f, giorni[i].giorno)).find(x => x);
+      if(dInizio){ n = giorniTra(dInizio, oggi) + 1; break; }
+      const g = frasiIntere.map(giornataScritta).find(x => x);
       if(g){ n = g + giorniTra(giorni[i].giorno, oggi); break; }
       if(giorni[i].giorno < inizio) break;
     }
@@ -10385,6 +10415,17 @@ function aggConsSintesi(extra, righeIeri, includiIeri){
 
 // copia negli appunti con formattazione (HTML) + testo semplice: incollato
 // in Google Docs mantiene evidenziazione e grassetto
+// copiando a mano (selezione) un pezzo di consegna: solo testo semplice,
+// senza colori/sfondo dell'app. La copia formattata resta solo dai tasti
+// dedicati (etichette EE/dimissione, richieste, "Copia")
+document.addEventListener('copy', (e) => {
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || !e.clipboardData) return;
+  const nodo = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+  if(!nodo || !nodo.closest('.agg-cons-righe, .cons-we-testo')) return;
+  e.clipboardData.setData('text/plain', sel.toString());
+  e.preventDefault();
+});
 async function aggConsCopia(html, testo, btn){
   let ok = false;
   try{
@@ -10716,8 +10757,11 @@ function renderAggiornaConsegne(container, entries){
       // "Dimissione sabato 03/10"; se nelle aggiunte c'è la destinazione
       // (RSA, OdC, CdR, Hospice), questa prende il posto di "Dimissione":
       // "RSA sabato 03/10"
+      // dimissione di OGGI: basta "Dimesso oggi" / "Dimessa oggi"
+      const dimessoOggi = chiaveGiorno(dDim.getTime()) === chiaveGiorno(Date.now());
+      const femmina = (p.state && p.state.sesso === 'F') || (!(p.state && p.state.sesso) && /\bdimessa\b/i.test(extra));
       const dest = aggConsDestinazione(extra);
-      const t = `${dest} ${NOMI_GIORNI_SETTIMANA[dDim.getDay()]} ${aggConsData(dDim)}`;
+      const t = dimessoOggi ? (femmina ? 'Dimessa oggi' : 'Dimesso oggi') : `${dest} ${NOMI_GIORNI_SETTIMANA[dDim.getDay()]} ${aggConsData(dDim)}`;
       const b = document.createElement('button');
       b.className = 'agg-cons-etichetta';
       b.title = 'Copia formattato';
