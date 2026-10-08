@@ -13,9 +13,9 @@
 <meta name="theme-color" content="#0a0e13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
+<style id="tema-scuro">
   :root{
     /* colore dei letti consegnati (bordo, velo, pulsante Consegne WE) */
     --consegna:#4a9fd9; --consegna-rgb:74,159,217;
@@ -1894,6 +1894,1952 @@
   .soffi-tabs .chip{ flex:1; text-align:center; }
 
 </style>
+<!-- TEMA CHIARO ("lilla & legno"): stesso foglio di sopra, ridisegnato.
+     Si sceglie in Strumenti → Impostazioni → Tema (preferenza di questo
+     dispositivo, non sincronizzata). Dei due fogli ne resta acceso uno solo:
+     l'altro prende media="not all" (vedi applicaTema qui sotto) -->
+<style id="tema-chiaro" media="not all">
+  :root{
+    /* ===== TEMA "LILLA & LEGNO" =====
+       chiaro, opaco e morbido: pagina lilla tenue, superfici crema calde,
+       accento salvia (le piante), caramello (il legno), lilla (gli sfondi).
+       Ombre diffuse e basse, come oggetti in argilla/feltro appoggiati su
+       un piano: niente bagliori neon, niente rilievi scuri */
+    /* colore dei letti consegnati (bordo, velo, pulsante Consegne WE) */
+    --consegna:#4a86c5; --consegna-rgb:74,134,197;
+    --page:#efe7f3;
+    --page-2:#e8def0;
+    --page-line:#e0d4e8;
+    --page-ink:#2e2631;
+    --page-ink-dim:#7d7083;
+
+    --panel:#fffcf8;
+    --panel-2:#f7f1ea;
+    --panel-3:#f3ece4;
+    --line:#e6dcd2;
+    --line-soft:#efe8e0;
+    --ink:#2f2723;
+    --ink-dim:#7a6d65;
+    --ink-faint:#ab9f97;
+    --signal:#4f7f5a;
+    --signal-dark:#3c6446;
+    --signal-dim:#dde9d6;
+    --signal-soft:rgba(79,127,90,.14);
+    --on-signal:#ffffff;
+
+    --folder:#a8693a;
+    --folder-dim:#f5e7d8;
+    --on-folder:#ffffff;
+    --panel-folder:#fbf3ea;
+    --panel-folder-2:#f5e7d8;
+
+    --violet:#7e5bb5;
+    --violet-dim:#eee5f8;
+    --on-violet:#ffffff;
+
+    /* colori dedicati alla striscia vitali: come le cifre di un monitor,
+       ma tarati per leggersi bene su fondo chiaro */
+    --vs-spo2:#3d7cc9;
+    --vs-pa:#d27a2e;
+    --vs-fc:#c8464e;
+    --vs-tc:#7a68d0;
+
+    /* ---- superfici morbide: elevazione (rilievo) e incavi (campi, stato premuto) ---- */
+    --clay-border:rgba(92,62,84,.08);
+    --clay-out:0 1px 1px rgba(74,48,82,.04), 0 12px 30px -14px rgba(74,48,82,.26);
+    --clay-out-sm:0 1px 1px rgba(74,48,82,.05), 0 4px 12px -6px rgba(74,48,82,.22);
+    --clay-in:inset 0 1px 3px rgba(74,48,82,.10);
+    --clay-in-sm:inset 0 1px 2px rgba(74,48,82,.07);
+    --glow-signal:0 4px 12px -4px rgba(79,127,90,.45);
+    --acid:#c0564e; --acid-strong:#c8464e; --acid-dim:#f9e4df; --on-acid:#ffffff; --acid-border:#e8b9b1;
+    --glow-acid:0 4px 12px -4px rgba(200,70,78,.45);
+    --glow-folder:0 4px 12px -4px rgba(168,105,58,.45);
+    --glow-violet:0 4px 12px -4px rgba(126,91,181,.45);
+
+    --radius-card:24px;
+    --radius-ctl:14px;
+
+    --font-display:'Manrope', -apple-system, sans-serif;
+    --font-body:'Manrope', -apple-system, sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    /* valori compilati nel prestampato del ricovero: sfondo azzurrino e
+       testo blu, lo stesso blu dei campi vuoti (blu = campo da compilare/tuo) */
+    --ric-valore-bg:#e9eff8;
+    --ric-valore-ink:#2f63a8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page); color:var(--page-ink);
+    font-family:var(--font-body); font-feature-settings:'cv11','ss01';
+    padding-bottom:32px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding:16px 16px 10px; border-bottom:1px solid transparent;
+    position:sticky; top:0; z-index:5;
+    background:rgba(239,231,243,.86);
+    backdrop-filter:saturate(1.4) blur(16px); -webkit-backdrop-filter:saturate(1.4) blur(16px);
+  }
+  .header-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:nowrap; }
+  .header-top > div:first-child{ min-width:0; }
+  /* marchio: riquadro chiaro con l'icona (cartellina + croce) a sinistra del titolo */
+  .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand-logo{
+    width:52px; height:52px; border-radius:16px; flex-shrink:0;
+    background:var(--panel); display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--clay-out-sm);
+  }
+  .brand-logo svg{ width:36px; height:36px; display:block; }
+  .brand-testo{ min-width:0; }
+  header h1{
+    font-family:var(--font-display); font-size:25px; margin:0; line-height:1.15;
+    font-weight:800; letter-spacing:-.025em; color:var(--signal);
+  }
+  header h1 .t-eo{ color:var(--page-ink); }
+  header .sub{ display:block; margin-top:3px; font-size:12.5px; color:var(--page-ink-dim); font-family:var(--font-body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .active-bed-pill{
+    font-family:var(--font-body); font-size:13.5px; letter-spacing:.01em;
+    color:var(--on-signal); background:var(--signal); border:none; border-radius:100px;
+    box-shadow:0 6px 14px -6px rgba(79,127,90,.6);
+    padding:7px 30px 7px 14px; white-space:nowrap; cursor:pointer; text-transform:lowercase;
+    font-weight:600; position:relative;
+    align-self:center; flex-shrink:0;
+    max-width:42vw; overflow:hidden; text-overflow:ellipsis;
+  }
+  /* freccia giù a destra (il testo lo scrive renderHeaderBadge, quindi va in ::after) */
+  .active-bed-pill::after{
+    content:''; position:absolute; right:11px; top:50%; width:12px; height:12px; margin-top:-6px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .sync-status-dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0; cursor:pointer;
+    background:#3ea86e; /* verde: tutto sincronizzato */
+    box-shadow:0 0 0 2px var(--page);
+    position:absolute; top:-2px; right:-9px;
+  }
+  .sync-status-dot.non-sincronizzato{
+    background:#cf5f55; /* rosso: ultimo invio non riuscito, in ritentativo */
+  }
+  .titolo-r-wrap{ position:relative; display:inline-block; }
+  /* barra delle sezioni: un'unica "vaschetta" morbida, la scheda attiva
+     è un cuscinetto chiaro in rilievo (segmented control) */
+  .header-nav{ display:flex; align-items:stretch; gap:2px; width:100%; margin-top:14px; border-bottom:none;
+    padding:4px; border-radius:20px; background:var(--page-2); box-shadow:var(--clay-in-sm); }
+  .header-nav > .topnav-btn, .nav-diari-col{ flex:1 1 0; }
+  .nav-diari-col{ display:flex; flex-direction:column; align-items:stretch; min-width:0; }
+  .nav-diari-col .topnav-btn{ width:100%; }
+  /* tab piatte, testo semplice: niente più sfondo a pillola — solo colore
+     del testo e una sottile riga colorata sotto quando attive */
+  .topnav-btn{
+    font-family:var(--font-body);
+    font-weight:600; font-size:13.5px; letter-spacing:-.01em;
+    padding:9px 6px; margin-right:0; border-radius:16px; border:none;
+    border-bottom:none;
+    background:none; color:var(--page-ink-dim); cursor:pointer;
+    box-shadow:none;
+    transition:color .15s ease, background .2s ease, box-shadow .2s ease;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; position:relative;
+    min-width:0; flex:0 0 auto; white-space:nowrap;
+  }
+  .topnav-btn:hover{ background:none; color:var(--page-ink); }
+  .topnav-btn:active{ opacity:.7; }
+  .topnav-btn .topnav-icon{ width:19px; height:19px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topnav-btn .topnav-icon .pieno{ fill:none; }
+  .topnav-btn.vista-attiva{ background:var(--panel); color:var(--signal-dark); font-weight:700; box-shadow:var(--clay-out-sm); }
+  .topnav-btn.vista-attiva .topnav-icon{ color:var(--signal); }
+  /* scheda attiva: l'icona si "riempie" (es. il foglio dei Diari pieno con righe bianche) */
+  .topnav-btn.vista-attiva .topnav-icon .pieno{ fill:currentColor; }
+  .topnav-btn.vista-attiva .topnav-icon .su-pieno{ stroke:var(--panel); }
+  @media (max-width:400px){
+    .topnav-btn{ font-size:12.5px; gap:4px; padding-left:2px; padding-right:2px; }
+    .topnav-btn .topnav-icon{ width:17px; height:17px; }
+    .brand-logo{ width:46px; height:46px; border-radius:14px; }
+    .brand-logo svg{ width:31px; height:31px; }
+    header .sub{ font-size:11.5px; }
+    header h1{ font-size:22px; }
+  }
+  /* griglia che occupa tutta la larghezza: le colonne (min. 52px) si
+     allargano quanto basta per lasciare a destra lo stesso margine che c'è
+     a sinistra, invece di un avanzo vuoto in fondo alla fila */
+  .bed-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); column-gap:8px; row-gap:10px; }
+  /* allargandosi, il letto cresce anche in altezza: stesse proporzioni
+     di prima (52×38), numero sempre centrato */
+  .bed-grid > .bed-tile{ min-width:0; aspect-ratio:52 / 38; display:flex; align-items:center; justify-content:center; padding-top:0; padding-bottom:0; }
+  .appoggio-aggiungi-riga{ display:flex; justify-content:flex-end; margin-top:8px; }
+  .appoggio-aggiungi{ width:26px; height:26px; border-radius:50%; border:1px dashed var(--clay-border); background:transparent;
+    color:var(--ink-dim); font-size:16px; line-height:1; cursor:pointer; opacity:.55; transition:.15s; padding:0; }
+  .appoggio-aggiungi:hover{ opacity:1; border-color:var(--signal); color:var(--signal); }
+  /* riquadro nuovo appoggio: sembra un letto normale, con dentro solo il
+     testo che si scrive (niente bordo/alone teal del campo) */
+  .bed-tile.bed-tile-nuovo{ cursor:text; }
+  .bed-tile.bed-tile-nuovo input,
+  .bed-tile.bed-tile-nuovo input:focus{ width:40px; height:1.3em; font-family:var(--font-mono); font-weight:600; font-size:13.5px; text-align:center;
+    padding:0; margin:0; border:none !important; outline:none !important; box-shadow:none !important; background:transparent !important; color:var(--ink); text-transform:uppercase; }
+  .bed-tile.bed-tile-nuovo input::placeholder{ color:var(--ink-dim); opacity:.6; font-weight:400; }
+  .settore-dots{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center; }
+  .settore-dot-sep{ color:var(--ink-dim); font-size:15px; padding:0 1px; user-select:none; }
+  .sync-box{
+    border:1px solid var(--clay-border); border-radius:16px; padding:13px 14px;
+    background:var(--panel-2); box-shadow:var(--clay-out-sm);
+  }
+  .sync-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
+  .sync-title{
+    display:flex; align-items:center; gap:8px;
+    font-size:13.5px; font-weight:600; color:var(--ink);
+  }
+  .sync-title .hicon{ width:17px; height:17px; color:var(--signal); }
+  .sync-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
+    background:var(--signal-dim); border-radius:999px; padding:4px 11px;
+    box-shadow:var(--clay-in-sm);
+  }
+  .sync-badge .hicon{ width:13px; height:13px; }
+  .input-con-icona{ position:relative; display:flex; align-items:center; flex:1; min-width:0; }
+  .input-con-icona .hicon{ position:absolute; left:11px; width:15px; height:15px; color:var(--ink-dim); pointer-events:none; }
+  .input-con-icona input{ padding-left:33px !important; width:100%; }
+  .settore-dot{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:700; font-size:14px;
+    border:1.5px solid transparent; background:var(--panel); color:var(--ink-dim);
+    box-shadow:var(--clay-out-sm);
+    cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation;
+    transition:border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  /* feedback visivo durante la pressione prolungata (svuota settore) */
+  .settore-dot.in-pressione{ border-color:#cf5a52 !important; box-shadow:0 0 0 1px #cf5a52, 0 4px 14px -4px rgba(207,90,82,.55) !important; }
+  .settore-dot:hover{ border-color:var(--signal); color:var(--ink); }
+  .settore-dot.active{
+    border-color:var(--signal); background:var(--signal); color:var(--on-signal);
+    box-shadow:0 0 0 4px var(--signal-soft), var(--glow-signal);
+  }
+  .bed-tile{
+    font-family:var(--font-mono); font-weight:600; font-size:13.5px;
+    padding:10px 6px; border-radius:14px; min-width:52px; text-align:center;
+    border:1px solid var(--clay-border); background:var(--panel); color:var(--ink);
+    cursor:pointer; user-select:none; transition:.12s; position:relative;
+    box-shadow:var(--clay-out-sm);
+  }
+  .bed-tile:hover{ border-color:var(--signal); }
+  .bed-tile.active{
+    border-color:var(--signal); color:var(--signal);
+    box-shadow:0 0 0 1px var(--signal), var(--glow-signal);
+  }
+
+  /* ---------- striscia vitali fissa (elemento firma) ---------- */
+  .vitals-strip{
+    margin:14px 14px 0; padding:12px 14px;
+    background:var(--panel); border:1px solid var(--clay-border); border-radius:20px;
+    box-shadow:var(--clay-out);
+  }
+  .vitals-strip.inline-fields{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:2px; flex-wrap:unset;
+  }
+  .vitals-strip .v{
+    text-align:center; padding:2px 0; position:relative;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .vitals-strip .v:not(:last-child)::after{
+    content:''; position:absolute; right:0; top:15%; bottom:15%; width:1px; background:var(--line);
+  }
+  .vitals-strip .v label{
+    display:block; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em;
+    color:var(--ink-faint); text-transform:uppercase; margin-bottom:3px;
+  }
+  .vitals-strip .v input{
+    font-family:var(--font-mono); font-size:20px; font-weight:600; line-height:1;
+    color:var(--ink-dim); background:none; border:none; text-align:center;
+    width:36px; padding:2px 0; -moz-appearance:textfield;
+  }
+  .vitals-strip .v input::-webkit-outer-spin-button,
+  .vitals-strip .v input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .vitals-strip .v input:focus{ outline:none; color:var(--ink); }
+  .vitals-strip .v input::placeholder{ color:var(--ink-faint); font-weight:400; }
+  .vitals-strip .v .val-row{ display:flex; align-items:baseline; justify-content:center; gap:1px; }
+  .vitals-strip .v .unit{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); }
+  .vitals-strip .v.pa .pa-row{ display:flex; align-items:center; justify-content:center; }
+  .vitals-strip .v.pa input{ width:38px; }
+  .vitals-strip .v.pa .sep{ color:var(--ink-dim); font-family:var(--font-mono); padding:0 1px; }
+  .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
+  .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
+  .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
+  .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
+
+  /* pagina "Parametri vitali" del settore: una riga per letto, ciascuna con
+     gli stessi 4 campi della striscia flottante — qui però statica (non
+     sticky) e senza margini esterni, dato che è già dentro .vitali-settore-lista */
+  #vitali-settore-lista{ display:flex; flex-direction:column; gap:10px; }
+  .vitali-riga .riga-label{
+    font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--ink);
+    margin-bottom:6px; display:flex; align-items:baseline; gap:8px;
+  }
+  .vitali-riga .riga-label .riga-stato{ font-weight:400; color:var(--ink-faint); font-size:11px; text-transform:none; letter-spacing:0; }
+  .vitali-riga .vitals-strip{ position:static; margin:0; }
+  .bed-tile.occupied{
+    background:var(--signal-dim); border-color:rgba(79,127,90,.35); color:var(--signal-dark); font-weight:700;
+    box-shadow:var(--clay-in-sm);
+  }
+  .bed-tile.occupied-old{
+    background:var(--violet-dim); border-color:rgba(126,91,181,.35); color:var(--violet); font-weight:700;
+    box-shadow:var(--clay-in-sm);
+  }
+  .bed-tile.occupied-vecchio{
+    background:var(--panel-3); border-color:var(--line); color:var(--ink-dim); font-weight:700;
+    box-shadow:var(--clay-in-sm);
+  }
+  .bed-tile-del{
+    position:absolute; top:-7px; right:-7px; width:20px; height:20px;
+    border-radius:50%; border:1px solid var(--line); background:var(--panel);
+    color:var(--ink-dim); font-size:12px; line-height:1; font-family:var(--font-body);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .12s, border-color .12s, color .12s;
+  }
+  .bed-tile-del:hover, .bed-tile-del:active{ border-color:var(--acid-border); color:var(--acid); }
+  .bed-tile-del.confirm{ background:var(--acid); color:#fff; border-color:var(--acid); }
+  .bed-tile-attiva-badge{
+    position:absolute; top:-7px; left:-7px; width:18px; height:18px;
+    border-radius:50%; background:var(--signal); border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .bed-tile-attiva-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .bed-tile-esami-badge{
+    position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
+    border-radius:50%; background:#cf5f55; border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  .diario-esami-badge{
+    width:18px; height:18px; border-radius:50%; background:#cf5f55;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  .lettera-toggle{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim);
+    font-family:var(--font-mono); font-weight:700; font-size:12px;
+    transition:border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .lettera-toggle:hover{ border-color:var(--signal); color:var(--ink); }
+  .lettera-toggle.attivo{
+    border-color:var(--signal); background:var(--signal); color:var(--on-signal);
+    box-shadow:var(--glow-signal);
+  }
+  .lettera-toggle.toggle-v{ border-color:#cf9a45; color:#cf9a45; }
+  .lettera-toggle.toggle-v.attivo{ background:#cf9a45; border-color:#cf9a45; color:#221a08; box-shadow:0 4px 10px -4px rgba(207,154,69,.4); }
+  .lettera-toggle.toggle-e{ border-color:#a383db; color:#a383db; }
+  .lettera-toggle.toggle-e.attivo{ background:#a383db; border-color:#a383db; color:#1c1233; box-shadow:0 4px 10px -4px rgba(163,131,219,.4); }
+  .lettera-toggle.toggle-s{ border-color:#46b6c6; color:#46b6c6; }
+  .lettera-toggle.toggle-s.attivo{ background:#46b6c6; border-color:#46b6c6; color:#062226; box-shadow:0 4px 10px -4px rgba(70,182,198,.4); }
+  .lettera-toggle.toggle-c{ border-color:#d27cb0; color:#d27cb0; }
+  .lettera-toggle.toggle-c.attivo{ background:#d27cb0; border-color:#d27cb0; color:#2a0f1f; box-shadow:0 4px 10px -4px rgba(210,124,176,.4); }
+  .bed-tile-consegna-badge{
+    width:15px; height:15px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; z-index:1;
+    font-family:var(--font-mono); font-size:8.5px; font-weight:800; color:#06131a;
+    border:1.5px solid var(--panel-2);
+    position:absolute; top:-6px;
+  }
+  .bed-tile-consegna-badge.v{ background:#cf9a45; left:-6px; }
+  .bed-tile-consegna-badge.e{ background:#a383db; left:9px; }
+  .bed-tile-consegna-badge.s{ background:#46b6c6; left:24px; }
+  .bed-tile-consegna-badge.c{ background:#d27cb0; left:39px; }
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
+  .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
+  /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
+  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:rgba(79,127,90,.4); color:var(--signal-dark); }
+  /* livello normale: pillola chiara verde menta con la capsula */
+  .diario-aiuti .aiuto.atb.liv0{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#e2eddd; border-color:#cde0c7; color:#3c6446; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.atb.liv0 svg{ width:15px; height:15px; flex-shrink:0; }
+  /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
+  .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
+  .diario-aiuti .aiuto.atb.liv0 .gg{ color:#5f8a66; opacity:1; }
+  .diario-aiuti .aiuto.atb.liv1{ border-color:#c0802a; color:#c0802a; }
+  .diario-aiuti .aiuto.atb.liv2{ border-color:#c8464e; color:#c8464e; font-weight:700; }
+  /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
+  .diario-aiuti .aiuto.richiesta{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
+  }
+  .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
+  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
+  .diario-aiuti .aiuto.rene{ border-color:#c0802a; color:#c0802a; cursor:pointer; }
+  .diario-aiuti .aiuto.rene.ok{ border-color:#cde0c7; background:#e2eddd; color:#3c6446; font-weight:600; }
+  .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 4px 10px -4px rgba(var(--consegna-rgb),.35); }
+  .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
+  .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#111; font-family:var(--font-mono); }
+  .diario-consegna-pallino.v{ background:#cf9a45; }
+  .diario-consegna-pallino.e{ background:#a383db; }
+  .diario-consegna-pallino.s{ background:#46b6c6; }
+  .diario-consegna-pallino.c{ background:#d27cb0; }
+  .diario-consegna-pallino.info{ background:#4a86c5; color:#fff; font-style:italic; }
+  .diario-consegna-testo{ margin:2px 0 8px; white-space:pre-wrap; font-size:13px; }
+  /* letto consegnato (Reparto e riquadri-letto): bordo e alone azzurri,
+     sfondo vuoto, numero bianco — "da fare". Una volta scritto l'esame
+     obiettivo di oggi si riempie di teal ("fatto"), col bordo azzurro */
+  .bed-tile.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 4px 10px -4px rgba(var(--consegna-rgb),.4); }
+  .bed-tile.ha-consegne:not(.occupied){ border-color:transparent; background-color:transparent; color:var(--ink); }
+  /* numero sempre bianco anche nei letti grigi (visti da più di 3 giorni)
+     e nei critici */
+  .bed-tile.occupied-vecchio, .bed-tile.critico{ color:var(--ink); }
+  /* il critico consegnato non prende lo sfondo vuoto dei consegnati */
+  .bed-tile.critico.ha-consegne:not(.occupied){ background-color:var(--panel); }
+  .bed-tile.critico.ha-consegne.occupied-vecchio{ background-color:var(--panel-3); }
+  .bed-tile.critico.ha-consegne.occupied-old{ background-color:var(--violet-dim); }
+  /* paziente critico (consegnato o no, ha la precedenza): bordo e alone
+     viola scuro + bande diagonali viola, come quelle blu della dimissione */
+  .bed-tile.critico, .bed-tile.critico.ha-consegne:not(.occupied){
+    border:1px solid #7a3fc0;
+    box-shadow:var(--clay-out-sm), 0 0 0 2px #7a3fc0;
+    background-image:repeating-linear-gradient(135deg, rgba(140,90,210,.22) 0 4px, transparent 4px 10px);
+  }
+  .referto-block.critico{ box-shadow:var(--clay-out-sm), 0 0 0 2px #7a3fc0, 0 4px 12px -4px rgba(122,63,192,.5); }
+  .referto-block.critico.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px #7a3fc0, 0 4px 12px -4px rgba(122,63,192,.45), inset 0 4px 16px -4px rgba(140,90,210,.25); }
+  /* dimissione di OGGI: bande diagonali nel blu della "D" (la dimissione di
+     domani ha solo il pallino D); per un critico restano le bande viola */
+  .bed-tile.dimissione-oggi:not(.critico){ background-image:repeating-linear-gradient(135deg, rgba(74,134,197,.3) 0 4px, transparent 4px 10px); }
+  .bed-tile-dimissione-badge{
+    position:absolute; bottom:-7px; right:-7px; width:18px; height:18px;
+    border-radius:50%; background:#4a86c5; border:2px solid var(--panel-2);
+    display:flex; align-items:center; justify-content:center; z-index:1;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  /* se compaiono insieme, la D si sovrappone un po' alla E (stessa
+     posizione, spostata leggermente più a destra) invece di stare esatta-
+     mente sopra — vale solo quando la D segue davvero una E nel tile,
+     non quando compare da sola (nel qual caso resta dove sta di solito
+     la E, in basso a destra) */
+  .bed-tile-esami-badge + .bed-tile-dimissione-badge{ right:-16px; }
+  /* stessa idea per la "i" col baffo del diario copiato oggi (stessa
+     posizione in alto a sinistra, vedi .bed-tile-attiva-badge): se il
+     baffo c'è già, la i si sposta un po' più a destra invece di
+     sovrapporlo e nasconderlo — uso "~" (fratello generico) e non "+"
+     perché tra i due, nel markup, possono comparire anche E/D */
+  .bed-tile-attiva-badge ~ .bed-tile-isolamento-badge{ left:9px; }
+  .bed-tile-isolamento-badge{
+    position:absolute; top:-7px; left:-7px; width:18px; height:18px;
+    border-radius:50%; border:2px solid var(--panel-2); z-index:1;
+    display:flex; align-items:center; justify-content:center;
+    font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-size:11px; font-weight:800; color:#fff; line-height:1;
+  }
+  .bed-tile-isolamento-badge.rosso{ background:#cf5a52; }
+  .bed-tile-isolamento-badge.arancione{ background:#cf9a45; }
+  .bed-tile-isolamento-badge.blu{ background:#4a86c5; }
+  .bed-tile-isolamento-badge.verde{ background:#4f9a62; }
+  .diario-isolamento-badge{
+    width:18px; height:18px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-size:11px; font-weight:800; color:#fff; line-height:1;
+  }
+  .diario-isolamento-badge.rosso{ background:#cf5a52; }
+  .diario-isolamento-badge.arancione{ background:#cf9a45; }
+  .diario-isolamento-badge.blu{ background:#4a86c5; }
+  .diario-isolamento-badge.verde{ background:#4f9a62; }
+  /* stesso taggle "i" della scheda (accanto a Sesso): quando è impostato
+     almeno un tipo di isolamento, prende lo stesso colore del pallino su
+     letto/diario, invece del generico evidenziato "active" — così basta
+     aprire la scheda per capire subito di che isolamento si tratta */
+  #isolamento-toggle.iso-rosso{ background:#cf5a52; border-color:#cf5a52; color:#fff; box-shadow:0 4px 10px -4px rgba(207,90,82,.4); }
+  #isolamento-toggle.iso-arancione{ background:#cf9a45; border-color:#cf9a45; color:#221a08; box-shadow:0 4px 10px -4px rgba(207,154,69,.4); }
+  #isolamento-toggle.iso-blu{ background:#4a86c5; border-color:#4a86c5; color:#06131a; box-shadow:0 4px 10px -4px rgba(74,134,197,.4); }
+  #isolamento-toggle.iso-verde{ background:#4f9a62; border-color:#4f9a62; color:#06210d; box-shadow:0 4px 10px -4px rgba(79,154,98,.4); }
+  .diario-dimissione-badge{
+    width:18px; height:18px; border-radius:50%; background:#4a86c5;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:var(--font-mono); font-size:10px; font-weight:800; color:#fff; line-height:1;
+  }
+  /* se compaiono insieme, la D si sovrappone un po' alla E (stessa
+     posizione, spostata leggermente a destra) invece di stare in fila
+     con lo spazio normale tra i due pallini — vale solo quando la D segue
+     davvero una E, non quando compare da sola */
+  .diario-esami-badge + .diario-dimissione-badge{ margin-left:-9px; z-index:1; }
+
+  /* ---------- CARDS ---------- */
+  .card{
+    margin:14px 14px 0; background:var(--panel); color:var(--ink);
+    border:1px solid var(--clay-border); border-radius:var(--radius-card); padding:18px 18px 19px;
+    box-shadow:var(--clay-out);
+  }
+  .card h2{
+    display:flex; align-items:center; gap:9px;
+    font-family:var(--font-display);
+    font-size:17.5px; letter-spacing:-.02em;
+    color:var(--ink); margin:0 0 15px; font-weight:800;
+  }
+  /* icona del titolo delle card: in un tondo salvia tenue */
+  .card > h2 > .hicon:first-child{
+    width:34px; height:34px; padding:7px; border-radius:12px; background:var(--signal-dim);
+  }
+  .hicon{
+    width:20px; height:20px; flex-shrink:0;
+    fill:none; stroke:var(--signal); stroke-width:1.8;
+    stroke-linecap:round; stroke-linejoin:round;
+  }
+  /* titoli dei box strumento (EGA, VFG, ECG, Soffi, Rubrica): stessa icona
+     della voce in Strumenti, a sinistra del nome */
+  h2.tool-titolo{ display:flex; align-items:center; gap:9px; }
+  h2.tool-titolo .hicon .pieno, .card h2 .hicon .pieno{ fill:var(--signal); stroke:none; }
+  .card h2 .eyebrow{
+    font-family:var(--font-mono); font-size:11px; font-weight:500;
+    color:var(--signal); background:var(--signal-dim);
+    padding:3px 8px; border-radius:999px; letter-spacing:.02em;
+  }
+  .group{ margin-bottom:15px; }
+  .group:last-child{ margin-bottom:0; }
+  .group-row{ display:flex; gap:15px; margin-bottom:15px; }
+  .group-row:last-child{ margin-bottom:0; }
+  .group-row > .group{ flex:1 1 0; min-width:0; margin-bottom:0; }
+  .group-label{
+    font-size:12.5px; color:var(--ink-dim); margin-bottom:8px;
+    letter-spacing:.005em; font-weight:600;
+  }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  /* Linguaggio + Aspetto generale affiancati: chip un po' più stretti per
+     stare tutti e quattro sulla stessa riga anche su telefono */
+  #coscienza-linguaggio .chip, #coscienza-aspetto .chip{ padding-left:10px; padding-right:10px; }
+  .chip{
+    font-family:var(--font-body);
+    font-size:13px; line-height:1.3; padding:8px 14px; border-radius:999px; font-weight:500;
+    border:1px solid transparent; background:var(--panel-2); color:var(--ink);
+    cursor:pointer; user-select:none;
+    transition:box-shadow .15s ease, border-color .12s, background .12s, color .12s, transform .08s;
+  }
+  .chip:hover{ border-color:var(--line); color:var(--ink); }
+  .chip:active{ transform:scale(.97); }
+  .chip.active{
+    background:var(--signal); border-color:var(--signal);
+    color:var(--on-signal); font-weight:700;
+    box-shadow:var(--glow-signal);
+  }
+  .addome-griglia{
+    display:flex; flex-wrap:wrap; gap:6px; width:100%;
+  }
+  .addome-griglia .addome-cella{
+    flex:0 0 calc((100% - 12px) / 3); box-sizing:border-box;
+    text-align:center; padding:8px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .addome-griglia .addome-diffusamente{
+    flex:0 0 100%; box-sizing:border-box; text-align:center;
+  }
+
+  /* ---------- LISTA CON "TENDINA" AGGANCIATA (sede subito sotto la voce) ---------- */
+  /* i chip stanno affiancati come una normale riga di pillole; ogni riga
+     "logica" (chip + tendina) usa display:contents così chip e tendina
+     diventano elementi diretti del flex-wrap del genitore: il chip resta
+     in linea con gli altri, la tendina - quando aperta - occupa da sola
+     tutta la larghezza (va a capo solo lì, senza spostare gli altri chip) */
+  .finding-list{ display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; }
+  #cute-reperti > .finding-row{
+    display:flex; flex-direction:column; width:calc(50% - 3.5px); box-sizing:border-box;
+  }
+  #cute-reperti > .finding-row:has(.finding-drawer.open){ width:100%; }
+  #cute-reperti > .finding-row[data-reperto="discromie_venosa"]{ width:100%; }
+  #cute-reperti > .finding-row > .chip{ width:100%; box-sizing:border-box; text-align:center; }
+  .finding-row{ display:contents; }
+  .finding-drawer{
+    flex-basis:0; width:0; overflow:hidden; max-height:0; opacity:0;
+    transition:max-height .22s ease, opacity .18s ease, margin-top .22s ease;
+  }
+  .finding-drawer.open{ flex-basis:100%; width:auto; max-height:260px; opacity:1; margin-top:2px; }
+  /* MV e reperti (crepitii/ronchi/rantoli/ecc.) possono avere più blocchi
+     sede ciascuno (vedi costruisciSedeToraciceMulti): il tetto fisso di
+     260px basterebbe per un solo blocco ma taglia il secondo/terzo, oltre
+     a bolle/sottotipi/pulsante "+ Aggiungi sede" — quindi qui alziamo il
+     limite per entrambe le tendine, non solo per quella di MV */
+  #torace-mv .finding-drawer.open, #torace-reperti .finding-drawer.open{ max-height:700px; }
+  .finding-drawer-inner{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:2px 0 2px 12px;
+    border-left:2px solid var(--signal);
+    margin-left:6px;
+  }
+
+  /* ---------- SCHEDE PAZIENTE (cartellina, colore/stile a parte) ---------- */
+  #wardmap-view h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
+  .patient-tabs{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; }
+  .patient-tab{
+    font-family:var(--font-body); font-size:14.5px; font-weight:500;
+    padding:11px 20px 10px; border-radius:14px 14px 0 0;
+    border:1px solid var(--clay-border); border-bottom:2px solid var(--clay-border);
+    background:var(--panel-3); color:var(--ink);
+    cursor:pointer; user-select:none; transition:.12s; position:relative;
+    box-shadow:var(--clay-out-sm);
+  }
+  .patient-tab:hover{ border-color:var(--folder); }
+  .patient-tab.active{
+    background:var(--folder-dim); border-color:var(--folder); border-bottom-color:var(--folder-dim);
+    color:var(--folder); font-weight:700; transform:translateY(-2px);
+    box-shadow:var(--clay-in-sm);
+  }
+  #riepilogo-view .btn.primary{ background:var(--folder); border-color:var(--folder); color:var(--on-folder); }
+  #riepilogo-view .btn:not(.primary){ background:var(--panel); }
+  #riepilogo-view .btn:not(.primary):hover{ border-color:var(--folder); }
+  .referto-block{
+    margin-bottom:14px; padding:13px; border:1px solid var(--clay-border); border-radius:20px;
+    background:var(--panel); box-shadow:var(--clay-out-sm);
+  }
+  .referto-block:last-child{ margin-bottom:0; }
+  .referto-block.copiato{
+    border-color:rgba(79,127,90,.45);
+    box-shadow:var(--clay-out-sm), 0 0 4px 1px -4px rgba(79,127,90,.45);
+  }
+  .referto-block.copiato .bed-title{ color:var(--signal); }
+  .referto-block .bed-title-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;
+  }
+  .referto-block .bed-title{
+    font-family:var(--font-mono); font-weight:700; font-size:13.5px;
+    color:var(--folder);
+  }
+  .referto-block .bed-date{
+    font-family:var(--font-mono); font-weight:500; font-size:11px;
+    color:var(--ink-dim); margin-left:8px;
+  }
+  .referto-block .copia-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:6px 13px; border-radius:999px; border:1px solid transparent;
+    background:var(--folder-dim); color:var(--folder); cursor:pointer; white-space:nowrap;
+  }
+  .referto-block .copia-btn:hover{ border-color:var(--folder); }
+  /* intestazione del diario: tondo con l'icona del letto, nome grande,
+     orario sotto, pulsante Copia con icona */
+  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:8px; }
+  .referto-block .bed-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+  /* da copiare: arancio (folder), come prima; copiato: verde */
+  .referto-block .bed-avatar{
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:var(--folder-dim); color:var(--folder); display:flex; align-items:center; justify-content:center;
+    box-shadow:none;
+  }
+  .referto-block .bed-avatar svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .bed-avatar svg .pieno{ fill:currentColor; stroke:none; }
+  .referto-block.copiato .bed-avatar{ background:var(--signal-dim); color:var(--signal); }
+  .referto-block .bed-head-testo{ min-width:0; }
+  .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:15.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
+  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:1px 0 0; color:var(--ink-dim); }
+  /* stesse misure del Copia di prima, più l'icona */
+  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; gap:5px; }
+  .referto-block.copiato .copia-btn.copia-grande{ background:var(--signal-dim); color:var(--signal-dark); }
+  .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
+  .referto-block .copia-btn.copia-grande svg{ width:13px; height:13px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .bed-text{
+    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+    background:var(--panel-2); border:1px solid transparent; border-radius:16px;
+    padding:12px 14px; white-space:pre-wrap; box-shadow:var(--clay-in-sm);
+    width:100%; resize:none; overflow-y:hidden; min-height:64px;
+  }
+  .referto-block textarea.bed-text:focus{ outline:none; border-color:var(--signal); }
+  /* righe delle aggiunte rimaste uguali al diario del giorno prima: in
+     grigio chiaro (vedi diarioRigheDiIeri). Si ottiene con una copia del
+     testo (.bed-text-specchio) disegnata sotto la textarea, il cui testo
+     diventa trasparente SOLO quando non è in modifica: scrivendo si torna
+     al testo vero, così il cursore non può mai disallinearsi */
+  /* nessuna proprietà che cambia l'impaginazione al tocco (posizione,
+     display, sfondo della textarea): su iPhone cambiarle proprio mentre il
+     campo prende il focus faceva perdere il primo tocco. Al focus cambia
+     SOLO il colore del testo: la textarea è sempre sopra, trasparente, e
+     lo sfondo lo disegna sempre la copia sotto */
+  /* ---------- AGGIORNA CONSEGNE (vista di Diari) ---------- */
+  .agg-cons-barra{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .agg-cons-barra label{ font-size:13px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .agg-cons-scroll{ overflow-x:auto; }
+  table.agg-cons{ width:100%; border-collapse:separate; border-spacing:0 6px; table-layout:fixed; }
+  table.agg-cons col.c-letto{ width:30%; max-width:150px; }
+  table.agg-cons th{ text-align:left; font-size:11.5px; font-family:var(--font-mono); color:var(--ink-dim); font-weight:600; padding:0 8px 2px; text-transform:uppercase; letter-spacing:.04em; }
+  table.agg-cons td{ vertical-align:top; background:var(--panel-2); padding:8px; border-top:1px solid var(--clay-border); border-bottom:1px solid var(--clay-border); color:var(--ink); }
+  table.agg-cons td:first-child{ border-left:1px solid var(--clay-border); border-radius:12px 0 0 12px; font-weight:700; font-size:13.5px; overflow-wrap:anywhere; }
+  table.agg-cons td:first-child > div:first-child{ margin-bottom:6px; }
+  table.agg-cons .agg-cons-righe{ cursor:text; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; touch-action:manipulation; }
+  table.agg-cons .agg-cons-righe .r-copia{
+    display:inline-flex; align-items:center; justify-content:center; vertical-align:-3px;
+    width:20px; height:18px; margin-left:3px; padding:0; border:none; border-radius:5px;
+    background:transparent; color:var(--ink-dim); cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  table.agg-cons .agg-cons-righe .r-copia:hover{ color:var(--ink); background:var(--panel); }
+  table.agg-cons .agg-cons-righe .r-copia svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  table.agg-cons td:last-child{ border-right:1px solid var(--clay-border); border-radius:0 12px 12px 0; }
+  table.agg-cons textarea.agg-cons-testo{ width:100%; min-height:44px; resize:vertical; font-size:13.5px; line-height:1.45; padding:6px 8px;
+    border-radius:9px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); font-family:inherit; box-sizing:border-box; }
+  table.agg-cons .agg-cons-righe{ font-size:13.5px; line-height:1.5; color:var(--ink); }
+  /* trattino in una colonnina a sé: le righe che vanno a capo restano
+     allineate al testo, non al trattino (prima il rientro era stimato in
+     "em" e non coincideva con la larghezza reale di "- ") */
+  table.agg-cons .agg-cons-righe .riga{ display:flex; gap:.4em; }
+  table.agg-cons .agg-cons-righe .riga .tr{ flex:0 0 auto; }
+  table.agg-cons .agg-cons-righe .riga .tx{ flex:1 1 auto; min-width:0; }
+  table.agg-cons .agg-cons-righe .r{ background:#ffff00; color:#12181e; padding:0 2px; border-radius:2px; }
+  table.agg-cons .agg-cons-azioni{ display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  table.agg-cons .agg-cons-azioni button, table.agg-cons .agg-cons-etichetta{ font-size:12px; padding:4px 9px; border-radius:8px;
+    border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); cursor:pointer; }
+  table.agg-cons .agg-cons-esami{ margin-top:6px; font-size:12.5px; line-height:1.45; color:var(--ink-dim); white-space:pre-wrap;
+    background:var(--panel); border:1px dashed var(--clay-border); border-radius:9px; padding:6px 8px; }
+  table.agg-cons .agg-cons-etichetta{ display:block; width:100%; margin-bottom:5px; text-align:left; white-space:normal; font-weight:400; line-height:1.35; }
+  table.agg-cons .agg-cons-etichetta .ico-sotto{ display:block; text-align:right; line-height:1; margin-top:2px; }
+  table.agg-cons .agg-cons-etichetta .ee{ background:#edabee; color:#12181e; font-weight:700; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-etichetta .dim{ background:#00ffff; color:#12181e; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-vuoto{ font-size:12px; color:var(--ink-dim); }
+  /* riquadro del letto (come in Reparto) sotto il nome: solo da guardare.
+     Il margine lascia spazio ai pallini che sporgono dai bordi */
+  table.agg-cons .agg-cons-tile{ display:inline-block; margin:7px 7px 9px; }
+  table.agg-cons .agg-cons-tile .bed-tile{ display:inline-block; cursor:default; pointer-events:none; font-size:13.5px; }
+
+  .bed-text-wrap{ position:relative; }
+  .bed-text-specchio{ position:absolute; inset:0; pointer-events:none; overflow:hidden;
+    overflow-wrap:break-word; word-break:normal; z-index:0; }
+  .bed-text-wrap textarea.bed-text{ position:relative; z-index:1; background:transparent; box-shadow:none; }
+  .bed-text-wrap.con-ieri:not(.in-modifica) textarea.bed-text{ color:transparent; }
+  .bed-text-wrap:not(.con-ieri) .bed-text-specchio,
+  .bed-text-wrap:not(.con-ieri) .bed-text-specchio *,
+  .bed-text-wrap.in-modifica .bed-text-specchio,
+  .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
+  .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
+  .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
+  /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
+  #ricoveri-view .patient-tab.active{ color:var(--signal); }
+  #ricoveri-view textarea, #ricovero-singolo-view textarea{
+    width:100%; min-height:64px; resize:none; overflow-y:hidden;
+    border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
+    border-radius:12px; padding:10px 12px; font-family:var(--font-body);
+    font-size:13px; line-height:1.55; box-shadow:var(--clay-in-sm);
+  }
+  #ricoveri-view textarea:focus, #ricovero-singolo-view textarea:focus{ border-color:var(--signal); }
+  .admit-form-card{ border-color:var(--clay-border); background:var(--panel-3); }
+  .admit-form-header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px; }
+  .admit-form-header-row h2{ margin-bottom:0; }
+  .ric-torna-oggi{ color:var(--signal); font-weight:600; cursor:pointer; }
+  .admit-sesso-chips{ display:flex; gap:8px; margin-bottom:2px; }
+  .field-label{ font-size:12.5px; color:var(--ink); font-weight:700; margin-bottom:5px; letter-spacing:.01em; }
+  .admit-field{ margin-bottom:12px; }
+  .admit-field:last-child{ margin-bottom:0; }
+  .admit-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .admit-grid{ grid-template-columns:1fr; } }
+  .admit-block{
+    margin-bottom:16px; padding:0; border:1px solid var(--clay-border); border-radius:16px;
+    background:var(--panel-3); overflow:hidden; box-shadow:var(--clay-out-sm);
+  }
+  .admit-block:last-child{ margin-bottom:0; }
+  .admit-block-head{
+    display:flex; flex-direction:column; gap:10px;
+    padding:11px 13px; background:var(--panel-2); border-bottom:1px solid var(--line);
+    cursor:pointer; list-style:none;
+  }
+  .admit-block:not([open]) .admit-block-head{ border-bottom:none; }
+  .admit-block-head::-webkit-details-marker{ display:none; }
+  .admit-block-head::marker{ content:''; }
+  .admit-block-title-row{ display:flex; align-items:center; gap:7px; min-width:0; }
+  .admit-chev{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:14px; flex-shrink:0; color:var(--ink-dim); font-size:15px;
+    transition:transform .15s ease;
+  }
+  .admit-block[open] .admit-chev{ transform:rotate(90deg); }
+  #app-farmaci-chev.aperto{ transform:rotate(90deg); }
+  #app-score-chev{ transition:transform .2s; }
+  #app-score-chev.aperto{ transform:rotate(90deg); }
+  .admit-block-title{
+    font-family:var(--font-mono); font-weight:700; font-size:13.5px; color:var(--signal);
+  }
+  /* calendario dei ricoveri */
+  #ricoveri-calendario .ric-cal{ margin-bottom:22px; }
+  .ric-cal-nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 13px; gap:8px;
+  }
+  .ric-cal-nav-btn{
+    width:28px; height:28px; border-radius:50%; border:1px solid var(--clay-border);
+    background:var(--panel-2); color:var(--ink-dim); font-size:14px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:var(--clay-out-sm);
+  }
+  .ric-cal-nav-btn:hover{ border-color:var(--signal); color:var(--signal); box-shadow:0 4px 10px -4px rgba(79,127,90,.35); }
+  .ric-cal-mese{ font-family:var(--font-display); font-weight:600; font-size:14.5px; color:var(--ink); text-transform:capitalize; }
+  .ric-cal-grid{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:3px;
+    padding:0 13px 13px;
+  }
+  .ric-cal-weekday{
+    text-align:center; font-family:var(--font-mono); font-size:10.5px;
+    color:var(--ink-dim); padding-bottom:4px; text-transform:uppercase;
+  }
+  .ric-cal-weekday.weekend{ color:var(--violet); }
+  .ric-cal-day{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:9px; font-family:var(--font-body); font-size:13px; color:var(--ink);
+    cursor:pointer; gap:3px; position:relative; background:transparent;
+  }
+  .ric-cal-day:hover{ background:var(--panel-2); }
+  .ric-cal-day.vuoto{ cursor:default; visibility:hidden; }
+  .ric-cal-day.weekend{ color:var(--violet); }
+  .ric-cal-day.oggi{ font-weight:700; color:var(--signal); }
+  .ric-cal-day.attivo{
+    background:var(--signal); color:var(--on-signal); font-weight:700; border-radius:50%;
+    box-shadow:var(--glow-signal);
+  }
+  .ric-cal-day.attivo .ric-cal-dot{ background:var(--on-signal); }
+  .ric-cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--signal); }
+  .ric-cal-filtro{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin:0 0 12px; padding:9px 13px; border-radius:14px;
+    background:var(--signal-dim); border:1px solid var(--signal-dim);
+    box-shadow:var(--clay-in-sm);
+  }
+  .ric-cal-filtro span{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); font-weight:600; text-transform:capitalize; }
+  .ric-cal-filtro button{
+    font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--signal);
+    background:transparent; border:1px solid var(--signal); border-radius:7px; padding:4px 10px; cursor:pointer;
+  }
+  .ric-lista-minimale{
+    display:flex; flex-direction:column;
+    border-top:1px solid var(--line-soft);
+  }
+  .ric-lista-riga{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 4px; font-family:var(--font-body); font-size:14px; color:var(--ink);
+    border-bottom:1px solid var(--line-soft); cursor:pointer;
+  }
+  .ric-lista-riga:hover{ color:var(--signal); }
+  .ric-lista-riga.attivo{ color:var(--signal); font-weight:600; }
+  .ric-lista-nome{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .farmaco-bullet{ color:var(--signal); margin-right:7px; font-weight:700; }
+  .ric-lista-del{
+    width:24px; height:24px; border-radius:50%; flex-shrink:0;
+    border:1px solid var(--acid-border); background:var(--panel); color:var(--acid);
+    font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .12s, border-color .12s, color .12s;
+  }
+  .ric-lista-del:hover, .ric-lista-del:active{ border-color:var(--acid); background:var(--acid-dim); }
+  .ric-lista-del.confirm{ background:var(--acid); color:#fff; border-color:var(--acid); }
+  .admit-checkbox{ width:17px; height:17px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
+  .admit-block-actions{ display:flex; flex-wrap:wrap; gap:6px; }
+  .admit-del-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:5px 12px; border-radius:7px; border:1px solid var(--acid-border); color:var(--acid);
+    background:var(--panel-2); cursor:pointer; white-space:nowrap;
+  }
+  .admit-del-btn:hover{ border-color:#cf5f55; }
+  .admit-sub{ padding:12px 13px; position:relative; }
+  .admit-sub + .admit-sub{ border-top:1px solid var(--line-soft); }
+  .admit-sub.copiato .admit-editable{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal); }
+  .admit-sub-copiato-badge{
+    position:absolute; top:2px; right:6px; width:18px; height:18px;
+    border-radius:50%; background:var(--signal); border:2px solid var(--panel-3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .admit-sub-copiato-badge svg{ width:11px; height:11px; fill:none; stroke:var(--on-signal); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .admit-sub-title-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .admit-sub-title{ font-family:var(--font-mono); font-size:12.5px; font-weight:600; color:var(--ink-dim); }
+  .admit-copy-btn{
+    font-family:var(--font-body); font-size:12px; font-weight:600;
+    padding:5px 12px; border-radius:7px; border:1px solid var(--signal-dim);
+    background:var(--panel-2); color:var(--signal); cursor:pointer; white-space:nowrap;
+  }
+  .admit-copy-btn:hover{ border-color:var(--signal); }
+  /* "Copia consegna" in fondo al ricovero: pieno, è l'azione finale */
+  .admit-copy-btn.primary{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); padding:7px 16px; font-size:13px; }
+  .admit-copy-btn.primary:hover{ filter:brightness(1.08); }
+  .admit-editable{
+    font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
+    padding:11px 13px; white-space:pre-wrap; outline:none; min-height:1.6em;
+    box-shadow:var(--clay-in-sm);
+  }
+  .admit-editable:focus{ border-color:var(--signal); }
+  .admit-editable:empty::before{ content:attr(data-placeholder); color:var(--ink-dim); }
+  /* righe "altro esame" (+ ECG ecc.) dentro Esami strumentali */
+  .altro-esame-row{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
+    margin-top:8px; padding:9px; border:1px solid var(--clay-border); border-radius:13px;
+    background:var(--panel-2); box-shadow:var(--clay-out-sm);
+  }
+  .altro-esame-row .altro-esame-nome{
+    flex:1 1 140px; min-width:110px;
+  }
+  .altro-esame-row .altro-esame-testo{
+    flex:2 1 220px; min-width:180px; min-height:38px;
+  }
+  .altro-esame-del{
+    flex:0 0 auto; width:30px; height:30px; border-radius:7px;
+    border:1px solid var(--acid-border); background:var(--panel); color:var(--acid);
+    cursor:pointer; font-size:16px; line-height:1; font-family:var(--font-body);
+  }
+  .altro-esame-del:hover{ border-color:#cf5f55; }
+  .admit-add-btn{
+    margin-top:8px; font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    padding:6px 13px; border-radius:8px; border:1px dashed var(--signal-dim);
+    background:transparent; color:var(--signal); cursor:pointer;
+  }
+  .admit-add-btn:hover{ border-color:var(--signal); border-style:solid; }
+  /* ---------- RICOVERO: una schermata in tre blocchi ---------- */
+  .ric-testata{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .ric-testata h2{ margin:0; }
+  .ric-testata-azioni{ display:flex; gap:6px; flex-wrap:wrap; }
+  .ric-blocco{ border-radius:16px; padding:13px 13px 14px; margin-bottom:16px; }
+  .ric-blocco:last-child{ margin-bottom:0; }
+  .ric-blocco-etichetta{
+    display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap;
+    margin-bottom:11px;
+  }
+  .ric-blocco-etichetta > span:first-child{
+    font-family:var(--font-mono); font-size:11.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .ric-nota{ font-size:11.5px; color:var(--ink-faint); }
+  /* 1. paziente: tratteggiato e "spento", si vede che sta FUORI dal testo */
+  .ric-fuori{ border:1.5px dashed var(--line); background:transparent; }
+  .ric-fuori .ric-blocco-etichetta > span:first-child{ color:var(--ink-dim); }
+  .ric-fuori > * + *{ margin-top:9px; }
+  .ric-riga{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ric-riga select{ width:100%; min-width:120px; }
+  .ric-mini{ display:flex; flex-direction:column; gap:4px; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); min-width:0; }
+  .ric-mini input, .ric-mini select, .ric-mini textarea{ text-transform:none; letter-spacing:normal; }
+  /* diagnosi: si allunga col testo (autoResizeTextarea), ma resta una riga
+     logica — Invio non va a capo (vedi il listener sotto caricaRicovero) */
+  #ricovero-singolo-view textarea.ric-diagnosi{ min-height:0; font-size:14px; padding:9px 12px; }
+  /* voce ancora vuota: niente "Copia", testo d'aiuto più discreto */
+  .ric-voce.vuota .ric-voce-testa .admit-copy-btn{ display:none; }
+  .ric-voce.vuota .ric-anteprima .admit-editable{ padding:8px 12px; font-size:12px; border-style:dashed; box-shadow:none; background:transparent; }
+  .ric-anagrafica{ gap:9px; }
+  .ric-verbale summary{ font-size:12.5px; color:var(--signal); cursor:pointer; padding:4px 0; }
+  .ric-verbale[open] summary{ margin-bottom:8px; }
+  /* 2. ricovero: il prestampato, foglio con bordo oro */
+  .ric-doc{ background:var(--panel-2); border:1px solid var(--folder-dim); border-left:3px solid var(--folder); box-shadow:var(--clay-out-sm); }
+  .ric-doc .ric-blocco-etichetta > span:first-child{ color:var(--folder); }
+  .ric-voce{ padding:12px 0 13px; border-top:1px solid var(--line-soft); position:relative; }
+  .ric-blocco-etichetta + .ric-voce{ border-top:none; padding-top:2px; }
+  .ric-voce .admit-sub-copiato-badge{ display:none; }
+  .ric-voce-testa{ display:flex; align-items:center; gap:8px; margin-bottom:8px; min-height:28px; }
+  .ric-num{
+    width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:11px; font-weight:700; background:var(--folder-dim); color:var(--folder);
+  }
+  .ric-voce-titolo{ font-family:var(--font-display); font-size:14.5px; font-weight:600; color:var(--ink); flex:1; min-width:0; }
+  .ric-voce-testa .admit-copy-btn{ flex-shrink:0; }
+  .ric-voce.copiato .ric-num{ background:var(--signal); color:var(--on-signal); }
+  .ric-voce.copiato .admit-editable{ border-color:var(--signal); }
+  .ric-manuale{ font-size:11px; color:var(--folder); white-space:nowrap; }
+  .ric-manuale button{ font:inherit; color:var(--signal); background:none; border:none; padding:0 0 0 4px; cursor:pointer; text-decoration:underline; }
+  /* i campi: pillole come il codice inline (mono, blu). Vuote: tratteggiate
+     con "+"; compilate: piene con ✓; aperte: bordo acceso */
+  .ric-campi{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .ric-pill{
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.2; color:#2f63a8;
+    background:transparent; border:1px dashed #a9bfdd; border-radius:7px; padding:4px 8px; cursor:pointer;
+  }
+  .ric-pill::before{ content:'+ '; opacity:.75; }
+  .ric-pill.pieno{ background:#e9eff8; border:1px solid #c7d6ea; }
+  .ric-pill.pieno::before{ content:'✓ '; color:var(--signal); opacity:1; }
+  .ric-pill.aperto{ border-color:#2f63a8; border-style:solid; box-shadow:0 0 0 1px #2f63a8 inset; }
+  .ric-pill.ric-pill-aggiungi::before{ content:''; }
+  /* anamnesi prossima come testo: fisso in bianco, campi in blu */
+  .ric-pross{
+    background:var(--panel); border:1px solid var(--clay-border); border-radius:12px; padding:11px 12px;
+    box-shadow:var(--clay-in-sm); font-family:var(--font-body); font-size:14px; line-height:1.45; color:var(--ink);
+  }
+  .ric-pross-fisso{ margin:8px 0 4px; }
+  /* testo fisso allineato al testo dei campi (che hanno 7px di margine interno) */
+  .ric-pross-fisso, .ric-pross-et{ padding-left:7px; }
+  .ric-pross .altro-esame-row::before{ padding-left:7px; }
+  /* righe che NON verranno copiate (campo vuoto): etichetta in grigio */
+  .ric-pross-fisso:not(.piena), .ric-pross-riga:not(.piena) > .ric-pross-et{ color:var(--ink-faint); }
+  .ric-pross-manuale{ display:none; margin-top:8px; }
+  .ric-pross-manuale.visibile{ display:block; }
+  /* etichetta e campo sulla stessa riga; se il campo resterebbe troppo
+     stretto (schermo piccolo, etichetta lunga) va a capo sotto l'etichetta */
+  .ric-pross-riga{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 6px; margin-top:4px; }
+  .ric-pross-riga.opzionale{ display:none; }
+  .ric-pross-riga.opzionale.visibile{ display:flex; }
+  .ric-pross-et{ flex-shrink:0; padding-top:3px; white-space:nowrap; }
+  /* riga compilata e non in modifica: testo che scorre dopo l'etichetta,
+     come nel testo copiato (referti tra virgolette); un tocco la riapre */
+  .ric-lettura{ display:none; }
+  /* !important: le righe facoltative visibili e gli "altro esame" hanno un display:flex più specifico */
+  .ric-pross .in-lettura{ display:block !important; cursor:text; padding-left:7px !important; }
+  .ric-pross .in-lettura > .ric-pross-et{ display:inline; padding:0; white-space:normal; }
+  .ric-pross .in-lettura > textarea, .ric-pross .in-lettura > input, .ric-pross .in-lettura > .altro-esame-del{ display:none !important; }
+  /* il valore compilato: sfondo "main" (anche quando va a capo) */
+  .ric-pross .in-lettura > .ric-lettura{
+    display:inline; background:var(--ric-valore-bg); color:var(--ric-valore-ink);
+    border:1px solid rgba(47,99,168,.14); border-radius:6px; padding:1px 6px;
+    -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  }
+  .ric-pross .in-lettura > .ric-pross-et{ margin-right:5px; }
+  .ric-pross .altro-esame-row:not(.in-lettura) > .ric-pross-et-altro{ display:none; }
+  /* doppio tocco gestito da noi (vedi il click su .ric-pross): niente zoom */
+  .ric-pross{ touch-action:manipulation; }
+  /* anamnesi prossima copiata: contorno teal come le altre voci, e il testo
+     si mostra come è stato incollato — tutto bianco, senza righe vuote né
+     "+ ...". Doppio tocco: torna modificabile (.in-modifica) */
+  .ric-voce.copiato .ric-pross{ border-color:var(--signal); }
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .in-lettura > .ric-lettura{ background:none; border-color:transparent; color:var(--ink); padding:0; }
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .ric-pross-aggiungi,
+  .ric-voce.copiato:not(.in-modifica) .ric-pross [data-tipo]:not(.piena),
+  .ric-voce.copiato:not(.in-modifica) .ric-pross .ric-pross-fisso:not(.piena){ display:none !important; }
+  .ric-pross .altro-esame-row.in-lettura::before{ content:'- '; padding:0; }
+  #ricovero-singolo-view .ric-pross textarea.ric-campo-blu,
+  #ricovero-singolo-view .ric-pross .altro-esame-row textarea,
+  #ricovero-singolo-view .ric-pross .altro-esame-row input{
+    flex:1 1 170px; min-width:0; min-height:0; width:100%; margin:0; padding:1px 6px; border-radius:6px; box-shadow:none;
+    font-family:var(--font-body); font-size:14px; line-height:1.45;
+    /* compilato (in modifica): testo azzurro come i valori, bordo solo toccandolo */
+    color:var(--ric-valore-ink); background:transparent; border:1px solid transparent;
+  }
+  /* vuoto: campo blu tratteggiato, da compilare */
+  #ricovero-singolo-view .ric-pross textarea.ric-campo-blu:placeholder-shown,
+  #ricovero-singolo-view .ric-pross .altro-esame-row textarea:placeholder-shown,
+  #ricovero-singolo-view .ric-pross .altro-esame-row input:placeholder-shown{ border-style:dashed; border-color:#a9bfdd; font-family:var(--font-mono); font-size:13px; }
+  #ricovero-singolo-view .ric-pross textarea::placeholder, #ricovero-singolo-view .ric-pross input::placeholder{ color:#2f63a8; }
+  #ricovero-singolo-view .ric-pross textarea:focus, #ricovero-singolo-view .ric-pross input:focus{ border-color:#2f63a8; border-style:solid; outline:none; }
+  .ric-pross .ric-pross-aggiungi{ margin:8px 0 4px; }
+  .ric-pross .ric-pross-aggiungi .ric-pill{ font-size:12px; padding:3px 7px; }
+  /* altri esami (ECG, EGA...): "- [nome]: [referto]" come le altre righe */
+  .ric-pross .altro-esame-row{ display:flex; flex-wrap:nowrap; align-items:flex-start; gap:6px; margin:4px 0 0; padding:0; border:none; background:none; box-shadow:none; }
+  .ric-pross .altro-esame-row::before{ content:'-'; padding-top:3px; }
+  #ricovero-singolo-view .ric-pross .altro-esame-row .altro-esame-nome{ flex:0 0 92px; min-width:0; }
+  .ric-pross .altro-esame-del{ width:24px; height:24px; font-size:14px; flex:0 0 auto; }
+  .ric-editor{ display:none; margin-bottom:8px; }
+  .ric-editor.aperto{ display:block; }
+  .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#2f63a8; margin:0 0 4px 2px; }
+  .ric-anteprima .admit-editable{ background:var(--panel); font-family:var(--font-body); font-size:14px; line-height:1.5; }
+  .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
+  /* 3. consegna: la tabella vera, in anteprima */
+  .ric-consegna{ background:var(--panel-2); border:1px solid var(--clay-border); box-shadow:var(--clay-out-sm); }
+  .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
+  table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
+  table.ric-cons td{ border:1px solid var(--line); padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
+  table.ric-cons tr.testa td{ font-weight:700; color:#12181e; }
+  table.ric-cons b{ color:var(--ink); }
+  table.ric-cons .derivato{ color:var(--ink-dim); }
+  table.ric-cons .vuoto{ color:var(--ink-faint); font-style:italic; }
+  .ric-cons-campo{
+    display:block; width:100%; margin-top:3px; font-family:var(--font-mono); font-size:12px; color:#2f63a8;
+    background:transparent; border:1px dashed #a9bfdd; border-radius:6px; padding:3px 6px; outline:none;
+    min-height:1.6em; white-space:pre-wrap;
+  }
+  .ric-cons-campo:not(:empty){ border-style:solid; border-color:#c7d6ea; background:#e9eff8; color:var(--ink); font-family:var(--font-body); }
+  .ric-cons-campo:focus{ border-color:#2f63a8; border-style:solid; }
+  .ric-cons-campo:empty::before{ content:attr(data-placeholder); color:#7f98bd; }
+  .ric-cons-inline{ display:flex; align-items:baseline; gap:6px; margin-top:4px; }
+  .ric-cons-inline:first-child{ margin-top:0; }
+  .ric-cons-inline > b{ flex-shrink:0; }
+  .ric-cons-inline .ric-cons-campo{ margin-top:0; }
+  .ric-cons-azioni{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:11px; }
+  .ric-cons-azioni label{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-dim); cursor:pointer; }
+  .admit-altri-radio{
+    margin-top:10px; border:1px dashed var(--line); border-radius:9px; padding:2px 11px;
+  }
+  .admit-altri-radio[open]{ padding-bottom:11px; }
+  .admit-altri-radio-summary{
+    padding:9px 0; font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    color:var(--signal); cursor:pointer; list-style:none;
+  }
+  .admit-altri-radio-summary::-webkit-details-marker{ display:none; }
+  .admit-altri-radio-summary::before{ content:'+ '; }
+  .admit-altri-radio[open] .admit-altri-radio-summary::before{ content:'– '; }
+  .chip:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--signal); outline-offset:2px;
+  }
+
+  .inline-fields{ display:flex; flex-wrap:wrap; gap:11px; align-items:center; }
+  .field{ display:flex; align-items:center; gap:7px; }
+  .field label{ font-size:12.5px; color:var(--ink-dim); }
+  .field .unita-dopo{ font-size:12.5px; color:var(--ink-dim); }
+  #respiro-campo-altro input{ width:150px; }
+  input[type=number], input[type=text], input[type=email], input[type=password], input[type=search], input[type=date]{
+    background:var(--panel-2); border:1px solid transparent; color:var(--ink);
+    border-radius:12px; padding:9px 11px; font-size:13px;
+    font-family:var(--font-mono); box-shadow:var(--clay-in-sm);
+    transition:border-color .15s, box-shadow .15s, background .15s;
+  }
+  input[type=text], input[type=email], input[type=password], input[type=search], input[type=date]{ font-family:var(--font-body); }
+  input[type=number]:focus, input[type=text]:focus, input[type=email]:focus, input[type=password]:focus, input[type=search]:focus, input[type=date]:focus{
+    outline:none; border-color:var(--signal); background:var(--panel); box-shadow:0 0 0 3px var(--signal-soft);
+  }
+  input[type=number]{ width:70px; }
+  input[type=text].wide{ width:100%; }
+  /* bordo teal quando un campo di testo libero dell'esame obiettivo ha
+     qualcosa scritto dentro — così il giorno dopo si vede subito, senza
+     dover aprire ogni tendina, dove c'era una nota (es. Stato di
+     coscienza, Cute/ernie/cicatrici, e qualunque altro campo simile).
+     :not(:placeholder-shown) fa scattare la regola solo quando il campo
+     NON sta mostrando il proprio placeholder, cioè contiene del testo
+     vero: niente JS da mantenere, funziona anche sui campi aggiunti in
+     futuro, basta che abbiano un placeholder. */
+  #clinical-view input[type=text]:not(:placeholder-shown),
+  #clinical-view textarea:not(#output):not(:placeholder-shown){
+    border-color:var(--signal);
+    box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
+  }
+  select{
+    background:var(--panel-2); border:1px solid transparent; color:var(--ink);
+    border-radius:12px; padding:9px 11px; font-size:13px;
+    font-family:var(--font-body); width:100%; box-shadow:var(--clay-in-sm);
+  }
+  select:focus{ outline:none; border-color:var(--signal); }
+
+  /* ---------- OUTPUT ---------- */
+  #output-card{
+    margin-bottom:10px;
+    border-color:var(--clay-border);
+    background:linear-gradient(180deg, rgba(79,127,90,.07), rgba(79,127,90,0) 45%), var(--panel);
+  }
+  #output-card h2 .eyebrow{ background:var(--signal); color:var(--on-signal); }
+  textarea#output{
+    width:100%; min-height:180px; resize:none; overflow:hidden;
+    background:var(--panel-2); border:1px solid transparent; color:var(--ink);
+    border-radius:18px; padding:14px 15px; font-family:var(--font-mono);
+    font-size:13px; line-height:1.65; box-shadow:var(--clay-in-sm);
+  }
+  textarea#output:focus{ outline:none; border-color:var(--signal); }
+  .row{ display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
+  .btn{
+    font-family:var(--font-body);
+    background:var(--panel); border:1px solid var(--line); color:var(--ink);
+    border-radius:999px; padding:10px 18px; font-size:13px; font-weight:600; cursor:pointer;
+    transition:border-color .12s, background .12s, box-shadow .15s, transform .08s;
+    box-shadow:var(--clay-out-sm);
+  }
+  .btn:hover{ border-color:var(--ink-faint); }
+  .btn:active{ transform:scale(.98); }
+  .btn.primary{
+    background:var(--signal); border-color:var(--signal); color:var(--on-signal); font-weight:700;
+    box-shadow:var(--glow-signal);
+  }
+  .btn.primary:hover{ opacity:.92; border-color:var(--signal); }
+
+  #toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); border:1px solid var(--ink); color:var(--panel);
+    padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:.2s;
+    box-shadow:0 10px 24px -10px rgba(47,39,35,.55);
+  }
+  #toast.show{ opacity:1; }
+
+  /* ---------- EGA ANALYZER (modale) ----------
+     tool separato, richiamato scrivendo "EGA:" in Diari — vedi
+     apriEgaAnalyzer/chiudiEgaAnalyzer. Riusa le classi già esistenti
+     (.card, .chip, .btn, .group, input...), qui solo lo stretto necessario
+     per il modale e i pezzi che l'app non aveva ancora (badge, diagnosis,
+     detail-line, note-box) */
+  #ega-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #ega-modal-overlay.show{ display:flex; }
+  #ega-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .ega-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+  .ega-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  .ega-modal-header .sub{ font-size:11.5px; color:var(--ink-dim); font-family:var(--font-mono); margin-top:2px; }
+  #ega-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #ega-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #ega-modal input[type=number]{ width:100%; font-size:15px; padding:9px 10px; }
+
+  #ega-modal .badge{
+    display:inline-block; font-family:var(--font-mono); font-size:11.5px; font-weight:700;
+    letter-spacing:.06em; padding:5px 12px; border-radius:999px; margin-bottom:10px;
+    box-shadow:var(--clay-in-sm);
+  }
+  #ega-modal .badge.normale{ background:var(--signal-dim); color:var(--signal); }
+  #ega-modal .badge.acidosi{ background:var(--acid-dim); color:var(--acid); }
+  #ega-modal .badge.alcalosi{ background:var(--violet-dim); color:var(--violet); }
+  #ega-modal .badge.misto{ background:var(--folder-dim); color:var(--folder); }
+
+  #ega-modal .diagnosis{
+    font-family:var(--font-display); font-size:19px; font-weight:700;
+    margin:0 0 12px; line-height:1.25; color:var(--ink);
+  }
+
+  #ega-modal .detail-line{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:13.5px;
+  }
+  #ega-modal .detail-line:last-child{ border-bottom:none; }
+  #ega-modal .detail-line .label{ color:var(--ink-dim); }
+  #ega-modal .detail-line .value{ font-family:var(--font-mono); font-weight:600; text-align:right; color:var(--ink); }
+
+  #ega-modal .note-box{
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.6; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:13px;
+    padding:12px; margin-top:10px; box-shadow:var(--clay-in-sm);
+  }
+  #ega-modal .note-box b{ color:var(--signal); font-family:var(--font-body); }
+  #ega-modal .note-box.lac b{ color:var(--folder); }
+
+  #ega-modal .ag-section{ margin-top:14px; padding-top:13px; border-top:1px solid var(--line); }
+  #ega-modal .ag-section h3{
+    font-family:var(--font-display); font-size:14.5px; margin:0 0 9px; color:var(--ink); font-weight:600;
+  }
+
+  #ega-output-card{ display:none; margin-top:14px; }
+  #ega-output-card.show{ display:block; }
+  #ega-output-card.tone-normale{ box-shadow:inset 0 0 0 1px var(--signal-dim); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-acidosi{ box-shadow:inset 0 0 0 1px var(--acid-border); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-alcalosi{ box-shadow:inset 0 0 0 1px var(--violet-dim); border-radius:14px; padding:12px; }
+  #ega-output-card.tone-misto{ box-shadow:inset 0 0 0 1px var(--folder-dim); border-radius:14px; padding:12px; }
+
+  /* ---------- VFG CALC (modale) ----------
+     stesso principio dell'EGA Analyzer: tool separato, richiamato
+     scrivendo "Cockroft"/"Cockcroft"/"VFG" in Diari — vedi apriVfgCalc.
+     CSS duplicato apposta invece di condividere le classi dell'EGA, per
+     tenere i due tool indipendenti e non rischiare di toccare l'EGA
+     modificando questo */
+  #vfg-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #vfg-modal-overlay.show{ display:flex; }
+  #vfg-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .vfg-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+  .vfg-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  .vfg-modal-header .sub{ font-size:11.5px; color:var(--ink-dim); font-family:var(--font-mono); margin-top:2px; }
+  #vfg-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #vfg-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #vfg-modal input[type=number]{ width:100%; font-size:15px; padding:9px 10px; }
+  #vfg-modal .chip{ flex:1; text-align:center; }
+
+  #vfg-modal .badge{
+    display:inline-block; font-family:var(--font-mono); font-size:11.5px; font-weight:700;
+    letter-spacing:.06em; padding:5px 12px; border-radius:999px; margin-bottom:10px;
+    box-shadow:var(--clay-in-sm);
+  }
+  #vfg-modal .badge.normale{ background:var(--signal-dim); color:var(--signal); }
+  #vfg-modal .badge.lieve{ background:var(--folder-dim); color:var(--folder); }
+  #vfg-modal .badge.moderata{ background:var(--acid-dim); color:var(--acid); }
+  #vfg-modal .badge.severa{ background:var(--violet-dim); color:var(--violet); }
+
+  #vfg-modal .vfg-value{
+    font-family:var(--font-display); font-size:42px; font-weight:700; line-height:1;
+    color:var(--ink); margin:0 0 4px;
+  }
+  #vfg-modal .vfg-value .unit{ font-family:var(--font-mono); font-size:16px; font-weight:500; color:var(--ink-dim); margin-left:6px; }
+
+  #vfg-modal .diagnosis{ font-family:var(--font-display); font-size:19px; font-weight:600; margin:0 0 12px; line-height:1.3; color:var(--ink); }
+
+  #vfg-modal .detail-line{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:13.5px;
+  }
+  #vfg-modal .detail-line:last-child{ border-bottom:none; }
+  #vfg-modal .detail-line .label{ color:var(--ink-dim); }
+  #vfg-modal .detail-line .value{ font-family:var(--font-mono); font-weight:600; text-align:right; color:var(--ink); }
+
+  #vfg-modal .note-box{
+    font-family:var(--font-mono); font-size:12.5px; line-height:1.6; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:13px;
+    padding:12px; margin-top:10px; box-shadow:var(--clay-in-sm);
+  }
+  #vfg-modal .note-box b{ color:var(--signal); font-family:var(--font-body); }
+
+  #vfg-output-card{ display:none; margin-top:14px; }
+  #vfg-output-card.show{ display:block; }
+  #vfg-output-card.tone-normale{ box-shadow:inset 0 0 0 1px var(--signal-dim); border-radius:14px; padding:12px; }
+  #vfg-output-card.tone-lieve{ box-shadow:inset 0 0 0 1px var(--folder-dim); border-radius:14px; padding:12px; }
+  #vfg-output-card.tone-moderata{ box-shadow:inset 0 0 0 1px var(--acid-border); border-radius:14px; padding:12px; }
+  #vfg-output-card.tone-severa{ box-shadow:inset 0 0 0 1px var(--violet-dim); border-radius:14px; padding:12px; }
+
+  /* ---------- BOX FARMACI (modale) ----------
+     box informativi (sola lettura, nessun calcolo interattivo): dosaggi
+     renali dei farmaci richiamati scrivendo "/nomefarmaco" in Diari.
+     Stesso stile "centrato" degli altri due modali, contenuto costruito
+     dinamicamente perché qui, a differenza di EGA/VFG, un solo trigger
+     (/NAO, /DOAC) può mostrare più farmaci insieme */
+  #farmaco-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #farmaco-modal-overlay.show{ display:flex; }
+  #farmaco-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .farmaco-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .farmaco-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  #farmaco-chiudi-btn, #score-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #farmaco-chiudi-btn:hover, #score-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  /* ---------- SCORE (modale) ----------
+     score clinici interattivi (per ora Geneva rivisto/semplificato),
+     richiamabili da App → Score o scrivendo "/geneva" in Diari; i dati già
+     presenti (FC del diario, emottisi scritta, età del ricovero) entrano da
+     soli e sono segnati come "dal diario" */
+  #score-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  #score-modal-overlay.show{ display:flex; }
+  .reparto-extra-blocco{ margin-top:18px; padding-top:14px; border-top:1px solid var(--clay-border); }
+  /* link "‹ Sezione" in cima alle sottopagine: risale di un livello
+     (es. Impostazioni → Strumenti). Uscire dalla sezione lo fa la nav bar */
+  .back-link{
+    display:inline-flex; align-items:center; gap:3px; margin:0 0 8px -2px; padding:2px 6px 2px 2px;
+    background:none; border:none; border-radius:8px; cursor:pointer;
+    font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--signal);
+  }
+  .back-link .ch{ font-size:22px; line-height:1; margin-top:-2px; }
+  .back-link:hover{ background:var(--panel-2); }
+  /* Diari: selettore Oggi · Ieri · Consegne */
+  .diari-seg{ display:flex; gap:3px; padding:3px; border-radius:12px; background:var(--panel); border:1px solid var(--clay-border); }
+  .diari-seg button{
+    flex:1 1 0; padding:8px 4px; border:none; border-radius:9px; background:transparent; cursor:pointer;
+    font-family:var(--font-body); font-size:13.5px; font-weight:600; color:var(--ink-dim);
+  }
+  /* stesso oro di "Consegne →" (#riepilogo-view .btn.primary) */
+  .diari-seg button.attivo{ background:var(--folder); color:var(--on-folder); }
+  /* Ieri resta nel verde di prima */
+  .diari-seg button#diari-seg-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
+  /* festivo con consegne analizzate: "Consegne WE" in blu (lo stesso
+     azzurro dell'alone dei letti consegnati in Reparto) */
+  .diari-seg button.we{ color:var(--consegna); }
+  .diari-seg button.we.attivo{ background:var(--consegna); color:#fff; }
+  .cons-we-barra{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .cons-we-barra .group-label{ margin:0; }
+  .cons-we-testo{ font-size:13.5px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; }
+  .cons-we-critico{ display:inline-block; margin-bottom:4px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:#fff; background:#7a3fc0; padding:1px 7px; border-radius:6px; }
+  .diari-fondo{ display:flex; gap:8px; margin-top:14px; }
+  .diari-fondo .btn{ flex:1 1 0; }
+  /* Strumenti: etichetta di gruppo */
+  /* icone delle voci di Strumenti (solo le voci principali, non i
+     sottoelenchi farmaci/score che hanno il pallino) */
+  #app-view .ric-lista-nome{ display:inline-flex; align-items:center; }
+  #app-view .str-ico{ width:19px; height:19px; margin-right:11px; flex-shrink:0; fill:none; stroke:var(--signal); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  #app-view .str-ico .pieno{ fill:var(--signal); stroke:none; }
+  .pd-conteggio{ font-family:var(--font-mono); font-size:12px; color:var(--signal); }
+  .pd-riga{ display:flex; align-items:flex-start; gap:11px; padding:10px 2px; border-bottom:1px solid var(--line-soft); }
+  .pd-riga:first-child{ border-top:1px solid var(--line-soft); }
+  .pd-pallino{ flex:0 0 auto; width:20px; height:20px; margin-top:1px; border-radius:50%; border:2px solid var(--signal); background:transparent; padding:0; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; color:transparent; font-size:12px; font-weight:700; line-height:1; transition:background .15s, color .15s; }
+  .pd-riga.risolta .pd-pallino{ background:var(--signal); color:var(--on-signal); }
+  .pd-riga.risolta .pd-testo{ text-decoration:line-through; opacity:.5; }
+  .pd-testo{ flex:1; min-width:0; font-size:14px; line-height:1.4; color:var(--ink); cursor:pointer; overflow-wrap:anywhere; }
+  .pd-testo .pd-paz{ font-weight:600; }
+  .pd-testo .pd-manca{ color:var(--ink-dim); }
+  .pd-data{ flex:0 0 auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .pd-data.scaduta{ color:#c0802a; }
+  #strumento-overlay{ position:fixed; inset:0; z-index:205; background:rgba(62,40,72,.30); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  #strumento-overlay.show{ display:flex; }
+  #strumento-box{ width:100%; max-width:520px; min-width:0; background:var(--panel); border:1px solid var(--clay-border); border-radius:26px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #strumento-chiudi{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  #strumento-slot #editor-lettere-testo{ min-height:38vh; }
+  #pd-avviso-overlay{ position:fixed; inset:0; z-index:210; background:rgba(62,40,72,.30); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+  #pd-avviso-overlay.show{ display:flex; }
+  #pd-avviso-box{ width:100%; max-width:480px; background:var(--panel); border:1px solid var(--clay-border); border-radius:26px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #pd-avviso-chiudi{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  .pd-avviso-voce{ padding:10px 2px; border-bottom:1px solid var(--line-soft); }
+  .pd-avviso-voce .pd-testo{ cursor:default; }
+  .pd-avviso-quando{ font-size:12px; color:var(--ink-dim); margin:3px 0 7px; }
+  .pd-avviso-tasti{ display:flex; flex-wrap:wrap; gap:6px; }
+  .pd-avviso-tasti .btn{ padding:5px 10px; font-size:12.5px; }
+  .pd-vuota{ font-size:13px; color:var(--ink-dim); text-align:center; padding:10px 4px; }
+  #editor-lettere-testo{ width:100%; min-height:55vh; resize:vertical; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
+    border-radius:12px; padding:12px 13px; font-family:var(--font-body); font-size:14px; line-height:1.6; box-shadow:var(--clay-in-sm); }
+  body.solo-editor header, body.solo-editor #editor-view .back-link{ display:none !important; }
+  /* finestrella sul PC, in stile Ubuntu: barra in alto con titolo e due
+     tondi (copia, chiudi), sotto solo il box */
+  .editor-barra{ display:none; }
+  body.solo-editor{ margin:0; padding:5px; box-sizing:border-box; height:100vh; overflow:hidden; }
+  body.solo-editor #editor-view{ margin:0; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--line-soft); box-shadow:none; height:100%; box-sizing:border-box; display:flex; flex-direction:column; }
+  body.solo-editor #editor-view > h2, body.solo-editor #editor-view .diari-fondo{ display:none; }
+  body.solo-editor .editor-barra{ display:flex; align-items:center; gap:8px; flex:0 0 auto; height:34px; padding:0 8px 0 12px;
+    background:var(--panel); border-bottom:1px solid var(--line-soft); user-select:none; }
+  .editor-barra-titolo{ flex:1; font-family:var(--font-body); font-size:13px; font-weight:700; color:var(--signal); letter-spacing:.01em; }
+  .editor-barra-tondo{ width:22px; height:22px; padding:0; border-radius:50%; border:none; cursor:pointer; flex:0 0 auto;
+    background:var(--panel-2); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; transition:background .12s, color .12s; }
+  .editor-barra-tondo svg{ width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .editor-barra-tondo:hover{ background:var(--signal); color:var(--on-signal); }
+  .editor-barra-tondo.chiudi:hover{ background:#e95420; color:#fff; }
+  body.solo-editor #editor-view > .group{ flex:1; display:flex; flex-direction:column; margin:0; padding:0; min-height:0; }
+  /* tutta l'area sotto la barra è il foglio: niente bordo né cornice */
+  body.solo-editor #editor-lettere-testo, body.solo-editor #editor-lettere-testo:focus{ flex:1; min-height:0; resize:none; font-size:13px; padding:10px 12px;
+    border:none; border-radius:0; box-shadow:none; outline:none; background:var(--panel-2); }
+  #editor-lettere-testo:focus{ outline:none; border-color:var(--signal); }
+  .strumenti-gruppo{ font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); margin:4px 2px 2px; }
+  /* Ricoveri: ricerca per nome */
+  .ric-cerca-btn{ flex:0 0 auto; align-self:stretch; width:50px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+  .ric-cerca-btn svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  .ric-cerca-riga{ display:flex; align-items:center; gap:10px; }
+  #ricoveri-cerca{ flex:1; min-width:0; }
+  .ric-cerca-chiudi{ background:none; border:none; padding:6px 2px; cursor:pointer; font-family:var(--font-body); font-size:14px; font-weight:600; color:var(--signal); }
+  .ric-cerca-data{ font-size:12px; color:var(--ink-dim); white-space:nowrap; margin-left:10px; flex-shrink:0; }
+  #rubrica-overlay{ position:fixed; inset:0; z-index:200; background:rgba(62,40,72,.30); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; overflow-x:hidden;
+    scrollbar-width:none; -ms-overflow-style:none; }
+  /* niente barre di scorrimento: si scorre comunque col dito/rotella */
+  #rubrica-overlay::-webkit-scrollbar{ display:none; }
+  #rubrica-overlay.show{ display:flex; }
+  #rubrica-box{ width:100%; max-width:520px; min-width:0; overflow:hidden; background:var(--panel); border:1px solid var(--clay-border); border-radius:26px; box-shadow:var(--clay-out); padding:16px 17px; color:var(--ink); }
+  #rubrica-chiudi-btn{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink-dim); font-size:15px; cursor:pointer; flex-shrink:0; }
+  #rubrica-cerca{ width:100%; font-size:16px; padding:10px 12px; border-radius:12px; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink); box-sizing:border-box; }
+  .rubrica-esterno{ font-size:12px; color:var(--ink-dim); margin:6px 2px 8px; font-family:var(--font-mono); }
+  /* la lista non scorre dentro di sé (niente barra laterale): si allunga
+     il riquadro e scorre la pagina sotto. Il testo va a capo nel box */
+  #rubrica-lista{ overflow:visible; min-width:0; }
+  .rubrica-voce{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 4px; border-bottom:1px solid var(--clay-border); min-width:0; }
+  .rubrica-voce > div:first-child{ min-width:0; flex:1 1 auto; }
+  .rubrica-voce .nome{ font-size:13.5px; color:var(--ink); overflow-wrap:anywhere; }
+  .rubrica-voce .nota{ font-size:11.5px; color:var(--ink-dim); overflow-wrap:anywhere; }
+  .rubrica-voce .numeri{ text-align:right; font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--signal); white-space:normal; flex:0 1 auto; min-width:0; max-width:55%; overflow-wrap:anywhere; }
+  .rubrica-voce .numeri a{ color:inherit; text-decoration:none; }
+  .rubrica-voce .numeri .ext{ display:block; font-size:10.5px; font-weight:400; color:var(--ink-dim); }
+  /* durante la ricerca: numeri grandi, uno sotto l'altro */
+  /* voce "aperta" (toccata nell'elenco) o trovata cercando: numeri in grande */
+  .rubrica-voce{ cursor:pointer; }
+  #rubrica-lista.cercando .rubrica-voce, .rubrica-voce.aperta{ display:block; padding:10px 4px; }
+  .rubrica-voce.aperta{ background:var(--panel-2); border-radius:10px; padding:10px 8px; }
+  #rubrica-lista.cercando .rubrica-voce .nome, .rubrica-voce.aperta .nome{ font-size:15px; font-weight:600; }
+  #rubrica-lista.cercando .rubrica-voce .numeri, .rubrica-voce.aperta .numeri{ text-align:left; font-size:clamp(20px, 7vw, 28px); line-height:1.25; margin-top:4px; white-space:normal; max-width:none; }
+  #rubrica-lista.cercando .rubrica-voce .numeri span.n, .rubrica-voce.aperta .numeri span.n{ display:inline-block; margin-right:16px; max-width:100%; overflow-wrap:anywhere; }
+  #rubrica-lista.cercando .rubrica-voce .numeri .ext, .rubrica-voce.aperta .numeri .ext{ font-size:12px; }
+  /* elenco da scorrere: numeri piccoli e non cliccabili, così scorrendo
+     non parte per sbaglio una chiamata */
+  #rubrica-lista:not(.cercando) .rubrica-voce:not(.aperta) .numeri{ font-size:12.5px; font-weight:600; opacity:.75; }
+  #rubrica-overlay{ overscroll-behavior:contain; }
+  .rubrica-piede{ margin-top:10px; text-align:right; }
+  .rubrica-vuota{ font-size:13px; color:var(--ink-dim); padding:12px 4px; }
+  #aggiunta-overlay{ position:fixed; inset:0; z-index:200; background:rgba(62,40,72,.30); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  #aggiunta-overlay.show{ display:flex; }
+  #aggiunta-box{ width:100%; max-width:320px; background:var(--panel); border:1px solid var(--clay-border); border-radius:18px; box-shadow:var(--clay-out); padding:16px; }
+  .aggiunta-domanda{ text-align:center; font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  .aggiunta-scelte{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .aggiunta-scelte .btn{ flex:1; min-width:80px; }
+  #mdc-modal-overlay{ position:fixed; inset:0; z-index:200; background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  #mdc-modal-overlay.show{ display:flex; }
+  #mdc-modal{ width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px; color:var(--ink); }
+  #mdc-modal .mdc-sez{ background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; padding:10px 12px; margin-top:8px; }
+  #mdc-modal .mdc-sez h3{ margin:0 0 6px; font-family:var(--font-display); font-size:13px; letter-spacing:.04em; text-transform:uppercase; color:var(--signal); }
+  #mdc-modal .mdc-sez p, #mdc-modal .mdc-sez li{ font-size:13.5px; line-height:1.5; margin:0; }
+  #mdc-modal .mdc-sez ul{ margin:0; padding-left:18px; }
+  #mdc-modal .mdc-sez li + li{ margin-top:5px; }
+  #mdc-modal .mdc-calc{ font-family:var(--font-mono); font-size:12.5px; color:var(--signal); }
+  #mdc-modal .mdc-vfg{ text-align:center; padding:10px; border-radius:14px; background:var(--panel-2); border:1px solid var(--clay-border); }
+  #mdc-modal .mdc-vfg .val{ font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--signal); }
+  #mdc-modal .mdc-vfg .fonte{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  #mdc-chiudi-btn{ width:34px; height:34px; border-radius:50%; border:1px solid var(--clay-border); background:var(--panel-2);
+    color:var(--ink-dim); font-size:15px; cursor:pointer; box-shadow:var(--clay-out); flex-shrink:0; }
+  #score-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px;
+  }
+  .score-sub{ font-size:12px; color:var(--ink-dim); margin:-2px 0 10px; font-family:var(--font-mono); }
+  .score-voce{ display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px;
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; cursor:pointer; user-select:none; }
+  .score-voce.attiva{ border-color:var(--signal); box-shadow:inset 0 0 0 1px var(--signal); }
+  .score-voce .spunta{ width:20px; height:20px; border-radius:6px; border:1.5px solid var(--ink-dim); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--signal); }
+  .score-voce.attiva .spunta{ border-color:var(--signal); }
+  .score-voce .testo{ flex:1; font-size:14px; line-height:1.35; color:var(--ink); }
+  .score-voce .punti{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-dim); white-space:nowrap; }
+  .score-auto{ display:inline-block; margin-left:6px; font-size:10.5px; font-family:var(--font-mono); color:var(--signal);
+    border:1px solid var(--signal); border-radius:8px; padding:0 5px; vertical-align:1px; }
+  .score-fc{ display:flex; align-items:center; gap:10px; padding:9px 10px; margin-bottom:6px;
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; }
+  .score-fc .testo{ color:var(--ink); }
+  .score-scelta{ padding:9px 10px; margin-bottom:6px; background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px; }
+  .score-scelta .titolo{ font-size:14px; color:var(--ink); margin-bottom:7px; font-weight:600; }
+  .score-scelta .opzioni{ display:flex; flex-wrap:wrap; gap:6px; }
+  .score-scelta .chip{ font-size:12.5px; }
+  .score-fc input{ width:74px; font-size:15px; padding:6px 8px; border-radius:9px; border:1px solid var(--clay-border);
+    background:var(--panel); color:var(--ink); font-family:var(--font-mono); }
+  .score-risultato{ margin-top:12px; padding:12px; border-radius:14px; background:var(--panel-2);
+    border:1px solid var(--clay-border); text-align:center; }
+  .score-risultato .totale{ font-family:var(--font-display); font-size:30px; font-weight:700; color:var(--signal); line-height:1.1; }
+  .score-risultato .esito{ font-size:14px; margin-top:4px; color:var(--ink); }
+  .score-nota{ font-size:12px; line-height:1.5; color:var(--ink-dim); margin-top:10px; }
+
+  /* modale semplice "i" isolamento: germe + DPI del singolo paziente, senza
+     spiegazioni — sostituisce la vecchia scheda informativa generica in
+     App (rimossa, vedi apriIsolamentoModal) */
+  #isolamento-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #isolamento-modal-overlay.show{ display:flex; }
+  .settori-label-riga{ display:flex; align-items:baseline; gap:6px; margin-bottom:7px; }
+  .settori-label-riga .group-label{ margin-bottom:0; }
+  /* discreto: una "i" (informazioni) piccola e tenue subito dopo il nome dei settori, senza
+     cerchio né ombra (la legenda serve di rado, non deve attirare l'occhio) */
+  .legenda-btn{
+    background:none; border:none; box-shadow:none; padding:8px 10px; margin:-8px -10px -8px -6px; cursor:pointer; align-self:center;
+    color:var(--ink-faint); font-family:var(--font-mono); font-size:11px; font-weight:600; line-height:1;
+    opacity:.7;
+  }
+  .legenda-btn:hover, .legenda-btn:active{ color:var(--signal); opacity:1; }
+  .legenda-btn svg{ width:13px; height:13px; display:block; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }
+  .legenda-btn svg .punto{ fill:currentColor; }
+  .legenda-sezione{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim); margin:12px 0 8px; font-weight:700; }
+  .legenda-sezione:first-child{ margin-top:0; }
+  .legenda-riga{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .legenda-demo{ width:92px; flex-shrink:0; display:flex; justify-content:center; padding:6px 0; }
+  .legenda-tile{ display:inline-block; pointer-events:none; min-width:46px; padding:8px 6px; }
+  .legenda-testo{ font-size:13.5px; line-height:1.4; color:var(--ink); }
+  .legenda-nota{ margin-top:6px; font-size:12.5px; color:var(--ink-dim); line-height:1.4; }
+  #isolamento-modal{
+    width:100%; max-width:400px; max-height:80vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .isolamento-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+  .isolamento-modal-header h2{ margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal); }
+  #isolamento-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #isolamento-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+  .isolamento-modal-riga{ font-size:14px; line-height:1.5; margin-bottom:4px; color:var(--ink); }
+  .isolamento-modal-riga b{ color:var(--ink); }
+  .isolamento-modal-dpi{ margin:4px 0 0; padding-left:18px; font-size:14px; line-height:1.6; color:var(--ink); }
+  #svuota-settore-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  #svuota-settore-overlay.show{ display:flex; }
+  #svuota-settore-modal{
+    width:100%; max-width:400px; max-height:80vh; overflow-y:auto;
+    background:var(--panel); border-radius:20px; border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out); padding:16px 17px 17px;
+  }
+  .svuota-settore-x{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  .isolamento-modal-nota{ margin-top:10px; font-size:12.5px; color:var(--signal); font-weight:600; line-height:1.4; }
+
+  #farmaco-vfg-info{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:14px;
+    padding:8px 11px; background:var(--panel-2); border-radius:10px; border:1px solid var(--clay-border);
+  }
+  #farmaco-vfg-info.trovata{ color:var(--signal); border-color:var(--signal-dim); }
+
+  .farmaco-scheda{ margin-bottom:18px; }
+  .farmaco-scheda:last-child{ margin-bottom:0; }
+  .farmaco-titolo{ font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--signal); margin-bottom:2px; }
+  .farmaco-sottotitolo{ font-size:11.5px; color:var(--ink-dim); font-family:var(--font-mono); margin-bottom:10px; }
+
+  /* tabella fine: colonne strette, poco padding, righe separate da un
+     filo sottile invece dei box separati usati prima */
+  .farmaco-tabella{ width:100%; border-collapse:collapse; font-size:12px; }
+  .farmaco-tabella th{
+    text-align:left; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 7px 5px 0; border-bottom:1px solid var(--clay-border);
+  }
+  .farmaco-tabella td{
+    padding:7px 7px 7px 0; border-bottom:1px solid var(--line-soft);
+    color:var(--ink-dim); line-height:1.45; vertical-align:top;
+  }
+  .farmaco-tabella tr:last-child td{ border-bottom:none; }
+  .farmaco-tabella td:first-child{
+    font-family:var(--font-mono); font-weight:700; color:var(--ink);
+    white-space:nowrap; width:1%;
+  }
+  .farmaco-tabella tr.match{ background:var(--signal-dim); }
+  .farmaco-tabella tr.match td{ color:var(--ink); }
+  .farmaco-tabella tr.match td:first-child{ color:var(--signal); }
+
+  /* sotto-tabella dei pesi (es. Arixtra terapeutico): stessa idea ma
+     ancora più fine, senza bordi propri, annidata nella cella */
+  .farmaco-subtabella{ width:100%; border-collapse:collapse; }
+  .farmaco-subtabella td{ padding:0 8px 1px 0; border:none; color:inherit; line-height:1.5; }
+  .farmaco-subtabella td:first-child{
+    font-family:var(--font-mono); font-weight:600; color:inherit;
+    white-space:nowrap; width:1%;
+  }
+
+  .farmaco-scheda .note-box{
+    font-family:var(--font-mono); font-size:12px; line-height:1.5; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--clay-border); border-radius:11px;
+    padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
+    text-align:justify;
+  }
+  .farmaco-tev-box{
+    font-family:var(--font-mono); font-size:12px; line-height:1.5; color:var(--ink);
+    background:var(--panel-2); border:1px solid var(--folder); border-radius:11px;
+    padding:10px 11px; margin-top:11px; box-shadow:var(--clay-in-sm);
+    text-align:justify;
+  }
+  .farmaco-tev-titolo{
+    font-weight:700; color:var(--folder); margin-bottom:6px; text-transform:none;
+    font-size:12.5px;
+  }
+  .farmaco-tev-studio{ font-weight:400; opacity:.75; }
+  .farmaco-opzioni{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .farmaco-opzioni .chip{ font-size:12.5px; padding:7px 12px; }
+
+  .farmaco-calcolatore{ margin-top:12px; }
+  .farmaco-calcolatore label{
+    display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
+    color:var(--ink-dim); text-transform:uppercase; margin-bottom:6px;
+  }
+  .farmaco-calc-row{ display:flex; align-items:center; gap:10px; }
+  .farmaco-calc-row input[type=number]{ width:110px; flex-shrink:0; }
+  .farmaco-calc-risultato{ display:flex; flex-direction:column; gap:2px; }
+  .farmaco-calc-out{ font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--signal); }
+  .farmaco-calc-esempio{ font-family:var(--font-mono); font-size:11.5px; font-weight:500; color:var(--ink-dim); }
+
+  /* ---------- ECG SIMULATOR (modale) ----------
+     Stesso principio degli altri: tool standalone dell'utente, integrato
+     come modale, richiamato scrivendo "/ECG" in Diari o dalla scheda App.
+     Variabili colore proprie scoperte SOLO dentro #ecgsim-modal (non in
+     :root), per non toccare --panel/--panel-2/--line del resto dell'app,
+     che altrimenti verrebbero sovrascritte ovunque */
+  #ecgsim-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #ecgsim-modal-overlay.show{ display:flex; }
+  #ecgsim-modal{
+    --bg:#fffcf8; --panel:#fffcf8; --panel-2:#f7f1ea; --line: rgba(92,62,84,0.10);
+    --screen:#0b1512; --trace:#3be9a6; --trace-glow: rgba(59,233,166,0.55);
+    --accent:#4f7f5a; --text:#2f2723; --muted:#7a6d65; --muted-2:#ab9f97;
+    --amber:#ffb454; --red:#ff5c66; --green:#3be9a6;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+    color:var(--text); font-family:var(--sans);
+  }
+  .ecgsim-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .ecgsim-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  .ecgsim-modal-header .sub{ font-size:11.5px; color:var(--muted); font-family:var(--mono); margin-top:2px; max-width:56ch; line-height:1.5; }
+  #ecgsim-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--muted);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #ecgsim-chiudi-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* MONITOR */
+  #ecgsim-modal .ecgsim-monitor{
+    position:relative;
+    background: linear-gradient(180deg,#3a3236,#2a2427);
+    border-radius:20px;
+    padding:14px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 34px -18px rgba(74,48,82,0.55);
+    border:1px solid var(--line);
+    margin:14px 0 16px;
+  }
+  #ecgsim-modal .ecgsim-screen-wrap{
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    background: var(--screen);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.75), inset 0 4px 2px -4px rgba(59,233,166,0.4);
+    transition: box-shadow .3s ease;
+  }
+  #ecgsim-modal .ecgsim-screen-wrap.ecgsim-morphing{
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.75), inset 0 4px 2px -4px rgba(59,233,166,0.4), 0 4px 22px -4px rgba(59,233,166,0.28);
+  }
+  #ecgsim-modal .ecgsim-screen-wrap::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(120% 90% at 50% 0%, transparent 40%, rgba(0,0,0,0.55) 100%);
+    pointer-events:none;
+  }
+  #ecgsim-modal canvas{display:block;width:100%;height:190px;}
+
+  #ecgsim-modal .ecgsim-readout{
+    position:absolute; top:10px; left:12px;
+    font-family:var(--mono);
+    z-index:2;
+  }
+  #ecgsim-modal .ecgsim-readout .ecgsim-label{font-size:9.5px;letter-spacing:.14em;color:#7d968f;text-transform:uppercase;}
+  #ecgsim-modal .ecgsim-readout .ecgsim-big{font-size:26px;font-weight:600;color:var(--trace);text-shadow:0 0 10px var(--trace-glow);line-height:1.05;}
+  #ecgsim-modal .ecgsim-readout .ecgsim-unit{font-size:11px;color:#9fb5ae;margin-left:3px;}
+  #ecgsim-modal .ecgsim-hr-block{position:absolute; top:10px; right:12px; text-align:right; z-index:2; font-family:var(--mono);}
+  #ecgsim-modal .ecgsim-hr-block .ecgsim-label{font-size:9.5px;letter-spacing:.14em;color:#7d968f;text-transform:uppercase;}
+  #ecgsim-modal .ecgsim-hr-block .ecgsim-big{font-size:22px;font-weight:600;color:#ffd166;text-shadow:0 4px 8px -4px rgba(255,209,102,0.5);}
+
+  #ecgsim-modal .ecgsim-severity-chip{
+    position:absolute; bottom:10px; left:12px; z-index:2;
+    font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em;
+    padding:5px 10px; border-radius:20px;
+    background: rgba(0,0,0,0.4);
+    border:1px solid currentColor;
+  }
+
+  /* TABS */
+  #ecgsim-modal .ecgsim-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  #ecgsim-modal .ecgsim-tab{
+    flex:1;
+    min-width:0;
+    padding:11px 2px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:12px;
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition: all .18s ease;
+    text-align:center;
+  }
+  #ecgsim-modal .ecgsim-tab .ecgsim-sym{font-family:var(--mono);}
+  #ecgsim-modal .ecgsim-tab.ecgsim-active{
+    background: linear-gradient(180deg, rgba(79,127,90,0.32), rgba(79,127,90,0.14));
+    border-color: var(--accent);
+    color:var(--text);
+    box-shadow: 0 0 4px 1px -4px rgba(79,127,90,0.35) inset, 0 4px 14px -4px rgba(79,127,90,0.4);
+  }
+
+  /* CONTROL PANEL */
+  #ecgsim-modal .ecgsim-panel{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 18px 16px;
+    margin-bottom:14px;
+  }
+  #ecgsim-modal .ecgsim-slider-head{
+    display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;
+  }
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-name{font-weight:600;font-size:15px;}
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-value{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--accent);}
+  #ecgsim-modal .ecgsim-slider-head .ecgsim-ion-value .u{font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
+
+  #ecgsim-modal input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:6px;
+    border-radius:6px;
+    background: #e6dcd2;
+    outline:none;
+    margin: 6px 0 4px;
+    box-shadow:none;
+  }
+  #ecgsim-modal input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px;height:20px;border-radius:50%;
+    background: var(--accent);
+    border:3px solid #fff;
+    box-shadow:0 0 4px 1px -4px rgba(79,127,90,0.5), 0 2px 6px rgba(0,0,0,0.5);
+    cursor:pointer; margin-top:-7px;
+  }
+  #ecgsim-modal input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background: var(--accent); border:3px solid #fff;
+    box-shadow:0 0 4px 1px -4px rgba(79,127,90,0.5);
+    cursor:pointer;
+  }
+  #ecgsim-modal input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:#e6dcd2;}
+
+  #ecgsim-modal .ecgsim-range-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-bottom:14px;}
+  #ecgsim-modal .ecgsim-range-labels .ecgsim-norm{color:var(--muted);}
+
+  #ecgsim-modal .ecgsim-sex-toggle{display:flex;gap:6px;margin:2px 0 10px;}
+  #ecgsim-modal .ecgsim-sexBtn{
+    flex:1; padding:7px; border-radius:9px;
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    font-family:var(--mono); font-size:12px; cursor:pointer; transition:all .15s ease;
+  }
+  #ecgsim-modal .ecgsim-sexBtn.ecgsim-active{background:rgba(79,127,90,0.30);border-color:var(--accent);color:var(--text);box-shadow:0 4px 10px -4px rgba(79,127,90,0.35);}
+
+  #ecgsim-modal .ecgsim-status-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  #ecgsim-modal .ecgsim-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  #ecgsim-modal .ecgsim-status-title{font-weight:700;font-size:14.5px;}
+  #ecgsim-modal .ecgsim-status-desc{color:var(--muted);font-size:13px;line-height:1.55;margin:0;min-height:3.1em;}
+
+  #ecgsim-modal details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;}
+  #ecgsim-modal summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);outline:none;}
+  #ecgsim-modal .ecgsim-ref-table{margin-top:10px;font-size:12.5px;line-height:1.9;color:var(--muted);}
+  #ecgsim-modal .ecgsim-ref-table b{color:var(--text);font-weight:600;}
+
+  #ecgsim-modal footer{text-align:center;color:var(--muted-2);font-size:11px;line-height:1.6;margin-top:18px;padding:0 10px;}
+
+  /* ---------- SOFFI CARDIACI (modale) ----------
+     box di consultazione (non un calcolatore): elenca le cause possibili
+     per tipo di soffio + focolaio, evidenziando la combinazione trovata
+     nel diario (letta dal testo che la scheda Cuore compone già da sola,
+     es. "soffio sistolico ... su focolaio aortico") */
+  #soffi-modal-overlay{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(62,40,72,.30);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #soffi-modal-overlay.show{ display:flex; }
+  #soffi-modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border-radius:26px;
+    border:1px solid var(--clay-border);
+    box-shadow:var(--clay-out);
+    padding:16px 17px 17px;
+  }
+  .soffi-modal-header{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .soffi-modal-header h2{
+    margin:0; font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--signal);
+  }
+  #soffi-chiudi-btn{
+    background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink-dim);
+    border-radius:50%; width:32px; height:32px; font-size:16px; line-height:1; cursor:pointer;
+    flex-shrink:0; box-shadow:var(--clay-out-sm);
+  }
+  #soffi-chiudi-btn:hover{ border-color:var(--signal); color:var(--signal); }
+
+  #soffi-info{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:14px;
+    padding:8px 11px; background:var(--panel-2); border-radius:10px; border:1px solid var(--clay-border);
+  }
+  #soffi-info.trovata{ color:var(--signal); border-color:var(--signal-dim); }
+
+  .soffi-focolaio{
+    padding:12px 13px; border-radius:14px; border:1px solid var(--clay-border);
+    background:var(--panel-2); margin-bottom:10px;
+  }
+  .soffi-focolaio:last-child{ margin-bottom:0; }
+  .soffi-focolaio-titolo{
+    font-family:var(--font-display); font-size:15px; font-weight:700;
+    color:var(--ink); margin-bottom:9px;
+  }
+  .soffi-tipo{
+    padding:8px 10px; border-radius:10px; margin-bottom:7px;
+    border:1px solid transparent;
+  }
+  .soffi-tipo:last-child{ margin-bottom:0; }
+  .soffi-tipo.match{
+    border-color:var(--signal); background:var(--panel);
+    box-shadow:0 0 0 1px var(--signal), var(--glow-signal);
+  }
+  .soffi-tipo-label{
+    font-weight:600; font-size:12.5px; letter-spacing:.02em;
+    color:var(--ink-dim); margin-bottom:4px; text-transform:uppercase;
+  }
+  .soffi-tipo.match .soffi-tipo-label{ color:var(--signal); }
+  .soffi-tipo ul{ margin:0; padding-left:18px; color:var(--ink-dim); font-size:13px; line-height:1.6; }
+  .soffi-tipo.match ul{ color:var(--ink); }
+  .soffi-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .soffi-tabs .chip{ flex:1; text-align:center; }
+
+
+  /* ---- pezzi del tema chiaro che stanno fuori da questo foglio (attributi
+     SVG, blocchi <style> più in basso): sovrascritti da qui, con ":root"
+     davanti per vincere sui blocchi successivi ---- */
+  .brand-logo svg rect[fill="#5fb79a"]{ fill:#7fa486; }
+  .brand-logo svg [fill="#3f8f78"]{ fill:#4f7f5a; }
+  .brand-logo svg circle[fill="#e3f3ed"]{ fill:#e2eddd; }
+  .diario-aiuti svg [fill="#cfeee3"]{ fill:#e2eddd; }
+  .diario-aiuti svg [stroke="#1f5f50"]{ stroke:#3c6446; }
+  .diario-aiuti svg [fill="#1f5f50"]{ fill:#3c6446; }
+  :root #comandi-menu{ box-shadow:var(--clay-out); }
+  :root #aurex-egg{ background:rgba(62,40,72,.34); }
+</style>
+<script>
+// tema scelto in Impostazioni: applicato qui, nell'<head>, prima che la
+// pagina venga disegnata (niente lampo dell'altro tema all'apertura)
+const TEMA_KEY = 'eo_builder_tema_v1';
+function temaAttuale(){
+  let t = null;
+  try{ t = localStorage.getItem(TEMA_KEY); } catch(e){}
+  // predefinito: scuro (anche senza scelta salvata), qualunque sia il
+  // tema del telefono — non si guarda prefers-color-scheme
+  return t === 'chiaro' ? 'chiaro' : 'scuro';
+}
+function applicaTema(t){
+  const chiaro = t !== 'scuro';
+  document.getElementById('tema-chiaro').media = chiaro ? 'all' : 'not all';
+  document.getElementById('tema-scuro').media = chiaro ? 'not all' : 'all';
+  document.documentElement.dataset.tema = chiaro ? 'chiaro' : 'scuro';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = chiaro ? '#efe7f3' : '#0a0e13';
+}
+function impostaTema(t){
+  try{ localStorage.setItem(TEMA_KEY, t); } catch(e){}
+  applicaTema(t);
+  renderImpostazioniTema();
+}
+function renderImpostazioniTema(){
+  const t = temaAttuale();
+  const btnChiaro = document.getElementById('impostazioni-tema-chiaro');
+  const btnScuro = document.getElementById('impostazioni-tema-scuro');
+  if(btnChiaro) btnChiaro.classList.toggle('active', t === 'chiaro');
+  if(btnScuro) btnScuro.classList.toggle('active', t === 'scuro');
+}
+applicaTema(temaAttuale());
+</script>
 </head>
 <body>
 
@@ -2203,6 +4149,14 @@
 <div class="card" id="impostazioni-view" style="display:none; background:var(--panel-3);">
   <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
   <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2.5a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2.5a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21.5a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Impostazioni</h2>
+
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Tema</div>
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <div class="chip" id="impostazioni-tema-chiaro" onclick="impostaTema('chiaro')">Chiaro</div>
+      <div class="chip" id="impostazioni-tema-scuro" onclick="impostaTema('scuro')">Scuro</div>
+    </div>
+  </div>
 
   <div class="group">
     <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
@@ -7032,7 +8986,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
-  if(v === 'impostazioni'){ renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+  if(v === 'impostazioni'){ renderImpostazioniTema(); renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
@@ -14413,6 +16367,7 @@ document.addEventListener('keydown', (e) => {
 
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
+  renderImpostazioniTema();
   renderImpostazioniTagNormale();
   renderImpostazioniResetGiornaliero();
   renderWardMap();
@@ -17487,7 +19442,9 @@ function farmacoControllaTrigger(testoAttuale, elementoTextarea, patientId){
     if(currentIon==='qt'){ nMax = cfg.thresholds[currentSex].normal; }
     const pct1 = ((nMin-cfg.min)/(cfg.max-cfg.min))*100;
     const pct2 = ((nMax-cfg.min)/(cfg.max-cfg.min))*100;
-    el.slider.style.background = `linear-gradient(90deg, #232c2e ${pct1}%, rgba(59,233,166,0.30) ${pct1}%, rgba(59,233,166,0.30) ${pct2}%, #232c2e ${pct2}%)`;
+    const chiaro = document.documentElement.dataset.tema === 'chiaro';
+    const binario = chiaro ? '#e6dcd2' : '#232c2e', fascia = chiaro ? 'rgba(79,127,90,0.35)' : 'rgba(59,233,166,0.30)';
+    el.slider.style.background = `linear-gradient(90deg, ${binario} ${pct1}%, ${fascia} ${pct1}%, ${fascia} ${pct2}%, ${binario} ${pct2}%)`;
   }
 
   function refreshUI(){
