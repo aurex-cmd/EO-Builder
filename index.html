@@ -1361,6 +1361,21 @@
   #app-view .ric-lista-nome{ display:inline-flex; align-items:center; }
   #app-view .str-ico{ width:19px; height:19px; margin-right:11px; flex-shrink:0; fill:none; stroke:var(--signal); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   #app-view .str-ico .pieno{ fill:var(--signal); stroke:none; }
+  .pd-conteggio{ font-family:var(--font-mono); font-size:12px; color:var(--signal); }
+  .pd-riga{ display:flex; align-items:flex-start; gap:11px; padding:10px 2px; border-bottom:1px solid var(--line-soft); }
+  .pd-riga:first-child{ border-top:1px solid var(--line-soft); }
+  .pd-pallino{ flex:0 0 auto; width:20px; height:20px; margin-top:1px; border-radius:50%; border:2px solid var(--signal); background:transparent; padding:0; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; color:transparent; font-size:12px; font-weight:700; line-height:1; transition:background .15s, color .15s; }
+  .pd-riga.risolta .pd-pallino{ background:var(--signal); color:var(--bg, #111); }
+  .pd-riga.risolta .pd-testo{ text-decoration:line-through; opacity:.5; }
+  .pd-testo{ flex:1; min-width:0; font-size:14px; line-height:1.4; color:var(--ink); cursor:pointer; overflow-wrap:anywhere; }
+  .pd-testo .pd-paz{ font-weight:600; }
+  .pd-testo .pd-manca{ color:var(--ink-dim); }
+  .pd-data{ flex:0 0 auto; font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .pd-vuota{ font-size:13px; color:var(--ink-dim); text-align:center; padding:10px 4px; }
+  #editor-lettere-testo{ width:100%; min-height:55vh; resize:vertical; border:1px solid var(--clay-border); background:var(--panel-2); color:var(--ink);
+    border-radius:12px; padding:12px 13px; font-family:var(--font-body); font-size:14px; line-height:1.6; box-shadow:var(--clay-in-sm); }
+  #editor-lettere-testo:focus{ outline:none; border-color:var(--signal); }
   .strumenti-gruppo{ font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); margin:4px 2px 2px; }
   /* Ricoveri: ricerca per nome */
   .ric-cerca-btn{ flex:0 0 auto; align-self:stretch; width:50px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
@@ -1995,6 +2010,13 @@
       <div class="ric-lista-riga" onclick="apriRubrica()">
         <span class="ric-lista-nome"><svg class="str-ico" viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4-2 1.4a12 12 0 006.5 6.5l1.4-2 4 1.4v2.6A2 2 0 0118.5 20 15.5 15.5 0 014 5.5a2 2 0 012-2z"/></svg>Rubrica numeri</span>
       </div>
+      <div class="ric-lista-riga" onclick="mostraVista('postdegenze')">
+        <span class="ric-lista-nome"><svg class="str-ico" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>Post-degenze</span>
+        <span class="pd-conteggio" id="pd-conteggio"></span>
+      </div>
+      <div class="ric-lista-riga" onclick="mostraVista('editor')">
+        <span class="ric-lista-nome"><svg class="str-ico" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7M8.5 19h4"/></svg>Editor di testo</span>
+      </div>
     </div>
   </div>
   <div class="group">
@@ -2205,6 +2227,39 @@
           <button class="btn" onclick="aggiungiSettore()">+ Settore</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- POST-DEGENZE: promemoria di quello che manca ai pazienti già dimessi
+     (es. un istologico da ritirare). Ogni voce resta finché non si tocca il
+     suo pallino; sincronizzata tra i dispositivi e fusa voce per voce come
+     le schede pazienti (vedi POSTDEGENZE_KEY / fondiSchedePazienti) -->
+<div class="card" id="postdegenze-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg> Post-degenze</h2>
+  <div class="group">
+    <input type="text" id="pd-paziente" placeholder="Nome Cognome, data di nascita" autocomplete="off" style="width:100%; margin-bottom:6px;">
+    <div class="inline-fields" style="align-items:center;">
+      <input type="text" id="pd-manca" placeholder="Cosa manca (es. biopsia gastrica)" autocomplete="off" style="flex:1; min-width:0;">
+      <button class="btn primary" id="pd-aggiungi-btn" onclick="postDegenzaSalva()">Aggiungi</button>
+    </div>
+    <div id="pd-modifica-nota" class="group-label" style="display:none; margin-top:6px; opacity:.8;">Stai modificando una voce · <span style="color:var(--signal); cursor:pointer;" onclick="postDegenzaAnnullaModifica()">annulla</span></div>
+  </div>
+  <div class="group" id="pd-lista"></div>
+</div>
+
+<!-- EDITOR LETTERE: un box di testo libero per scrivere le lettere, con le
+     stesse comodità di Diari (unità di misura degli esami aggiunte da sole,
+     referti incollati uniti su una riga). Resta solo su questo dispositivo -->
+<div class="card" id="editor-view" style="display:none; background:var(--panel-3);">
+  <button class="back-link" onclick="apriAppTools()"><span class="ch">‹</span>Strumenti</button>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7M8.5 19h4"/></svg> Editor di testo</h2>
+  <div class="group">
+    <textarea id="editor-lettere-testo" spellcheck="true" placeholder="Scrivi o incolla qui. I referti incollati vanno su una riga, le unità di misura degli esami si aggiungono da sole."></textarea>
+    <div class="diari-fondo">
+      <button class="btn" onclick="editorLettereCopia()">Copia tutto</button>
+      <button class="btn" id="editor-svuota-btn" onclick="editorLettereSvuota()">Svuota</button>
     </div>
   </div>
 </div>
@@ -2967,7 +3022,7 @@ function cloudPush(key, rawValue){
       // cloud. Se nel frattempo un altro dispositivo l'ha cambiato, invece
       // di sovrascriverlo alla cieca (perdendo le sue modifiche) si fonde
       // paziente per paziente e si invia il risultato
-      if(key === PATIENTS_KEY){
+      if(fusaPerVoce(key)){
         const { data: righe, error: erroreLettura } = await supabaseClient.from('eo_data').select('value').eq('user_id', user.id).eq('key', key);
         if(erroreLettura) throw erroreLettura;
         const valoreCloud = righe && righe[0] && typeof righe[0].value === 'string' ? righe[0].value : null;
@@ -2975,11 +3030,12 @@ function cloudPush(key, rawValue){
         let attuale = rawValue;
         try{ attuale = localStorage.getItem(key) ?? rawValue; } catch(e){}
         if(valoreCloud !== null && valoreCloud !== base && valoreCloud !== attuale){
-          aggiornaBackupLocale(attuale, true);
+          if(key === PATIENTS_KEY) aggiornaBackupLocale(attuale, true);
           const fuso = fondiSchedePazienti(base, attuale, valoreCloud);
           try{ localStorage.setItem(key, fuso); } catch(e){}
           rawValue = fuso;
-          if(typeof ricaricaSchedaApertaDopoSync === 'function') ricaricaSchedaApertaDopoSync(attuale, fuso);
+          if(key === PATIENTS_KEY && typeof ricaricaSchedaApertaDopoSync === 'function') ricaricaSchedaApertaDopoSync(attuale, fuso);
+          if(key === POSTDEGENZE_KEY && typeof renderPostDegenze === 'function') renderPostDegenze();
         } else {
           rawValue = attuale;
         }
@@ -3038,7 +3094,11 @@ function setLocalAndCloud(key, rawValue){
 const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1',
   // anche queste passano da setLocalAndCloud: senza elencarle qui, quelle
   // create prima del login non arriverebbero mai sul cloud
-  'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1'];
+  'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1', 'eo_builder_postdegenze_v1'];
+// post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
+// per voce (una aggiunta dal telefono e una dal PC restano entrambe)
+const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY;
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -3154,10 +3214,10 @@ async function cloudPullAll(){
           await cloudPush(row.key, valoreLocaleAttuale);
           continue;
         }
-        if(row.key === PATIENTS_KEY && localeCambiato && cloudCambiato){
+        if(fusaPerVoce(row.key) && localeCambiato && cloudCambiato){
           // copia di sicurezza della versione locale prima di toccarla,
           // senza aspettare l'intervallo dei 15 minuti dei backup
-          aggiornaBackupLocale(valoreLocaleAttuale, true);
+          if(row.key === PATIENTS_KEY) aggiornaBackupLocale(valoreLocaleAttuale, true);
           const fuso = fondiSchedePazienti(sincronizzato, valoreLocaleAttuale, row.value);
           try{ localStorage.setItem(row.key, fuso); } catch(e){}
           if(fuso === row.value){ segnaValoreSincronizzato(row.key, row.value); }
@@ -3206,6 +3266,7 @@ async function cloudPullAll(){
     ultimoPullRiuscito = Date.now();
     // pulizia del weekend: solo ora che le schede sono allineate al cloud
     if(typeof pulisciSchedeWeekend === 'function') pulisciSchedeWeekend();
+    if(chiaviScaricate.has(POSTDEGENZE_KEY) && typeof renderPostDegenze === 'function') renderPostDegenze();
     // (prima bastava che la chiave ESISTESSE sul cloud per ricaricare la
     // scheda aperta: innocuo con un pull solo all'avvio, ma con quelli
     // automatici qui sotto ridisegnerebbe il form a ogni rientro nell'app)
@@ -6905,6 +6966,10 @@ function mostraVista(v){
   document.getElementById('ricoveri-view').style.display = (v === 'ricoveri') ? '' : 'none';
   document.getElementById('ricovero-singolo-view').style.display = (v === 'ricovero-singolo') ? '' : 'none';
   document.getElementById('vitali-settore-view').style.display = (v === 'vitali') ? '' : 'none';
+  document.getElementById('postdegenze-view').style.display = (v === 'postdegenze') ? '' : 'none';
+  document.getElementById('editor-view').style.display = (v === 'editor') ? '' : 'none';
+  if(v === 'postdegenze' && typeof renderPostDegenze === 'function') renderPostDegenze();
+  if(v === 'editor' && typeof editorLettereApri === 'function') editorLettereApri();
   if(v === 'wardmap') renderWardMap();
   if(v === 'riepilogo'){
     renderRiepilogo();
@@ -6922,7 +6987,7 @@ function mostraVista(v){
 
   // la pagina vitali è una sotto-vista di "Reparto": la tab resta segnata
   // come attiva anche lì, così il contesto (che settore) è chiaro
-  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
+  const mappaTab = { riepilogo:'topnav-diari', app:'topnav-app', impostazioni:'topnav-app', postdegenze:'topnav-app', editor:'topnav-app', wardmap:'topnav-reparto', vitali:'topnav-reparto', ricoveri:'topnav-ricoveri', 'ricovero-singolo':'topnav-ricoveri' };
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
@@ -17876,7 +17941,7 @@ function formattaRefertoIncollato(incollato, testoPrima, sempreReferto){
 document.addEventListener('paste', (e) => {
   const el = e.target;
   if(!el || el.tagName !== 'TEXTAREA' || el.readOnly) return;
-  const boxDiario = el.id === 'output' || el.classList.contains('bed-text');
+  const boxDiario = el.id === 'output' || el.id === 'editor-lettere-testo' || el.classList.contains('bed-text');
   const boxReferto = REFERTO_BOX_RICOVERO.includes(el.id) || el.classList.contains('altro-esame-testo');
   if(!boxDiario && !boxReferto) return;
   const incollato = (e.clipboardData || window.clipboardData)?.getData('text');
@@ -17915,6 +17980,176 @@ document.addEventListener('paste', (e) => {
     el.dispatchEvent(new Event('input', { bubbles:true }));
   }
 }, true);
+</script>
+<script>
+// ============================================================
+// POST-DEGENZE: { id: { paziente, manca, inseritoIl, savedAt } }. Toccando
+// il pallino la voce si spunta e dopo poco sparisce (ritoccandolo prima,
+// torna com'era); toccando il testo la si riporta nei campi per modificarla
+// ============================================================
+let postDegenzaInModifica = null;
+const postDegenzeInUscita = {}; // id -> timer della rimozione
+function caricaPostDegenze(){
+  try{ const o = JSON.parse(localStorage.getItem(POSTDEGENZE_KEY) || '{}'); return (o && typeof o === 'object') ? o : {}; } catch(e){ return {}; }
+}
+function salvaPostDegenze(voci){ setLocalAndCloud(POSTDEGENZE_KEY, JSON.stringify(voci)); }
+function dataBreve(ts){
+  const d = new Date(ts);
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getFullYear()).slice(2);
+}
+function renderPostDegenze(){
+  const voci = caricaPostDegenze();
+  const ids = Object.keys(voci).sort((a, b) => (voci[a].inseritoIl || 0) - (voci[b].inseritoIl || 0));
+  const conteggio = document.getElementById('pd-conteggio');
+  if(conteggio) conteggio.textContent = ids.length ? String(ids.length) : '';
+  const lista = document.getElementById('pd-lista');
+  if(!lista) return;
+  if(!ids.length){ lista.innerHTML = '<div class="pd-vuota">Nessuna post-degenza in sospeso.</div>'; return; }
+  lista.innerHTML = ids.map(id => {
+    const v = voci[id];
+    return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}">` +
+      `<button class="pd-pallino" aria-label="Risolta" title="Risolta">✓</button>` +
+      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
+      `<span class="pd-data" title="Inserita il">${dataBreve(v.inseritoIl || v.savedAt || Date.now())}</span></div>`;
+  }).join('');
+}
+function postDegenzaSalva(){
+  const paz = document.getElementById('pd-paziente');
+  const manca = document.getElementById('pd-manca');
+  const paziente = paz.value.trim().replace(/\s+/g, ' ');
+  const cosa = manca.value.trim().replace(/\s+/g, ' ');
+  if(!paziente){ paz.focus(); return; }
+  const voci = caricaPostDegenze();
+  const ora = Date.now();
+  const id = (postDegenzaInModifica && voci[postDegenzaInModifica]) ? postDegenzaInModifica : 'pd' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
+  voci[id] = { paziente, manca: cosa, inseritoIl: voci[id] ? voci[id].inseritoIl : ora, savedAt: ora };
+  salvaPostDegenze(voci);
+  postDegenzaAnnullaModifica();
+  renderPostDegenze();
+}
+function postDegenzaAnnullaModifica(){
+  postDegenzaInModifica = null;
+  document.getElementById('pd-paziente').value = '';
+  document.getElementById('pd-manca').value = '';
+  document.getElementById('pd-aggiungi-btn').textContent = 'Aggiungi';
+  document.getElementById('pd-modifica-nota').style.display = 'none';
+}
+document.getElementById('pd-lista').addEventListener('click', (e) => {
+  const riga = e.target.closest('.pd-riga');
+  if(!riga) return;
+  const id = riga.dataset.id;
+  if(e.target.closest('.pd-pallino')){
+    if(postDegenzeInUscita[id]){
+      clearTimeout(postDegenzeInUscita[id]);
+      delete postDegenzeInUscita[id];
+      riga.classList.remove('risolta');
+      return;
+    }
+    riga.classList.add('risolta');
+    postDegenzeInUscita[id] = setTimeout(() => {
+      delete postDegenzeInUscita[id];
+      const voci = caricaPostDegenze();
+      if(voci[id]){ delete voci[id]; salvaPostDegenze(voci); }
+      if(postDegenzaInModifica === id) postDegenzaAnnullaModifica();
+      renderPostDegenze();
+    }, 2500);
+    return;
+  }
+  if(e.target.closest('.pd-testo')){
+    const v = caricaPostDegenze()[id];
+    if(!v) return;
+    postDegenzaInModifica = id;
+    document.getElementById('pd-paziente').value = v.paziente || '';
+    document.getElementById('pd-manca').value = v.manca || '';
+    document.getElementById('pd-aggiungi-btn').textContent = 'Salva';
+    document.getElementById('pd-modifica-nota').style.display = '';
+    document.getElementById('pd-manca').focus();
+  }
+});
+['pd-paziente', 'pd-manca'].forEach(idCampo => {
+  document.getElementById(idCampo).addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    if(idCampo === 'pd-paziente' && !document.getElementById('pd-manca').value.trim()) document.getElementById('pd-manca').focus();
+    else postDegenzaSalva();
+  });
+});
+renderPostDegenze();
+
+// ============================================================
+// EDITOR LETTERE: testo libero salvato solo su questo dispositivo. Le
+// unità di misura si aggiungono all'uscita dal box (come in Diari), dopo
+// aver incollato, e mentre si scrive appena un valore viene chiuso da
+// ", " / "; " / ". " o da un a capo (non prima: "9," potrebbe essere
+// l'inizio di "9,5")
+// ============================================================
+const EDITOR_LETTERE_KEY = 'eo_builder_editor_lettere_v1';
+let editorLettereTimer = null, editorSvuotaArmato = null;
+function editorLettereSalvaOra(){
+  clearTimeout(editorLettereTimer);
+  try{ localStorage.setItem(EDITOR_LETTERE_KEY, document.getElementById('editor-lettere-testo').value); } catch(e){}
+}
+function editorLettereApri(){
+  const ta = document.getElementById('editor-lettere-testo');
+  if(document.activeElement !== ta){ try{ ta.value = localStorage.getItem(EDITOR_LETTERE_KEY) || ''; } catch(e){} }
+}
+function editorLettereUnita(ta){
+  const pos = ta.selectionStart, fine = ta.selectionEnd;
+  const prima = ta.value.slice(0, pos);
+  const nuovoPrima = aggiungiUnitaMancantiTesto(prima);
+  // anche dopo il cursore (es. dopo aver incollato in mezzo al testo)
+  const dopo = ta.value.slice(fine);
+  const nuovoTutto = aggiungiUnitaMancantiTesto(nuovoPrima + ta.value.slice(pos, fine) + dopo);
+  if(nuovoTutto === ta.value) return;
+  const scarto = nuovoPrima.length - prima.length;
+  ta.value = nuovoTutto;
+  ta.setSelectionRange(pos + scarto, fine + scarto);
+}
+(function(){
+  const ta = document.getElementById('editor-lettere-testo');
+  let lunghezzaPrima = 0;
+  ta.addEventListener('beforeinput', () => { lunghezzaPrima = ta.value.length; });
+  ta.addEventListener('input', (e) => {
+    const prima = ta.value.slice(0, ta.selectionStart);
+    const aCapo = e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph';
+    const chiuso = e.data === ' ' && /[,;.] $/.test(prima);
+    const incollato = ta.value.length - lunghezzaPrima > 3;
+    if(aCapo || chiuso || incollato) editorLettereUnita(ta);
+    clearTimeout(editorLettereTimer);
+    editorLettereTimer = setTimeout(editorLettereSalvaOra, 400);
+  });
+  ta.addEventListener('blur', () => {
+    let corretto = typeof correggiItaliano === 'function' ? correggiItaliano(ta.value) : ta.value;
+    corretto = aggiungiUnitaMancantiTesto(corretto);
+    if(corretto !== ta.value) ta.value = corretto;
+    editorLettereSalvaOra();
+  });
+  window.addEventListener('pagehide', editorLettereSalvaOra);
+  if(document.getElementById('editor-view').style.display !== 'none') editorLettereApri();
+})();
+function editorLettereCopia(){
+  const ta = document.getElementById('editor-lettere-testo');
+  ta.dispatchEvent(new Event('blur'));
+  if(!ta.value.trim()){ showToast('Niente da copiare'); return; }
+  copiaTesto(ta.value);
+}
+function editorLettereSvuota(){
+  const btn = document.getElementById('editor-svuota-btn');
+  if(!editorSvuotaArmato){
+    btn.textContent = 'Tocca ancora per svuotare';
+    editorSvuotaArmato = setTimeout(() => { editorSvuotaArmato = null; btn.textContent = 'Svuota'; }, 3000);
+    return;
+  }
+  clearTimeout(editorSvuotaArmato); editorSvuotaArmato = null;
+  btn.textContent = 'Svuota';
+  const ta = document.getElementById('editor-lettere-testo');
+  // seleziona tutto e cancella: così Annulla (Ctrl+Z) lo riporta indietro
+  ta.focus(); ta.select();
+  let ok = false;
+  try{ ok = document.execCommand('delete'); } catch(e){}
+  if(!ok || ta.value) ta.value = '';
+  editorLettereSalvaOra();
+}
 </script>
 </body>
 </html>
