@@ -10007,7 +10007,10 @@ function renderRiepilogo(){
     body.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, body.value).length);
     body.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, body.value).length);
     body.addEventListener('blur', () => rinfrescaAiuti());
-    attivaMenuComandi(body);
+    // (il menu "/" è definito in un <script> più in basso: se Diari viene
+    // disegnato all'avvio, prima che sia caricato, lo collega lui stesso
+    // alle caselle già presenti — vedi fondo di quel blocco)
+    if(typeof attivaMenuComandi === 'function') attivaMenuComandi(body);
     body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
     body.addEventListener('input', () => {
       // salvataggio (localStorage + cloud dell'intero archivio pazienti)
@@ -17689,6 +17692,8 @@ function comandiScegli(i){
 }
 
 function attivaMenuComandi(el){
+  if(el.dataset.menuComandi) return;
+  el.dataset.menuComandi = '1';
   el.addEventListener('input', () => comandiAggiorna(el));
   el.addEventListener('keydown', (e) => {
     const st = comandiStato;
@@ -17709,6 +17714,9 @@ function attivaMenuComandi(el){
   el.addEventListener('click', () => { if(comandiStato && comandiStato.el === el) comandiAggiorna(el); });
 }
 window.addEventListener('scroll', () => { if(comandiStato) comandiNascondi(); }, { passive:true });
+// Diari già disegnato all'avvio (ultima pagina aperta), prima che questo
+// blocco fosse caricato: si collegano ora le caselle presenti
+document.querySelectorAll('#riepilogo-lista textarea.bed-text').forEach(attivaMenuComandi);
 </script>
 
 <!-- EASTER EGG "Aurex": scrivendo Aurex in qualsiasi campo compare il
