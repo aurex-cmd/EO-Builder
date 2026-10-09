@@ -6808,9 +6808,15 @@ function collegaEsameObiettivo(id){
       patientId = esistente[0];
     } else {
       patientId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-      patients[patientId] = { name: nome, savedAt: Date.now(), state: computeDefaultSnapshot() };
+      patients[patientId] = { name: nome, savedAt: Date.now(), state: snapshotEsameRicovero() };
       savePatients(patients);
     }
+  }
+  // esame del ricovero mai toccato (scheda di partenza "nuda"): gli si
+  // danno i tag neurologici di partenza del ricovero
+  if(JSON.stringify(patients[patientId].state) === DEFAULT_SNAPSHOT_JSON){
+    patients[patientId].state = snapshotEsameRicovero();
+    savePatients(patients);
   }
 
   const testo = getRefertoFor(patients[patientId].state);
@@ -6883,6 +6889,7 @@ function apriEsameObiettivoInline(ricoveroId){
   clinical.style.display = '';
   contenitore.style.display = '';
   esameObiettivoInlineAperto = true;
+  applicaSezioniNascoste(true);
   contenitore.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
@@ -6895,6 +6902,7 @@ function chiudiEsameObiettivoInline(){
   clinical.style.display = 'none';
   document.getElementById('ricovero-eo-inline').style.display = 'none';
   esameObiettivoInlineAperto = false;
+  applicaSezioniNascoste(true);
 
   // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
   // già il pulsante "Aggiorna esame obiettivo") con le modifiche appena fatte
@@ -8888,7 +8896,8 @@ function sezioniNascoste(){
 }
 // chiudiAperte=true: le parti nascoste aperte a mano tornano chiuse
 function applicaSezioniNascoste(chiudiAperte){
-  const nascoste = sezioniNascoste();
+  // aperto da dentro un ricovero: tutte le parti aperte, sempre
+  const nascoste = esameObiettivoInlineAperto ? [] : sezioniNascoste();
   SEZIONI_ESAME.forEach(([id]) => {
     const card = document.getElementById(id);
     if(!card) return;
@@ -9024,7 +9033,19 @@ let DEFAULT_SNAPSHOT_JSON = null; // impostata nell'init, prima di caricare l'ul
 
 function schedaHaDati(patientState){
   if(!patientState) return false;
-  return JSON.stringify(patientState) !== DEFAULT_SNAPSHOT_JSON;
+  const j = JSON.stringify(patientState);
+  // anche la scheda di partenza dell'esame obiettivo di un ricovero (vedi
+  // snapshotEsameRicovero) conta come "vuota" finché non la si tocca
+  return j !== DEFAULT_SNAPSHOT_JSON && j !== JSON.stringify(snapshotEsameRicovero());
+}
+// scheda di partenza dell'esame obiettivo aperto da un ricovero: come una
+// scheda nuova qualunque, ma — solo se in Impostazioni i tag normali sono
+// già selezionati — con anche "Muove i quattro arti" e "Non segni di lato".
+// Con i tag normali spenti resta vuota come tutte le altre
+function snapshotEsameRicovero(){
+  const o = JSON.parse(DEFAULT_SNAPSHOT_JSON);
+  if(tagNormaleAttivo()) o.neuro.generale = ['muove_arti', 'non_segni_lato'];
+  return o;
 }
 
 // gestione delle 3 "pagine": clinica (form EO), mappa reparto, riepilogo referti
