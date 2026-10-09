@@ -9004,6 +9004,7 @@ let zoomAttuale = (() => {
 })();
 function applicaZoom(){
   document.body.style.zoom = (zoomAttuale / 100);
+  if(typeof ridimensionaTextareaPresto === 'function') ridimensionaTextareaPresto();
   try{ localStorage.setItem(ZOOM_KEY, String(zoomAttuale)); } catch(e){}
   const etichetta = document.getElementById('zoom-livello-testo');
   if(etichetta) etichetta.textContent = zoomAttuale + '%';
@@ -9077,6 +9078,8 @@ function mostraVista(v){
   if(v === 'clinical') applicaSezioniNascoste(true); // le parti nascoste ripartono chiuse
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
+  // caselle disegnate mentre la vista era nascosta: altezza da calcolare ora
+  requestAnimationFrame(() => { if(typeof ridimensionaTextareaVisibili === 'function') ridimensionaTextareaVisibili(); });
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
   document.getElementById('backup-view').style.display = (v === 'backup') ? '' : 'none';
   document.getElementById('impostazioni-view').style.display = (v === 'impostazioni') ? '' : 'none';
@@ -12280,6 +12283,7 @@ function renderRiepilogo(){
       };
       body.addEventListener('focus', () => wrap.classList.add('in-modifica'));
       body.addEventListener('blur', () => { wrap.classList.remove('in-modifica'); body._aggiornaSpecchio(); });
+      body._specchio = specchio;
       wrap.appendChild(specchio);
       wrap.appendChild(body);
       block.appendChild(wrap);
@@ -13006,12 +13010,45 @@ function aggiornaDiarioSoloExtra(patientId, nuovoExtra){
 // tocco di tasto così, scrivendo delle aggiunte, il riquadro si allunga
 // subito insieme al testo invece di restare fisso con lo scroll dentro
 function autoResizeTextarea(el){
+  // nascosta (vista non aperta): niente misure, varrebbero 0 — la si
+  // ridimensiona quando torna visibile (vedi ridimensionaTextareaVisibili)
+  if(!el.offsetParent) return;
   el.style.height = 'auto';
-  el.style.height = el.scrollHeight + 'px';
+  // con box-sizing:border-box l'altezza comprende anche il bordo, che
+  // scrollHeight non conta: senza aggiungerlo l'ultima riga restava
+  // tagliata di un paio di pixel. +2px di margine per gli arrotondamenti
+  // (zoom dell'app, schermi ad alta densità)
+  const bordi = el.offsetHeight - el.clientHeight;
+  el.style.height = (el.scrollHeight + bordi + 2) + 'px';
   // diario con righe del giorno prima: riallinea la copia in grigio ogni
   // volta che il testo cambia, anche da codice (score, farmaci, EGA...)
-  if(el._aggiornaSpecchio) el._aggiornaSpecchio();
+  if(el._aggiornaSpecchio){
+    el._aggiornaSpecchio();
+    // la copia in grigio è quella che si vede: se per qualche motivo va a
+    // capo una riga in più, la casella si allunga anche per lei
+    const sp = el._specchio;
+    if(sp && sp.scrollHeight > el.clientHeight) el.style.height = (sp.scrollHeight + bordi + 2) + 'px';
+  }
 }
+// ricalcola l'altezza di tutte le caselle che si allungano col testo e che
+// sono visibili ora: quando cambia la larghezza utile o il carattere, le
+// righe vanno a capo in punti diversi e l'altezza calcolata prima non
+// basta più (era la causa dell'ultima riga tagliata "a volte" in Diari)
+function ridimensionaTextareaVisibili(){
+  document.querySelectorAll('textarea.bed-text, #ricoveri-view textarea, #ricovero-singolo-view textarea, .ric-pross textarea')
+    .forEach(el => { if(el.offsetParent) autoResizeTextarea(el); });
+}
+let timerRidimensiona = null;
+function ridimensionaTextareaPresto(){
+  clearTimeout(timerRidimensiona);
+  timerRidimensiona = setTimeout(ridimensionaTextareaVisibili, 120);
+}
+// i caratteri dell'app arrivano da internet: se Diari viene disegnato
+// prima che siano caricati, le altezze vanno ricalcolate col carattere vero
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(ridimensionaTextareaVisibili);
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ridimensionaTextareaPresto);
+window.addEventListener('resize', ridimensionaTextareaPresto);
+window.addEventListener('orientationchange', ridimensionaTextareaPresto);
 
 // righe delle AGGIUNTE (dopo la riga vuota) del diario archiviato più
 // recente prima di oggi: se oggi una riga è ancora identica, viene
