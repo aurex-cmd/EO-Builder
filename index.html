@@ -4615,6 +4615,9 @@ applicaTema(temaAttuale());
       <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
   </div>
+  <div class="group">
+    <input type="text" class="wide" id="respiro-nota" placeholder="Nota libera (aggiunta dopo la frase su respiro e parametri)">
+  </div>
 </div>
 
 <!-- 3. DIURESI -->
@@ -4665,6 +4668,9 @@ applicaTema(temaAttuale());
       <div class="chips" id="cuore-focolaio"></div>
     </div>
   </div>
+  <div class="group">
+    <input type="text" class="wide" id="cuore-nota" placeholder="Nota libera (aggiunta dopo la frase sul cuore)">
+  </div>
 </div>
 
 <!-- 5. TORACE -->
@@ -4680,6 +4686,9 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <div class="chips" id="torace-limitata"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="torace-nota" placeholder="Nota libera (aggiunta dopo la frase sul torace)">
   </div>
 </div>
 
@@ -4729,6 +4738,10 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
+  </div>
+  <div class="group">
+    <div class="group-label">Lingua</div>
+    <div class="chips" id="cute-lingua"></div>
   </div>
 </div>
 
@@ -4814,6 +4827,9 @@ applicaTema(temaAttuale());
     <div class="group-label">Lato del solco spianato (paresi) — la rima si calcola dal lato opposto</div>
     <div class="chips" id="neuro-facciale"></div>
   </div>
+  <div class="group">
+    <input type="text" class="wide" id="neuro-nota" placeholder="Nota libera (aggiunta dopo la frase neurologica)">
+  </div>
 </div>
 
 <!-- OUTPUT -->
@@ -4878,14 +4894,14 @@ const state = {
   // parte generata torna quella vera (vedi refreshUI/update più in basso)
   outputEsameManuale: '',
   coscienza: { primary:'vigile', soporosoRisvegliabile:'', soporosoStimolo:'', descrittori:new Set(['orientato','collaborante']), umore:{attiva:false, valore:''}, extra:'' },
-  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false },
-  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'' },
-  torace: { mv:'presente', mvLoc:[new Set()], mvSel:['presente'], mvLocPerTipo:{}, reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false },
+  respiro: { tipo:'eupnoico', dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:'AA', litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'', tempStorico:'', pvStabili:false, nota:'' },
+  cuore: { ritmo:'ritmici', extrasistoli:false, freq:'normofrequenti', targetFA:false, pauseLibere:false, pauseMalValutabili:false, qualita:new Set(), soffio:'nessuno', grado:'', focolaio:'', nota:'' },
+  torace: { mv:'presente', mvLoc:[new Set()], mvSel:['presente'], mvLocPerTipo:{}, reperti:new Set(['non_rumori']), reperteLocPerTipo:{}, reperteSottotipi:{}, limitata:false, nota:'' },
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'', oliguria:false, anuria:false },
-  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
-  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'' }
+  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'', lingua:new Set() },
+  neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'', nota:'' }
 };
 
 /* ============================================================
@@ -4916,7 +4932,11 @@ const TEXT_FIELD_MAP = [
   ['diuresi-volume',  ['diuresi','volume']],
   ['diuresi-note',    ['diuresi','note']],
   ['cute-note',       ['cute','note']],
-  ['addome-extra',    ['addome','extra']]
+  ['addome-extra',    ['addome','extra']],
+  ['respiro-nota',    ['respiro','nota']],
+  ['cuore-nota',      ['cuore','nota']],
+  ['torace-nota',     ['torace','nota']],
+  ['neuro-nota',      ['neuro','nota']]
 ];
 function syncInputsToState(){
   TEXT_FIELD_MAP.forEach(([id, path]) => {
@@ -8022,7 +8042,7 @@ function applyStateObject(o){
   state.coscienza.extra = o.coscienza?.extra ?? '';
 
   state.respiro = Object.assign(
-    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false },
+    { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false, nota:'' },
     o.respiro || {}
   );
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
@@ -8050,6 +8070,7 @@ function applyStateObject(o){
   state.cuore.soffio = o.cuore?.soffio ?? (tagNormaleAttivo() ? 'nessuno' : '');
   state.cuore.grado = o.cuore?.grado ?? '';
   state.cuore.focolaio = o.cuore?.focolaio ?? '';
+  state.cuore.nota = o.cuore?.nota ?? '';
 
   state.torace.mv = o.torace?.mv ?? (tagNormaleAttivo() ? 'presente' : '');
   // mvLoc ora è un array di "blocchi sede" (uno per ciascuna combinazione
@@ -8147,6 +8168,7 @@ function applyStateObject(o){
     getLocSet(state.torace.reperteSottotipi, 'crepitii').add('fini');
   }
   state.torace.limitata = o.torace?.limitata ?? false;
+  state.torace.nota = o.torace?.nota ?? '';
 
   state.addome.forma = o.addome?.forma ?? '';
   state.addome.meteorico = o.addome?.meteorico ?? false;
@@ -8419,6 +8441,7 @@ function applyStateObject(o){
   if(state.cute.cicatrici.size > 0) state.cute.reperti.add('cicatrice');
   if(state.cute.ernieTipi.size > 0) state.cute.reperti.add('ernia');
   state.cute.note = o.cute?.note ?? '';
+  state.cute.lingua = new Set(o.cute?.lingua || []);
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
@@ -8449,6 +8472,7 @@ function applyStateObject(o){
   state.neuro.pupille = new Set(o.neuro?.pupille || []);
   state.neuro.pupilleCoriaLato = o.neuro?.pupilleCoriaLato ?? '';
   state.neuro.pupilleCicliaLato = o.neuro?.pupilleCicliaLato ?? '';
+  state.neuro.nota = o.neuro?.nota ?? '';
 }
 // tiene allineato a mano con lo stato iniziale definito sopra
 function resetFormToDefaults(){
@@ -9941,10 +9965,10 @@ function aggiornaVitaleLetto(nome, campo, valore){
   // aggiornaVitale(), così non resta indietro finché non si riapre la
   // scheda — vecchioRespiro va calcolato PRIMA di scrivere il valore nuovo
   if(entry[1].state.outputEsameManuale){
-    const vecchioRespiro = composeRespiro(entry[1].state.respiro);
+    const vecchioRespiro = composeRespiroConNota(entry[1].state.respiro);
     entry[1].state.respiro[campo] = valore;
     applicaRegolaTemperatura(entry[1].state.respiro);
-    const nuovoRespiro = composeRespiro(entry[1].state.respiro);
+    const nuovoRespiro = composeRespiroConNota(entry[1].state.respiro);
     if(entry[1].state.outputEsameManuale.includes(vecchioRespiro)){
       entry[1].state.outputEsameManuale = entry[1].state.outputEsameManuale.replace(vecchioRespiro, nuovoRespiro);
     }
@@ -14712,6 +14736,15 @@ const OPT = {
     {value:'tachicardici', label:'tachicardici'},
     {value:'bradicardici', label:'bradicardici'}
   ],
+  // lingua: umida/asciutta si escludono a vicenda, il resto si combina
+  lingua: [
+    {value:'umida', label:'Umida', excludes:['asciutta']},
+    {value:'asciutta', label:'Asciutta', excludes:['umida']},
+    {value:'impaniata', label:'Impaniata'},
+    {value:'fissurata', label:'Fissurata'},
+    {value:'mughetto', label:'Mughetto'},
+    {value:'ulcere', label:'Ulcerata'}
+  ],
   cuoreQualita: [
     {value:'validi', label:'validi', excludes:['parafonici']},
     {value:'parafonici', label:'parafonici', excludes:['validi']}
@@ -15025,6 +15058,7 @@ function renderAll(){
   renderCuoreExtrasistoli();
   renderCuoreFreq();
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
+  renderMultiEsclusivo('cute-lingua', OPT.lingua, ()=>state.cute.lingua);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>{
     state.cuore.soffio = v;
     if(v !== 'nessuno') state.cuore.pauseMalValutabili = false; // incompatibile con un soffio descritto
@@ -15923,18 +15957,53 @@ function sistemaPuntiFinali(t){
     .replace(/\s*[,;:]\s*\./g, '.');
 }
 
+// nota libera di una sezione (respiro, cuore, torace, neurologico): stessa
+// regola dei box già esistenti (coscienza, addome, cute, edemi) — viene
+// aggiunta DOPO la frase dei tag: iniziale maiuscola = nuova frase,
+// minuscola = continua la frase precedente con la virgola al posto del
+// punto; da sola (nessun tag) diventa lei stessa la frase, con maiuscola
+// e punto. Il punto finale si aggiunge solo se manca
+function conNotaLibera(base, nota){
+  nota = (nota || '').trim();
+  if(!nota) return base;
+  const chiusa = /[.!?]$/.test(nota) ? '' : '.';
+  if(!base) return cap(nota) + chiusa;
+  if(/^[A-ZÀ-Ý]/.test(nota)) return base + ' ' + nota + chiusa;
+  return base.replace(/\.$/, '') + ', ' + nota + chiusa;
+}
+// frase di Respiro e parametri con la sua nota: è anche il pezzo che
+// aggiornaVitale() cerca e sostituisce dentro un testo modificato a mano
+function composeRespiroConNota(r){
+  r = r || state.respiro;
+  return conNotaLibera(composeRespiro(r), r.nota);
+}
+// lingua: "Lingua asciutta, impaniata e fissurata, con patina biancastra
+// come da mughetto. Ulcere a livello linguale."
+function composeLingua(){
+  const l = state.cute.lingua;
+  if(!l || !l.size) return '';
+  const agg = ['umida','asciutta','impaniata','fissurata'].filter(v => l.has(v));
+  const frasi = [];
+  let f = agg.length ? 'Lingua ' + joinIt(agg) : '';
+  if(l.has('mughetto')) f = f ? f + ', con patina biancastra come da mughetto' : 'Lingua con patina biancastra come da mughetto';
+  if(f) frasi.push(f + '.');
+  if(l.has('ulcere')) frasi.push('Ulcere a livello linguale.');
+  return frasi.join(' ');
+}
+
 function composeReferto(){
   const corpo = sistemaPuntiFinali([
     composeCoscienza(),
-    composeRespiro(),
-    composeCuore(),
-    composeToraceClean(),
+    composeRespiroConNota(),
+    conNotaLibera(composeCuore(), state.cuore.nota),
+    conNotaLibera(composeToraceClean(), state.torace.nota),
     composeAddome(),
     composeCuteSenzaDiscromie(),
+    composeLingua(),
     composeEdemi(),
     composeDiscromieVenosa(),
     composeDiuresi(),
-    composeNeuro()
+    conNotaLibera(composeNeuro(), state.neuro.nota)
   ].filter(Boolean).join(' '));
   // l'isolamento va a capo rispetto al resto (non in coda con uno spazio
   // come le altre frasi), per staccarlo visivamente dal corpo dell'esame
@@ -15991,7 +16060,7 @@ function refreshUI(discardManuale = true){
   renderAll();
   const autoText = composeReferto();
   outputAutoUltimo = autoText;
-  outputRespiroUltimo = composeRespiro();
+  outputRespiroUltimo = composeRespiroConNota();
   if(discardManuale) state.outputEsameManuale = '';
   const esameText = state.outputEsameManuale || autoText;
   const extra = (state.outputExtra || '').trim();
@@ -16011,7 +16080,7 @@ function aggiornaVitale(){
   applicaRegolaTemperatura(state.respiro);
   renderAll();
   const nuovoAuto = composeReferto();
-  const nuovoRespiro = composeRespiro();
+  const nuovoRespiro = composeRespiroConNota();
 
   if(state.outputEsameManuale){
     if(outputRespiroUltimo && state.outputEsameManuale.includes(outputRespiroUltimo)){
