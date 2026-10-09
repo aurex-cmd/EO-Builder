@@ -4599,7 +4599,7 @@ applicaTema(temaAttuale());
 
 <!-- 2. RESPIRO / PARAMETRI -->
 <div class="card" id="card-respiro">
-  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12h4l2-6.5 4 13 2-6.5h7"/></svg> Respiro e parametri</h2>
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12h4l2-6.5 4 13 2-6.5h7"/></svg> Respiro e parametri vitali</h2>
   <div class="group">
     <div class="group-label">Tipo respiro</div>
     <div class="finding-list" id="respiro-tipo"></div>
@@ -4619,10 +4619,10 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <div class="inline-fields">
-      <div class="field"><label>SatO2 %</label><input type="number" id="v-sat" min="0" max="100"></div>
-      <div class="field"><label>PA sist.</label><input type="number" id="v-pas" min="0"></div>
-      <div class="field"><label>PA diast.</label><input type="number" id="v-pad" min="0"></div>
-      <div class="field"><label>FC</label><input type="number" id="v-fc" min="0"></div>
+      <div class="field"><label>SatO2 %</label><input type="number" id="v-sat" min="0" inputmode="numeric" max="100"></div>
+      <div class="field"><label>PA sist.</label><input type="number" id="v-pas" min="0" inputmode="numeric"></div>
+      <div class="field"><label>PA diast.</label><input type="number" id="v-pad" min="0" inputmode="numeric"></div>
+      <div class="field"><label>FC</label><input type="number" id="v-fc" min="0" inputmode="numeric"></div>
     </div>
   </div>
   <div class="group">
@@ -16632,6 +16632,24 @@ document.getElementById('admit-ematochimici')?.addEventListener('blur', function
   // niente listener generico per questi campi (vedi CAMPI_VITALI_IDS più
   // sopra): vanno collegati qui a aggiornaVitale()
   document.getElementById(id)?.addEventListener('input', aggiornaVitale);
+});
+// passaggio automatico al campo successivo mentre si scrive, con le stesse
+// regole della pagina "Parametri vitali" (vedi AUTO_ADVANCE_VITALI lì):
+// SatO2 -> PA sist. -> PA diast. -> FC, dove si ferma. La lunghezza dipende
+// dalla prima cifra: SatO2 e diastolica 1 -> 3 cifre (100), altrimenti 2;
+// sistolica 1/2 (o 0) -> 3 cifre, da 3 a 9 -> 2 cifre (80, 95…). Mai
+// mentre si cancella
+const AUTO_AVANZA_VITALI_ESAME = {
+  'v-sat': { lunghezza: v => /^1/.test(v) ? 3 : 2, prossimo: 'v-pas' },
+  'v-pas': { lunghezza: v => /^[3-9]/.test(v) ? 2 : 3, prossimo: 'v-pad' },
+  'v-pad': { lunghezza: v => /^1/.test(v) ? 3 : 2, prossimo: 'v-fc' }
+};
+Object.entries(AUTO_AVANZA_VITALI_ESAME).forEach(([id, regola]) => {
+  const input = document.getElementById(id);
+  input?.addEventListener('input', (e) => {
+    if((e.inputType || '').startsWith('delete')) return;
+    if(input.value.length >= regola.lunghezza(input.value)) document.getElementById(regola.prossimo)?.focus();
+  });
 });
 
 // Frecce sinistra/destra per spostarsi tra i campi numerici affiancati sulla
