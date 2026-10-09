@@ -1902,8 +1902,10 @@
     content:'›'; margin-left:auto; font-size:22px; line-height:1; color:var(--ink-dim); transition:transform .15s ease;
   }
   #clinical-view .card.sezione-nascosta.aperta-ora > h2::after{ transform:rotate(90deg); }
-  #clinical-view .card.sezione-nascosta:not(.aperta-ora){ padding-top:11px; padding-bottom:11px; }
-  #clinical-view .card.sezione-nascosta:not(.aperta-ora) > h2{ margin-bottom:0; font-size:15px; }
+  /* chiusa: stesso titolo (stessa misura e posizione) della parte aperta,
+     cambia solo che sotto non c'è niente — aprendola il titolo non si muove */
+  #clinical-view .card.sezione-nascosta:not(.aperta-ora){ padding-bottom:16px; }
+  #clinical-view .card.sezione-nascosta:not(.aperta-ora) > h2{ margin-bottom:0; }
   #clinical-view .card.sezione-nascosta:not(.aperta-ora) > :not(h2){ display:none !important; }
 </style>
 <!-- TEMA CHIARO: stesso foglio di sopra, solo con i colori chiari.
