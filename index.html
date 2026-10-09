@@ -1893,6 +1893,9 @@
   .soffi-tabs .chip{ flex:1; text-align:center; }
 
 </style>
+<style>
+  #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+</style>
 <!-- TEMA CHIARO ("lilla & legno"): stesso foglio di sopra, ridisegnato.
      Si sceglie in Strumenti → Impostazioni → Tema (preferenza di questo
      dispositivo, non sincronizzata). Dei due fogli ne resta acceso uno solo:
@@ -4905,7 +4908,7 @@ const state = {
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'', oliguria:false, anuria:false },
-  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
+  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'', ecchimosiDettagli:{} },
   lingua: { tag:new Set(), nota:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'', nota:'' }
 };
@@ -8448,6 +8451,9 @@ function applyStateObject(o){
   if(state.cute.cicatrici.size > 0) state.cute.reperti.add('cicatrice');
   if(state.cute.ernieTipi.size > 0) state.cute.reperti.add('ernia');
   state.cute.note = o.cute?.note ?? '';
+  // sedi dettagliate delle ecchimosi: chiave "zona.sede" -> Set dei lati
+  state.cute.ecchimosiDettagli = {};
+  Object.entries(o.cute?.ecchimosiDettagli || {}).forEach(([k, lati]) => { state.cute.ecchimosiDettagli[k] = new Set(lati || []); });
   state.lingua = { tag:new Set(o.lingua?.tag || []), nota:o.lingua?.nota ?? '' };
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
@@ -14386,7 +14392,55 @@ function renderCute(){
     const onClickChip = () => { active ? s.delete(opt.value) : s.add(opt.value); update(); };
 
     let builder;
-    if(opt.customDrawer === 'ernia'){
+    if(opt.customDrawer === 'ecchimosi'){
+      // zone (Volto, Torace...); toccandone una, sotto compaiono le sue sedi
+      // dettagliate, e toccando una sede con lato compaiono Sx/Dx accanto
+      const sedeSet = getLocSet(state.cute.sedePerTipo, opt.value);
+      const det = state.cute.ecchimosiDettagli;
+      const chipPiccolo = (testo, attivo, onTap) => {
+        const b = document.createElement('div');
+        b.className = 'chip' + (attivo ? ' active' : '');
+        b.style.cssText = 'font-size:12px; padding:5px 10px;';
+        b.textContent = testo;
+        b.onclick = (e) => { e.stopPropagation(); onTap(); };
+        return b;
+      };
+      const aCapo = (inner) => { const sp = document.createElement('div'); sp.style.cssText = 'flex-basis:100%; height:0;'; inner.appendChild(sp); };
+      builder = (inner) => {
+        renderGruppoChipInline(inner, null, OPT.cuteEcchimosiSedi,
+          v => sedeSet.has(v),
+          (v, sAttivo) => {
+            if(!sAttivo){
+              const esclusiva = OPT.cuteEcchimosiSedi.find(o => o.value === v)?.esclusiva;
+              OPT.cuteEcchimosiSedi.forEach(o => { if(esclusiva ? o.value !== v : o.esclusiva) sedeSet.delete(o.value); });
+            }
+            sAttivo ? sedeSet.delete(v) : sedeSet.add(v);
+            // togliendo una zona si tolgono anche le sue sedi dettagliate
+            Object.keys(det).forEach(k => { if(!sedeSet.has(k.split('.')[0])) delete det[k]; });
+            update();
+          });
+        OPT.cuteEcchimosiSedi.forEach(z => {
+          const dettagli = OPT.cuteEcchimosiDettagli[z.value];
+          if(!dettagli || !sedeSet.has(z.value)) return;
+          const lbl = document.createElement('div');
+          lbl.style.cssText = 'font-size:10.5px; color:var(--ink-dim); width:100%; margin:6px 0 1px;';
+          lbl.textContent = z.label;
+          inner.appendChild(lbl);
+          dettagli.forEach(d => {
+            const k = z.value + '.' + d.value;
+            const dAttivo = !!det[k];
+            inner.appendChild(chipPiccolo(d.label, dAttivo, () => { dAttivo ? delete det[k] : det[k] = new Set(); update(); }));
+            if(dAttivo && d.lato){
+              OPT.cuteLato.forEach(l => {
+                const lAttivo = det[k].has(l.value);
+                inner.appendChild(chipPiccolo(l.label, lAttivo, () => { lAttivo ? det[k].delete(l.value) : det[k].add(l.value); update(); }));
+              });
+              aCapo(inner);
+            }
+          });
+        });
+      };
+    } else if(opt.customDrawer === 'ernia'){
       builder = (inner) => {
         const tipiAttivi = state.cute.ernieTipi;
         const attivi = OPT.cuteErnieTipi.filter(t => tipiAttivi.has(t.value));
@@ -14929,6 +14983,48 @@ const OPT = {
     {value:'aaii', label:'AAII', frag:'agli AAII'},
     {value:'diffuse', label:'Diffuse', esclusiva:true}
   ],
+  // sedi dettagliate di ogni zona: compaiono toccando la zona. lato:true =
+  // si sceglie anche Sx/Dx (entrambi = "bilateralmente"); frag = come la
+  // sede entra nella frase, al posto della zona generica
+  cuteEcchimosiDettagli: {
+    volto: [
+      {value:'frontale', label:'Frontale', frag:'in regione frontale', lato:true},
+      {value:'periorbitaria', label:'Periorbitaria', frag:'in sede periorbitaria', lato:true},
+      {value:'zigomatica', label:'Zigomatica', frag:'in regione zigomatica', lato:true},
+      {value:'mandibolare', label:'Mandibolare', frag:'in regione mandibolare', lato:true}
+    ],
+    torace: [
+      {value:'sternale', label:'Sternale', frag:'in regione sternale'},
+      {value:'anteriore', label:'Anteriore', frag:"all'emitorace anteriore", lato:true},
+      {value:'laterale', label:'Laterale', frag:"all'emitorace laterale", lato:true},
+      {value:'ascellare', label:'Ascellare', frag:'in regione ascellare', lato:true}
+    ],
+    addome: [
+      {value:'epigastrio', label:'Epigastrio', frag:'in epigastrio'},
+      {value:'periombelicale', label:'Periombelicale', frag:'in sede periombelicale'},
+      {value:'ipogastrio', label:'Ipogastrio', frag:'in ipogastrio'},
+      {value:'ipocondrio', label:'Ipocondrio', frag:"all'ipocondrio", lato:true},
+      {value:'fianco', label:'Fianco', frag:'al fianco', lato:true},
+      {value:'fossa_iliaca', label:'Fossa iliaca', frag:'in fossa iliaca', lato:true}
+    ],
+    dorso: [
+      {value:'scapolare', label:'Scapolare', frag:'in regione scapolare', lato:true},
+      {value:'lombare', label:'Lombare', frag:'in regione lombare', lato:true},
+      {value:'sacrale', label:'Sacrale', frag:'in regione sacrale'}
+    ],
+    aass: [
+      {value:'braccio', label:'Braccio', frag:'al braccio', lato:true},
+      {value:'gomito', label:'Piega del gomito', frag:'alla piega del gomito', lato:true},
+      {value:'avambraccio', label:'Avambraccio', frag:"all'avambraccio", lato:true},
+      {value:'mano', label:'Dorso della mano', frag:'al dorso della mano', lato:true}
+    ],
+    aaii: [
+      {value:'coscia', label:'Coscia', frag:'alla coscia', lato:true},
+      {value:'ginocchio', label:'Ginocchio', frag:'al ginocchio', lato:true},
+      {value:'gamba', label:'Gamba', frag:'alla gamba', lato:true},
+      {value:'piede', label:'Piede', frag:'al piede', lato:true}
+    ]
+  },
   cuteCicatrici: [
     {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
     {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
@@ -14957,7 +15053,7 @@ const OPT = {
     // etichetta corta solo sul tag: nel referto resta "discromie cutanee ...
     // da insufficienza venosa cronica" (vedi fraseCute)
     {value:'discromie_venosa', label:'Discromie'},
-    {value:'ecchimosi', label:'Ecchimosi', locOptions:'cuteEcchimosiSedi'},
+    {value:'ecchimosi', label:'Ecchimosi', customDrawer:'ecchimosi'},
     {value:'equinismo', label:'Piedi in equinismo'},
     {value:'anchilosi', label:'Anchilosi', locOptions:'cuteArti'}
   ],
@@ -15024,7 +15120,21 @@ function fraseCute(valore, sedeSet, extraSet){
   }
   if(valore === 'ecchimosi'){
     if(sedeSet && sedeSet.has('diffuse')) return 'ecchimosi diffuse';
-    const sedi = OPT.cuteEcchimosiSedi.filter(o => o.frag && sedeSet && sedeSet.has(o.value)).map(o => o.frag);
+    // per ogni zona: le sedi dettagliate scelte (con il lato), oppure la
+    // zona generica se non se n'è scelta nessuna — "ecchimosi in sede
+    // periorbitaria dx, in regione frontale bilateralmente e agli AAII"
+    const det = state.cute.ecchimosiDettagli || {};
+    const sedi = [];
+    OPT.cuteEcchimosiSedi.forEach(z => {
+      if(!z.frag || !sedeSet || !sedeSet.has(z.value)) return;
+      const scelte = (OPT.cuteEcchimosiDettagli[z.value] || []).filter(d => det[z.value + '.' + d.value]);
+      if(!scelte.length){ sedi.push(z.frag); return; }
+      scelte.forEach(d => {
+        const lati = det[z.value + '.' + d.value];
+        const lato = !d.lato ? '' : (lati.has('dx') && lati.has('sx')) ? ' bilateralmente' : lati.has('dx') ? ' dx' : lati.has('sx') ? ' sx' : '';
+        sedi.push(d.frag + lato);
+      });
+    });
     return sedi.length ? 'ecchimosi ' + joinIt(sedi) : 'ecchimosi';
   }
   if(valore === 'equinismo'){
