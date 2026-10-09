@@ -1895,6 +1895,16 @@
 </style>
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+  /* parti dell'esame obiettivo nascoste in Impostazioni: solo il titolo,
+     una riga che si apre toccandola */
+  #clinical-view .card.sezione-nascosta > h2{ cursor:pointer; user-select:none; -webkit-user-select:none; }
+  #clinical-view .card.sezione-nascosta > h2::after{
+    content:'›'; margin-left:auto; font-size:22px; line-height:1; color:var(--ink-dim); transition:transform .15s ease;
+  }
+  #clinical-view .card.sezione-nascosta.aperta-ora > h2::after{ transform:rotate(90deg); }
+  #clinical-view .card.sezione-nascosta:not(.aperta-ora){ padding-top:11px; padding-bottom:11px; }
+  #clinical-view .card.sezione-nascosta:not(.aperta-ora) > h2{ margin-bottom:0; color:var(--ink-dim); font-size:15px; }
+  #clinical-view .card.sezione-nascosta:not(.aperta-ora) > :not(h2){ display:none !important; }
 </style>
 <!-- TEMA CHIARO ("lilla & legno"): stesso foglio di sopra, ridisegnato.
      Si sceglie in Strumenti → Impostazioni → Tema (preferenza di questo
@@ -4190,6 +4200,14 @@ applicaTema(temaAttuale());
   </div>
 
   <div class="group">
+    <div class="group-label" style="text-align:center;">Parti dell'esame obiettivo sempre aperte</div>
+    <!-- come "Nuovo giorno", vale per tutto l'account (SEZIONI_NASCOSTE_KEY):
+         le parti spente restano una riga chiusa, che si apre toccandola -->
+    <div class="chips" id="impostazioni-sezioni" style="justify-content:center;"></div>
+    <div class="group-label" style="text-align:center; margin:8px 0 0; font-size:11.5px;">Le parti spente restano una riga chiusa: toccandola si apre, e torna chiusa la volta dopo.</div>
+  </div>
+
+  <div class="group">
     <div class="group-label">Reparto</div>
     <!-- reparto di tutti i giorni: decide i settori mostrati in Reparto
          (gli altri si aggiungono solo nei festivi, dal "+") -->
@@ -5123,7 +5141,7 @@ function setLocalAndCloud(key, rawValue){
 }
 
 // le chiavi che l'app tiene in memoria e sincronizza col cloud
-const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1',
+const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1', 'eo_builder_sezioni_nascoste_v1',
   // anche queste passano da setLocalAndCloud: senza elencarle qui, quelle
   // create prima del login non arriverebbero mai sul cloud
   'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1', 'eo_builder_postdegenze_v1'];
@@ -5299,6 +5317,7 @@ async function cloudPullAll(){
     // pulizia del weekend: solo ora che le schede sono allineate al cloud
     if(typeof pulisciSchedeWeekend === 'function') pulisciSchedeWeekend();
     if(chiaviScaricate.has(POSTDEGENZE_KEY) && typeof renderPostDegenze === 'function') renderPostDegenze();
+    if(chiaviScaricate.has(SEZIONI_NASCOSTE_KEY) && typeof applicaSezioniNascoste === 'function'){ applicaSezioniNascoste(); renderImpostazioniSezioni(); }
     // (prima bastava che la chiave ESISTESSE sul cloud per ricaricare la
     // scheda aperta: innocuo con un pull solo all'avvio, ma con quelli
     // automatici qui sotto ridisegnerebbe il form a ogni rientro nell'app)
@@ -8873,6 +8892,61 @@ function renderImpostazioniTagNormale(){
 // giorno da una scheda vuota per l'intero esame (isolamento escluso, che
 // deve restare finché il paziente non viene dimesso/eliminato — vedi
 // selezionaPaziente/aggiornaVitaleLetto, dove viene applicata).
+// PARTI DELL'ESAME OBIETTIVO NASCOSTE (Impostazioni): come
+// RESET_GIORNALIERO_KEY vale per tutto l'account, sincronizzata. Una parte
+// nascosta resta solo una riga col titolo: toccandola si apre (e si
+// richiude), ma ogni volta che si torna all'esame obiettivo o si cambia
+// scheda torna chiusa. Le parti NON nascoste restano sempre aperte, senza
+// possibilità di chiuderle. Quello che c'è scritto in una parte nascosta
+// entra comunque nel referto
+const SEZIONI_NASCOSTE_KEY = 'eo_builder_sezioni_nascoste_v1';
+const SEZIONI_ESAME = [
+  ['card-coscienza', 'Coscienza'], ['card-respiro', 'Respiro'], ['card-diuresi', 'Diuresi'],
+  ['card-cuore', 'Cuore'], ['card-torace', 'Torace'], ['card-addome', 'Addome'], ['card-cute', 'Cute'],
+  ['card-edemi', 'Edemi'], ['card-lingua', 'Lingua'], ['card-neuro', 'Neurologico']
+];
+function sezioniNascoste(){
+  try{ const v = JSON.parse(localStorage.getItem(SEZIONI_NASCOSTE_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+  catch(e){ return []; }
+}
+// chiudiAperte=true: le parti nascoste aperte a mano tornano chiuse
+function applicaSezioniNascoste(chiudiAperte){
+  const nascoste = sezioniNascoste();
+  SEZIONI_ESAME.forEach(([id]) => {
+    const card = document.getElementById(id);
+    if(!card) return;
+    card.classList.toggle('sezione-nascosta', nascoste.includes(id));
+    if(chiudiAperte || !nascoste.includes(id)) card.classList.remove('aperta-ora');
+  });
+}
+function impostaSezioneVisibile(id, visibile){
+  const nascoste = sezioniNascoste().filter(x => x !== id);
+  if(!visibile) nascoste.push(id);
+  setLocalAndCloud(SEZIONI_NASCOSTE_KEY, JSON.stringify(nascoste));
+  applicaSezioniNascoste(true);
+  renderImpostazioniSezioni();
+}
+function renderImpostazioniSezioni(){
+  const el = document.getElementById('impostazioni-sezioni');
+  if(!el) return;
+  const nascoste = sezioniNascoste();
+  el.innerHTML = '';
+  SEZIONI_ESAME.forEach(([id, nome]) => {
+    const visibile = !nascoste.includes(id);
+    const b = document.createElement('div');
+    b.className = 'chip' + (visibile ? ' active' : '');
+    b.textContent = nome;
+    b.onclick = () => impostaSezioneVisibile(id, !visibile);
+    el.appendChild(b);
+  });
+}
+// tocco sul titolo: apre/chiude SOLO le parti nascoste
+document.addEventListener('click', (e) => {
+  const h2 = e.target.closest('#clinical-view .card.sezione-nascosta > h2');
+  if(h2) h2.parentElement.classList.toggle('aperta-ora');
+});
+document.addEventListener('DOMContentLoaded', () => applicaSezioniNascoste(true));
+
 const RESET_GIORNALIERO_KEY = 'eo_builder_reset_giornaliero_v1';
 function resetGiornalieroAttivo(){
   try{ return localStorage.getItem(RESET_GIORNALIERO_KEY) === '1'; }
@@ -9002,6 +9076,7 @@ function mostraVista(v){
   }
   wardMapOpen = (v === 'wardmap');
   document.getElementById('clinical-view').style.display = (v === 'clinical') ? '' : 'none';
+  if(v === 'clinical') applicaSezioniNascoste(true); // le parti nascoste ripartono chiuse
   document.getElementById('wardmap-view').style.display = (v === 'wardmap') ? '' : 'none';
   document.getElementById('riepilogo-view').style.display = (v === 'riepilogo') ? '' : 'none';
   document.getElementById('app-view').style.display = (v === 'app') ? '' : 'none';
@@ -9027,7 +9102,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
-  if(v === 'impostazioni'){ renderImpostazioniTema(); renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+  if(v === 'impostazioni'){ renderImpostazioniSezioni(); renderImpostazioniTema(); renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
@@ -10034,6 +10109,7 @@ function selezionaPaziente(id){
   const patients = loadPatients();
   const p = patients[id];
   if(!p) return;
+  applicaSezioniNascoste(true); // cambiando scheda le parti nascoste tornano chiuse
   currentPatientId = id;
   setLocalAndCloud(LAST_PATIENT_KEY, id);
   applyStateObject(p.state);
