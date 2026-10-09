@@ -545,7 +545,6 @@
     display:flex; flex-direction:column; width:calc(50% - 3.5px); box-sizing:border-box;
   }
   #cute-reperti > .finding-row:has(.finding-drawer.open){ width:100%; }
-  #cute-reperti > .finding-row[data-reperto="discromie_venosa"]{ width:100%; }
   #cute-reperti > .finding-row > .chip{ width:100%; box-sizing:border-box; text-align:center; }
   .finding-row{ display:contents; }
   .finding-drawer{
@@ -2444,7 +2443,6 @@
     display:flex; flex-direction:column; width:calc(50% - 3.5px); box-sizing:border-box;
   }
   #cute-reperti > .finding-row:has(.finding-drawer.open){ width:100%; }
-  #cute-reperti > .finding-row[data-reperto="discromie_venosa"]{ width:100%; }
   #cute-reperti > .finding-row > .chip{ width:100%; box-sizing:border-box; text-align:center; }
   .finding-row{ display:contents; }
   .finding-drawer{
@@ -14511,7 +14509,15 @@ function renderCute(){
       builder = (inner) => {
         renderGruppoChipInline(inner, null, opzioniSede,
           v => sedeSet.has(v),
-          (v, sAttivo) => { sAttivo ? sedeSet.delete(v) : sedeSet.add(v); update(); });
+          (v, sAttivo) => {
+            // una sede "esclusiva" (es. ecchimosi Diffuse) toglie le altre, e viceversa
+            if(!sAttivo){
+              const esclusiva = opzioniSede.find(o => o.value === v)?.esclusiva;
+              opzioniSede.forEach(o => { if(esclusiva ? o.value !== v : o.esclusiva) sedeSet.delete(o.value); });
+            }
+            sAttivo ? sedeSet.delete(v) : sedeSet.add(v);
+            update();
+          });
         if(opt.extra){
           renderGruppoChipInline(inner, null, opt.extra,
             v => extraSet.has(v),
@@ -14912,6 +14918,17 @@ const OPT = {
     {value:'aaii', label:'AAII'},
     {value:'aass', label:'AASS'}
   ],
+  // sedi delle ecchimosi (combinabili); "Diffuse" esclude le altre.
+  // frag = come la sede entra nella frase ("ecchimosi all'addome e agli AASS")
+  cuteEcchimosiSedi: [
+    {value:'volto', label:'Volto', frag:'al volto'},
+    {value:'torace', label:'Torace', frag:'al torace'},
+    {value:'addome', label:'Addome', frag:"all'addome"},
+    {value:'dorso', label:'Dorso', frag:'al dorso'},
+    {value:'aass', label:'AASS', frag:'agli AASS'},
+    {value:'aaii', label:'AAII', frag:'agli AAII'},
+    {value:'diffuse', label:'Diffuse', esclusiva:true}
+  ],
   cuteCicatrici: [
     {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
     {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
@@ -14937,7 +14954,10 @@ const OPT = {
     {value:'ernia', label:'Ernia', customDrawer:'ernia'},
     {value:'colostomia', label:'Colostomia', extra:[{value:'in_ordine', label:'In ordine'}]},
     {value:'ureterocutaneostomia', label:'Ureterocutaneostomia'},
-    {value:'discromie_venosa', label:'Discromie da insuff. venosa'},
+    // etichetta corta solo sul tag: nel referto resta "discromie cutanee ...
+    // da insufficienza venosa cronica" (vedi fraseCute)
+    {value:'discromie_venosa', label:'Discromie'},
+    {value:'ecchimosi', label:'Ecchimosi', locOptions:'cuteEcchimosiSedi'},
     {value:'equinismo', label:'Piedi in equinismo'},
     {value:'anchilosi', label:'Anchilosi', locOptions:'cuteArti'}
   ],
@@ -15001,6 +15021,11 @@ function fraseCute(valore, sedeSet, extraSet){
     if(hasDx) return "discromie cutanee all'arto inferiore dx da insufficienza venosa cronica";
     if(hasSx) return "discromie cutanee all'arto inferiore sx da insufficienza venosa cronica";
     return 'discromie cutanee da insufficienza venosa cronica';
+  }
+  if(valore === 'ecchimosi'){
+    if(sedeSet && sedeSet.has('diffuse')) return 'ecchimosi diffuse';
+    const sedi = OPT.cuteEcchimosiSedi.filter(o => o.frag && sedeSet && sedeSet.has(o.value)).map(o => o.frag);
+    return sedi.length ? 'ecchimosi ' + joinIt(sedi) : 'ecchimosi';
   }
   if(valore === 'equinismo'){
     if(hasDx && !hasSx) return 'piede dx in equinismo';
