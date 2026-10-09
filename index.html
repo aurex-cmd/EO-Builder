@@ -4574,7 +4574,7 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <div class="inline-fields">
-      <input type="text" class="wide" id="coscienza-extra" placeholder="Nota libera (es. chiede di potersi rialimentare, umore deflesso…)">
+      <input type="text" class="wide" id="coscienza-extra" placeholder="Nota libera">
     </div>
   </div>
 </div>
@@ -4613,11 +4613,10 @@ applicaTema(temaAttuale());
     <div class="inline-fields">
       <div class="chips" id="temp-chips"></div>
       <div class="field field-temp"><label>TC</label><input type="number" id="temp-valore" step="0.1"><span class="unita-dopo">°C</span></div>
-      <input type="text" class="wide" id="temp-storico" placeholder="Nota storica (es. ieri segnalata febbre con TC 38°C)">
     </div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="respiro-nota" placeholder="Nota libera (aggiunta dopo la frase su respiro e parametri)">
+    <input type="text" class="wide" id="respiro-nota" placeholder="Nota libera, aggiunta dopo l'obiettività respiratoria">
   </div>
 </div>
 
@@ -4636,7 +4635,7 @@ applicaTema(temaAttuale());
     <div class="inline-fields">
       <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
       <div class="chips" id="diuresi-oligo"></div>
-      <input type="text" class="wide" id="diuresi-note" placeholder="Note (es. BI negativo di 500 ml…)">
+      <input type="text" class="wide" id="diuresi-note" placeholder="Nota libera">
     </div>
   </div>
 </div>
@@ -4670,7 +4669,7 @@ applicaTema(temaAttuale());
     </div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="cuore-nota" placeholder="Nota libera (aggiunta dopo la frase sul cuore)">
+    <input type="text" class="wide" id="cuore-nota" placeholder="Nota libera, aggiunta dopo l'obiettività cardiaca">
   </div>
 </div>
 
@@ -4689,7 +4688,7 @@ applicaTema(temaAttuale());
     <div class="chips" id="torace-limitata"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="torace-nota" placeholder="Nota libera (aggiunta dopo la frase sul torace)">
+    <input type="text" class="wide" id="torace-nota" placeholder="Nota libera, aggiunta dopo l'obiettività toracica">
   </div>
 </div>
 
@@ -4726,8 +4725,7 @@ applicaTema(temaAttuale());
     </div>
   </div>
   <div class="group">
-    <div class="group-label">Nota libera (aggiunta subito dopo la frase sull'addome)</div>
-    <input type="text" class="wide" id="addome-extra" placeholder="es. Strie rubre">
+    <input type="text" class="wide" id="addome-extra" placeholder="Nota libera, aggiunta dopo l'obiettività addominale">
   </div>
 </div>
 
@@ -4738,7 +4736,7 @@ applicaTema(temaAttuale());
     <div class="finding-list" id="cute-reperti"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
+    <input type="text" class="wide" id="cute-note" placeholder="Nota libera, aggiunta dopo l'obiettività cutanea">
   </div>
 </div>
 
@@ -4777,7 +4775,7 @@ applicaTema(temaAttuale());
     <div class="chips" id="edemi-andamento"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="edemi-custom" placeholder="Nota libera (aggiunta dopo la frase sugli edemi)">
+    <input type="text" class="wide" id="edemi-custom" placeholder="Nota libera">
   </div>
 </div>
 
@@ -4788,7 +4786,7 @@ applicaTema(temaAttuale());
     <div class="chips" id="lingua-tag"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="lingua-nota" placeholder="Nota libera (aggiunta dopo la frase sulla lingua)">
+    <input type="text" class="wide" id="lingua-nota" placeholder="Nota libera">
   </div>
 </div>
 
@@ -4836,7 +4834,7 @@ applicaTema(temaAttuale());
     <div class="chips" id="neuro-facciale"></div>
   </div>
   <div class="group">
-    <input type="text" class="wide" id="neuro-nota" placeholder="Nota libera (aggiunta dopo la frase neurologica)">
+    <input type="text" class="wide" id="neuro-nota" placeholder="Nota libera, aggiunta dopo l'obiettività neurologica">
   </div>
 </div>
 
@@ -4935,7 +4933,6 @@ const TEXT_FIELD_MAP = [
   ['v-pad',           ['respiro','pad']],
   ['v-fc',            ['respiro','fc']],
   ['temp-valore',     ['respiro','tempValore']],
-  ['temp-storico',    ['respiro','tempStorico']],
   ['cuore-grado',     ['cuore','grado']],
   ['edemi-custom',    ['edemi','custom']],
   ['diuresi-volume',  ['diuresi','volume']],
@@ -8055,6 +8052,13 @@ function applyStateObject(o){
     { tipo:(tagNormaleAttivo() ? 'eupnoico' : ''), dispnoicoRiferita:false, dispnoicoEloquio:false, dispnoicoSforzo:false, tachipnoicoBilancia:false, o2:(tagNormaleAttivo() ? 'AA' : ''), litri:'', fio2:'', altro:'', sat:'', pas:'', pad:'', fc:'', temp:(tagNormaleAttivo() ? 'apiretico' : ''), tempValore:'', tempStorico:'', pvStabili:false, nota:'' },
     o.respiro || {}
   );
+  // la vecchia "Nota storica" della temperatura non c'è più: quello che vi
+  // era scritto passa nella nota libera di Respiro (come frase a sé)
+  if((state.respiro.tempStorico || '').trim()){
+    const storico = cap(state.respiro.tempStorico.trim());
+    state.respiro.nota = state.respiro.nota ? storico.replace(/[.!?]?$/, '.') + ' ' + state.respiro.nota : storico;
+    state.respiro.tempStorico = '';
+  }
   if(state.respiro.temp === 'non_specificata') state.respiro.temp = 'apiretico'; // opzione rimossa
   if(state.respiro.tipo === 'riferita_dispnea'){
     // "Riferita dispnea" era una voce a sé, ora è "Dispnoico" + sottoopzione
