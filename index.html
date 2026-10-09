@@ -4739,10 +4739,6 @@ applicaTema(temaAttuale());
   <div class="group">
     <input type="text" class="wide" id="cute-note" placeholder="Altre note libere (es. FKT, dolore anca dx sotto carico…)">
   </div>
-  <div class="group">
-    <div class="group-label">Lingua</div>
-    <div class="chips" id="cute-lingua"></div>
-  </div>
 </div>
 
 <!-- 8. EDEMI -->
@@ -4781,6 +4777,17 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <input type="text" class="wide" id="edemi-custom" placeholder="Nota libera (aggiunta dopo la frase sugli edemi)">
+  </div>
+</div>
+
+<!-- 8b. LINGUA -->
+<div class="card" id="card-lingua">
+  <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M3.5 9.5c2.5-2 5.3-3 8.5-3s6 1 8.5 3"/><path d="M6.5 9.8v3.7a5.5 5.5 0 0011 0V9.8"/><path d="M12 9.5v4.5"/></svg> Lingua</h2>
+  <div class="group">
+    <div class="chips" id="lingua-tag"></div>
+  </div>
+  <div class="group">
+    <input type="text" class="wide" id="lingua-nota" placeholder="Nota libera (aggiunta dopo la frase sulla lingua)">
   </div>
 </div>
 
@@ -4900,7 +4907,8 @@ const state = {
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'', oliguria:false, anuria:false },
-  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'', lingua:new Set() },
+  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'' },
+  lingua: { tag:new Set(), nota:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'', nota:'' }
 };
 
@@ -4936,7 +4944,8 @@ const TEXT_FIELD_MAP = [
   ['respiro-nota',    ['respiro','nota']],
   ['cuore-nota',      ['cuore','nota']],
   ['torace-nota',     ['torace','nota']],
-  ['neuro-nota',      ['neuro','nota']]
+  ['neuro-nota',      ['neuro','nota']],
+  ['lingua-nota',     ['lingua','nota']]
 ];
 function syncInputsToState(){
   TEXT_FIELD_MAP.forEach(([id, path]) => {
@@ -8441,7 +8450,7 @@ function applyStateObject(o){
   if(state.cute.cicatrici.size > 0) state.cute.reperti.add('cicatrice');
   if(state.cute.ernieTipi.size > 0) state.cute.reperti.add('ernia');
   state.cute.note = o.cute?.note ?? '';
-  state.cute.lingua = new Set(o.cute?.lingua || []);
+  state.lingua = { tag:new Set(o.lingua?.tag || []), nota:o.lingua?.nota ?? '' };
 
   state.neuro.generale = new Set(o.neuro?.generale || []);
   state.neuro.linguaggio = new Set(o.neuro?.linguaggio || []);
@@ -15058,7 +15067,7 @@ function renderAll(){
   renderCuoreExtrasistoli();
   renderCuoreFreq();
   renderMultiEsclusivo('cuore-qualita', OPT.cuoreQualita, ()=>state.cuore.qualita);
-  renderMultiEsclusivo('cute-lingua', OPT.lingua, ()=>state.cute.lingua);
+  renderMultiEsclusivo('lingua-tag', OPT.lingua, ()=>state.lingua.tag);
   renderSingle('cuore-soffio', OPT.cuoreSoffio, ()=>state.cuore.soffio, v=>{
     state.cuore.soffio = v;
     if(v !== 'nessuno') state.cuore.pauseMalValutabili = false; // incompatibile con un soffio descritto
@@ -15980,7 +15989,7 @@ function composeRespiroConNota(r){
 // lingua: "Lingua asciutta, impaniata e fissurata, con patina biancastra
 // come da mughetto. Ulcere a livello linguale."
 function composeLingua(){
-  const l = state.cute.lingua;
+  const l = state.lingua.tag;
   if(!l || !l.size) return '';
   const agg = ['umida','asciutta','impaniata','fissurata'].filter(v => l.has(v));
   const frasi = [];
@@ -15999,9 +16008,9 @@ function composeReferto(){
     conNotaLibera(composeToraceClean(), state.torace.nota),
     composeAddome(),
     composeCuteSenzaDiscromie(),
-    composeLingua(),
     composeEdemi(),
     composeDiscromieVenosa(),
+    conNotaLibera(composeLingua(), state.lingua.nota),
     composeDiuresi(),
     conNotaLibera(composeNeuro(), state.neuro.nota)
   ].filter(Boolean).join(' '));
