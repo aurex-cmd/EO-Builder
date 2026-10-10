@@ -1895,6 +1895,9 @@
 </style>
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+  /* tag della data in alto a destra: solo da leggere, niente freccia */
+  .active-bed-pill.pill-data{ cursor:default; padding-right:14px; }
+  .active-bed-pill.pill-data::after{ display:none; }
   /* parti dell'esame obiettivo nascoste in Impostazioni: solo il titolo,
      una riga che si apre toccandola */
   #clinical-view .card.sezione-nascosta > h2{ cursor:pointer; user-select:none; -webkit-user-select:none; }
@@ -3850,7 +3853,7 @@ applicaTema(temaAttuale());
         <span class="sub">esame obiettivo · click-to-compose</span>
       </div>
     </div>
-    <span class="active-bed-pill" id="active-bed-pill" style="display:none;" onclick="chiudiWardMap()"></span>
+    <span class="active-bed-pill pill-data" id="active-bed-pill"></span>
   </div>
   <div class="header-nav">
     <div class="nav-diari-col">
@@ -9246,18 +9249,21 @@ async function aggiornaVitaliSettore(){
 // pillola col nome del paziente attivo, in alto a destra nell'header
 // (stile prototipo): visibile solo se c'è una scheda aperta, un tap
 // riporta alla scheda clinica
+// in alto a destra: la data di oggi ("sabato 10/10"), al posto del nome
+// dell'ultimo esame obiettivo aperto. Si aggiorna da sola a mezzanotte e
+// quando si torna nell'app
 function renderHeaderBadge(){
   const pill = document.getElementById('active-bed-pill');
   if(!pill) return;
-  const patients = loadPatients();
-  const active = patients[currentPatientId];
-  if(active){
-    pill.textContent = active.name;
-    pill.style.display = '';
-  } else {
-    pill.style.display = 'none';
-  }
+  const oggi = new Date();
+  const giorno = oggi.toLocaleDateString('it-IT', { weekday:'long' });
+  const dd = String(oggi.getDate()).padStart(2, '0');
+  const mm = String(oggi.getMonth() + 1).padStart(2, '0');
+  pill.textContent = `${giorno} ${dd}/${mm}`;
 }
+setInterval(renderHeaderBadge, 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) renderHeaderBadge(); });
+document.addEventListener('DOMContentLoaded', renderHeaderBadge);
 
 // pressione prolungata (1,5 s) su un elemento: usata sui pallini dei
 // settori per "svuota settore", apposta nascosta per non cancellare nulla
