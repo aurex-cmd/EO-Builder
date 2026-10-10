@@ -1895,6 +1895,15 @@
 </style>
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+  /* EGA: cause possibili e avviso di valori incoerenti */
+  #ega-modal .note-box.ega-cause{ font-family:var(--font-body); font-size:13px; line-height:1.45; text-align:left; }
+  #ega-modal .note-box.ega-cause ul{ margin:3px 0 6px; padding-left:18px; }
+  #ega-modal .note-box.ega-cause li{ margin:2px 0; }
+  #ega-modal .ega-causa-tit{ margin-top:9px; font-weight:700; color:var(--ink); }
+  #ega-modal .ega-causa-sub{ font-weight:400; color:var(--ink-dim); }
+  #ega-modal .ega-causa-cons{ font-size:12px; color:var(--ink-dim); }
+  #ega-modal .note-box.ega-allarme{ border-color:var(--acid-border); background:var(--acid-dim); }
+  #ega-modal .note-box.ega-allarme b{ color:var(--acid); }
   /* tag della data in alto a destra: solo da leggere, niente freccia */
   .active-bed-pill.pill-data{ cursor:default; font-size:10.5px; padding:3px 9px; top:-6px; }
   .active-bed-pill.pill-data::after{ display:none; }
@@ -16840,6 +16849,20 @@ try{
       </div>
     </details>
 
+    <details class="admit-altri-radio" id="ega-o2Details">
+      <summary class="admit-altri-radio-summary">pO₂ / FiO₂ (ossigenazione)</summary>
+      <div class="group-row">
+        <div class="group">
+          <div class="group-label">pO₂ mmHg</div>
+          <input type="number" id="ega-po2" inputmode="decimal" step="1" placeholder="80">
+        </div>
+        <div class="group">
+          <div class="group-label">FiO₂ % (vuoto = aria)</div>
+          <input type="number" id="ega-fio2" inputmode="decimal" step="1" placeholder="21">
+        </div>
+      </div>
+    </details>
+
     <button class="btn primary" style="margin-top:14px;" onclick="egaAnalyze()">Analizza</button>
 
     <div id="ega-output-card">
@@ -16854,17 +16877,31 @@ try{
         <span class="value" id="ega-compValue"></span>
       </div>
 
+      <div class="note-box ega-allarme" id="ega-coerenza" style="display:none;"></div>
       <div class="note-box" id="ega-interpretationNote"></div>
 
       <div class="ag-section" id="ega-agSection" style="display:none;">
+        <div id="ega-agBlocco">
         <h3>Anion Gap</h3>
         <div class="detail-line"><span class="label">AG</span><span class="value" id="ega-outAg"></span></div>
         <div class="detail-line" id="ega-agCorrLine" style="display:none;"><span class="label">AG corretto</span><span class="value" id="ega-outAgCorr"></span></div>
         <div class="detail-line" id="ega-deltaLine" style="display:none;"><span class="label">Delta ratio</span><span class="value" id="ega-outDelta"></span></div>
         <div class="note-box" id="ega-agNote"></div>
+        </div>
         <div class="detail-line" id="ega-lacLine" style="display:none;"><span class="label">Lattati</span><span class="value" id="ega-outLac"></span></div>
         <div class="note-box lac" id="ega-lacNote" style="display:none;"></div>
       </div>
+
+      <div class="ag-section" id="ega-o2Section" style="display:none;">
+        <h3>Ossigenazione</h3>
+        <div class="detail-line"><span class="label">pO₂</span><span class="value" id="ega-outPo2"></span></div>
+        <div class="detail-line"><span class="label">FiO₂</span><span class="value" id="ega-outFio2"></span></div>
+        <div class="detail-line"><span class="label">P/F</span><span class="value" id="ega-outPf"></span></div>
+        <div class="detail-line"><span class="label">Gradiente A-a</span><span class="value" id="ega-outAa"></span></div>
+        <div class="note-box" id="ega-o2Note"></div>
+      </div>
+
+      <div class="note-box ega-cause" id="ega-cause" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -17184,8 +17221,10 @@ try{
 <script>
 // ============================================================
 // EGA ANALYZER — tool standalone dell'utente, integrato come modale.
-// Logica clinica IDENTICA all'originale (Winter, Narins-Emmett, anion gap,
-// delta ratio, lattati): qui solo id/nomi con prefisso "ega" e l'aggiunta
+// Basato sul tool originale (Winter, formule di compenso, anion gap,
+// delta ratio, lattati), poi rivisto: disturbo primitivo scelto dal pH,
+// controllo di coerenza dei valori, cause possibili e ossigenazione.
+// Id/nomi con prefisso "ega" e l'aggiunta
 // di apertura/chiusura del modale + riconoscimento/estrazione dal diario.
 // ============================================================
 let egaIsChronic = false;
@@ -17250,22 +17289,78 @@ function egaAnalyze(){
     return {min: exp-range, max: exp+range, val: exp};
   }
 
+  // suggerimento quando con "Acuto" il quadro sembra misto ma con le
+  // formule del cronico tornerebbe un disturbo semplice (es. BPCO ipercapnica)
+  function suggerisciCronico(fitsChronic){
+    if (!egaIsChronic && fitsChronic) note += ' Se il disturbo respiratorio è <b>cronico</b> (es. BPCO, ipoventilazione cronica) i valori sono invece compatibili con un compenso adeguato: seleziona "Cronico".';
+  }
+
   if (normalPH && !metAcid && !metAlk && !respAcid && !respAlk){
     badgeClass = 'normale';
     diagnosis = 'Equilibrio acido-base nella norma';
-    note = 'Tutti i parametri rientrano nei range di normalità (pH 7.35–7.45, pCO₂ 35–45, HCO₃⁻ 22–26).';
+    note = 'Tutti i parametri rientrano nei range di normalità (pH 7.35–7.45, pCO₂ 35–45, HCO₃⁻ 22–26). Un anion gap elevato (se calcolato) può comunque rivelare un disturbo nascosto.';
   }
-  else if (normalPH && (metAcid || metAlk || respAcid || respAlk)){
+  else if (normalPH && respAcid && metAlk && ph <= 7.40 && (() => { const r = respAcidExpected(pco2, true); return hco3 >= r.min && hco3 <= r.max; })()){
+    const r = respAcidExpected(pco2, true);
+    badgeClass='acidosi'; diagnosis='Acidosi respiratoria cronica compensata (pH nei limiti)';
+    showComp = true; compLabel = 'HCO₃⁻ atteso (cronico)'; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+    note = `pH nei limiti ma sul versante acido, pCO₂ alta e HCO₃⁻ ${egaFmt(hco3)} nel range atteso per un'acidosi respiratoria cronica (${egaFmt(r.min)}–${egaFmt(r.max)}): quadro tipico della BPCO ipercapnica stabile. Un compenso che normalizza del tutto il pH è però raro: se il quadro non è cronico, considerare un'alcalosi metabolica associata (diuretici, vomito, steroidi).`;
+  }
+  else if (normalPH && respAcid && metAlk && ph > 7.40 && (() => { const e = metAlkExpected(hco3); return pco2 >= e.min && pco2 <= e.max; })()){
+    const e = metAlkExpected(hco3);
+    badgeClass='alcalosi'; diagnosis='Alcalosi metabolica compensata (pH nei limiti)';
+    showComp = true; compLabel = 'pCO₂ attesa'; compValue = `${egaFmt(e.min,0)}–${egaFmt(e.max,0)} mmHg`;
+    note = `pH nei limiti ma sul versante alcalino, HCO₃⁻ alto e pCO₂ (${egaFmt(pco2,0)}) nel range di compenso atteso (${egaFmt(e.min,0)}–${egaFmt(e.max,0)}): alcalosi metabolica con compenso respiratorio.`;
+  }
+  else if (normalPH && respAlk && metAcid && ph >= 7.40 && (() => { const r = respAlkExpected(pco2, true); return hco3 >= r.min && hco3 <= r.max; })()){
+    const r = respAlkExpected(pco2, true);
+    badgeClass='alcalosi'; diagnosis='Alcalosi respiratoria cronica compensata (pH nei limiti)';
+    showComp = true; compLabel = 'HCO₃⁻ atteso (cronico)'; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+    note = `pH nei limiti ma sul versante alcalino, pCO₂ bassa e HCO₃⁻ ${egaFmt(hco3)} nel range atteso per un'alcalosi respiratoria cronica (${egaFmt(r.min)}–${egaFmt(r.max)}): è l'unico disturbo che può compensarsi fino a normalizzare il pH.`;
+  }
+  else if (normalPH && respAlk && metAcid && ph < 7.40 && (() => { const w = winterExpected(hco3); return pco2 >= w.min && pco2 <= w.max; })()){
+    const w = winterExpected(hco3);
+    badgeClass='acidosi'; diagnosis='Acidosi metabolica compensata (pH nei limiti)';
+    showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
+    note = `pH nei limiti ma sul versante acido, HCO₃⁻ basso e pCO₂ (${egaFmt(pco2,0)}) nel range di Winter (${egaFmt(w.min,0)}–${egaFmt(w.max,0)}): acidosi metabolica con compenso respiratorio.`;
+  }
+  else if (normalPH){
     badgeClass = 'misto';
     diagnosis = 'pH normale ma componenti alterate — possibile disturbo misto';
-    note = 'Il pH è normale ma pCO₂ e/o HCO₃⁻ sono fuori range: ciò suggerisce due processi opposti che si compensano a vicenda (es. acidosi metabolica + alcalosi metabolica, o compenso completo). ';
-    if (metAcid && metAlk) note += 'Attenzione: HCO₃⁻ non può essere contemporaneamente alto e basso — controllare il dato inserito.';
-    else if (metAcid && respAlk) note += 'Combinazione compatibile con acidosi metabolica + alcalosi respiratoria concomitante (es. sepsi, salicilati, insufficienza epatica).';
-    else if (metAlk && respAcid) note += 'Combinazione compatibile con alcalosi metabolica + acidosi respiratoria concomitante (es. BPCO riacutizzata in terapia diuretica).';
-    else note += 'Calcolare comunque l\'anion gap per non perdere un\'acidosi metabolica mascherata.';
+    note = 'Il pH è normale ma pCO₂ e/o HCO₃⁻ sono fuori range, oltre quanto spiegabile da un solo disturbo compensato: suggerisce due processi opposti che si bilanciano. ';
+    if (metAcid && respAlk) note += 'Combinazione compatibile con acidosi metabolica + alcalosi respiratoria concomitante (es. sepsi, salicilati, insufficienza epatica).';
+    else if (metAlk && respAcid) note += 'Combinazione compatibile con alcalosi metabolica + acidosi respiratoria concomitante (es. BPCO riacutizzata in terapia diuretica o steroidea).';
+    else note += 'Calcolare comunque l\'anion gap per non perdere un\'acidosi metabolica mascherata da un\'alcalosi metabolica.';
   }
   else if (acidemia){
-    if (metAcid && !respAcid){
+    // disturbo primitivo = quello che spiega l'acidemia; l'altro parametro
+    // si valuta con le formule di compenso anche se è fuori dal range
+    // normale (es. HCO₃⁻ 30 in un'acidosi respiratoria cronica è compenso,
+    // non un'alcalosi metabolica)
+    if (respAcid && metAcid){
+      const w = winterExpected(hco3);
+      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
+      badgeClass='misto'; diagnosis='Acidosi mista: metabolica + respiratoria (entrambe primitive)';
+      note = `HCO₃⁻ basso e pCO₂ alta in un quadro di acidemia: la pCO₂ misurata (${egaFmt(pco2,0)}) supera l'atteso per il solo compenso (max ${egaFmt(w.max,0)}) → entrambi i processi sono primitivi, non solo compenso.`;
+    }
+    else if (respAcid){
+      const r = respAcidExpected(pco2, egaIsChronic);
+      const rc = respAcidExpected(pco2, true);
+      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+      if (hco3 >= r.min && hco3 <= r.max){
+        badgeClass='acidosi'; diagnosis=`Acidosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
+        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
+        if (!egaIsChronic && hco3 > 26) note += ' HCO₃⁻ già sopra la norma: considerare che il quadro sia in parte cronico (acuto su cronico).';
+      } else if (hco3 < r.min){
+        badgeClass='misto'; diagnosis='Acidosi mista: respiratoria + metabolica';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → acidosi metabolica sovrapposta. Calcolare l'anion gap.`;
+      } else {
+        badgeClass='misto'; diagnosis='Acidosi respiratoria + alcalosi metabolica sovrapposta';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → componente di alcalosi metabolica concomitante (es. diuretici, vomito, steroidi in BPCO).`;
+        suggerisciCronico(hco3 >= rc.min && hco3 <= rc.max);
+      }
+    }
+    else if (metAcid){
       const w = winterExpected(hco3);
       showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
       if (pco2 >= w.min && pco2 <= w.max){
@@ -17273,50 +17368,39 @@ function egaAnalyze(){
         note = `Con HCO₃⁻ ${egaFmt(hco3)} la pCO₂ attesa per compenso è ${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg; il valore misurato (${egaFmt(pco2,0)}) rientra nel range → compenso appropriato.`;
       } else if (pco2 > w.max){
         badgeClass='misto'; diagnosis='Acidosi mista: metabolica + respiratoria';
-        note = `pCO₂ misurata (${egaFmt(pco2,0)}) è superiore all'atteso (max ${egaFmt(w.max,0)}) → compenso respiratorio insufficiente / componente respiratoria acidosica sovrapposta.`;
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) superiore all'atteso (max ${egaFmt(w.max,0)}) → compenso respiratorio insufficiente / componente respiratoria acidosica sovrapposta (affaticamento, sedativi, BPCO).`;
       } else {
         badgeClass='misto'; diagnosis='Acidosi metabolica + alcalosi respiratoria sovrapposta';
-        note = `pCO₂ misurata (${egaFmt(pco2,0)}) è inferiore all'atteso (min ${egaFmt(w.min,0)}) → iperventilazione oltre il compenso previsto, suggestiva di alcalosi respiratoria concomitante (es. sepsi, dolore, ansia, salicilati).`;
+        note = `pCO₂ misurata (${egaFmt(pco2,0)}) inferiore all'atteso (min ${egaFmt(w.min,0)}) → iperventilazione oltre il compenso previsto, suggestiva di alcalosi respiratoria concomitante (es. sepsi, dolore, ansia, salicilati).`;
       }
-    }
-    else if (respAcid && !metAcid){
-      const r = respAcidExpected(pco2, egaIsChronic);
-      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
-      if (hco3 >= r.min && hco3 <= r.max){
-        badgeClass='acidosi'; diagnosis=`Acidosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
-        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
-      } else if (hco3 < r.min){
-        badgeClass='misto'; diagnosis='Acidosi mista: respiratoria + metabolica';
-        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → acidosi metabolica sovrapposta. Calcolare l'anion gap.`;
-      } else {
-        badgeClass='misto'; diagnosis='Acidosi respiratoria + alcalosi metabolica sovrapposta';
-        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → componente di alcalosi metabolica concomitante (es. diuretici, vomito, steroidi in BPCO).`;
-      }
-    }
-    else if (metAcid && respAcid){
-      const w = winterExpected(hco3);
-      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
-      if (pco2 > w.max){
-        badgeClass='misto'; diagnosis='Acidosi mista: metabolica + respiratoria (entrambe primitive)';
-        note = `HCO₃⁻ basso e pCO₂ alto in un quadro di acidemia: la pCO₂ misurata (${egaFmt(pco2,0)}) supera ampiamente l'atteso per compenso puro (max ${egaFmt(w.max,0)}) → entrambi i processi sono primitivi, non solo compenso.`;
-      } else {
-        badgeClass='acidosi'; diagnosis='Acidosi metabolica con compenso respiratorio al limite/adeguato';
-        note = `pCO₂ elevata ma comunque coerente con il grado di compenso atteso per l'acidosi metabolica presente (HCO₃⁻ ${egaFmt(hco3)}).`;
-      }
-    }
-    else if (metAlk && respAcid){
-      badgeClass='misto'; diagnosis='Acidosi respiratoria + alcalosi metabolica (disturbo misto)';
-      const r = respAcidExpected(pco2, egaIsChronic);
-      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
-      note = `pH acido con pCO₂ alta (acidosi respiratoria) e HCO₃⁻ alto oltre quanto atteso per compenso (${egaFmt(r.min)}–${egaFmt(r.max)}) → alcalosi metabolica sovrapposta.`;
     }
     else {
       badgeClass='misto'; diagnosis='Quadro complesso — valutare anion gap e contesto clinico';
-      note = 'La combinazione di valori non rientra in un pattern semplice standard: possibile disturbo triplo o errore di laboratorio. Ricontrollare i dati e correlare clinicamente.';
+      note = 'Acidemia senza pCO₂ alta né HCO₃⁻ basso: combinazione non spiegabile da un disturbo semplice. Verificare i valori (errore di trascrizione o di campione) e correlare clinicamente.';
     }
   }
   else if (alkalemia){
-    if (metAlk && !respAlk){
+    if (respAlk && metAlk){
+      badgeClass='misto'; diagnosis='Alcalosi mista: metabolica + respiratoria (entrambe primitive)';
+      note = `HCO₃⁻ alto e pCO₂ bassa in un quadro di alcalemia: i due parametri vanno nella stessa direzione invece di compensarsi → entrambi i processi sono primitivi.`;
+    }
+    else if (respAlk){
+      const r = respAlkExpected(pco2, egaIsChronic);
+      const rc = respAlkExpected(pco2, true);
+      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
+      if (hco3 >= r.min && hco3 <= r.max){
+        badgeClass='alcalosi'; diagnosis=`Alcalosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
+        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
+      } else if (hco3 > r.max){
+        badgeClass='misto'; diagnosis='Alcalosi mista: respiratoria + metabolica';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → alcalosi metabolica sovrapposta.`;
+      } else {
+        badgeClass='misto'; diagnosis='Alcalosi respiratoria + acidosi metabolica sovrapposta';
+        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → componente di acidosi metabolica concomitante. Calcolare l'anion gap.`;
+        suggerisciCronico(hco3 >= rc.min && hco3 <= rc.max);
+      }
+    }
+    else if (metAlk){
       const e = metAlkExpected(hco3);
       showComp = true; compLabel = 'pCO₂ attesa'; compValue = `${egaFmt(e.min,0)}–${egaFmt(e.max,0)} mmHg`;
       if (pco2 >= e.min && pco2 <= e.max){
@@ -17330,39 +17414,27 @@ function egaAnalyze(){
         note = `pCO₂ misurata (${egaFmt(pco2,0)}) superiore all'atteso (max ${egaFmt(e.max,0)}) → ipoventilazione oltre il compenso previsto, componente respiratoria acidosica concomitante.`;
       }
     }
-    else if (respAlk && !metAlk){
-      const r = respAlkExpected(pco2, egaIsChronic);
-      showComp = true; compLabel = `HCO₃⁻ atteso (${egaIsChronic?'cronico':'acuto'})`; compValue = `${egaFmt(r.min)}–${egaFmt(r.max)} mEq/L`;
-      if (hco3 >= r.min && hco3 <= r.max){
-        badgeClass='alcalosi'; diagnosis=`Alcalosi respiratoria ${egaIsChronic?'cronica':'acuta'} semplice, compenso metabolico adeguato`;
-        note = `Con pCO₂ ${egaFmt(pco2,0)}, l'HCO₃⁻ atteso in fase ${egaIsChronic?'cronica':'acuta'} è ${egaFmt(r.min)}–${egaFmt(r.max)}; il valore misurato (${egaFmt(hco3)}) rientra nel range.`;
-      } else if (hco3 > r.max){
-        badgeClass='misto'; diagnosis='Alcalosi mista: respiratoria + metabolica';
-        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) superiore all'atteso (max ${egaFmt(r.max)}) → alcalosi metabolica sovrapposta.`;
-      } else {
-        badgeClass='misto'; diagnosis='Alcalosi respiratoria + acidosi metabolica sovrapposta';
-        note = `HCO₃⁻ misurato (${egaFmt(hco3)}) inferiore all'atteso (min ${egaFmt(r.min)}) → componente di acidosi metabolica concomitante. Calcolare l'anion gap.`;
-      }
-    }
-    else if (metAlk && respAlk){
-      badgeClass='misto'; diagnosis='Alcalosi mista: metabolica + respiratoria (entrambe primitive)';
-      note = `HCO₃⁻ alto e pCO₂ basso in un quadro di alcalemia oltre il range di compenso atteso: entrambi i processi sono verosimilmente primitivi.`;
-    }
-    else if (metAcid && respAlk){
-      badgeClass='misto'; diagnosis='Alcalosi respiratoria + acidosi metabolica (disturbo misto)';
-      const w = winterExpected(hco3);
-      showComp = true; compLabel = 'pCO₂ attesa (Winter)'; compValue = `${egaFmt(w.min,0)}–${egaFmt(w.max,0)} mmHg`;
-      note = `pH alcalino con pCO₂ bassa (alcalosi respiratoria) e HCO₃⁻ basso oltre quanto atteso per compenso semplice → acidosi metabolica sovrapposta (es. sepsi, salicilati).`;
-    }
     else {
       badgeClass='misto'; diagnosis='Quadro complesso — valutare anion gap e contesto clinico';
-      note = 'La combinazione di valori non rientra in un pattern semplice standard: possibile disturbo triplo o errore di laboratorio. Ricontrollare i dati e correlare clinicamente.';
+      note = 'Alcalemia senza pCO₂ bassa né HCO₃⁻ alto: combinazione non spiegabile da un disturbo semplice. Verificare i valori (errore di trascrizione o di campione) e correlare clinicamente.';
     }
   }
 
   document.getElementById('ega-outPh').textContent = egaFmt(ph,2) + (acidemia?' (acidemia)':alkalemia?' (alcalemia)':' (normale)');
   document.getElementById('ega-outPco2').textContent = egaFmt(pco2,0) + ' mmHg' + (respAcid?' ↑':respAlk?' ↓':'');
   document.getElementById('ega-outHco3').textContent = egaFmt(hco3,1) + ' mEq/L' + (metAcid?' ↓':metAlk?' ↑':'');
+
+  // i tre valori devono essere coerenti tra loro: pH = 6.1 + log(HCO₃⁻ / 0.03·pCO₂).
+  // Uno scarto ampio indica quasi sempre un errore di trascrizione (o un
+  // HCO₃⁻ preso da un prelievo diverso): l'interpretazione non è affidabile
+  const phCalcolato = 6.1 + Math.log10(hco3 / (0.0307 * pco2));
+  const coerenzaBox = document.getElementById('ega-coerenza');
+  if (Math.abs(phCalcolato - ph) > 0.04){
+    coerenzaBox.style.display = 'block';
+    coerenzaBox.innerHTML = `<b>Valori non coerenti tra loro</b><br>Con pCO₂ ${egaFmt(pco2,0)} e HCO₃⁻ ${egaFmt(hco3)} il pH atteso è ${egaFmt(phCalcolato,2)}, non ${egaFmt(ph,2)}. Ricontrollare i valori inseriti: l'interpretazione qui sotto potrebbe non essere affidabile.`;
+  } else {
+    coerenzaBox.style.display = 'none';
+  }
 
   const badgeEl = document.getElementById('ega-badgeContainer');
   badgeEl.innerHTML = `<span class="badge ${badgeClass}">${badgeClass.toUpperCase()}</span>`;
@@ -17385,13 +17457,14 @@ function egaAnalyze(){
   const cl = parseFloat(document.getElementById('ega-cl').value);
   let alb = parseFloat(document.getElementById('ega-alb').value);
   const agSection = document.getElementById('ega-agSection');
+  let agForDelta = null, deltaRatio = null;
 
   if (!isNaN(na) && !isNaN(cl)){
     agSection.style.display = 'block';
     const ag = na - (cl + hco3);
     document.getElementById('ega-outAg').textContent = egaFmt(ag,1) + ' mEq/L' + (ag>12?' (elevato)':ag<8?' (basso)':' (normale)');
 
-    let agForDelta = ag;
+    agForDelta = ag;
     const agCorrLine = document.getElementById('ega-agCorrLine');
     // il campo è in g/dL, ma nel resto dell'app l'albumina è in g/L:
     // un valore da 10 in su ("35") è chiaramente in g/L e va convertito
@@ -17406,78 +17479,228 @@ function egaAnalyze(){
     }
 
     let agNote = 'AG normale: 8–12 mEq/L (range può variare per metodica laboratorio). ';
+    if (isNaN(alb)) agNote += 'Senza albumina l\'AG può essere sottostimato (ogni g/dL di albumina in meno lo abbassa di ~2,5): nell\'anziano ipoalbuminemico un AG "normale" può nascondere un AG elevato. ';
     const deltaLine = document.getElementById('ega-deltaLine');
-    if (agForDelta > 12 && (metAcid || acidemia)){
-      const deltaRatio = (agForDelta - 12) / (24 - hco3);
-      if (isFinite(deltaRatio) && (24-hco3) !== 0){
-        deltaLine.style.display='flex';
-        document.getElementById('ega-outDelta').textContent = egaFmt(deltaRatio,2);
-        if (deltaRatio < 0.4){
-          agNote += 'Delta ratio &lt;0.4 → acidosi metabolica normocloremica (AG normale) predominante o coesistente con quella ad AG elevato.';
-        } else if (deltaRatio <= 0.8){
-          agNote += 'Delta ratio 0.4–0.8 → possibile combinazione di acidosi ad AG elevato + acidosi normocloremica (AG normale).';
-        } else if (deltaRatio <= 2){
-          agNote += 'Delta ratio 0.8–2 → acidosi metabolica ad anion gap elevato "pura" (consumo di HCO₃⁻ proporzionale all\'accumulo di acidi).';
-        } else {
-          agNote += 'Delta ratio &gt;2 → suggerisce alcalosi metabolica concomitante o HCO₃⁻ basale elevato (es. compenso di acidosi respiratoria cronica preesistente).';
-        }
+    if (agForDelta > 12 && (metAcid || acidemia) && (24 - hco3) > 0){
+      deltaRatio = (agForDelta - 12) / (24 - hco3);
+      deltaLine.style.display='flex';
+      document.getElementById('ega-outDelta').textContent = egaFmt(deltaRatio,2);
+      if (deltaRatio < 0.4){
+        agNote += 'Delta ratio &lt;0.4 → acidosi metabolica normocloremica (AG normale) predominante o coesistente con quella ad AG elevato.';
+      } else if (deltaRatio <= 0.8){
+        agNote += 'Delta ratio 0.4–0.8 → possibile combinazione di acidosi ad AG elevato + acidosi normocloremica (AG normale).';
+      } else if (deltaRatio <= 2){
+        agNote += 'Delta ratio 0.8–2 → acidosi metabolica ad anion gap elevato "pura" (consumo di HCO₃⁻ proporzionale all\'accumulo di acidi).';
       } else {
-        deltaLine.style.display='none';
+        agNote += 'Delta ratio &gt;2 → suggerisce alcalosi metabolica concomitante o HCO₃⁻ basale elevato (es. compenso di acidosi respiratoria cronica preesistente).';
       }
     } else {
       deltaLine.style.display='none';
-      if (agForDelta > 12) agNote += 'Anion gap elevato: considerare cause (chetoacidosi, acidosi lattica, uremia, tossici — MUDPILES/GOLDMARK).';
+      if (agForDelta > 12) agNote += 'Anion gap elevato anche senza HCO₃⁻ basso: può esserci un\'acidosi metabolica mascherata da un\'alcalosi metabolica concomitante.';
     }
     document.getElementById('ega-agNote').innerHTML = '<b>Anion gap</b><br>' + agNote;
-
-    const lac = parseFloat(document.getElementById('ega-lac').value);
-    const lacLine = document.getElementById('ega-lacLine');
-    const lacNoteBox = document.getElementById('ega-lacNote');
-    if (!isNaN(lac)){
-      lacLine.style.display = 'flex';
-      let lacStatus = lac <= 2.2 ? 'normale' : (lac <= 4 ? 'moderatamente elevato' : 'marcatamente elevato');
-      document.getElementById('ega-outLac').textContent = egaFmt(lac,1) + ' mmol/L (' + lacStatus + ')';
-
-      let lacNote = '';
-      if (agForDelta > 12){
-        const gap_excess = agForDelta - 12;
-        const lac_excess = Math.max(lac - 1, 0);
-        const pctExplained = gap_excess > 0 ? Math.min((lac_excess/gap_excess)*100, 200) : 0;
-        if (lac <= 2.2){
-          lacNote = 'Lattati nella norma: l\'anion gap elevato non è spiegato da acidosi lattica → considerare altre cause (chetoacidosi, uremia, tossici — metanolo, glicole etilenico, salicilati).';
-        } else if (pctExplained >= 70){
-          lacNote = `I lattati spiegano gran parte dell'anion gap elevato (~${egaFmt(pctExplained,0)}%) → acidosi lattica verosimilmente la causa predominante. Valutare causa tipo A (ipoperfusione/ipossia) vs tipo B (farmaci, sepsi, epatopatia, neoplasie).`;
-        } else {
-          lacNote = `I lattati sono elevati ma spiegano solo in parte l'anion gap (~${egaFmt(pctExplained,0)}%) → probabile componente mista (acidosi lattica + altra causa di AG elevato, es. chetoacidosi o uremia).`;
-        }
-      } else if (lac > 2.2){
-        lacNote = 'Lattati elevati ma anion gap non elevato: quadro atipico, verificare il dosaggio e considerare iperlattatemia senza acidosi franca o compenso di base alterato.';
-      }
-      if (lacNote){
-        lacNoteBox.style.display = 'block';
-        lacNoteBox.innerHTML = '<b>Lattati</b><br>' + lacNote;
-      } else {
-        lacNoteBox.style.display = 'none';
-      }
-    } else {
-      lacLine.style.display = 'none';
-      lacNoteBox.style.display = 'none';
-    }
   } else {
     agSection.style.display = 'none';
   }
 
+  // lattati: si valutano anche senza Na/Cl (prima, senza anion gap, il
+  // valore inserito veniva ignorato del tutto)
+  const lac = parseFloat(document.getElementById('ega-lac').value);
+  const lacLine = document.getElementById('ega-lacLine');
+  const lacNoteBox = document.getElementById('ega-lacNote');
+  if (!isNaN(lac)){
+    lacLine.style.display = 'flex';
+    const lacStatus = lac <= 2 ? 'normale' : (lac <= 4 ? 'moderatamente elevato' : 'marcatamente elevato');
+    document.getElementById('ega-outLac').textContent = egaFmt(lac,1) + ' mmol/L (' + lacStatus + ')';
+    let lacNote = '';
+    if (agForDelta !== null && agForDelta > 12){
+      const gap_excess = agForDelta - 12;
+      const lac_excess = Math.max(lac - 1, 0);
+      const pctExplained = gap_excess > 0 ? Math.min((lac_excess/gap_excess)*100, 200) : 0;
+      if (lac <= 2){
+        lacNote = 'Lattati nella norma: l\'anion gap elevato non è spiegato da acidosi lattica → considerare altre cause (chetoacidosi, uremia, tossici).';
+      } else if (pctExplained >= 70){
+        lacNote = `I lattati spiegano gran parte dell'anion gap elevato (~${egaFmt(pctExplained,0)}%) → acidosi lattica verosimilmente la causa predominante.`;
+      } else {
+        lacNote = `I lattati sono elevati ma spiegano solo in parte l'anion gap (~${egaFmt(pctExplained,0)}%) → probabile componente mista (acidosi lattica + altra causa di AG elevato, es. chetoacidosi o uremia).`;
+      }
+    } else if (lac > 2){
+      lacNote = agForDelta === null
+        ? 'Lattati elevati: inserire Na⁺ e Cl⁻ per capire quanta parte dell\'acidosi spiegano.'
+        : 'Lattati elevati ma anion gap non elevato: iperlattatemia senza acidosi franca, oppure AG sottostimato (ipoalbuminemia).';
+    }
+    if (lac > 2) lacNote += ' Tipo A (ipoperfusione/ipossia: shock, sepsi, scompenso, ischemia mesenterica) vs tipo B (metformina, insufficienza epatica, neoplasie, convulsioni, β2-agonisti).';
+    if (lac >= 4) lacNote += ' <b>Lattati ≥ 4: rivalutare subito perfusione e possibile sepsi.</b>';
+    if (lacNote){ lacNoteBox.style.display = 'block'; lacNoteBox.innerHTML = '<b>Lattati</b><br>' + lacNote; }
+    else lacNoteBox.style.display = 'none';
+  } else {
+    lacLine.style.display = 'none';
+    lacNoteBox.style.display = 'none';
+  }
+  agSection.style.display = (agForDelta !== null || !isNaN(lac)) ? 'block' : 'none';
+  document.getElementById('ega-agBlocco').style.display = agForDelta !== null ? '' : 'none';
+
+  // possibili cause dei disturbi trovati
+  const comp = egaComponenti(diagnosis, { metAcid, metAlk, respAcid, respAlk });
+  const causeEl = document.getElementById('ega-cause');
+  const causeHtml = egaCauseHtml(comp, agForDelta, deltaRatio, !isNaN(lac) ? lac : null);
+  causeEl.style.display = causeHtml ? 'block' : 'none';
+  causeEl.innerHTML = causeHtml;
+
+  // ossigenazione (facoltativa)
+  egaOssigenazione(pco2);
+
   outputCard.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+// componenti presenti nella diagnosi finale (per elencare le cause)
+function egaComponenti(diagnosi, grezzi){
+  const d = diagnosi.toLowerCase();
+  const c = { metAcid:false, metAlk:false, respAcid:false, respAlk:false };
+  if (d.startsWith('acidosi mista')){ c.metAcid = c.respAcid = true; return c; }
+  if (d.startsWith('alcalosi mista')){ c.metAlk = c.respAlk = true; return c; }
+  if (d.includes('possibile disturbo misto') || d.includes('quadro complesso')) return Object.assign(c, grezzi);
+  const re = /(acidosi|alcalosi)\s+(metabolica|respiratoria)/g;
+  let m;
+  while ((m = re.exec(d))){
+    if (m[1] === 'acidosi') c[m[2] === 'metabolica' ? 'metAcid' : 'respAcid'] = true;
+    else c[m[2] === 'metabolica' ? 'metAlk' : 'respAlk'] = true;
+  }
+  return c;
+}
+
+// cause più frequenti in un reparto di medicina/geriatria, per disturbo
+const EGA_CAUSE = {
+  agAlto: {
+    titolo: 'Acidosi metabolica ad anion gap elevato',
+    voci: [
+      'acidosi lattica: shock/ipoperfusione, sepsi, ipossiemia grave, ischemia mesenterica, metformina (soprattutto con IRC)',
+      'chetoacidosi: diabetica, alcolica, da digiuno prolungato',
+      'insufficienza renale acuta o cronica avanzata (uremia)',
+      'tossici: salicilati, metanolo, glicole etilenico; paracetamolo cronico (5-oxoprolina, anziani malnutriti)'
+    ],
+    consiglio: 'Utili: glicemia e chetonemia, creatinina/urea, lattati; se resta inspiegato, gap osmolare.'
+  },
+  agNormale: {
+    titolo: 'Acidosi metabolica ad anion gap normale (ipercloremica)',
+    voci: [
+      'perdite intestinali di HCO₃⁻: diarrea, fistole o drenaggi biliari/pancreatici, ileostomia, ureterosigmoidostomia',
+      'infusione abbondante di soluzione fisiologica (NaCl 0,9%)',
+      'acidosi tubulare renale; insufficienza renale cronica iniziale-moderata',
+      'ipoaldosteronismo / acidosi tubulare tipo IV (spesso con K⁺ alto): ACE-inibitori/sartani, spironolattone, trimetoprim, eparina, nefropatia diabetica',
+      'acetazolamide; fase di risoluzione della chetoacidosi'
+    ],
+    consiglio: 'Utile il gap anionico urinario (Na⁺ + K⁺ − Cl⁻ urinari): negativo → perdite intestinali; positivo → causa renale.'
+  },
+  metAlk: {
+    titolo: 'Alcalosi metabolica',
+    voci: [
+      'cloro-responsive (Cl⁻ urinario &lt; 20): vomito, sondino naso-gastrico in aspirazione, diuretici sospesi da poco, post-ipercapnia (BPCO ventilata o corretta rapidamente), disidratazione',
+      'cloro-resistenti (Cl⁻ urinario &gt; 40): diuretici dell\'ansa/tiazidici in corso, ipokaliemia grave, steroidi/Cushing, iperaldosteronismo, liquirizia',
+      'carico di alcali: bicarbonato, citrato (trasfusioni multiple), antiacidi (sindrome latte-alcali)'
+    ],
+    consiglio: 'Controllare K⁺ e, se la causa non è evidente, Cl⁻ urinario.'
+  },
+  respAcid: {
+    titolo: 'Acidosi respiratoria',
+    voci: [
+      'farmaci depressori del respiro: oppioidi, benzodiazepine, sedativi; O₂ ad alti flussi nel BPCO ipercapnico',
+      'BPCO o asma riacutizzati; polmonite o edema polmonare gravi con esaurimento muscolare',
+      'ipoventilazione cronica: obesità-ipoventilazione, OSAS, cifoscoliosi',
+      'cause neuromuscolari: SLA, miastenia, Guillain-Barré, ipokaliemia o ipofosfatemia gravi',
+      'lesioni del SNC (tronco encefalico), ipotiroidismo grave'
+    ]
+  },
+  respAlk: {
+    titolo: 'Alcalosi respiratoria',
+    voci: [
+      'ipossiemia: polmonite, embolia polmonare, scompenso cardiaco/edema polmonare, interstiziopatie',
+      'sepsi (fase iniziale), febbre',
+      'dolore, ansia, agitazione',
+      'insufficienza epatica, salicilati (fase iniziale), gravidanza',
+      'patologie del SNC (ictus, emorragia, meningite); ventilazione meccanica eccessiva'
+    ]
+  }
+};
+function egaCauseHtml(comp, ag, deltaRatio, lac){
+  const blocchi = [];
+  const blocco = (k, extra) => {
+    const c = EGA_CAUSE[k];
+    blocchi.push(`<div class="ega-causa-tit">${c.titolo}${extra || ''}</div><ul>${c.voci.map(v => `<li>${v}</li>`).join('')}</ul>` + (c.consiglio ? `<div class="ega-causa-cons">${c.consiglio}</div>` : ''));
+  };
+  if (comp.metAcid){
+    if (ag === null){
+      blocco('agAlto', ' <span class="ega-causa-sub">(se AG elevato)</span>');
+      blocco('agNormale', ' <span class="ega-causa-sub">(se AG normale)</span>');
+      blocchi.push('<div class="ega-causa-cons"><b>Inserire Na⁺ e Cl⁻ (e albumina) per distinguere tra le due.</b></div>');
+    } else if (ag > 12){
+      blocco('agAlto', lac !== null && lac > 2 ? ` <span class="ega-causa-sub">(lattati ${egaFmt(lac,1)})</span>` : '');
+      if (deltaRatio !== null && deltaRatio < 0.8) blocco('agNormale', ' <span class="ega-causa-sub">(coesistente, delta ratio &lt; 0.8)</span>');
+    } else {
+      blocco('agNormale');
+    }
+  }
+  if (comp.metAlk) blocco('metAlk');
+  if (comp.respAcid) blocco('respAcid');
+  if (comp.respAlk) blocco('respAlk');
+  if (!blocchi.length) return '';
+  return '<b>Possibili cause</b>' + blocchi.join('') + '<div class="ega-causa-cons" style="margin-top:8px;">Elenco orientativo: va sempre correlato con anamnesi, terapia in corso e clinica.</div>';
+}
+
+// FiO₂ scritta come 21, 28, 0.21... → frazione; vuota = aria ambiente presunta
+function egaFiO2(){
+  const v = parseFloat(document.getElementById('ega-fio2').value);
+  if (isNaN(v)) return { f: 0.21, presunta: true };
+  return { f: v > 1 ? v / 100 : v, presunta: false };
+}
+// ossigenazione: pO₂, rapporto P/F, gradiente A-a, tipo di insufficienza respiratoria
+function egaOssigenazione(pco2){
+  const sez = document.getElementById('ega-o2Section');
+  const po2 = parseFloat(document.getElementById('ega-po2').value);
+  egaRisultatoO2 = null;
+  if (isNaN(po2)){ sez.style.display = 'none'; return; }
+  sez.style.display = 'block';
+  const { f, presunta } = egaFiO2();
+  const pf = po2 / f;
+  const pAO2 = f * (760 - 47) - pco2 / 0.8;
+  const aa = pAO2 - po2;
+  document.getElementById('ega-outPo2').textContent = egaFmt(po2,0) + ' mmHg' + (po2 < 60 ? ' ↓↓' : po2 < 80 ? ' ↓' : '');
+  document.getElementById('ega-outFio2').textContent = Math.round(f*100) + '%' + (presunta ? ' (aria ambiente, presunta)' : '');
+  document.getElementById('ega-outPf').textContent = egaFmt(pf,0) + (pf >= 300 ? ' (normale)' : pf >= 200 ? ' (lievemente ridotto)' : pf >= 100 ? ' (moderatamente ridotto)' : ' (gravemente ridotto)');
+  document.getElementById('ega-outAa').textContent = egaFmt(aa,0) + ' mmHg';
+
+  let n = '';
+  let tipo = '';
+  if (po2 < 60){
+    tipo = pco2 > 45 ? 'ipossiemico-ipercapnica' : 'ipossiemica';
+    n += `<b>Insufficienza respiratoria ${tipo}</b> (${pco2 > 45 ? 'tipo 2' : 'tipo 1'}): pO₂ &lt; 60 mmHg${pco2 > 45 ? ' con pCO₂ &gt; 45' : ''}. `;
+  } else if (po2 < 80 && f <= 0.22){
+    n += 'Ipossiemia lieve in aria ambiente. ';
+  } else if (f > 0.22 && pf < 300){
+    n += `pO₂ ${egaFmt(po2,0)} mantenuta solo con O₂ supplementare: lo scambio gassoso è comunque compromesso (P/F ${egaFmt(pf,0)}). `;
+  } else {
+    n += 'Ossigenazione nei limiti. ';
+  }
+  n += `Gradiente A-a ${egaFmt(aa,0)} mmHg (atteso circa età/4 + 4, ≈ 25 a 80 anni)`;
+  if (aa > 30) n += ': <b>aumentato</b> → alterato rapporto ventilazione/perfusione, shunt o difetto di diffusione (polmonite, embolia polmonare, edema, interstiziopatia, atelettasie).';
+  else if (po2 < 80 && pco2 > 45) n += ': nei limiti → l\'ipossiemia è spiegata dall\'<b>ipoventilazione</b> (vedi cause dell\'acidosi respiratoria).';
+  else n += '.';
+  if (f > 0.4) n += ' Con FiO₂ elevata il gradiente A-a è poco affidabile: meglio il rapporto P/F.';
+  if (presunta) n += ' FiO₂ non inserita: calcoli fatti in aria ambiente (21%); se il paziente è in O₂ inserirla (in occhialini ~ 21% + 4% per ogni L/min).';
+  document.getElementById('ega-o2Note').innerHTML = '<b>Ossigenazione</b><br>' + n;
+  egaRisultatoO2 = { po2, pf, presunta, tipo };
+}
+let egaRisultatoO2 = null;
+
 function egaResetForm(){
-  ['ega-ph','ega-pco2','ega-hco3','ega-na','ega-cl','ega-alb','ega-lac'].forEach(id => {
+  ['ega-ph','ega-pco2','ega-hco3','ega-na','ega-cl','ega-alb','ega-lac','ega-po2','ega-fio2'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
   });
   egaSetChronicity(false);
   document.getElementById('ega-output-card').classList.remove('show');
   document.getElementById('ega-optionalDetails').open = false;
+  document.getElementById('ega-o2Details').open = false;
 }
 
 // isola, nel testo del diario, solo la porzione dopo "EGA:" fino a fine
@@ -17504,7 +17727,9 @@ function egaParseValori(rigaEga){
     ph:   trova(/\bph\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
     pco2: trova(/\bpco2\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
     hco3: trova(/\bhco3\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
-    lac:  trova(/\blac(?:tati)?\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i)
+    lac:  trova(/\blac(?:tati)?\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
+    po2:  trova(/\bpa?o2\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i),
+    fio2: trova(/\bfio2\s*:?\s*([0-9]+(?:[.,][0-9]+)?)/i) || (/\bin\s+aa\b|aria\s+ambiente/i.test(norm) ? '21' : '')
   };
 }
 
@@ -17522,10 +17747,12 @@ function apriEgaAnalyzer(testoDiario, textareaEl, patientId, opzioni){
   egaContestoAttivo = { textareaEl, patientId, modo, inizio };
   egaResetForm();
   const valori = egaParseValori(modo === 'esame' ? (testoDiario || '') : egaEstraiRiga((testoDiario || '').slice(inizio || 0)));
-  ['ph','pco2','hco3','lac'].forEach(campo => {
+  ['ph','pco2','hco3','lac','po2','fio2'].forEach(campo => {
     const el = document.getElementById('ega-' + campo);
     if(el && valori[campo]) el.value = valori[campo];
   });
+  if(valori.lac) document.getElementById('ega-optionalDetails').open = true;
+  if(valori.po2) document.getElementById('ega-o2Details').open = true;
   document.getElementById('ega-modal-overlay').classList.add('show');
 }
 
@@ -17558,7 +17785,11 @@ const EGA_DIAGNOSI_BREVE = {
   'Alcalosi mista: respiratoria + metabolica': 'alcalosi mista (respiratoria + metabolica)',
   'Alcalosi respiratoria + acidosi metabolica sovrapposta': 'alcalosi respiratoria + acidosi metabolica',
   'Alcalosi mista: metabolica + respiratoria (entrambe primitive)': 'alcalosi mista (metabolica + respiratoria)',
-  'Alcalosi respiratoria + acidosi metabolica (disturbo misto)': 'alcalosi respiratoria + acidosi metabolica'
+  'Alcalosi respiratoria + acidosi metabolica (disturbo misto)': 'alcalosi respiratoria + acidosi metabolica',
+  'Acidosi respiratoria cronica compensata (pH nei limiti)': 'acidosi respiratoria cronica compensata',
+  'Alcalosi metabolica compensata (pH nei limiti)': 'alcalosi metabolica compensata',
+  'Alcalosi respiratoria cronica compensata (pH nei limiti)': 'alcalosi respiratoria cronica compensata',
+  'Acidosi metabolica compensata (pH nei limiti)': 'acidosi metabolica compensata'
 };
 
 // "acidosi metabolica compensata (pH 7.21, pCO2 38 mmHg, HCO3 21 mmol/L,
@@ -17583,8 +17814,14 @@ function egaComponiRigaFinale(){
   if(pco2) pezzi.push('pCO2 ' + pco2 + ' mmHg');
   if(hco3) pezzi.push('HCO3 ' + hco3 + ' mmol/L');
   if(lac) pezzi.push('Lac ' + lac + ' mmol/L');
+  const o2 = egaRisultatoO2;
+  if(o2){
+    pezzi.push('pO2 ' + Math.round(o2.po2) + ' mmHg');
+    if(!o2.presunta) pezzi.push('P/F ' + Math.round(o2.pf));
+  }
+  const ir = o2 && o2.tipo ? ', insufficienza respiratoria ' + o2.tipo : '';
 
-  return 'EGA: ' + diagnosiBreve + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
+  return 'EGA: ' + diagnosiBreve + ir + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
 }
 
 function chiudiEgaAnalyzer(){
@@ -17626,7 +17863,8 @@ function egaComponiRefertoEsame(nuovaRiga, testoPrecedente){
   const d = diagnosi.find(x => resto.trim().toLowerCase().startsWith(x));
   if(d) resto = resto.trim().slice(d.length);
   resto = resto
-    .replace(/\b(?:ph|pco2|hco3|lac(?:tati)?)\s*:?\s*[0-9]+(?:[.,][0-9]+)?(?:\s*(?:mmhg|mmol\/l))?/gi, '')
+    .replace(/,?\s*insufficienza respiratoria (?:ipossiemico-ipercapnica|ipossiemica)/gi, '')
+    .replace(/\b(?:ph|pco2|hco3|lac(?:tati)?|pa?o2|fio2|p\/f)\s*:?\s*[0-9]+(?:[.,][0-9]+)?(?:\s*(?:mmhg|mmol\/l|%))?/gi, '')
     .replace(/\(\s*[,;\s]*\)/g, '')
     .replace(/\s*[,;]\s*(?=[,;])/g, '')
     .replace(/^[\s,;.()]+|[\s,;]+$/g, '')
