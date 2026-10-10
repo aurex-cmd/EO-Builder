@@ -16956,10 +16956,11 @@ try{
       <div class="detail-line"><span class="label">Formula</span><span class="value" id="vfg-outFormula"></span></div>
       <div class="detail-line"><span class="label">Sesso</span><span class="value" id="vfg-outSex"></span></div>
       <div class="detail-line"><span class="label" id="vfg-outStadioLabel">Stadio</span><span class="value" id="vfg-outStadio"></span></div>
+      <div class="note-box" id="vfg-avvisoUnita" style="display:none; font-family:var(--font-body);"></div>
     </div>
 
     <div class="note-box" style="margin-top:14px; font-family:var(--font-body); font-size:11.5px; color:var(--ink-dim); box-shadow:none;">
-      CrCl = [(140–età) × peso] / (72 × creatinina) × 0.85 se donna — stima approssimativa, da usare con cautela in obesità, edemi/ascite, età estreme o massa muscolare ridotta.
+      CrCl = [(140–età) × peso] / (72 × creatinina) × 0.85 se donna — stima approssimativa, da usare con cautela in obesità, edemi/ascite, età estreme o massa muscolare ridotta. È la formula di riferimento per il dosaggio dei farmaci; gli stadi G1–G5 sono quelli KDIGO, pensati per l'eGFR (CKD-EPI) e qui solo indicativi.
     </div>
   </div>
 </div>
@@ -17952,11 +17953,23 @@ function vfgFmt(n, d=1){
 function vfgCalc(){
   const age = parseFloat(document.getElementById('vfg-age').value);
   const weight = parseFloat(document.getElementById('vfg-weight').value);
-  const creat = parseFloat(document.getElementById('vfg-creat').value);
+  let creat = parseFloat(document.getElementById('vfg-creat').value);
 
   if (isNaN(age) || isNaN(weight) || isNaN(creat) || creat <= 0){
     alert('Inserisci età, peso e creatinina (creatinina > 0)');
     return;
+  }
+  // creatinina scritta in µmol/L (es. 120): nessun valore in mg/dL arriva
+  // a 20, quindi la si converte invece di dare una VFG di 0-1 mL/min
+  const avvisoUnita = document.getElementById('vfg-avvisoUnita');
+  if (creat > 20){
+    const originale = creat;
+    creat = Math.round(creat / 88.4 * 100) / 100;
+    document.getElementById('vfg-creat').value = creat;
+    avvisoUnita.style.display = 'block';
+    avvisoUnita.innerHTML = `Creatinina ${originale} interpretata in µmol/L e convertita in <b>${creat} mg/dL</b>.`;
+  } else {
+    avvisoUnita.style.display = 'none';
   }
 
   let vfg = ((140 - age) * weight) / (72 * creat);
@@ -18016,7 +18029,7 @@ function vfgEstraiRiga(testoCompleto){
 }
 
 function vfgParseValori(riga){
-  const norm = riga.replace(',', '.');
+  const norm = riga.replace(/,/g, '.');
   const trova = (regex) => {
     const m = norm.match(regex);
     return m ? m[1] : '';
@@ -19054,15 +19067,20 @@ const SCORE_DB = {
       { tipo:'num', k:'alb', label:'Albumina', unita:'g/L', auto: d => d.alb, decimali:true }
     ],
     calcola(c){
-      const { ca, alb } = c.val;
+      let { ca, alb } = c.val;
       if(ca === null || alb === null) return { totale: '—', esito: 'Inserisci calcio totale e albumina', riga: '' };
+      // unità diverse da quelle del modulo: albumina in g/dL (≤ 6) e calcio
+      // in mmol/L (< 4) vengono convertiti invece di dare un risultato errato
+      const conv = [];
+      if(alb <= 6){ alb = alb * 10; conv.push('albumina letta in g/dL'); }
+      if(ca < 4){ ca = Math.round(ca * 4.008 * 100) / 100; conv.push('calcio letto in mmol/L'); }
       // albumina in g/L: Ca + 0,08 × (40 − albumina), equivalente a
       // Ca + 0,8 × (4 − albumina in g/dL)
       const corr = Math.round((ca + 0.08 * (40 - alb)) * 10) / 10;
       const f = x => Number(x).toFixed(1).replace('.', ',');
       const fa = x => String(Math.round(x * 10) / 10).replace('.', ',');
       const giudizio = corr < 8.5 ? 'ipocalcemia' : corr > 10.5 ? 'ipercalcemia' : 'nella norma';
-      return { totale: f(corr) + ' <span style="font-size:15px;">mg/dL</span>', esito: giudizio.charAt(0).toUpperCase() + giudizio.slice(1) + ' (riferimento indicativo 8,5–10,5 mg/dL)',
+      return { totale: f(corr) + ' <span style="font-size:15px;">mg/dL</span>', esito: giudizio.charAt(0).toUpperCase() + giudizio.slice(1) + ' (riferimento indicativo 8,5–10,5 mg/dL)' + (conv.length ? `<br><span style="font-size:12px;">(${conv.join(', ')} e convertito)</span>` : ''),
         riga: `Calcemia corretta per albumina: ${f(corr)} mg/dL (Ca ${f(ca)} mg/dL, albumina ${fa(alb)} g/L)` };
     },
     nota: ''
