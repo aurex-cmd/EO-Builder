@@ -16860,6 +16860,10 @@ try{
           <div class="group-label">FiO₂ % (vuoto = aria)</div>
           <input type="number" id="ega-fio2" inputmode="decimal" step="1" placeholder="21">
         </div>
+        <div class="group">
+          <div class="group-label">Età anni</div>
+          <input type="number" id="ega-eta" inputmode="numeric" step="1" placeholder="—">
+        </div>
       </div>
     </details>
 
@@ -17681,8 +17685,13 @@ function egaOssigenazione(pco2){
   } else {
     n += 'Ossigenazione nei limiti. ';
   }
-  n += `Gradiente A-a ${egaFmt(aa,0)} mmHg (atteso circa età/4 + 4, ≈ 25 a 80 anni)`;
-  if (aa > 30) n += ': <b>aumentato</b> → alterato rapporto ventilazione/perfusione, shunt o difetto di diffusione (polmonite, embolia polmonare, edema, interstiziopatia, atelettasie).';
+  const eta = parseFloat(document.getElementById('ega-eta').value);
+  const aaAtteso = !isNaN(eta) && eta > 0 ? eta / 4 + 4 : null;
+  document.getElementById('ega-outAa').textContent = egaFmt(aa,0) + ' mmHg' + (aaAtteso !== null ? ` (atteso ≤ ${egaFmt(aaAtteso,0)})` : '');
+  n += aaAtteso !== null
+    ? `Gradiente A-a ${egaFmt(aa,0)} mmHg (atteso per ${Math.round(eta)} anni ≤ ${egaFmt(aaAtteso,0)})`
+    : `Gradiente A-a ${egaFmt(aa,0)} mmHg (età non nota: atteso circa età/4 + 4, ≈ 25 a 80 anni)`;
+  if (aa > (aaAtteso !== null ? aaAtteso : 30)) n += ': <b>aumentato</b> → alterato rapporto ventilazione/perfusione, shunt o difetto di diffusione (polmonite, embolia polmonare, edema, interstiziopatia, atelettasie).';
   else if (po2 < 80 && pco2 > 45) n += ': nei limiti → l\'ipossiemia è spiegata dall\'<b>ipoventilazione</b> (vedi cause dell\'acidosi respiratoria).';
   else n += '.';
   if (f > 0.4) n += ' Con FiO₂ elevata il gradiente A-a è poco affidabile: meglio il rapporto P/F.';
@@ -17691,9 +17700,20 @@ function egaOssigenazione(pco2){
   egaRisultatoO2 = { po2, pf, presunta, tipo };
 }
 let egaRisultatoO2 = null;
+// età del paziente, per il gradiente A-a atteso: dal ricovero aperto (EGA
+// nel Ricovero) oppure dal ricovero collegato alla scheda del diario
+function egaEtaPaziente(modo, patientId){
+  let eta = null;
+  try{
+    if(modo === 'esame') eta = parseFloat(document.getElementById('admit-eta')?.value);
+    // aperto da Strumenti (nessun paziente): niente età presa a caso
+    else if(patientId && typeof scoreRaccogliDati === 'function') eta = scoreRaccogliDati(patientId, '').eta;
+  } catch(e){}
+  return eta && eta > 0 && eta < 120 ? Math.round(eta) : null;
+}
 
 function egaResetForm(){
-  ['ega-ph','ega-pco2','ega-hco3','ega-na','ega-cl','ega-alb','ega-lac','ega-po2','ega-fio2'].forEach(id => {
+  ['ega-ph','ega-pco2','ega-hco3','ega-na','ega-cl','ega-alb','ega-lac','ega-po2','ega-fio2','ega-eta'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
   });
@@ -17751,6 +17771,8 @@ function apriEgaAnalyzer(testoDiario, textareaEl, patientId, opzioni){
     const el = document.getElementById('ega-' + campo);
     if(el && valori[campo]) el.value = valori[campo];
   });
+  const eta = egaEtaPaziente(modo, patientId);
+  if(eta) document.getElementById('ega-eta').value = eta;
   if(valori.lac) document.getElementById('ega-optionalDetails').open = true;
   if(valori.po2) document.getElementById('ega-o2Details').open = true;
   document.getElementById('ega-modal-overlay').classList.add('show');
