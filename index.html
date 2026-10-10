@@ -16949,18 +16949,15 @@ try{
     <button class="btn primary" style="margin-top:14px;" onclick="vfgCalc()">Calcola VFG</button>
 
     <div id="vfg-output-card">
-      <div id="vfg-badgeContainer"></div>
       <div class="vfg-value" id="vfg-vfgValue">— <span class="unit">mL/min</span></div>
-      <div class="diagnosis" id="vfg-diagnosisText"></div>
 
       <div class="detail-line"><span class="label">Formula</span><span class="value" id="vfg-outFormula"></span></div>
       <div class="detail-line"><span class="label">Sesso</span><span class="value" id="vfg-outSex"></span></div>
-      <div class="detail-line"><span class="label" id="vfg-outStadioLabel">Stadio</span><span class="value" id="vfg-outStadio"></span></div>
       <div class="note-box" id="vfg-avvisoUnita" style="display:none; font-family:var(--font-body);"></div>
     </div>
 
     <div class="note-box" style="margin-top:14px; font-family:var(--font-body); font-size:11.5px; color:var(--ink-dim); box-shadow:none;">
-      CrCl = [(140–età) × peso] / (72 × creatinina) × 0.85 se donna — stima approssimativa, da usare con cautela in obesità, edemi/ascite, età estreme o massa muscolare ridotta. È la formula di riferimento per il dosaggio dei farmaci; gli stadi G1–G5 sono quelli KDIGO, pensati per l'eGFR (CKD-EPI) e qui solo indicativi.
+      CrCl = [(140–età) × peso] / (72 × creatinina) × 0.85 se donna — stima approssimativa, da usare con cautela in obesità, edemi/ascite, età estreme o massa muscolare ridotta. È la formula di riferimento per il dosaggio dei farmaci.
     </div>
   </div>
 </div>
@@ -17975,41 +17972,19 @@ function vfgCalc(){
   let vfg = ((140 - age) * weight) / (72 * creat);
   if (vfgSex === 'F') vfg *= 0.85;
 
-  let badgeClass, stageLabel, stadioCode, stadioRange;
-  if (vfg >= 90){
-    badgeClass = 'normale'; stageLabel = 'Funzione renale normale';
-    stadioCode = 'G1'; stadioRange = '≥90';
-  } else if (vfg >= 60){
-    badgeClass = 'lieve'; stageLabel = 'Lieve riduzione (stadio G2)';
-    stadioCode = 'G2'; stadioRange = '60-89';
-  } else if (vfg >= 45){
-    badgeClass = 'lieve'; stageLabel = 'Riduzione lieve-moderata (stadio G3a)';
-    stadioCode = 'G3a'; stadioRange = '45-59';
-  } else if (vfg >= 30){
-    badgeClass = 'moderata'; stageLabel = 'Riduzione moderata-severa (stadio G3b)';
-    stadioCode = 'G3b'; stadioRange = '30-44';
-  } else if (vfg >= 15){
-    badgeClass = 'moderata'; stageLabel = 'Riduzione severa (stadio G4)';
-    stadioCode = 'G4'; stadioRange = '15-29';
-  } else {
-    badgeClass = 'severa'; stageLabel = 'Insufficienza renale terminale (stadio G5)';
-    stadioCode = 'G5'; stadioRange = '<15';
-  }
-
+  // niente stadi: la Cockcroft-Gault stima la clearance della creatinina
+  // (per il dosaggio dei farmaci), gli stadi G1–G5 sono pensati per l'eGFR
   document.getElementById('vfg-vfgValue').innerHTML = vfgFmt(vfg,0) + ' <span class="unit">mL/min</span>';
-  document.getElementById('vfg-badgeContainer').innerHTML = `<span class="badge ${badgeClass}">${badgeClass.toUpperCase()}</span>`;
-  document.getElementById('vfg-diagnosisText').textContent = stageLabel;
   document.getElementById('vfg-outFormula').textContent = 'Cockcroft-Gault';
   document.getElementById('vfg-outSex').textContent = vfgSex === 'M' ? 'Uomo' : 'Donna (×0.85)';
-  document.getElementById('vfg-outStadioLabel').textContent = 'Stadio ' + stadioCode;
-  document.getElementById('vfg-outStadio').textContent = 'VFG ' + stadioRange + ' mL/min';
 
   const outputCard = document.getElementById('vfg-output-card');
-  outputCard.className = 'card show tone-' + badgeClass;
+  outputCard.className = 'card show tone-normale';
   outputCard.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function vfgResetForm(){
+  document.getElementById('vfg-vfgValue').innerHTML = '';
   ['vfg-age','vfg-weight','vfg-creat'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
@@ -18077,26 +18052,11 @@ function apriVfgCalc(testoDiario, textareaEl, patientId, inizio){
   document.getElementById('vfg-modal-overlay').classList.add('show');
 }
 
-// stadio per esteso (invariato nel modale) -> forma abbreviata per la
-// riga del diario, stesso principio di EGA_DIAGNOSI_BREVE. Elenco
-// esaustivo dei 6 stadi che vfgCalc() può produrre
-const VFG_STADIO_BREVE = {
-  'Funzione renale normale': 'funzione renale normale',
-  'Lieve riduzione (stadio G2)': 'lieve riduzione (G2)',
-  'Riduzione lieve-moderata (stadio G3a)': 'riduzione lieve-moderata (G3a)',
-  'Riduzione moderata-severa (stadio G3b)': 'riduzione moderata-severa (G3b)',
-  'Riduzione severa (stadio G4)': 'riduzione severa (G4)',
-  'Insufficienza renale terminale (stadio G5)': 'insufficienza renale terminale (G5)'
-};
-
-// "VFG: 37 mL/min, riduzione moderata-severa (G3b) (età 82, peso 65,
-// creat 1.4)" — valore calcolato + stadio abbreviato + soli parametri
-// effettivamente compilati
+// "VFG: 37 mL/min (età 82 anni, peso 65 kg, creat 1.4 mg/dL)" — valore
+// calcolato + soli parametri effettivamente compilati
 function vfgComponiRigaFinale(){
-  const stadio = document.getElementById('vfg-diagnosisText').textContent.trim();
-  if(!stadio) return null;
-  const stadioBreve = VFG_STADIO_BREVE[stadio] || stadio.toLowerCase();
   const valore = document.getElementById('vfg-vfgValue').textContent.trim();
+  if(!valore) return null;
 
   const pezzi = [];
   const age = document.getElementById('vfg-age').value;
@@ -18106,7 +18066,7 @@ function vfgComponiRigaFinale(){
   if(weight) pezzi.push('peso ' + weight + ' kg');
   if(creat) pezzi.push('creat ' + creat + ' mg/dL');
 
-  return 'VFG: ' + valore + ', ' + stadioBreve + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
+  return 'VFG: ' + valore + (pezzi.length ? ' (' + pezzi.join(', ') + ')' : '');
 }
 
 function chiudiVfgCalc(){
