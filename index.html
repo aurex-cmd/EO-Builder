@@ -1018,6 +1018,7 @@
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
   /* 3. consegna: la tabella vera, in anteprima */
   .ric-consegna{ background:var(--panel-2); border:1px solid var(--clay-border); box-shadow:var(--clay-out-sm); }
+  .ric-consegna.copiata{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal), var(--clay-out-sm); }
   .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
   table.ric-cons td{ border:1px solid #3a4652; padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
@@ -2951,6 +2952,7 @@
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
   /* 3. consegna: la tabella vera, in anteprima */
   .ric-consegna{ background:var(--panel-2); border:1px solid var(--clay-border); box-shadow:var(--clay-out-sm); }
+  .ric-consegna.copiata{ border-color:var(--signal); box-shadow:0 0 0 1px var(--signal), var(--clay-out-sm); }
   .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
   table.ric-cons td{ border:1px solid #cfd6dc; padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
@@ -7551,15 +7553,30 @@ function creaCampoConsegna(rec, chiave, segnaposto){
     // segnaposto (che compare solo a campo :empty) non torna
     if(!el.textContent) el.innerHTML = '';
     salvaCampoConsegna(rec.id, chiave, leggi());
+    if(el.closest('.ric-consegna.copiata')) segnaConsegnaCopiata(rec.id, false);
   });
   el.addEventListener('blur', () => salvaCampoConsegna(rec.id, chiave, leggi(), true));
   return el;
+}
+
+// consegna copiata: contorno teal sul blocco, finché non se ne modifica un campo
+function segnaConsegnaCopiata(id, copiata){
+  document.querySelector('#ricovero-singolo-view .ric-consegna')?.classList.toggle('copiata', copiata);
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === id);
+  if(idx === -1) return;
+  const prima = !!(list[idx].copiati && list[idx].copiati.consegna);
+  if(prima === copiata) return;
+  if(!list[idx].copiati) list[idx].copiati = {};
+  list[idx].copiati.consegna = copiata;
+  saveRicoveri(list);
 }
 
 function renderAnteprimaConsegna(rec){
   const box = document.getElementById('ric-consegna-anteprima');
   if(!box) return;
   box.innerHTML = '';
+  box.closest('.ric-consegna')?.classList.toggle('copiata', !!(rec && rec.copiati && rec.copiati.consegna));
   if(!rec){
     const v = document.createElement('div');
     v.className = 'ric-nota';
@@ -7620,7 +7637,9 @@ function renderAnteprimaConsegna(rec){
     eseguiSalvataggiConsegna();
     eseguiSalvataggioRicoveroForm();
     const aggiornato = loadRicoveri().find(r => r.id === rec.id);
-    if(aggiornato) copiaConsegna(aggiornato);
+    if(!aggiornato) return;
+    copiaConsegna(aggiornato);
+    segnaConsegnaCopiata(rec.id, true);
   };
   azioni.appendChild(lab);
   azioni.appendChild(copia);
