@@ -1010,6 +1010,7 @@
   .ric-pross .altro-esame-del{ width:24px; height:24px; font-size:14px; flex:0 0 auto; }
   .ric-editor{ display:none; margin-bottom:8px; }
   .ric-editor.aperto{ display:block; }
+  .ric-voce.editor-aperto > .ric-anteprima{ display:none; }
   .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#8ab4f8; margin:0 0 4px 2px; }
   .ric-anteprima .admit-editable{ background:var(--panel); font-family:var(--font-body); font-size:14px; line-height:1.5; }
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
@@ -2930,6 +2931,7 @@
   .ric-pross .altro-esame-del{ width:24px; height:24px; font-size:14px; flex:0 0 auto; }
   .ric-editor{ display:none; margin-bottom:8px; }
   .ric-editor.aperto{ display:block; }
+  .ric-voce.editor-aperto > .ric-anteprima{ display:none; }
   .ric-editor-label{ font-family:var(--font-mono); font-size:11px; color:#1f5fb0; margin:0 0 4px 2px; }
   .ric-anteprima .admit-editable{ background:var(--panel); font-family:var(--font-body); font-size:14px; line-height:1.5; }
   .ric-anteprima .admit-editable[contenteditable="false"]{ color:var(--ink-faint); font-style:italic; }
@@ -6342,6 +6344,9 @@ function apriEditorRicovero(idCampo, apri){
   const aperto = apri === undefined ? !ed.classList.contains('aperto') : apri;
   ed.classList.toggle('aperto', aperto);
   if(pill) pill.classList.toggle('aperto', aperto);
+  // un box solo: mentre si scrive si vede il campo, chiuso il campo si vede
+  // il testo composto (quello che si copia), non tutti e due insieme
+  ed.closest('.ric-voce')?.classList.toggle('editor-aperto', aperto);
   if(aperto){
     // l'altezza giusta si legge solo a campo visibile
     ed.querySelectorAll('textarea').forEach(autoResizeTextarea);
@@ -6349,6 +6354,17 @@ function apriEditorRicovero(idCampo, apri){
     if(campo && apri === undefined) campo.focus();
   }
 }
+// uscendo dal campo (tocco altrove, Copia...) il campo si richiude da solo
+// e resta il testo composto
+document.addEventListener('focusout', (e) => {
+  const ed = e.target.closest && e.target.closest('#ricovero-singolo-view .ric-editor.aperto');
+  if(!ed) return;
+  setTimeout(() => {
+    if(ed.contains(document.activeElement)) return;
+    apriEditorRicovero(ed.dataset.editor, false);
+    if(typeof aggiornaPillRicovero === 'function') aggiornaPillRicovero();
+  }, 150);
+});
 function chiudiTuttiEditorRicovero(){
   document.querySelectorAll('#ricovero-singolo-view .ric-editor.aperto').forEach(ed => apriEditorRicovero(ed.dataset.editor, false));
   document.querySelectorAll('#ricovero-singolo-view .ric-pross-riga.opzionale').forEach(r => delete r.dataset.aperta);
