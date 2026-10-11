@@ -1922,21 +1922,11 @@
   .diff-ieri-barra > span{ padding:1px 6px; }
   .diff-ieri-barra button{ margin-left:auto; font-size:11.5px; padding:3px 9px; border-radius:8px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink-dim); cursor:pointer; }
   /* statistiche dei ricoveri (al posto del calendario) */
-  /* colori dei grafici: 6 tinte categoriali in ordine fisso (verificate per
-     daltonismo, una scala per tema) e una scala ordinale per le fasce d'età */
-  :root{
-    --st-1:#3987e5; --st-2:#d95926; --st-3:#199e70; --st-4:#c98500; --st-5:#d55181; --st-6:#9085e9;
-    --st-seq-1:#184f95; --st-seq-2:#256abf; --st-seq-3:#3987e5; --st-seq-4:#6da7ec; --st-seq-5:#9ec5f4;
-  }
-  :root[data-tema="chiaro"]{
-    --st-1:#2a78d6; --st-2:#eb6834; --st-3:#1baf7a; --st-4:#eda100; --st-5:#e87ba4; --st-6:#6250d6;
-    --st-seq-1:#86b6ef; --st-seq-2:#5598e7; --st-seq-3:#2a78d6; --st-seq-4:#1c5cab; --st-seq-5:#0d366b;
-  }
   .ric-stat-link{ font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer; text-decoration:none; }
   .ric-stat{ padding-top:4px; }
   .ric-stat-tit{ font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-dim); margin:18px 0 9px; }
   .ric-stat-tiles{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
-  .ric-stat-tile{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accento, var(--line)); border-radius:12px; padding:10px 12px; min-width:0; }
+  .ric-stat-tile{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; }
   .ric-stat-tile .v{ font-size:22px; font-weight:700; color:var(--ink); line-height:1.15; font-variant-numeric:tabular-nums; }
   .ric-stat-tile .l{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
   .ric-stat-tile .n{ font-size:11px; color:var(--ink-faint); margin-top:3px; overflow-wrap:anywhere; }
@@ -1944,24 +1934,24 @@
   .ric-stat-col{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; cursor:default; }
   .ric-stat-col .num{ font-size:10.5px; color:var(--ink-dim); height:15px; font-variant-numeric:tabular-nums; }
   .ric-stat-col .area{ flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; }
-  .ric-stat-col .bar{ width:min(70%, 26px); background:var(--colore, var(--st-1)); border-radius:4px 4px 0 0; }
+  .ric-stat-col .bar{ width:min(70%, 26px); background:var(--signal); border-radius:4px 4px 0 0; }
   .ric-stat-col:hover .bar{ filter:brightness(1.15); }
   .ric-stat-col .lab{ font-size:10.5px; color:var(--ink-faint); padding-top:4px; height:18px; white-space:nowrap; }
   .ric-stat-bars + .ric-stat-tit{ margin-top:26px; }
   .ric-stat-sesso{ display:flex; gap:2px; height:10px; margin-top:10px; border-radius:5px; overflow:hidden; }
-  .ric-stat-sesso .f{ background:var(--st-5); } .ric-stat-sesso .m{ background:var(--st-1); }
+  /* F/M: rosa e blu (tinte verificate per daltonismo, una per tema) */
+  :root{ --st-f:#d55181; --st-m:#3987e5; }
+  :root[data-tema="chiaro"]{ --st-f:#e87ba4; --st-m:#2a78d6; }
+  .ric-stat-sesso .f{ background:var(--st-f); } .ric-stat-sesso .m{ background:var(--st-m); }
   .ric-stat-legenda{ display:flex; gap:14px; font-size:11.5px; color:var(--ink-dim); margin-top:6px; }
   .ric-stat-legenda i{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
-  .ric-stat-legenda i.f{ background:var(--st-5); } .ric-stat-legenda i.m{ background:var(--st-1); }
+  .ric-stat-legenda i.f{ background:var(--st-f); } .ric-stat-legenda i.m{ background:var(--st-m); }
   .ric-stat-riga{ margin-bottom:9px; }
   .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:4px; }
   .ric-stat-riga .nome{ min-width:0; overflow-wrap:anywhere; }
   .ric-stat-riga .val{ color:var(--ink-dim); white-space:nowrap; font-variant-numeric:tabular-nums; }
   .ric-stat-riga .traccia{ height:6px; background:var(--panel); border-radius:3px; }
-  .ric-stat-riga .bar{ height:100%; background:var(--colore, var(--st-1)); border-radius:3px; }
-  .ric-stat-riga .nome i{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
-  .ric-stat-legenda{ flex-wrap:wrap; }
-  .ric-stat-bars + .ric-stat-legenda{ margin-top:8px; }
+  .ric-stat-riga .bar{ height:100%; background:var(--signal); border-radius:3px; }
   #diari-testa.fissa{
     position:sticky; top:var(--altezza-header, 0px); z-index:4;
     margin:-10px -17px 12px; padding:10px 17px 0;
@@ -7193,10 +7183,9 @@ function renderStatisticheRicoveri(el, list){
   const tiles = arr => {
     const g = document.createElement('div');
     g.className = 'ric-stat-tiles';
-    arr.forEach(([valore, etichetta, nota, accento]) => {
+    arr.forEach(([valore, etichetta, nota]) => {
       const t = document.createElement('div');
       t.className = 'ric-stat-tile';
-      if(accento) t.style.setProperty('--accento', accento);
       t.innerHTML = '<div class="v"></div><div class="l"></div>' + (nota ? '<div class="n"></div>' : '');
       t.querySelector('.v').textContent = valore;
       t.querySelector('.l').textContent = etichetta;
@@ -7217,7 +7206,6 @@ function renderStatisticheRicoveri(el, list){
       c.innerHTML = '<div class="num"></div><div class="area"><div class="bar"></div></div><div class="lab"></div>';
       c.querySelector('.num').textContent = d.n || '';
       c.querySelector('.bar').style.height = (d.n ? Math.max(3, d.n / max * 100) : 0) + '%';
-      if(d.colore) c.querySelector('.bar').style.setProperty('--colore', d.colore);
       c.querySelector('.lab').textContent = d.etichetta;
       g.appendChild(c);
     });
@@ -7231,54 +7219,33 @@ function renderStatisticheRicoveri(el, list){
       r.className = 'ric-stat-riga';
       r.innerHTML = '<div class="testo"><span class="nome"></span><span class="val"></span></div><div class="traccia"><div class="bar"></div></div>';
       r.querySelector('.nome').textContent = d.testo;
-      if(d.colore){
-        r.querySelector('.bar').style.setProperty('--colore', d.colore);
-        const q = document.createElement('i'); q.style.background = d.colore;
-        r.querySelector('.nome').prepend(q);
-      }
       r.querySelector('.val').textContent = d.n + ' · ' + pct(d.n, tot);
       r.querySelector('.bar').style.width = (d.n / max * 100) + '%';
       el.appendChild(r);
     });
   };
 
-  const legenda = voci => {
-    const l = document.createElement('div');
-    l.className = 'ric-stat-legenda';
-    voci.forEach(([colore, testo]) => {
-      const sp = document.createElement('span');
-      const q = document.createElement('i'); q.style.background = colore;
-      sp.appendChild(q); sp.append(testo);
-      l.appendChild(sp);
-    });
-    el.appendChild(l);
-  };
-  const ST = i => `var(--st-${i})`;
-
   tiles([
-    [fmt(tot, 0), 'ricoveri totali', 'dal ' + primo.toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' }), ST(1)],
-    [fmt(questoMese, 0), 'questo mese', oggi.toLocaleDateString('it-IT', { month:'long' }), ST(3)],
-    [fmt(tot / mesiTot), 'al mese', 'in media', ST(1)],
-    [fmt(tot / giorniTot), 'al giorno', 'in media su ' + giorniTot + ' giorn' + (giorniTot === 1 ? 'o' : 'i'), ST(6)],
-    [fmt(tot / giorniConRic), 'per giorno di ricovero', giorniConRic + ' giorn' + (giorniConRic === 1 ? 'o' : 'i') + ' con ricoveri', ST(6)],
-    [record ? fmt(record[1], 0) : '–', 'record in un giorno', record ? formattaGiornoEsteso(record[0]) : '', ST(4)]
+    [fmt(tot, 0), 'ricoveri totali', 'dal ' + primo.toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })],
+    [fmt(questoMese, 0), 'questo mese', oggi.toLocaleDateString('it-IT', { month:'long' })],
+    [fmt(tot / mesiTot), 'al mese', 'in media'],
+    [fmt(tot / giorniTot), 'al giorno', 'in media su ' + giorniTot + ' giorn' + (giorniTot === 1 ? 'o' : 'i')],
+    [fmt(tot / giorniConRic), 'per giorno di ricovero', giorniConRic + ' giorn' + (giorniConRic === 1 ? 'o' : 'i') + ' con ricoveri'],
+    [record ? fmt(record[1], 0) : '–', 'record in un giorno', record ? formattaGiornoEsteso(record[0]) : '']
   ]);
 
   sezione('Ricoveri per mese');
-  if(mesi.length) mesi[mesi.length - 1].colore = ST(3);
   colonne(mesi, ['ricovero', 'ricoveri']);
-  legenda([[ST(1), 'mesi precedenti'], [ST(3), 'mese in corso']]);
 
   sezione('Per giorno della settimana');
-  colonne(perSett.map((n, i) => ({ etichetta: GIORNI[i], n, colore: i >= 5 ? ST(2) : ST(1) })), ['ricovero', 'ricoveri']);
-  legenda([[ST(1), 'feriali'], [ST(2), 'weekend']]);
+  colonne(perSett.map((n, i) => ({ etichetta: GIORNI[i], n })), ['ricovero', 'ricoveri']);
 
   sezione('Pazienti');
   tiles([
-    [fmt(femmine, 0), 'femmine', pct(femmine, tot) + ' · età media ' + etaPerSesso('F'), ST(5)],
-    [fmt(maschi, 0), 'maschi', pct(maschi, tot) + ' · età media ' + etaPerSesso('M'), ST(1)],
-    [eta.length ? fmt(media) : '–', 'età media', eta.length ? 'mediana ' + fmt(mediana) : 'età non indicata', 'var(--st-seq-3)'],
-    [eta.length ? eta[0] + '–' + eta[eta.length - 1] : '–', 'età minima e massima', eta.length < tot ? (tot - eta.length) + ' senza età' : '', 'var(--st-seq-3)']
+    [fmt(femmine, 0), 'femmine', pct(femmine, tot) + ' · età media ' + etaPerSesso('F')],
+    [fmt(maschi, 0), 'maschi', pct(maschi, tot) + ' · età media ' + etaPerSesso('M')],
+    [eta.length ? fmt(media) : '–', 'età media', eta.length ? 'mediana ' + fmt(mediana) : 'età non indicata'],
+    [eta.length ? eta[0] + '–' + eta[eta.length - 1] : '–', 'età minima e massima', eta.length < tot ? (tot - eta.length) + ' senza età' : '']
   ]);
   const barraSesso = document.createElement('div');
   barraSesso.className = 'ric-stat-sesso';
@@ -7287,25 +7254,24 @@ function renderStatisticheRicoveri(el, list){
   barraSesso.querySelector('.m').style.flexGrow = maschi;
   barraSesso.title = `F ${femmine} (${pct(femmine, tot)}) · M ${maschi} (${pct(maschi, tot)})`;
   el.appendChild(barraSesso);
-  legenda([[ST(5), 'F ' + pct(femmine, tot)], [ST(1), 'M ' + pct(maschi, tot)]]);
+  const legSesso = document.createElement('div');
+  legSesso.className = 'ric-stat-legenda';
+  legSesso.innerHTML = '<span><i class="f"></i>F ' + pct(femmine, tot) + '</span><span><i class="m"></i>M ' + pct(maschi, tot) + '</span>';
+  el.appendChild(legSesso);
 
   if(eta.length){
     sezione('Fasce d’età');
-    // scala ordinale di una sola tinta: più intensa con l'età
-    fasce.forEach((f, i) => { f.colore = `var(--st-seq-${i + 1})`; });
     colonne(fasce, ['paziente', 'pazienti']);
   }
 
   if(Object.keys(perReparto).length > 1){
     sezione('Per reparto');
-    // colore fisso per reparto (in ordine alfabetico), non per posizione in classifica
-    const reparti = Object.keys(perReparto).sort();
-    righe(Object.entries(perReparto).sort((a, b) => b[1] - a[1]).map(([testo, n]) => ({ testo, n, colore: ST(reparti.indexOf(testo) % 6 + 1) })));
+    righe(Object.entries(perReparto).sort((a, b) => b[1] - a[1]).map(([testo, n]) => ({ testo, n })));
   }
 
   if(diagnosi.length){
     sezione('Diagnosi più frequenti');
-    righe(diagnosi.map((d, i) => Object.assign({ colore: ST(i + 1) }, d)));
+    righe(diagnosi);
   }
 }
 
