@@ -12239,7 +12239,7 @@ function renderRiepilogo(){
     copiaBtn.innerHTML = SVG_COPIA_DIARIO;
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
-      if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); }
+      if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); aggiornaStrisciaRepartoDiari(); }
     };
 
     titleRow.appendChild(titleWrap);
@@ -12396,6 +12396,7 @@ function renderRiepilogo(){
       const nuovi = rigaAiutiDiario(pAgg, id);
       segnapostoAiuti.innerHTML = '';
       if(nuovi) segnapostoAiuti.appendChild(nuovi);
+      aggiornaStrisciaRepartoDiari();
     };
     const righeIeri = diarioRigheDiIeri(p);
     if(righeIeri.size){
@@ -12473,7 +12474,14 @@ let diariGiornoScelto = 'oggi';
 // ogni diario dell'elenco (letti, appoggi, letti consegnati da vedere),
 // con gli stessi colori e pallini di Reparto. Toccandone uno si scorre al
 // suo diario
+let nomiStrisciaReparto = [];
+// ridisegna solo la striscia (dopo Copia, o mentre si scrive): baffo verde
+// e pallini E/D si aggiornano subito, senza ridisegnare i diari
+function aggiornaStrisciaRepartoDiari(){
+  if(diariVistaReparto && !diariMostraIeri && !diariVistaConsegne) renderStrisciaRepartoDiari(nomiStrisciaReparto);
+}
 function renderStrisciaRepartoDiari(nomi){
+  nomiStrisciaReparto = nomi.slice();
   const el = document.getElementById('diari-reparto-strip');
   if(!el) return;
   el.innerHTML = '';
