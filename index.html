@@ -10557,12 +10557,12 @@ function dateEsamiPaziente(p, id, extra){
 function dateDimissionePaziente(p, id, extra){
   return conDataRiferimento(giornoDiarioScritto(p), () => estraiDimissioniProgrammate(extra)).sort((a, b) => a - b);
 }
-// pallini del letto/diario: E = esami domani, D = dimissione oggi o domani
+// pallini del letto/diario: restano finché la frase è scritta nel diario,
+// anche nei giorni in cui il diario non viene aggiornato (letto viola) —
+// E = esami domani, D = dimissione oggi (con le bande blu) o domani. Il
+// letto del dimesso oggi si svuota da solo il giorno dopo (pulisciSchedeDimessi)
 function pallinidataLetto(p, id, extra){
-  const oggiK = chiaveGiorno(Date.now()), domaniK = chiaveGiorno(Date.now() + 864e5);
-  const esami = dateEsamiPaziente(p, id, extra).map(v => chiaveGiorno(v.data.getTime()));
-  const dim = dateDimissionePaziente(p, id, extra).map(d => chiaveGiorno(d.getTime()));
-  return { esamiDomani: esami.includes(domaniK), dimOggi: dim.includes(oggiK), dimDomani: dim.includes(domaniK) };
+  return { esamiDomani: haEsamiDomani(extra), dimOggi: haDimissioneOggi(extra), dimDomani: haDimissioneDomani(extra) };
 }
 
 // la prossima data (oggi compreso) che cade in quel giorno della settimana
