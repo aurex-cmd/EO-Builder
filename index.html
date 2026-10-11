@@ -11860,7 +11860,17 @@ function antibioticiInCorso(p, idPaziente){
       const dInizio = frasiIntere.map(f => dataInizioScritta(f, giorni[i].giorno)).find(x => x);
       if(dInizio){ n = giorniTra(dInizio, oggi) + 1; break; }
       const g = frasiIntere.map(giornataScritta).find(x => x);
-      if(g){ n = g + giorniTra(giorni[i].giorno, oggi); break; }
+      if(g){
+        // la stessa giornata ricopiata uguale nei diari successivi (le
+        // aggiunte passano da un giorno all'altro senza essere riscritte)
+        // conta dal giorno in cui è stata scritta la PRIMA volta: "V
+        // giornata" scritto ieri e rimasto oggi è oggi la VI, non la V
+        let j = i;
+        const giornataDel = k => (giorni[k].testo || '').split(/[;\n]|\.(?!\d)/).filter(f => reG.test(f)).map(giornataScritta).find(x => x);
+        while(j > 0 && giorniTra(giorni[j - 1].giorno, giorni[j].giorno) <= 3 && giornataDel(j - 1) === g) j--;
+        n = g + giorniTra(giorni[j].giorno, oggi);
+        break;
+      }
       if(giorni[i].giorno < inizio) break;
     }
     risultati.push({ nome, giorni: n, etichetta: `${nome} ${numeroRomano(n)} ${n === 1 ? 'g' : 'gg'}`, livello: n >= 14 ? 2 : n >= 7 ? 1 : 0 });
