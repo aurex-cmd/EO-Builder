@@ -5036,6 +5036,18 @@ function leggiValoreSincronizzato(key){
 // avviso nella scheda di sincronizzazione (vedi aggiornaStatoSync), invece
 // di restare un fallimento invisibile come prima
 let ultimoPushFallito = false;
+// chiavi il cui ultimo invio non è riuscito: l'avviso resta finché ce n'è
+// almeno una. Prima era un solo interruttore che si spegneva solo con un
+// NUOVO invio riuscito: se nel frattempo lo scaricamento allineava già
+// quella chiave, il ritentativo trovava "niente da inviare" e l'avviso
+// rosso restava acceso per sempre
+const chiaviPushFallite = new Set();
+function segnaEsitoPush(key, riuscito){
+  if(riuscito) chiaviPushFallite.delete(key); else chiaviPushFallite.add(key);
+  const prima = ultimoPushFallito;
+  ultimoPushFallito = chiaviPushFallite.size > 0;
+  if(prima !== ultimoPushFallito && typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+}
 // stesso concetto, ma per lo SCARICAMENTO dal cloud (cloudPullAll): prima
 // un errore qui (sessione scaduta, rete assente, permessi) veniva
 // ignorato in silenzio — ricaricare la pagina più volte non serviva a
@@ -5066,7 +5078,13 @@ function cloudPush(key, rawValue){
   // quello di un vero cambiamento, non quello di un salvataggio qualsiasi)
   const inalterato = (rawValue === leggiValoreSincronizzato(key));
   segnaScrittaLocale(key, rawValue);
-  if(inalterato || !supabaseClient) return codaCloudPush;
+  if(!supabaseClient) return codaCloudPush;
+  if(inalterato){
+    // già allineata col cloud: un eventuale invio fallito prima per questa
+    // chiave non ha più nulla da recuperare
+    if(chiaviPushFallite.has(key)) codaCloudPush = codaCloudPush.then(() => { if(rawValue === leggiValoreSincronizzato(key)) segnaEsitoPush(key, true); });
+    return codaCloudPush;
+  }
   const invio = async () => {
     try{
       const { data, error: erroreUtente } = await supabaseClient.auth.getUser();
@@ -5096,7 +5114,7 @@ function cloudPush(key, rawValue){
         } else {
           rawValue = attuale;
         }
-        if(rawValue === valoreCloud){ segnaValoreSincronizzato(key, rawValue); return; }
+        if(rawValue === valoreCloud){ segnaValoreSincronizzato(key, rawValue); segnaEsitoPush(key, true); return; }
       }
       // supabase-js NON lancia eccezioni sugli errori del database: li
       // restituisce in { error }. Prima non veniva controllato, quindi un
@@ -5110,13 +5128,13 @@ function cloudPush(key, rawValue){
       }, { onConflict: 'user_id,key' });
       if(error) throw error;
       segnaValoreSincronizzato(key, rawValue);
-      if(ultimoPushFallito){ ultimoPushFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+      segnaEsitoPush(key, true);
     } catch(e){
       // resta comunque salvato in locale: non è una perdita di dati, ma
       // finché questo invio non riesce, un altro dispositivo non vedrà
       // questa modifica — va segnalato, non lasciato silenzioso come prima
-      ultimoPushFallito = true;
-      if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+      console.warn('Invio al cloud non riuscito (' + key + '):', e && (e.message || e));
+      segnaEsitoPush(key, false);
       // e va ritentato da solo, invece di aspettare passivamente il
       // prossimo salvataggio dell'utente (che potrebbe non arrivare per
       // minuti, se nel frattempo sta solo leggendo/guardando la scheda)
@@ -5310,6 +5328,13 @@ async function cloudPullAll(){
     }
 
     if(ultimoPullFallito){ ultimoPullFallito = false; if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+    // invii falliti per chiavi che lo scaricamento ha appena riallineato
+    // (stesso contenuto qui e sul cloud): non c'è più nulla da recuperare
+    [...chiaviPushFallite].forEach(k => {
+      let v = null;
+      try{ v = localStorage.getItem(k); } catch(e){}
+      if(v !== null && v === leggiValoreSincronizzato(k)) segnaEsitoPush(k, true);
+    });
 
     // fatto QUI dentro (non in ognuno dei punti che chiamano
     // cloudPullAll), una volta per tutte: questa funzione aggiorna solo il
