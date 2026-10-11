@@ -1913,8 +1913,6 @@
     background:var(--panel-3); border-bottom:1px solid var(--line);
     box-shadow:0 8px 12px -10px rgba(0,0,0,.35);
   }
-  #diari-reparto-strip .settore-dots{ gap:8px; margin-bottom:10px; }
-  #diari-reparto-strip .settore-dot{ width:30px; height:30px; font-size:12px; }
   #diari-reparto-strip .bed-grid{ grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); column-gap:7px; row-gap:9px; }
   #diari-reparto-strip .bed-tile{ font-size:12.5px; cursor:pointer; }
   /* tag della data in alto a destra: solo da leggere, niente freccia */
@@ -3992,8 +3990,8 @@ applicaTema(temaAttuale());
       <button id="diari-seg-consegne" onclick="setDiariModo('consegne')">Consegne</button>
     </div>
   </div>
-  <!-- vista Reparto (solo feriali): letti del settore fissi in alto, i
-       diari del settore scorrono sotto (vedi renderStrisciaRepartoDiari) -->
+  <!-- vista Reparto: i letti dei diari di oggi fissi in alto, i diari
+       scorrono sotto (vedi renderStrisciaRepartoDiari) -->
   <div id="diari-reparto-strip" style="display:none;"></div>
   <div class="group" id="riepilogo-lista"></div>
 </div>
@@ -12099,10 +12097,7 @@ function renderRiepilogo(){
   // oggi: appoggi prima dei letti del settore, in ordine di compilazione
   if(!diariMostraIeri){ const o = ordinaPazientiPerLetto(entries, true); entries.length = 0; o.forEach(e => entries.push(e)); }
 
-  // selettore in alto Oggi/Ieri · Reparto · Consegne: evidenzia la vista
-  // attuale. Reparto solo nei feriali
-  const festivoOggi = eFestivo(new Date());
-  if(diariVistaReparto && festivoOggi) diariVistaReparto = false;
+  // selettore in alto Oggi/Ieri · Reparto · Consegne: evidenzia la vista attuale
   const modo = diariMostraIeri ? 'ieri' : diariVistaConsegne ? 'consegne' : diariVistaReparto ? 'reparto' : 'oggi';
   const bGiorno = document.getElementById('diari-seg-oggi');
   if(bGiorno){
@@ -12116,8 +12111,6 @@ function renderRiepilogo(){
     const b = document.getElementById('diari-seg-' + id);
     if(b){ b.classList.toggle('attivo', m === modo); b.setAttribute('aria-selected', m === modo ? 'true' : 'false'); }
   });
-  const bRep = document.getElementById('diari-seg-reparto');
-  if(bRep) bRep.style.display = festivoOggi ? 'none' : '';
   const striscia = document.getElementById('diari-reparto-strip');
   if(striscia && !diariVistaReparto){ striscia.style.display = 'none'; striscia.innerHTML = ''; }
   // festivo/weekend con le consegne già analizzate: "Consegne" diventa
@@ -12159,20 +12152,14 @@ function renderRiepilogo(){
     entries.length = 0; ordinate.forEach(e => entries.push(e));
   }
 
-  // vista Reparto: solo i diari dei letti (e degli appoggi) del settore,
-  // con la striscia dei letti fissa in alto
-  if(diariVistaReparto){
-    const settore = settoreDiariReparto();
-    const nomiSettore = new Set((getWardMap()[settore] || []).map(bedName).concat(loadAppoggi()[settore] || []));
-    const delSettore = entries.filter(([, p]) => nomiSettore.has(p.name));
-    entries.length = 0; delSettore.forEach(e => entries.push(e));
-    renderStrisciaRepartoDiari(settore);
-  }
+  // vista Reparto: gli stessi diari di oggi, con in alto (fissi) i letti
+  // di tutti i diari dell'elenco, nello stesso ordine
+  if(diariVistaReparto) renderStrisciaRepartoDiari(entries.map(([, p]) => p.name));
 
   if(entries.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
-    vuoto.textContent = diariVistaReparto ? 'Nessun diario scritto oggi in questo settore.' : diariMostraIeri
+    vuoto.textContent = diariMostraIeri
       ? 'Nessuna scheda con dati salvati ieri.'
       : 'Nessuna scheda con dati salvati per ora.';
     container.appendChild(vuoto);
@@ -12482,35 +12469,19 @@ let diariVistaReparto = false;
 // ultimo giorno scelto col pulsante Oggi/Ieri: è quello che il pulsante
 // mostra (e riapre) quando si è in Reparto o in Consegne
 let diariGiornoScelto = 'oggi';
-// settore mostrato nella vista Reparto di Diari: quello aperto in Reparto
-// (il settore delle schede extra non ha letti: si usa il primo del reparto)
-function settoreDiariReparto(){
-  const settori = getSettori().filter(x => repartoDelSettore(x) === getReparto());
-  return (settoreAttivo && settoreAttivo !== SETTORE_EXTRA && settori.includes(settoreAttivo)) ? settoreAttivo : settori[0];
-}
-// striscia fissa in alto: pallini dei settori + letti del settore, con gli
-// stessi colori e pallini di Reparto. Toccando un letto si scorre al suo
-// diario; se oggi non ce n'è, si apre l'esame obiettivo di quel letto
-function renderStrisciaRepartoDiari(settore){
+// striscia fissa in alto nella vista Reparto di Diari: un riquadro per
+// ogni diario dell'elenco (letti, appoggi, letti consegnati da vedere),
+// con gli stessi colori e pallini di Reparto. Toccandone uno si scorre al
+// suo diario
+function renderStrisciaRepartoDiari(nomi){
   const el = document.getElementById('diari-reparto-strip');
   if(!el) return;
-  el.style.display = '';
   el.innerHTML = '';
+  if(!nomi.length){ el.style.display = 'none'; return; }
+  el.style.display = '';
   const patients = loadPatients(), consegne = loadConsegne(), critici = loadCritici();
-  const dots = document.createElement('div');
-  dots.className = 'settore-dots';
-  getSettori().filter(x => repartoDelSettore(x) === getReparto()).forEach(s => {
-    const d = document.createElement('div');
-    d.className = 'settore-dot' + (s === settore ? ' active' : '');
-    d.textContent = s.replace(/^.*Settore\s+/, '');
-    d.title = s;
-    d.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderRiepilogo(); window.scrollTo(0, 0); };
-    dots.appendChild(d);
-  });
-  el.appendChild(dots);
   const grid = document.createElement('div');
   grid.className = 'bed-grid';
-  const nomi = (getWardMap()[settore] || []).map(bedName).concat(loadAppoggi()[settore] || []);
   nomi.forEach(nome => {
     const entry = Object.entries(patients).find(([, p]) => p.name === nome);
     let tile;
@@ -12525,7 +12496,7 @@ function renderStrisciaRepartoDiari(settore){
     }
     tile.onclick = () => {
       const block = document.querySelector(`#riepilogo-lista .referto-block[data-letto="${CSS.escape(nome)}"]`);
-      if(!block){ apriLetto(nome); return; }
+      if(!block) return;
       const header = document.querySelector('header');
       const sopra = (header ? header.offsetHeight : 0) + el.offsetHeight + 10;
       window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - sopra, behavior: 'smooth' });
