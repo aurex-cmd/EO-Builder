@@ -10221,7 +10221,61 @@ function inizioUltimoFeriale(oggi){
   }
   return chiaveGiorno(d.getTime());
 }
+// LETTI DIMESSI: quando nelle aggiunte del diario c'è "dimesso/a oggi"
+// (o "dimissione odierna"...) la scheda di quel letto si cancella da sola
+// il giorno dopo; con "dimesso/a domani" dal giorno dopo ancora.
+// La data di dimissione si fissa la PRIMA volta che la frase viene vista
+// (p.dimissioneIl), rispetto al giorno in cui è stata scritta: il testo
+// delle aggiunte passa da un giorno all'altro, quindi ricalcolarla ogni
+// giorno la sposterebbe sempre in avanti. Se la frase sparisce o cambia
+// (es. da "domani" a "oggi"), la data si ricalcola
+function tipoDimissioneDiario(extra){
+  if(haDimissioneOggi(extra)) return 'oggi';
+  if(haDimissioneDomani(extra) || /\bdimess[oa]\s+domani\b/.test((extra || '').toLowerCase())) return 'domani';
+  return '';
+}
+function registraDimissioni(patients){
+  let cambiato = false;
+  Object.values(patients).forEach(p => {
+    const tipo = tipoDimissioneDiario((p.state && p.state.outputExtra) || '');
+    if(!tipo){
+      if(p.dimissioneIl){ delete p.dimissioneIl; delete p.dimissioneTipo; cambiato = true; }
+      return;
+    }
+    if(p.dimissioneTipo === tipo && p.dimissioneIl) return;
+    const scritto = new Date(p.savedAt || Date.now());
+    if(tipo === 'domani') scritto.setDate(scritto.getDate() + 1);
+    p.dimissioneIl = chiaveGiorno(scritto.getTime());
+    p.dimissioneTipo = tipo;
+    cambiato = true;
+  });
+  return cambiato;
+}
+function pulisciSchedeDimessi(){
+  const patients = loadPatients();
+  let cambiato = registraDimissioni(patients);
+  const oggi = chiaveGiorno(Date.now());
+  const daEliminare = Object.keys(patients).filter(id => patients[id].dimissioneIl && patients[id].dimissioneIl < oggi);
+  daEliminare.forEach(id => { delete patients[id]; });
+  if(!cambiato && !daEliminare.length) return 0;
+  savePatients(patients);
+  if(!daEliminare.length) return 0;
+  if(currentPatientId && daEliminare.includes(currentPatientId)){
+    chiudiPaziente();
+  } else if(typeof renderWardMap === 'function'){
+    renderWardMap();
+  }
+  if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
+  showToast(daEliminare.length === 1 ? 'Dimessi: 1 letto liberato' : `Dimessi: ${daEliminare.length} letti liberati`);
+  return daEliminare.length;
+}
+// app lasciata aperta a lungo: la data di dimissione va fissata in giornata
+setInterval(() => { try{ pulisciSchedeDimessi(); } catch(e){} }, 10 * 60 * 1000);
+
 function pulisciSchedeWeekend(){
+  // stessi momenti della pulizia del weekend (avvio, rientro nell'app,
+  // dopo la sincronizzazione): prima si liberano i letti dei dimessi
+  pulisciSchedeDimessi();
   const oggi = new Date();
   if(!eFestivo(oggi)) return 0;
   const limite = inizioUltimoFeriale(oggi);
