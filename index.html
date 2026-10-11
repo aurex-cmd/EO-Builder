@@ -1904,6 +1904,19 @@
   #ega-modal .ega-causa-cons{ font-size:12px; color:var(--ink-dim); }
   #ega-modal .note-box.ega-allarme{ border-color:var(--acid-border); background:var(--acid-dim); }
   #ega-modal .note-box.ega-allarme b{ color:var(--acid); }
+  /* Diari: pulsante Oggi/Ieri (in "Ieri" stesso verde di prima) e striscia
+     dei letti fissa in alto nella vista Reparto */
+  .diari-seg button#diari-seg-oggi.giorno-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
+  #diari-reparto-strip{
+    position:sticky; top:var(--altezza-header, 0px); z-index:4;
+    margin:0 -17px 12px; padding:10px 17px 12px;
+    background:var(--panel-3); border-bottom:1px solid var(--line);
+    box-shadow:0 8px 12px -10px rgba(0,0,0,.35);
+  }
+  #diari-reparto-strip .settore-dots{ gap:8px; margin-bottom:10px; }
+  #diari-reparto-strip .settore-dot{ width:30px; height:30px; font-size:12px; }
+  #diari-reparto-strip .bed-grid{ grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); column-gap:7px; row-gap:9px; }
+  #diari-reparto-strip .bed-tile{ font-size:12.5px; cursor:pointer; }
   /* tag della data in alto a destra: solo da leggere, niente freccia */
   .active-bed-pill.pill-data{ cursor:default; font-size:10.5px; padding:3px 9px; top:-6px; }
   .active-bed-pill.pill-data::after{ display:none; }
@@ -3972,11 +3985,16 @@ applicaTema(temaAttuale());
 <div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
   <div class="group">
     <div class="diari-seg" role="tablist">
-      <button id="diari-seg-oggi" onclick="setDiariModo('oggi')">Oggi</button>
-      <button id="diari-seg-ieri" onclick="setDiariModo('ieri')">Ieri</button>
+      <!-- Oggi/Ieri in un solo pulsante: toccato quando è già attivo passa
+           all'altro giorno (vedi toccaDiariGiorno) -->
+      <button id="diari-seg-oggi" onclick="toccaDiariGiorno()">Oggi</button>
+      <button id="diari-seg-reparto" onclick="setDiariModo('reparto')">Reparto</button>
       <button id="diari-seg-consegne" onclick="setDiariModo('consegne')">Consegne</button>
     </div>
   </div>
+  <!-- vista Reparto (solo feriali): letti del settore fissi in alto, i
+       diari del settore scorrono sotto (vedi renderStrisciaRepartoDiari) -->
+  <div id="diari-reparto-strip" style="display:none;"></div>
   <div class="group" id="riepilogo-lista"></div>
 </div>
 
@@ -11631,6 +11649,7 @@ const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005
 
 function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const block = document.createElement('div');
+  block.dataset.letto = nome;
   block.className = 'referto-block ha-consegne consegna-da-vedere' + (loadCritici()[nome] ? ' critico' : '');
   const titleRow = document.createElement('div');
   titleRow.className = 'bed-title-row';
@@ -12080,12 +12099,27 @@ function renderRiepilogo(){
   // oggi: appoggi prima dei letti del settore, in ordine di compilazione
   if(!diariMostraIeri){ const o = ordinaPazientiPerLetto(entries, true); entries.length = 0; o.forEach(e => entries.push(e)); }
 
-  // selettore in alto Oggi · Ieri · Consegne: evidenzia la vista attuale
-  const modo = diariMostraIeri ? 'ieri' : (diariVistaConsegne ? 'consegne' : 'oggi');
-  ['oggi', 'ieri', 'consegne'].forEach(m => {
-    const b = document.getElementById('diari-seg-' + m);
+  // selettore in alto Oggi/Ieri · Reparto · Consegne: evidenzia la vista
+  // attuale. Reparto solo nei feriali
+  const festivoOggi = eFestivo(new Date());
+  if(diariVistaReparto && festivoOggi) diariVistaReparto = false;
+  const modo = diariMostraIeri ? 'ieri' : diariVistaConsegne ? 'consegne' : diariVistaReparto ? 'reparto' : 'oggi';
+  const bGiorno = document.getElementById('diari-seg-oggi');
+  if(bGiorno){
+    const ieriInVista = modo === 'ieri' || ((modo === 'consegne' || modo === 'reparto') && diariGiornoScelto === 'ieri');
+    bGiorno.textContent = ieriInVista ? 'Ieri' : 'Oggi';
+    bGiorno.classList.toggle('giorno-ieri', ieriInVista);
+    bGiorno.classList.toggle('attivo', modo === 'oggi' || modo === 'ieri');
+    bGiorno.setAttribute('aria-selected', (modo === 'oggi' || modo === 'ieri') ? 'true' : 'false');
+  }
+  [['reparto', 'reparto'], ['consegne', 'consegne']].forEach(([m, id]) => {
+    const b = document.getElementById('diari-seg-' + id);
     if(b){ b.classList.toggle('attivo', m === modo); b.setAttribute('aria-selected', m === modo ? 'true' : 'false'); }
   });
+  const bRep = document.getElementById('diari-seg-reparto');
+  if(bRep) bRep.style.display = festivoOggi ? 'none' : '';
+  const striscia = document.getElementById('diari-reparto-strip');
+  if(striscia && !diariVistaReparto){ striscia.style.display = 'none'; striscia.innerHTML = ''; }
   // festivo/weekend con le consegne già analizzate: "Consegne" diventa
   // "Consegne WE" (blu) e mostra le consegne ricevute, letto per letto
   const consegneWE = consegneWeekendAttive();
@@ -12125,10 +12159,20 @@ function renderRiepilogo(){
     entries.length = 0; ordinate.forEach(e => entries.push(e));
   }
 
+  // vista Reparto: solo i diari dei letti (e degli appoggi) del settore,
+  // con la striscia dei letti fissa in alto
+  if(diariVistaReparto){
+    const settore = settoreDiariReparto();
+    const nomiSettore = new Set((getWardMap()[settore] || []).map(bedName).concat(loadAppoggi()[settore] || []));
+    const delSettore = entries.filter(([, p]) => nomiSettore.has(p.name));
+    entries.length = 0; delSettore.forEach(e => entries.push(e));
+    renderStrisciaRepartoDiari(settore);
+  }
+
   if(entries.length === 0){
     const vuoto = document.createElement('div');
     vuoto.className = 'group-label';
-    vuoto.textContent = diariMostraIeri
+    vuoto.textContent = diariVistaReparto ? 'Nessun diario scritto oggi in questo settore.' : diariMostraIeri
       ? 'Nessuna scheda con dati salvati ieri.'
       : 'Nessuna scheda con dati salvati per ora.';
     container.appendChild(vuoto);
@@ -12155,6 +12199,7 @@ function renderRiepilogo(){
     const soloExtra = sepIdx === -1 ? '' : testo.slice(sepIdx + 2).replace(/^\s+/, '');
 
     const block = document.createElement('div');
+    block.dataset.letto = p.name;
     block.className = 'referto-block' + (!diariMostraIeri && p.refertoCopiato && isOggi(p.refertoCopiatoIl) ? ' copiato' : '')
       + (consegneOggi[p.name] ? ' ha-consegne' : '')
       + (!diariMostraIeri && criticiOggi[p.name] ? ' critico' : '');
@@ -12433,8 +12478,78 @@ function renderRiepilogo(){
 }
 
 // selettore Oggi · Ieri · Consegne in cima a Diari
+let diariVistaReparto = false;
+// ultimo giorno scelto col pulsante Oggi/Ieri: è quello che il pulsante
+// mostra (e riapre) quando si è in Reparto o in Consegne
+let diariGiornoScelto = 'oggi';
+// settore mostrato nella vista Reparto di Diari: quello aperto in Reparto
+// (il settore delle schede extra non ha letti: si usa il primo del reparto)
+function settoreDiariReparto(){
+  const settori = getSettori().filter(x => repartoDelSettore(x) === getReparto());
+  return (settoreAttivo && settoreAttivo !== SETTORE_EXTRA && settori.includes(settoreAttivo)) ? settoreAttivo : settori[0];
+}
+// striscia fissa in alto: pallini dei settori + letti del settore, con gli
+// stessi colori e pallini di Reparto. Toccando un letto si scorre al suo
+// diario; se oggi non ce n'è, si apre l'esame obiettivo di quel letto
+function renderStrisciaRepartoDiari(settore){
+  const el = document.getElementById('diari-reparto-strip');
+  if(!el) return;
+  el.style.display = '';
+  el.innerHTML = '';
+  const patients = loadPatients(), consegne = loadConsegne(), critici = loadCritici();
+  const dots = document.createElement('div');
+  dots.className = 'settore-dots';
+  getSettori().filter(x => repartoDelSettore(x) === getReparto()).forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'settore-dot' + (s === settore ? ' active' : '');
+    d.textContent = s.replace(/^.*Settore\s+/, '');
+    d.title = s;
+    d.onclick = () => { settoreAttivo = s; try{ localStorage.setItem(LAST_SETTORE_KEY, s); }catch(e){} renderRiepilogo(); window.scrollTo(0, 0); };
+    dots.appendChild(d);
+  });
+  el.appendChild(dots);
+  const grid = document.createElement('div');
+  grid.className = 'bed-grid';
+  const nomi = (getWardMap()[settore] || []).map(bedName).concat(loadAppoggi()[settore] || []);
+  nomi.forEach(nome => {
+    const entry = Object.entries(patients).find(([, p]) => p.name === nome);
+    let tile;
+    if(entry){
+      tile = tileLettoSolaLettura(entry[0], entry[1], consegne, critici);
+    } else {
+      tile = document.createElement('div');
+      tile.className = 'bed-tile' + (consegne[nome] ? ' ha-consegne' : '') + (critici[nome] ? ' critico' : '');
+      const n = document.createElement('span');
+      n.textContent = inizialiLetto(nome);
+      tile.appendChild(n);
+    }
+    tile.onclick = () => {
+      const block = document.querySelector(`#riepilogo-lista .referto-block[data-letto="${CSS.escape(nome)}"]`);
+      if(!block){ apriLetto(nome); return; }
+      const header = document.querySelector('header');
+      const sopra = (header ? header.offsetHeight : 0) + el.offsetHeight + 10;
+      window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - sopra, behavior: 'smooth' });
+    };
+    grid.appendChild(tile);
+  });
+  el.appendChild(grid);
+  aggiornaAltezzaHeader();
+}
+// la striscia si ferma subito sotto l'intestazione (anch'essa fissa)
+function aggiornaAltezzaHeader(){
+  const header = document.querySelector('header');
+  if(header) document.documentElement.style.setProperty('--altezza-header', header.offsetHeight + 'px');
+}
+window.addEventListener('resize', aggiornaAltezzaHeader);
+
+function toccaDiariGiorno(){
+  const attivo = !diariVistaConsegne && !diariVistaReparto;
+  setDiariModo(attivo ? (diariMostraIeri ? 'oggi' : 'ieri') : diariGiornoScelto);
+}
 function setDiariModo(m){
+  if(m === 'oggi' || m === 'ieri') diariGiornoScelto = m;
   diariMostraIeri = (m === 'ieri');
+  diariVistaReparto = (m === 'reparto');
   diariConsegneWEAggiorna = false;
   diariVistaConsegne = (m === 'consegne');
   if(diariVistaConsegne) diariSoloConsegneAttivo = false;
