@@ -9701,7 +9701,8 @@ function renderWardMap(){
     // delle frasi standard con cui si annotano esami di controllo
     // programmati per il giorno dopo (vedi haEsamiDomani)
     const extraTesto = (entry && entry[0] === currentPatientId) ? state.outputExtra : (entry && entry[1].state.outputExtra);
-    if(entry && haEsamiDomani(extraTesto)){
+    const pall = entry ? pallinidataLetto(entry[1], entry[0], extraTesto) : {};
+    if(entry && pall.esamiDomani){
       const esamiBadge = document.createElement('div');
       esamiBadge.className = 'bed-tile-esami-badge';
       esamiBadge.title = 'Esami di controllo programmati per domani';
@@ -9711,14 +9712,14 @@ function renderWardMap(){
     // pallino azzurro "D": per una dimissione già di oggi, o programmata
     // per il giorno dopo (vedi haDimissioneOggi/haDimissioneDomani) — il
     // titolo (tooltip) distingue i due casi, il pallino è lo stesso
-    if(entry && (haDimissioneOggi(extraTesto) || haDimissioneDomani(extraTesto))){
+    if(entry && (pall.dimOggi || pall.dimDomani)){
       const dimissioneBadge = document.createElement('div');
       dimissioneBadge.className = 'bed-tile-dimissione-badge';
-      dimissioneBadge.title = haDimissioneOggi(extraTesto) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
+      dimissioneBadge.title = pall.dimOggi ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       tile.appendChild(dimissioneBadge);
       // oggi: anche le bande diagonali blu sul letto
-      if(haDimissioneOggi(extraTesto)) tile.classList.add('dimissione-oggi');
+      if(pall.dimOggi) tile.classList.add('dimissione-oggi');
     }
     // pallino "i" (isolamento): resta ogni giorno finché il paziente è
     // ricoverato, indipendentemente dal fatto che oggi compaia o no la
@@ -10223,43 +10224,30 @@ function inizioUltimoFeriale(oggi){
 }
 // LETTI DIMESSI: quando nelle aggiunte del diario c'è "dimesso/a oggi"
 // (o "dimissione odierna"...) la scheda di quel letto si cancella da sola
-// il giorno dopo; con "dimesso/a domani" dal giorno dopo ancora.
-// La data di dimissione si fissa la PRIMA volta che la frase viene vista
-// (p.dimissioneIl), rispetto al giorno in cui è stata scritta: il testo
-// delle aggiunte passa da un giorno all'altro, quindi ricalcolarla ogni
-// giorno la sposterebbe sempre in avanti. Se la frase sparisce o cambia
-// (es. da "domani" a "oggi"), la data si ricalcola
+// il giorno dopo; con "dimesso/a domani" dal giorno dopo ancora. Come per
+// le altre frasi relative, "oggi"/"domani" valgono rispetto al giorno in
+// cui il diario è stato scritto l'ultima volta (giornoDiarioScritto): se
+// il giorno dopo il diario viene riscritto e dice ancora "dimessa domani",
+// la dimissione si sposta di conseguenza
 function tipoDimissioneDiario(extra){
   if(haDimissioneOggi(extra)) return 'oggi';
   if(haDimissioneDomani(extra) || /\bdimess[oa]\s+domani\b/.test((extra || '').toLowerCase())) return 'domani';
   return '';
 }
-function registraDimissioni(patients){
-  let cambiato = false;
-  Object.values(patients).forEach(p => {
-    const tipo = tipoDimissioneDiario((p.state && p.state.outputExtra) || '');
-    if(!tipo){
-      if(p.dimissioneIl){ delete p.dimissioneIl; delete p.dimissioneTipo; cambiato = true; }
-      return;
-    }
-    if(p.dimissioneTipo === tipo && p.dimissioneIl) return;
-    const scritto = new Date(p.savedAt || Date.now());
-    if(tipo === 'domani') scritto.setDate(scritto.getDate() + 1);
-    p.dimissioneIl = chiaveGiorno(scritto.getTime());
-    p.dimissioneTipo = tipo;
-    cambiato = true;
-  });
-  return cambiato;
+function dataDimissioneScheda(p){
+  const tipo = tipoDimissioneDiario((p.state && p.state.outputExtra) || '');
+  if(!tipo) return null;
+  const d = new Date(giornoDiarioScritto(p) + 'T12:00:00');
+  if(tipo === 'domani') d.setDate(d.getDate() + 1);
+  return chiaveGiorno(d.getTime());
 }
 function pulisciSchedeDimessi(){
   const patients = loadPatients();
-  let cambiato = registraDimissioni(patients);
   const oggi = chiaveGiorno(Date.now());
-  const daEliminare = Object.keys(patients).filter(id => patients[id].dimissioneIl && patients[id].dimissioneIl < oggi);
-  daEliminare.forEach(id => { delete patients[id]; });
-  if(!cambiato && !daEliminare.length) return 0;
-  savePatients(patients);
+  const daEliminare = Object.keys(patients).filter(id => { const d = dataDimissioneScheda(patients[id]); return d && d < oggi; });
   if(!daEliminare.length) return 0;
+  daEliminare.forEach(id => { delete patients[id]; });
+  savePatients(patients);
   if(currentPatientId && daEliminare.includes(currentPatientId)){
     chiudiPaziente();
   } else if(typeof renderWardMap === 'function'){
@@ -10269,7 +10257,7 @@ function pulisciSchedeDimessi(){
   showToast(daEliminare.length === 1 ? 'Dimessi: 1 letto liberato' : `Dimessi: ${daEliminare.length} letti liberati`);
   return daEliminare.length;
 }
-// app lasciata aperta a lungo: la data di dimissione va fissata in giornata
+// app lasciata aperta a cavallo della mezzanotte
 setInterval(() => { try{ pulisciSchedeDimessi(); } catch(e){} }, 10 * 60 * 1000);
 
 function pulisciSchedeWeekend(){
@@ -10540,11 +10528,48 @@ function haDimissioneOggi(testoExtra){
 // Date.getDay(), per poterli confrontare direttamente
 const NOMI_GIORNI_SETTIMANA = ['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
 
+// FRASI RELATIVE ("oggi", "domani", "lunedì") NEL DIARIO: valgono rispetto
+// al giorno in cui il diario è stato scritto/modificato l'ultima volta
+// (esameAggiornatoIl), non a oggi. "Esami domani" scritto l'11 → esami il
+// 12; se il 12 il diario viene riscritto e dice ancora "esami domani" →
+// esami il 13 (e solo quelli: il 12 sono già stati fatti). Se il diario
+// oggi non è stato toccato, le frasi restano quelle del giorno in cui è
+// stato scritto. DATA_RIF_TESTO è quel giorno durante la lettura (null = oggi)
+let DATA_RIF_TESTO = null;
+function oggiRiferimento(){
+  const d = DATA_RIF_TESTO ? new Date(DATA_RIF_TESTO + 'T00:00:00') : new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function conDataRiferimento(rif, fn){
+  const prima = DATA_RIF_TESTO;
+  DATA_RIF_TESTO = rif;
+  try{ return fn(); } finally{ DATA_RIF_TESTO = prima; }
+}
+function giornoDiarioScritto(p){
+  return chiaveGiorno((p && (p.esameAggiornatoIl || p.savedAt)) || Date.now());
+}
+// date (assolute) degli esami programmati e delle dimissioni scritte nelle
+// aggiunte di un paziente, ciascuna letta rispetto al giorno in cui è stata scritta
+function dateEsamiPaziente(p, id, extra){
+  return conDataRiferimento(giornoDiarioScritto(p), () => aggConsEsamiProgrammati(extra, aggConsDataEsami(extra)));
+}
+function dateDimissionePaziente(p, id, extra){
+  return conDataRiferimento(giornoDiarioScritto(p), () => estraiDimissioniProgrammate(extra)).sort((a, b) => a - b);
+}
+// pallini del letto/diario: E = esami domani, D = dimissione oggi o domani
+function pallinidataLetto(p, id, extra){
+  const oggiK = chiaveGiorno(Date.now()), domaniK = chiaveGiorno(Date.now() + 864e5);
+  const esami = dateEsamiPaziente(p, id, extra).map(v => chiaveGiorno(v.data.getTime()));
+  const dim = dateDimissionePaziente(p, id, extra).map(d => chiaveGiorno(d.getTime()));
+  return { esamiDomani: esami.includes(domaniK), dimOggi: dim.includes(oggiK), dimDomani: dim.includes(domaniK) };
+}
+
 // la prossima data (oggi compreso) che cade in quel giorno della settimana
 function prossimaDataPerGiorno(nomeGiorno, daData){
   const idx = NOMI_GIORNI_SETTIMANA.indexOf(nomeGiorno.toLowerCase());
   if(idx === -1) return null;
-  const base = daData ? new Date(daData) : new Date();
+  const base = daData ? new Date(daData) : oggiRiferimento();
   base.setHours(0,0,0,0);
   const diff = (idx - base.getDay() + 7) % 7;
   const d = new Date(base);
@@ -10570,15 +10595,12 @@ function estraiDimissioniProgrammate(testoExtra){
   // haDimissioneOggi/FRASI_DIMISSIONE_OGGI), qui usate per far comparire
   // la dimissione anche nel Calendario, con la data di oggi
   if(haDimissioneOggi(normalizzato)){
-    const oggi = new Date();
-    oggi.setHours(0,0,0,0);
-    risultati.push(oggi);
+    risultati.push(oggiRiferimento());
   }
 
-  if(/\bdomani\s+dimess[oa]\b/.test(normalizzato) || /\bdimess[oa]\s+domani\b/.test(normalizzato)){
-    const domani = new Date();
+  if(haDimissioneDomani(normalizzato) || /\bdomani\s+dimess[oa]\b/.test(normalizzato) || /\bdimess[oa]\s+domani\b/.test(normalizzato)){
+    const domani = oggiRiferimento();
     domani.setDate(domani.getDate() + 1);
-    domani.setHours(0,0,0,0);
     risultati.push(domani);
   }
 
@@ -10599,7 +10621,7 @@ function estraiDimissioniProgrammate(testoExtra){
   const aggiungi = (nome, prossimo) => {
     const d = prossimaDataPerGiorno(nome);
     if(!d) return;
-    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const oggi = oggiRiferimento();
     if(prossimo && d.getTime() === oggi.getTime()) d.setDate(d.getDate() + 7);
     risultati.push(d);
   };
@@ -10648,7 +10670,7 @@ function calcolaCalendarioDimissioni(){
     if(chiaveGiorno(p.savedAt) !== chiaveRiferimento) return;
     const extra = (p.state.outputExtra || '').trim();
     if(!extra) return;
-    estraiDimissioniProgrammate(extra).forEach(data => {
+    dateDimissionePaziente(p, id, extra).forEach(data => {
       risultati.push({ id, nome: p.name, data });
     });
   });
@@ -12199,7 +12221,10 @@ function renderRiepilogo(){
     const rightWrap = document.createElement('div');
     rightWrap.style.cssText = 'display:flex; align-items:center; gap:8px; flex-shrink:0;';
     const extraTestoBadge = diariMostraIeri ? soloExtra : ((id === currentPatientId) ? state.outputExtra : p.state.outputExtra);
-    if(haEsamiDomani(extraTestoBadge)){
+    const pallD = diariMostraIeri
+      ? { esamiDomani: haEsamiDomani(extraTestoBadge), dimOggi: haDimissioneOggi(extraTestoBadge), dimDomani: haDimissioneDomani(extraTestoBadge) }
+      : pallinidataLetto(p, id, extraTestoBadge);
+    if(pallD.esamiDomani){
       const esamiBadge = document.createElement('div');
       esamiBadge.className = 'diario-esami-badge';
       esamiBadge.title = 'Esami di controllo programmati per domani';
@@ -12208,10 +12233,10 @@ function renderRiepilogo(){
     }
     // stesso meccanismo, per il pallino azzurro "D" (dimissione di oggi o
     // programmata per domani, vedi haDimissioneOggi/haDimissioneDomani)
-    if(haDimissioneOggi(extraTestoBadge) || haDimissioneDomani(extraTestoBadge)){
+    if(pallD.dimOggi || pallD.dimDomani){
       const dimissioneBadge = document.createElement('div');
       dimissioneBadge.className = 'diario-dimissione-badge';
-      dimissioneBadge.title = haDimissioneOggi(extraTestoBadge) ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
+      dimissioneBadge.title = pallD.dimOggi ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
       dimissioneBadge.textContent = 'D';
       rightWrap.appendChild(dimissioneBadge);
     }
@@ -12547,12 +12572,12 @@ const AGG_CONS_GIORNI = { 'lunedì':1, 'lunedi':1, 'martedì':2, 'martedi':2, 'm
 
 function aggConsData(d){ return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
 function aggConsProssimoGiorno(idx){
-  const d = new Date(); d.setHours(0,0,0,0);
+  const d = oggiRiferimento();
   let diff = (idx - d.getDay() + 7) % 7; if(diff === 0) diff = 7; // "esami lunedì" detto di lunedì = il prossimo
   d.setDate(d.getDate() + diff); return d;
 }
 function aggConsDataDaGiornoMese(g, m){
-  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const oggi = oggiRiferimento();
   const d = new Date(oggi.getFullYear(), m - 1, g);
   if(d < oggi && (oggi - d) > 180 * 864e5) d.setFullYear(d.getFullYear() + 1);
   return isNaN(d) ? null : d;
@@ -12562,10 +12587,10 @@ function aggConsDataDaGiornoMese(g, m){
 // per sabato", "EE lunedì", "esami il 6/10"
 function aggConsDataEsami(extra){
   const t = (extra || '').split('\n').filter(r => !AGG_CONS_RIGA_ESAMI.test(r)).join('\n').toLowerCase().replace(/\s+/g, ' ');
-  if(typeof haEsamiDomani === 'function' && haEsamiDomani(t)){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
+  if(typeof haEsamiDomani === 'function' && haEsamiDomani(t)){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
   const esami = String.raw`(?:esami|ee|eec)(?:\s+(?:ematochimici|ematici|di\s+controllo|programmati|previsti))*(?:\s+(?:per|il|di|da\s+fare|fissati\s+per))?`;
   // "esami (di controllo) domani" anche senza le frasi esatte della E
-  if(new RegExp(esami + String.raw`\s+domani(?![a-zà-ù])`).test(t)){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
+  if(new RegExp(esami + String.raw`\s+domani(?![a-zà-ù])`).test(t)){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
   let m = t.match(new RegExp(esami + String.raw`\s+(lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica)(?![a-zà-ù])`));
   if(m) return aggConsProssimoGiorno(AGG_CONS_GIORNI[m[1]]);
   m = t.match(new RegExp(esami + String.raw`\s+(?:\p{L}+\s+)?(\d{1,2})[\/.](\d{1,2})(?!\d)`, 'u'));
@@ -12585,7 +12610,7 @@ const AGG_CONS_ESAMI_SPECIFICI = [
 const AGG_CONS_RE_SPECIFICO = String.raw`(?:emocromo|elettroliti|ionogramma|pcr|inr|funzione\s+renale|funzionalit[àa]\s+renale|troponina|tropo|tni|sodio|natremia|sodiemia|na|potassio|kaliemia|potassiemia|k)(?![\p{L}])`;
 const AGG_CONS_RE_GIORNO_ESAME = String.raw`(?:(?:per|il|di|da\s+fare|programmat[oiae]\s+per|previst[oiae]\s+per)\s+)?(?:(?:prossimo|il)\s+)?(domani|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|(?<=(?:per|il|entro|del|dal)\s+)\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
 function aggConsDataDaParola(parola){
-  if(parola === 'domani'){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 1); return d; }
+  if(parola === 'domani'){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
   if(AGG_CONS_GIORNI[parola] !== undefined) return aggConsProssimoGiorno(AGG_CONS_GIORNI[parola]);
   const m = parola.match(/(\d{1,2})[\/.](\d{1,2})/);
   return m ? aggConsDataDaGiornoMese(+m[1], +m[2]) : null;
@@ -12615,12 +12640,6 @@ function aggConsEsamiProgrammati(extra, dataGenerici){
     .map(v => ({ data: v.data, dettagli: v.generici ? [] : v.dettagli }));
 }
 
-function aggConsDataDimissione(extra){
-  if(typeof estraiDimissioniProgrammate !== 'function') return null;
-  const oggi = new Date(); oggi.setHours(0,0,0,0);
-  const date = estraiDimissioniProgrammate(extra).filter(d => d >= oggi).sort((a, b) => a - b);
-  return date[0] || null;
-}
 
 // frasi già coperte dalla colonna Esami/dimissione: tolte dalla sintesi
 function aggConsTogliProgrammati(riga){
@@ -12838,16 +12857,17 @@ function tileLettoSolaLettura(id, p, consegne, critici){
     tile.appendChild(spunta);
   }
   const extraTesto = (id === currentPatientId) ? state.outputExtra : st.outputExtra;
-  if(haEsamiDomani(extraTesto)){
+  const pall = pallinidataLetto(p, id, extraTesto);
+  if(pall.esamiDomani){
     const b = document.createElement('div');
     b.className = 'bed-tile-esami-badge'; b.textContent = 'E';
     tile.appendChild(b);
   }
-  if(haDimissioneOggi(extraTesto) || haDimissioneDomani(extraTesto)){
+  if(pall.dimOggi || pall.dimDomani){
     const b = document.createElement('div');
     b.className = 'bed-tile-dimissione-badge'; b.textContent = 'D';
     tile.appendChild(b);
-    if(haDimissioneOggi(extraTesto)) tile.classList.add('dimissione-oggi');
+    if(pall.dimOggi) tile.classList.add('dimissione-oggi');
   }
   const coloreIso = coloreIsolamento(isolamentoPerLetto(p.name, (id === currentPatientId) ? state.isolamento : st.isolamento));
   if(coloreIso){
@@ -12916,8 +12936,12 @@ function renderAggiornaConsegne(container, entries){
         if(!sintesi.toLowerCase().includes(r.testo.toLowerCase())) sintesi += (sintesi ? '\n' : '') + '- ' + r.testo;
       });
     }
-    const dEsami = aggConsDataEsami(extra);
-    const dDim = aggConsDataDimissione(extra);
+    // date lette rispetto al giorno in cui il diario è stato scritto
+    // (giornoDiarioScritto); quelle ormai passate non si riportano in consegna
+    const oggi0 = new Date(); oggi0.setHours(0,0,0,0);
+    // esami: solo da domani in poi (quelli di oggi sono già stati fatti)
+    const esamiFuturi = dateEsamiPaziente(p, id, extra).filter(v => v.data > oggi0);
+    const dDim = dateDimissionePaziente(p, id, extra).filter(d => d >= oggi0)[0] || null;
 
     const tr = document.createElement('tr');
     const tdLetto = document.createElement('td');
@@ -13018,7 +13042,7 @@ function renderAggiornaConsegne(container, entries){
     const tdEE = tdLetto;
     // una etichetta violetta per data: "EE 06/10", oppure "EE 06/10
     // (emocromo)" se per quel giorno è previsto solo un esame specifico
-    aggConsEsamiProgrammati(extra, dEsami).forEach(({ data, dettagli }) => {
+    esamiFuturi.forEach(({ data, dettagli }) => {
       const t = 'EE ' + aggConsData(data) + (dettagli.length ? ` (${dettagli.join(', ')})` : '');
       const b = document.createElement('button');
       b.className = 'agg-cons-etichetta';
