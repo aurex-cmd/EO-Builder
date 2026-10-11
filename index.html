@@ -6062,6 +6062,12 @@ function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
 // anamnesi patologica prossima: testo libero seguito, SENZA riga vuota in
 // mezzo, da "In PS ha eseguito" (deve stare subito dopo l'ultima parte del
 // testo libero, non staccato da uno spazio)
+// "altro esame": tra virgolette solo i referti di imaging (come Rx e TC);
+// EGA, ECG, esami di laboratorio e simili si riportano come sono
+const RE_ESAME_IMAGING = /\b(rx|rmn?|tc|angio\w*|eco\w*|ecografia|doppler|scintigrafia|pet|mammografia|radiografia|uro-?tc|colangio\w*)\b/i;
+function testoAltroEsame(nome, testo){
+  return RE_ESAME_IMAGING.test(nome) ? `"${testo}"` : testo;
+}
 function costruisciProssima(f){
   const righe = [];
   const esamiTxt = formattaEsamiEmatochimici(f.ematochimici);
@@ -6080,7 +6086,7 @@ function costruisciProssima(f){
   (f.altriEsami || []).forEach(es => {
     const nome = (es.nome || '').trim();
     const t = formattaStrumentale(es.testo);
-    if(nome && t) righe.push(`- ${nome}: "${t}"`);
+    if(nome && t) righe.push(`- ${nome}: ${testoAltroEsame(nome, t)}`);
   });
 
   const blocchi = [];
@@ -6388,7 +6394,7 @@ function aggiornaRigheProssima(){
     let testo = '';
     if(tipo === 'altro'){
       const nome = val(riga.querySelector('.altro-esame-nome')), ref = formattaStrumentale(val(riga.querySelector('.altro-esame-testo')));
-      testo = nome && ref ? `"${ref}"` : '';
+      testo = nome && ref ? testoAltroEsame(nome, ref) : '';
       const et = riga.querySelector('.ric-pross-et-altro');
       if(et) et.textContent = nome + ':';
     } else if(tipo === 'referto'){
