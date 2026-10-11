@@ -886,7 +886,8 @@
   .ric-testata{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
   .ric-testata h2{ margin:0; }
   .ric-testata-azioni{ display:flex; gap:6px; flex-wrap:wrap; }
-  .ric-testata-azioni .ric-ordine-btn.attivo{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); }
+  .ric-doc .ric-blocco-etichetta{ align-items:center; }
+  .ric-ordine-btn.attivo{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); }
   .ric-blocco{ border-radius:16px; padding:13px 13px 14px; margin-bottom:16px; }
   .ric-blocco:last-child{ margin-bottom:0; }
   .ric-blocco-etichetta{
@@ -2808,7 +2809,8 @@
   .ric-testata{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
   .ric-testata h2{ margin:0; }
   .ric-testata-azioni{ display:flex; gap:6px; flex-wrap:wrap; }
-  .ric-testata-azioni .ric-ordine-btn.attivo{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); }
+  .ric-doc .ric-blocco-etichetta{ align-items:center; }
+  .ric-ordine-btn.attivo{ background:var(--signal); color:var(--on-signal); border-color:var(--signal); }
   .ric-blocco{ border-radius:16px; padding:13px 13px 14px; margin-bottom:16px; }
   .ric-blocco:last-child{ margin-bottom:0; }
   .ric-blocco-etichetta{
@@ -4449,7 +4451,7 @@ applicaTema(temaAttuale());
 
   <!-- 2. RICOVERO (prestampato) -->
   <section class="ric-blocco ric-doc">
-    <div class="ric-blocco-etichetta"><span>Ricovero</span><span class="ric-nota">ordine di scrittura</span></div>
+    <div class="ric-blocco-etichetta"><span>Ricovero</span><button type="button" class="admit-copy-btn ric-ordine-btn" id="ric-ordine-btn" onclick="toccaOrdineRicovero()">⇅ Ordina per la copia</button></div>
 
     <div class="ric-voce" data-sezione="diario">
       <div class="ric-voce-testa"><span class="ric-num">1</span><span class="ric-voce-titolo">Diario d'ingresso</span></div>
@@ -7384,12 +7386,23 @@ let ricOrdineCopia = false;
 const RIC_ORDINE_SCRITTURA = ['diario', 'prossima', 'remota', 'farmacologica', 'allergie', 'familiare', 'esameObiettivo'];
 const RIC_ORDINE_COPIA = ['diario', 'esameObiettivo', 'familiare', 'allergie', 'remota', 'prossima', 'farmacologica'];
 document.addEventListener('DOMContentLoaded', () => applicaOrdineRicovero());
+function toccaOrdineRicovero(){
+  ricOrdineCopia = !ricOrdineCopia;
+  applicaOrdineRicovero();
+  const sezione = document.querySelector('#ricovero-singolo-view .ric-doc');
+  const header = document.querySelector('header');
+  if(sezione) window.scrollTo({ top: sezione.getBoundingClientRect().top + window.scrollY - (header ? header.offsetHeight : 0) - 8 });
+  showToast(ricOrdineCopia ? 'Voci nell\'ordine della cartella, pronte da copiare' : 'Voci nell\'ordine di scrittura');
+}
 function applicaOrdineRicovero(){
   const sezione = document.querySelector('#ricovero-singolo-view .ric-doc');
   if(!sezione) return;
   sezione.classList.toggle('ordine-copia', ricOrdineCopia);
-  const etichetta = sezione.querySelector('.ric-blocco-etichetta .ric-nota');
-  if(etichetta) etichetta.textContent = ricOrdineCopia ? 'ordine della cartella · pronti da copiare' : 'ordine di scrittura';
+  const btn = document.getElementById('ric-ordine-btn');
+  if(btn){
+    btn.classList.toggle('attivo', ricOrdineCopia);
+    btn.textContent = ricOrdineCopia ? '✎ Ordine di scrittura' : '⇅ Ordina per la copia';
+  }
   (ricOrdineCopia ? RIC_ORDINE_COPIA : RIC_ORDINE_SCRITTURA).forEach((nome, i) => {
     const voce = sezione.querySelector(`:scope > .ric-voce[data-sezione="${nome}"]`);
     if(!voce) return;
@@ -7404,21 +7417,6 @@ function renderAzioniRicovero(rec){
   const azioni = document.getElementById('ric-testata-azioni');
   if(!azioni) return;
   azioni.innerHTML = '';
-  // ordine di scrittura <-> ordine di copia (vedi applicaOrdineRicovero)
-  const ordineBtn = document.createElement('button');
-  ordineBtn.type = 'button';
-  ordineBtn.className = 'admit-copy-btn ric-ordine-btn' + (ricOrdineCopia ? ' attivo' : '');
-  ordineBtn.textContent = ricOrdineCopia ? '✎ Ordine di scrittura' : '⇅ Ordina per la copia';
-  ordineBtn.onclick = () => {
-    ricOrdineCopia = !ricOrdineCopia;
-    applicaOrdineRicovero();
-    renderAzioniRicovero(currentRicoveroId ? loadRicoveri().find(r => r.id === currentRicoveroId) : null);
-    const view = document.getElementById('ricovero-singolo-view');
-    const header = document.querySelector('header');
-    if(view) window.scrollTo({ top: view.getBoundingClientRect().top + window.scrollY - (header ? header.offsetHeight : 0) - 8 });
-    showToast(ricOrdineCopia ? 'Voci nell\'ordine della cartella, pronte da copiare' : 'Voci nell\'ordine di scrittura');
-  };
-  azioni.appendChild(ordineBtn);
   if(!rec) return;
   const esportaBtn = document.createElement('button');
   esportaBtn.className = 'admit-copy-btn';
