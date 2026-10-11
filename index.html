@@ -4538,7 +4538,7 @@ applicaTema(temaAttuale());
       <!-- il testo composto si vede qui solo se in passato è stato corretto a
            mano (e quindi non coincide più con i campi qui sopra) -->
       <div class="ric-pross-manuale">
-        <div class="ric-editor-label">Testo corretto a mano (è quello che viene copiato)</div>
+        <div class="ric-editor-label">Testo del ricovero (è quello che viene copiato)</div>
         <div class="ric-anteprima" data-slot="prossima"></div>
       </div>
     </div>
@@ -6619,7 +6619,7 @@ function aggiornaRicoveroDalForm(){
 
   Object.keys(nuovi).forEach(campo => {
     const el = view.querySelector(`.ric-anteprima [data-campo="${campo}"]`);
-    const eraVergine = !el || baseline[campo] === undefined || el.textContent === baseline[campo];
+    const eraVergine = TESTI_SEMPRE_DAI_CAMPI.includes(campo) || !el || baseline[campo] === undefined || el.textContent === baseline[campo];
     if(!eraVergine) return; // modificato a mano nel testo: non lo tocchiamo
 
     cambiatiVergini[campo] = nuovi[campo];
@@ -6716,6 +6716,21 @@ document.addEventListener('DOMContentLoaded', () => {
       aggiornaRicoveroDalForm();
     }
     autoResizeTextarea(diag);
+  });
+});
+
+// racconto dell'anamnesi prossima: il testo incollato (es. dal verbale,
+// spezzato su più righe) diventa una riga sola
+document.addEventListener('DOMContentLoaded', () => {
+  const racconto = document.getElementById('admit-prossima');
+  if(!racconto) return;
+  racconto.addEventListener('paste', (e) => {
+    const testo = e.clipboardData && e.clipboardData.getData('text/plain');
+    if(!testo || !/[\r\n]/.test(testo)) return;
+    e.preventDefault();
+    const unaRiga = testo.replace(/\s*[\r\n]+\s*/g, ' ').trim();
+    racconto.setRangeText(unaRiga, racconto.selectionStart, racconto.selectionEnd, 'end');
+    racconto.dispatchEvent(new Event('input', { bubbles:true }));
   });
 });
 
@@ -7207,10 +7222,36 @@ const SEGNAPOSTO_VOCE = {
 const CAMPO_FORM_DI_VOCE = { remota:'admit-remota', farmacologica:'admit-farmacologica', familiare:'admit-familiare', allergie:'admit-allergie' };
 const CHIAVE_CAMPI_DI_VOCE = { remota:'remota', farmacologica:'farmacologica', familiare:'familiare', allergie:'allergie' };
 
+// testi che vengono SEMPRE dai campi (niente "testo corretto a mano" in un
+// secondo box): una correzione si fa nel campo, o nel testo stesso per le
+// voci di un solo campo (APR, farmaci, allergie, familiare), che la
+// riportano nel campo. Il diario resta correggibile a mano
+const TESTI_SEMPRE_DAI_CAMPI = ['prossima', 'remota', 'farmacologica', 'familiare', 'allergie'];
+// riallinea ai campi i testi salvati che ne divergono (es. corretti a mano
+// prima, o composti con regole precedenti). Un testo con i campi vuoti
+// (ricoveri vecchi, nati prima dei campi) si lascia com'è
+function allineaTestiAiCampi(rec){
+  if(!rec || !rec.campi) return;
+  const nuovi = calcolaTestiRicovero(Object.assign({ sesso:'F' }, rec.campi));
+  let cambiato = false;
+  TESTI_SEMPRE_DAI_CAMPI.forEach(campo => {
+    if(!nuovi[campo] || rec[campo] === nuovi[campo]) return;
+    rec[campo] = nuovi[campo];
+    cambiato = true;
+  });
+  if(!cambiato) return;
+  const list = loadRicoveri();
+  const idx = list.findIndex(r => r.id === rec.id);
+  if(idx === -1) return;
+  TESTI_SEMPRE_DAI_CAMPI.forEach(campo => { list[idx][campo] = rec[campo]; });
+  saveRicoveri(list);
+}
+
 function renderRicoveroSingoloBox(){
   const view = document.getElementById('ricovero-singolo-view');
   if(!view) return;
   const rec = currentRicoveroId ? loadRicoveri().find(r => r.id === currentRicoveroId) : null;
+  allineaTestiAiCampi(rec);
 
   // riferimento "generato dai campi" di ciascun testo: un testo diverso da
   // questo è stato modificato a mano e non viene più riscritto dai campi
@@ -7234,7 +7275,7 @@ function renderRicoveroSingoloBox(){
     const editable = creaTestoVoceRicovero(rec, campo, voce);
     slot.appendChild(editable);
     if(!rec) return;
-    if(CAMPO_FORM_DI_VOCE[campo] !== undefined || ['diario','prossima'].includes(campo)){
+    if(!TESTI_SEMPRE_DAI_CAMPI.includes(campo)){
       const manuale = document.createElement('span');
       manuale.className = 'ric-manuale';
       manuale.dataset.voce = campo;
@@ -7357,6 +7398,11 @@ function aggiornaIndicatoriManualiRicovero(){
     voce.classList.toggle('vuota', !el || !el._testo || !el._testo().trim());
   });
   if(!currentRicoveroId) return;
+  // anamnesi prossima: il testo composto non si mostra mai (si legge già
+  // nei campi), tranne per i ricoveri vecchi con il testo ma senza i campi
+  const elPross = view.querySelector('.ric-anteprima [data-campo="prossima"]');
+  const composta = costruisciProssima(raccogliCampiForm());
+  view.querySelector('.ric-pross-manuale')?.classList.toggle('visibile', !!(elPross && elPross.textContent.trim() && !composta.trim()));
   const base = ricoveroAutoUltimo[currentRicoveroId] || {};
   view.querySelectorAll('.ric-manuale').forEach(ind => {
     const campo = ind.dataset.voce;
@@ -7367,7 +7413,6 @@ function aggiornaIndicatoriManualiRicovero(){
     // anamnesi prossima: il testo composto si mostra solo se è stato
     // corretto a mano, perché solo allora differisce da quello che si vede
     // nei campi (ed è quello che viene copiato)
-    if(campo === 'prossima') view.querySelector('.ric-pross-manuale')?.classList.toggle('visibile', manuale);
     if(!manuale){ ind.innerHTML = ''; return; }
     if(ind.firstChild) return;
     ind.append('scritto a mano');
