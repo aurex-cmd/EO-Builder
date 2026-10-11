@@ -1907,12 +1907,14 @@
   /* Diari: pulsante Oggi/Ieri (in "Ieri" stesso verde di prima) e striscia
      dei letti fissa in alto nella vista Reparto */
   .diari-seg button#diari-seg-oggi.giorno-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
-  #diari-reparto-strip{
+  #diari-testa.fissa{
     position:sticky; top:var(--altezza-header, 0px); z-index:4;
-    margin:0 -17px 12px; padding:10px 17px 12px;
+    margin:-10px -17px 12px; padding:10px 17px 0;
     background:var(--panel-3); border-bottom:1px solid var(--line);
     box-shadow:0 8px 12px -10px rgba(0,0,0,.35);
   }
+  #diari-testa.fissa > .group{ margin-bottom:10px; }
+  #diari-reparto-strip{ padding:0 0 12px; }
   #diari-reparto-strip .bed-grid{ grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); column-gap:7px; row-gap:9px; }
   #diari-reparto-strip .bed-tile{ font-size:12.5px; cursor:pointer; }
   /* tag della data in alto a destra: solo da leggere, niente freccia */
@@ -3981,6 +3983,9 @@ applicaTema(temaAttuale());
 
 <!-- RIEPILOGO REFERTI -->
 <div class="card" id="riepilogo-view" style="display:none; background:var(--panel-3);">
+  <!-- nella vista Reparto la barra Oggi/Reparto/Consegne e la striscia
+       dei letti restano insieme fisse in alto -->
+  <div id="diari-testa">
   <div class="group">
     <div class="diari-seg" role="tablist">
       <!-- Oggi/Ieri in un solo pulsante: toccato quando è già attivo passa
@@ -3993,6 +3998,7 @@ applicaTema(temaAttuale());
   <!-- vista Reparto: i letti dei diari di oggi fissi in alto, i diari
        scorrono sotto (vedi renderStrisciaRepartoDiari) -->
   <div id="diari-reparto-strip" style="display:none;"></div>
+  </div>
   <div class="group" id="riepilogo-lista"></div>
 </div>
 
@@ -12138,6 +12144,7 @@ function renderRiepilogo(){
   });
   const striscia = document.getElementById('diari-reparto-strip');
   if(striscia && !diariVistaReparto){ striscia.style.display = 'none'; striscia.innerHTML = ''; }
+  if(!diariVistaReparto){ const testa = document.getElementById('diari-testa'); if(testa) testa.classList.remove('fissa'); }
   // festivo/weekend con le consegne già analizzate: "Consegne" diventa
   // "Consegne WE" (blu) e mostra le consegne ricevute, letto per letto
   const consegneWE = consegneWeekendAttive();
@@ -12510,8 +12517,10 @@ function renderStrisciaRepartoDiari(nomi){
   const el = document.getElementById('diari-reparto-strip');
   if(!el) return;
   el.innerHTML = '';
-  if(!nomi.length){ el.style.display = 'none'; return; }
+  const testa = document.getElementById('diari-testa');
+  if(!nomi.length){ el.style.display = 'none'; if(testa) testa.classList.remove('fissa'); return; }
   el.style.display = '';
+  if(testa) testa.classList.add('fissa');
   const patients = loadPatients(), consegne = loadConsegne(), critici = loadCritici();
   const grid = document.createElement('div');
   grid.className = 'bed-grid';
