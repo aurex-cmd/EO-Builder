@@ -1910,6 +1910,16 @@
   /* Diari: pulsante Oggi/Ieri (in "Ieri" stesso verde di prima) e striscia
      dei letti fissa in alto nella vista Reparto */
   .diari-seg button#diari-seg-oggi.giorno-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
+  /* Diari, Ieri: differenze rispetto al diario di oggi */
+  .referto-block .diff-ieri{ min-height:0; }
+  .diff-ieri .d-uguale{ color:var(--ink-faint); }
+  .diff-ieri .d-ieri, .diff-ieri-barra .d-ieri{ background:rgba(217,105,95,.22); color:var(--ink); text-decoration:line-through; text-decoration-color:rgba(217,105,95,.9); border-radius:3px; }
+  .diff-ieri .d-oggi, .diff-ieri-barra .d-oggi{ background:rgba(52,199,160,.25); color:var(--ink); border-radius:3px; }
+  .diff-ieri .d-ieri + .d-oggi{ margin-left:4px; }
+  .diff-ieri .diff-nessuna{ font-family:var(--font-body); font-style:italic; color:var(--ink-dim); margin-bottom:6px; }
+  .diff-ieri-barra{ display:flex; align-items:center; gap:8px; margin:0 0 7px; font-size:11.5px; font-family:var(--font-mono); }
+  .diff-ieri-barra > span{ padding:1px 6px; }
+  .diff-ieri-barra button{ margin-left:auto; font-size:11.5px; padding:3px 9px; border-radius:8px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink-dim); cursor:pointer; }
   #diari-testa.fissa{
     position:sticky; top:var(--altezza-header, 0px); z-index:4;
     margin:-10px -17px 12px; padding:10px 17px 0;
@@ -10514,6 +10524,52 @@ function schedeConDati(){
 // solo nello scatto archiviato (vedi archiviaGiornoSeNecessario); se
 // invece non lo si è più toccato, il suo stato attuale è ANCORA quello di
 // ieri, e si mostra direttamente quello, senza bisogno di uno scatto.
+// testo del diario di OGGI dello stesso letto, per il confronto in "Ieri";
+// null se oggi non è ancora stato scritto (in quel caso "ieri" è proprio
+// lo stato attuale e non c'è niente da confrontare)
+function testoDiarioOggiPerIeri(id, pIeri){
+  if(!pIeri || !pIeri.archiviato) return null;
+  const pz = loadPatients()[id];
+  if(!pz || !schedaHaDati(pz.state) || !isOggi(pz.esameAggiornatoIl || pz.savedAt)) return null;
+  return (id === currentPatientId && typeof state !== 'undefined') ? getRefertoFor(state) : getRefertoFor(pz.state);
+}
+// differenze parola per parola (sottosequenza comune più lunga) tra il
+// diario di ieri e quello di oggi: in comune in grigio, solo di ieri
+// barrato, solo di oggi evidenziato
+function renderDiffIeriOggi(el, ieri, oggi){
+  const tok = t => t.match(/\s+|[^\s]+/g) || [];
+  const a = tok(ieri), b = tok(oggi);
+  const n = a.length, m = b.length;
+  const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for(let i = n - 1; i >= 0; i--) for(let j = m - 1; j >= 0; j--)
+    L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const pezzi = [];
+  const metti = (tipo, t) => {
+    const ult = pezzi[pezzi.length - 1];
+    if(ult && ult.tipo === tipo) ult.t += t; else pezzi.push({ tipo, t });
+  };
+  let i = 0, j = 0;
+  while(i < n || j < m){
+    if(i < n && j < m && a[i] === b[j]){ metti('uguale', a[i]); i++; j++; }
+    // a parità, prima la parola di ieri (barrata) e poi quella di oggi
+    else if(i < n && (j >= m || L[i + 1][j] >= L[i][j + 1])){ metti(/^\s+$/.test(a[i]) ? 'uguale' : 'ieri', a[i]); i++; }
+    else { metti(/^\s+$/.test(b[j]) ? 'uguale' : 'oggi', b[j]); j++; }
+  }
+  el.innerHTML = '';
+  if(!pezzi.some(x => x.tipo !== 'uguale')){
+    const nota = document.createElement('div');
+    nota.className = 'diff-nessuna';
+    nota.textContent = 'Nessuna differenza rispetto a oggi.';
+    el.appendChild(nota);
+  }
+  pezzi.forEach(x => {
+    const sp = document.createElement('span');
+    sp.className = 'd-' + x.tipo;
+    sp.textContent = x.t;
+    el.appendChild(sp);
+  });
+}
+
 function schedeConDatiPerGiorno(mostraIeri){
   const patients = loadPatients();
   // il diario in questa vista deve riflettere quando è stato scritto/
@@ -12417,6 +12473,32 @@ function renderRiepilogo(){
       // non avrebbe un posto sensato dove essere salvata
       body.readOnly = true;
       block.appendChild(titleRow);
+      // se lo stesso letto ha già il diario di oggi, invece del testo
+      // intero si vedono solo le differenze (parole di ieri cambiate e
+      // quelle nuove di oggi); un tocco su "testo di ieri" mostra l'intero
+      const testoOggi = testoDiarioOggiPerIeri(id, p);
+      if(testoOggi !== null){
+        const diff = document.createElement('div');
+        diff.className = 'bed-text diff-ieri';
+        renderDiffIeriOggi(diff, testo, testoOggi);
+        const barra = document.createElement('div');
+        barra.className = 'diff-ieri-barra';
+        barra.innerHTML = '<span class="d-ieri">ieri</span><span class="d-oggi">oggi</span>';
+        const tBtn = document.createElement('button');
+        tBtn.type = 'button';
+        tBtn.textContent = 'testo di ieri';
+        tBtn.onclick = () => {
+          const intero = diff.style.display !== 'none';
+          diff.style.display = intero ? 'none' : '';
+          body.style.display = intero ? '' : 'none';
+          tBtn.textContent = intero ? 'differenze' : 'testo di ieri';
+          if(intero) autoResizeTextarea(body);
+        };
+        barra.appendChild(tBtn);
+        body.style.display = 'none';
+        block.appendChild(barra);
+        block.appendChild(diff);
+      }
       block.appendChild(body);
       container.appendChild(block);
       areeTesto.push(body);
