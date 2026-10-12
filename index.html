@@ -13145,7 +13145,10 @@ function renderStrisciaRepartoDiari(nomi){
       const block = document.querySelector(`#riepilogo-lista .referto-block[data-letto="${CSS.escape(nome)}"]`);
       if(!block) return;
       const header = document.querySelector('header');
-      const sopra = (header ? header.offsetHeight : 0) + el.offsetHeight + 10;
+      // si parte dall'intestazione del letto, appena sotto la testa fissa
+      // (barra Oggi/Reparto/Consegne + striscia dei letti)
+      const fissa = testa && testa.classList.contains('fissa') ? testa : el;
+      const sopra = (header ? header.offsetHeight : 0) + fissa.offsetHeight + 8;
       window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - sopra, behavior: 'smooth' });
     };
     grid.appendChild(tile);
