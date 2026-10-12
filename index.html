@@ -1937,7 +1937,7 @@
   .ric-stat-card{ background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:12px; min-width:0; }
   .ric-stat-tit{ font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-dim); }
   .ric-stat-hero .big{ display:flex; align-items:baseline; gap:10px; }
-  .ric-stat-hero .big b{ font-family:var(--font-display); font-size:50px; font-weight:700; line-height:1; color:var(--signal); }
+  .ric-stat-hero .big b{ font-family:var(--font-display); font-size:50px; font-weight:700; line-height:1; color:var(--ink); }
   .ric-stat-hero .big span{ font-size:14px; color:var(--ink-dim); }
   .ric-stat-hero .medie{ display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:var(--ink-dim); }
   .ric-stat-hero .medie b{ color:var(--ink); font-weight:600; }
@@ -1972,9 +1972,6 @@
   .ric-stat-estremo .val span{ font-size:13px; color:var(--ink-dim); }
   .ric-stat-estremo .nota{ font-size:11px; color:var(--ink-faint); margin-top:4px; overflow-wrap:anywhere; }
   .ric-stat-estremo .badge{ display:inline-block; margin-top:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--on-signal); background:var(--signal); border-radius:999px; padding:2px 8px; }
-  .ric-stat-tile .v .max{ color:var(--signal); }
-  .ric-stat-leg.stretta{ font-size:12.5px; gap:7px; }
-  .ric-stat-leg .riga > div:first-child{ min-width:0; overflow-wrap:anywhere; }
   .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:5px; }
   .ric-stat-riga .nome{ min-width:0; overflow-wrap:anywhere; }
   .ric-stat-riga .val{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
@@ -7236,7 +7233,7 @@ function renderStatisticheRicoveri(el, list){
   // il più giovane e il più anziano (a parità d'età, il ricovero più recente)
   const conEta = list.map(r => ({ r, eta: parseInt(campi(r).eta, 10) })).filter(x => x.eta > 0 && x.eta < 120);
   const estremo = segno => conEta.reduce((best, x) => (!best || segno * (x.eta - best.eta) > 0 || (x.eta === best.eta && (x.r.creatoIl || 0) > (best.r.creatoIl || 0))) ? x : best, null);
-  const piuAnziano = estremo(1);
+  const piuGiovane = estremo(-1), piuAnziano = estremo(1);
   const ultracentenari = conEta.filter(x => x.eta >= 100).length;
   const etaPerSesso = sx => { const v = list.filter(r => (campi(r).sesso === 'M') === (sx === 'M')).map(r => parseInt(campi(r).eta, 10)).filter(n => n > 0 && n < 120); return v.length ? fmt(v.reduce((a, b) => a + b, 0) / v.length) : '–'; };
   const fasce = [['< 65', n => n < 65], ['65–74', n => n >= 65 && n < 75], ['75–84', n => n >= 75 && n < 85], ['85–94', n => n >= 85 && n < 95], ['≥ 95', n => n >= 95]]
@@ -7298,11 +7295,8 @@ function renderStatisticheRicoveri(el, list){
     });
     dove.append(g, labs);
   };
-  // ciambella: spicchi in proporzione, con un testo opzionale al centro;
-  // centro === 'torta' disegna invece una torta piena
+  // ciambella: spicchi in proporzione, con un testo opzionale al centro
   const ciambella = (dove, spicchi, dim, centro) => {
-    const piena = centro === 'torta';
-    if(piena) centro = null;
     const tot = spicchi.reduce((a, x) => a + x.n, 0) || 1;
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
@@ -7312,18 +7306,17 @@ function renderStatisticheRicoveri(el, list){
     svg.setAttribute('aria-label', spicchi.map(x => `${x.testo} ${pct(x.n, tot)}`).join(', '));
     const cerchio = (colore, arco, inizio) => {
       const c = document.createElementNS(NS, 'circle');
-      c.setAttribute('cx', 21); c.setAttribute('cy', 21); c.setAttribute('r', piena ? 10 : 15.915);
-      if(piena) c.setAttribute('pathLength', 100);
-      c.setAttribute('fill', 'none'); c.style.stroke = colore; c.setAttribute('stroke-width', piena ? 20 : centro ? 6 : 7);
+      c.setAttribute('cx', 21); c.setAttribute('cy', 21); c.setAttribute('r', 15.915);
+      c.setAttribute('fill', 'none'); c.style.stroke = colore; c.setAttribute('stroke-width', centro ? 6 : 7);
       if(arco !== undefined){
         c.setAttribute('stroke-dasharray', `${arco} ${100 - arco}`);
         c.setAttribute('stroke-dashoffset', 25 - inizio);
       }
       svg.appendChild(c);
     };
-    if(!piena) cerchio('var(--panel)');
+    cerchio('var(--panel)');
     let inizio = 0;
-    const gap = !piena && spicchi.filter(x => x.n).length > 1 ? 0.8 : 0;
+    const gap = spicchi.filter(x => x.n).length > 1 ? 0.8 : 0;
     spicchi.forEach(x => {
       const arco = x.n / tot * 100;
       if(arco > 0) cerchio(x.colore, Math.max(0.1, arco - gap), inizio);
@@ -7360,6 +7353,24 @@ function renderStatisticheRicoveri(el, list){
     if(sotto) v.appendChild(crea('div', 'dim sotto', sotto));
     leg.appendChild(v);
   };
+  // barre orizzontali con etichetta e conteggio (diagnosi)
+  const righe = (dove, dati) => {
+    const max = Math.max(1, ...dati.map(d => d.n));
+    dati.forEach(d => {
+      const r = crea('div', 'ric-stat-riga');
+      const testo = crea('div', 'testo');
+      testo.append(crea('span', 'nome', d.testo), crea('span', 'val', d.n + ' · ' + pct(d.n, tot)));
+      if(d.varianti && d.varianti.size > 1) r.title = 'Comprende: ' + [...d.varianti].join('; ');
+      const traccia = crea('div', 'traccia');
+      const bar = crea('div', 'bar');
+      bar.style.width = (d.n / max * 100) + '%';
+      if(d.colore) bar.style.setProperty('--colore', d.colore);
+      traccia.appendChild(bar);
+      r.append(testo, traccia);
+      dove.appendChild(r);
+    });
+  };
+
   // numero guida: totale e medie
   const hero = card('Dal ' + primo.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' }));
   hero.classList.add('ric-stat-hero');
@@ -7391,30 +7402,39 @@ function renderStatisticheRicoveri(el, list){
   const cSett = card('Per giorno della settimana');
   colonne(cSett, perSett.map((n, i) => ({ etichetta: GIORNI[i], n, colore: i >= 5 ? 'var(--st-bar-hi)' : '' })), ['ricovero', 'ricoveri']);
 
-  // pazienti: torta F/M, sotto età media e età minima–massima (la massima in teal)
+  // pazienti: ciambella F/M con l'età media al centro
   const cPaz = card('Pazienti');
   const legPaz = ciambella(cPaz, [
     { testo: 'Femmine', n: femmine, colore: 'var(--st-f)' },
     { testo: 'Maschi', n: maschi, colore: 'var(--st-m)' }
-  ], 120, 'torta');
-  voceLeg(legPaz, 'var(--st-f)', 'Femmine · ' + pct(femmine, tot), '', `${femmine} · età media ${etaPerSesso('F')}`);
-  voceLeg(legPaz, 'var(--st-m)', 'Maschi · ' + pct(maschi, tot), '', `${maschi} · età media ${etaPerSesso('M')}`);
+  ], 128, eta.length ? [fmt(media), 'età media'] : null);
+  voceLeg(legPaz, 'var(--st-f)', 'Femmine', '', `${femmine} · ${pct(femmine, tot)} · ${etaPerSesso('F')} anni`);
+  voceLeg(legPaz, 'var(--st-m)', 'Maschi', '', `${maschi} · ${pct(maschi, tot)} · ${etaPerSesso('M')} anni`);
   if(eta.length){
-    const g = crea('div', 'ric-stat-tiles');
-    const tMedia = crea('div', 'ric-stat-tile');
-    tMedia.append(crea('div', 'v', fmt(media)), crea('div', 'l', 'età media'), crea('div', 'n', 'mediana ' + fmt(mediana)));
-    const tRange = crea('div', 'ric-stat-tile');
-    const v = crea('div', 'v');
-    const max = crea('span', 'max', String(eta[eta.length - 1]));
-    v.append(String(eta[0]) + '–', max);
-    const nota = [];
-    if(ultracentenari === 1) nota.push(campi(piuAnziano.r).sesso === 'M' ? '1 ultracentenario' : '1 ultracentenaria');
-    else if(ultracentenari > 1) nota.push(`${ultracentenari} ultracentenari`);
-    if(eta.length < tot) nota.push(`${tot - eta.length} senza età`);
-    tRange.append(v, crea('div', 'l', 'età minima e massima'));
-    if(nota.length) tRange.appendChild(crea('div', 'n', nota.join(' · ')));
-    g.append(tMedia, tRange);
-    cPaz.appendChild(g);
+    const altro = crea('div', 'dim sotto', `mediana ${fmt(mediana)}` + (eta.length < tot ? ` · ${tot - eta.length} senza età` : ''));
+    legPaz.appendChild(altro);
+  }
+
+  // età: il più giovane e il più anziano in grande
+  if(piuGiovane && piuAnziano){
+    const cEstremi = card('Età');
+    const g = crea('div', 'ric-stat-estremi');
+    const lato = (x, giovane) => {
+      const f = campi(x.r).sesso !== 'M';
+      const b = crea('div', 'ric-stat-estremo' + (giovane ? '' : ' anziano'));
+      b.appendChild(crea('div', 'cosa', giovane ? (f ? 'la più giovane' : 'il più giovane') : (f ? 'la più anziana' : 'il più anziano')));
+      const v = crea('div', 'val');
+      v.append(crea('b', '', String(x.eta)), crea('span', '', 'anni'));
+      b.appendChild(v);
+      const quando = x.r.creatoIl ? new Date(x.r.creatoIl).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' }) : '';
+      const dia = (campi(x.r).diagnosi || '').trim();
+      b.appendChild(crea('div', 'nota', [quando, dia].filter(Boolean).join(' · ')));
+      if(!giovane && x.eta >= 100) b.appendChild(crea('div', 'badge', f ? 'ultracentenaria' : 'ultracentenario'));
+      return b;
+    };
+    g.append(lato(piuGiovane, true), lato(piuAnziano, false));
+    cEstremi.appendChild(g);
+    if(ultracentenari) cEstremi.appendChild(crea('div', 'ric-stat-nota', `${ultracentenari} ricover${ultracentenari === 1 ? 'o' : 'i'} di ultracentenari`));
   }
 
   // fasce d'età: una sola tinta, più intensa con l'età
@@ -7433,21 +7453,10 @@ function renderStatisticheRicoveri(el, list){
     rep.forEach(r => voceLeg(legRep, r.colore, r.testo, `${r.n} · ${pct(r.n, tot)}`));
   }
 
-  // diagnosi più frequenti: ciambella teal, oro, lilla e grigi; il resto
-  // come "altre" in tinta neutra, così gli spicchi restano in proporzione
+  // diagnosi più frequenti: la prima in teal
   if(diagnosi.length){
     const cDia = card('Diagnosi più frequenti');
-    const COLORI_DIA = ['var(--signal)', 'var(--folder)', 'var(--violet)', 'var(--st-bar-hi)', 'var(--st-bar)'];
-    const spicchi = diagnosi.map((d, i) => Object.assign({ colore: COLORI_DIA[i] }, d));
-    const conDiagnosi = Object.values(perDiagnosi).reduce((a, d) => a + d.n, 0);
-    const altre = conDiagnosi - spicchi.reduce((a, d) => a + d.n, 0);
-    if(altre > 0) spicchi.push({ testo: 'Altre', n: altre, colore: 'var(--line)' });
-    const legDia = ciambella(cDia, spicchi, 104);
-    legDia.classList.add('stretta');
-    spicchi.forEach(d => {
-      voceLeg(legDia, d.colore, d.testo, String(d.n));
-      if(d.varianti && d.varianti.size > 1) legDia.lastChild.title = 'Comprende: ' + [...d.varianti].join('; ');
-    });
+    righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
   }
 }
 
