@@ -1923,35 +1923,51 @@
   .diff-ieri-barra button{ margin-left:auto; font-size:11.5px; padding:3px 9px; border-radius:8px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink-dim); cursor:pointer; }
   /* statistiche dei ricoveri (al posto del calendario) */
   .ric-stat-link{ font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer; text-decoration:none; }
-  .ric-stat{ padding-top:4px; }
-  .ric-stat-tit{ font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-dim); margin:18px 0 9px; }
+  /* stile "tonale": grigio ardesia, il teal solo dove conta (mese in
+     corso, voce principale); F/M rosa e blu; fasce d'età in una sola tinta */
+  :root{
+    --st-bar:#3a4958; --st-bar-hi:#5b6e80; --st-f:#d27b9c; --st-m:#5f93cc;
+    --st-eta-1:#2b4a45; --st-eta-2:#2f6b5f; --st-eta-3:#2f8a77; --st-eta-4:#30ab92; --st-eta-5:#35d0ae;
+  }
+  :root[data-tema="chiaro"]{
+    --st-bar:#c3ccd4; --st-bar-hi:#8d9ba7; --st-f:#c8577f; --st-m:#3f7fc4;
+    --st-eta-1:#b5e6da; --st-eta-2:#7fd3be; --st-eta-3:#45bfa1; --st-eta-4:#1f9e80; --st-eta-5:#0c7f66;
+  }
+  .ric-stat{ padding-top:4px; display:flex; flex-direction:column; gap:14px; }
+  .ric-stat-card{ background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .ric-stat-tit{ font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-dim); }
+  .ric-stat-hero .big{ display:flex; align-items:baseline; gap:10px; }
+  .ric-stat-hero .big b{ font-family:var(--font-display); font-size:50px; font-weight:700; line-height:1; color:var(--ink); }
+  .ric-stat-hero .big span{ font-size:14px; color:var(--ink-dim); }
+  .ric-stat-hero .medie{ display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:var(--ink-dim); }
+  .ric-stat-hero .medie b{ color:var(--ink); font-weight:600; }
+  .ric-stat-hero .medie b.ora{ color:var(--signal); }
   .ric-stat-tiles{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
   .ric-stat-tile{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; }
-  .ric-stat-tile .v{ font-size:22px; font-weight:700; color:var(--ink); line-height:1.15; font-variant-numeric:tabular-nums; }
+  .ric-stat-tile .v{ font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--ink); line-height:1.15; }
   .ric-stat-tile .l{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
   .ric-stat-tile .n{ font-size:11px; color:var(--ink-faint); margin-top:3px; overflow-wrap:anywhere; }
-  .ric-stat-bars{ display:flex; align-items:stretch; gap:4px; height:120px; border-bottom:1px solid var(--line); }
+  .ric-stat-bars{ display:flex; align-items:stretch; gap:5px; height:122px; border-bottom:1px solid var(--line); }
   .ric-stat-col{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; cursor:default; }
-  .ric-stat-col .num{ font-size:10.5px; color:var(--ink-dim); height:15px; font-variant-numeric:tabular-nums; }
+  .ric-stat-col .num{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-dim); height:15px; }
   .ric-stat-col .area{ flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; }
-  .ric-stat-col .bar{ width:min(70%, 26px); background:var(--signal); border-radius:4px 4px 0 0; }
+  .ric-stat-col .bar{ width:min(70%, 24px); background:var(--colore, var(--st-bar)); border-radius:5px 5px 0 0; }
   .ric-stat-col:hover .bar{ filter:brightness(1.15); }
-  .ric-stat-col .lab{ font-size:10.5px; color:var(--ink-faint); padding-top:4px; height:18px; white-space:nowrap; }
-  .ric-stat-bars + .ric-stat-tit{ margin-top:26px; }
-  .ric-stat-sesso{ display:flex; gap:2px; height:10px; margin-top:10px; border-radius:5px; overflow:hidden; }
-  /* F/M: rosa e blu (tinte verificate per daltonismo, una per tema) */
-  :root{ --st-f:#d55181; --st-m:#3987e5; }
-  :root[data-tema="chiaro"]{ --st-f:#e87ba4; --st-m:#2a78d6; }
-  .ric-stat-sesso .f{ background:var(--st-f); } .ric-stat-sesso .m{ background:var(--st-m); }
-  .ric-stat-legenda{ display:flex; gap:14px; font-size:11.5px; color:var(--ink-dim); margin-top:6px; }
-  .ric-stat-legenda i{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
-  .ric-stat-legenda i.f{ background:var(--st-f); } .ric-stat-legenda i.m{ background:var(--st-m); }
-  .ric-stat-riga{ margin-bottom:9px; }
-  .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:4px; }
+  .ric-stat-labs{ display:flex; gap:5px; margin-top:-6px; }
+  .ric-stat-labs div{ flex:1 1 0; min-width:0; text-align:center; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); white-space:nowrap; }
+  .ric-stat-nota{ font-size:11px; color:var(--ink-faint); }
+  .ric-stat-torta{ display:flex; align-items:center; gap:18px; }
+  .ric-stat-torta svg{ flex-shrink:0; }
+  .ric-stat-leg{ flex:1; min-width:0; display:flex; flex-direction:column; gap:9px; font-size:13px; color:var(--ink); }
+  .ric-stat-leg .riga{ display:flex; justify-content:space-between; gap:10px; }
+  .ric-stat-leg i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:8px; vertical-align:-1px; }
+  .ric-stat-leg .dim{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
+  .ric-stat-leg .sotto{ margin:2px 0 0 18px; }
+  .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:5px; }
   .ric-stat-riga .nome{ min-width:0; overflow-wrap:anywhere; }
-  .ric-stat-riga .val{ color:var(--ink-dim); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .ric-stat-riga .val{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
   .ric-stat-riga .traccia{ height:6px; background:var(--panel); border-radius:3px; }
-  .ric-stat-riga .bar{ height:100%; background:var(--signal); border-radius:3px; }
+  .ric-stat-riga .bar{ height:100%; background:var(--colore, var(--st-bar)); border-radius:3px; }
   #diari-testa.fissa{
     position:sticky; top:var(--altezza-header, 0px); z-index:4;
     margin:-10px -17px 12px; padding:10px 17px 0;
@@ -7179,99 +7195,182 @@ function renderStatisticheRicoveri(el, list){
 
   el.innerHTML = '';
   el.className = 'ric-stat';
-  const sezione = titolo => { const h = document.createElement('div'); h.className = 'ric-stat-tit'; h.textContent = titolo; el.appendChild(h); };
-  const tiles = arr => {
-    const g = document.createElement('div');
-    g.className = 'ric-stat-tiles';
+  const crea = (tag, cls, testo) => { const e = document.createElement(tag); if(cls) e.className = cls; if(testo !== undefined) e.textContent = testo; return e; };
+  const card = titolo => { const c = crea('div', 'ric-stat-card'); if(titolo) c.appendChild(crea('div', 'ric-stat-tit', titolo)); el.appendChild(c); return c; };
+  const tiles = (dove, arr) => {
+    const g = crea('div', 'ric-stat-tiles');
     arr.forEach(([valore, etichetta, nota]) => {
-      const t = document.createElement('div');
-      t.className = 'ric-stat-tile';
-      t.innerHTML = '<div class="v"></div><div class="l"></div>' + (nota ? '<div class="n"></div>' : '');
-      t.querySelector('.v').textContent = valore;
-      t.querySelector('.l').textContent = etichetta;
-      if(nota) t.querySelector('.n').textContent = nota;
+      const t = crea('div', 'ric-stat-tile');
+      t.appendChild(crea('div', 'v', valore));
+      t.appendChild(crea('div', 'l', etichetta));
+      if(nota) t.appendChild(crea('div', 'n', nota));
       g.appendChild(t);
     });
-    el.appendChild(g);
+    dove.appendChild(g);
   };
-  // istogramma a colonne (una sola serie): valore sopra le colonne non vuote
-  const colonne = (dati, unita) => {
+  // istogramma a colonne (una sola serie): grigio, con l'eventuale colonna
+  // da evidenziare (d.colore) e il valore sopra le colonne non vuote
+  const colonne = (dove, dati, unita) => {
     const max = Math.max(1, ...dati.map(d => d.n));
-    const g = document.createElement('div');
-    g.className = 'ric-stat-bars';
+    const g = crea('div', 'ric-stat-bars');
+    const labs = crea('div', 'ric-stat-labs');
     dati.forEach(d => {
-      const c = document.createElement('div');
-      c.className = 'ric-stat-col';
+      const c = crea('div', 'ric-stat-col');
       c.title = `${d.titolo || d.etichetta}: ${d.n} ${d.n === 1 ? unita[0] : unita[1]}`;
-      c.innerHTML = '<div class="num"></div><div class="area"><div class="bar"></div></div><div class="lab"></div>';
-      c.querySelector('.num').textContent = d.n || '';
-      c.querySelector('.bar').style.height = (d.n ? Math.max(3, d.n / max * 100) : 0) + '%';
-      c.querySelector('.lab').textContent = d.etichetta;
+      const num = crea('div', 'num', d.n || '');
+      const area = crea('div', 'area');
+      const bar = crea('div', 'bar');
+      bar.style.height = (d.n ? Math.max(3, d.n / max * 100) : 0) + '%';
+      if(d.colore) bar.style.setProperty('--colore', d.colore);
+      if(d.accento){ num.style.color = 'var(--signal)'; }
+      area.appendChild(bar);
+      c.append(num, area);
       g.appendChild(c);
+      const lab = crea('div', '', d.etichetta);
+      if(d.accento) lab.style.color = 'var(--signal)';
+      labs.appendChild(lab);
     });
-    el.appendChild(g);
+    dove.append(g, labs);
   };
-  // barre orizzontali con etichetta e conteggio (reparti, diagnosi)
-  const righe = dati => {
+  // ciambella: spicchi in proporzione, con un testo opzionale al centro
+  const ciambella = (dove, spicchi, dim, centro) => {
+    const tot = spicchi.reduce((a, x) => a + x.n, 0) || 1;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 42 42');
+    svg.setAttribute('width', dim); svg.setAttribute('height', dim);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', spicchi.map(x => `${x.testo} ${pct(x.n, tot)}`).join(', '));
+    const cerchio = (colore, arco, inizio) => {
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', 21); c.setAttribute('cy', 21); c.setAttribute('r', 15.915);
+      c.setAttribute('fill', 'none'); c.style.stroke = colore; c.setAttribute('stroke-width', centro ? 6 : 7);
+      if(arco !== undefined){
+        c.setAttribute('stroke-dasharray', `${arco} ${100 - arco}`);
+        c.setAttribute('stroke-dashoffset', 25 - inizio);
+      }
+      svg.appendChild(c);
+    };
+    cerchio('var(--panel)');
+    let inizio = 0;
+    const gap = spicchi.filter(x => x.n).length > 1 ? 0.8 : 0;
+    spicchi.forEach(x => {
+      const arco = x.n / tot * 100;
+      if(arco > 0) cerchio(x.colore, Math.max(0.1, arco - gap), inizio);
+      inizio += arco;
+    });
+    if(centro){
+      const t1 = document.createElementNS(NS, 'text');
+      t1.setAttribute('x', 21); t1.setAttribute('y', 21); t1.setAttribute('text-anchor', 'middle');
+      t1.setAttribute('font-size', 7.5); t1.setAttribute('font-weight', 700); t1.style.fill = 'var(--ink)';
+      t1.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t1.textContent = centro[0];
+      const t2 = document.createElementNS(NS, 'text');
+      t2.setAttribute('x', 21); t2.setAttribute('y', 26.5); t2.setAttribute('text-anchor', 'middle');
+      t2.setAttribute('font-size', 3.3); t2.style.fill = 'var(--ink-dim)';
+      t2.textContent = centro[1];
+      svg.append(t1, t2);
+    }
+    const riga = crea('div', 'ric-stat-torta');
+    riga.appendChild(svg);
+    const leg = crea('div', 'ric-stat-leg');
+    riga.appendChild(leg);
+    dove.appendChild(riga);
+    return leg;
+  };
+  const voceLeg = (leg, colore, testo, destra, sotto) => {
+    const v = crea('div');
+    const r = crea('div', 'riga');
+    const sx = crea('div');
+    const q = crea('i'); q.style.background = colore;
+    sx.append(q, testo);
+    r.appendChild(sx);
+    if(destra) r.appendChild(crea('div', 'dim', destra));
+    v.appendChild(r);
+    if(sotto) v.appendChild(crea('div', 'dim sotto', sotto));
+    leg.appendChild(v);
+  };
+  // barre orizzontali con etichetta e conteggio (diagnosi)
+  const righe = (dove, dati) => {
     const max = Math.max(1, ...dati.map(d => d.n));
     dati.forEach(d => {
-      const r = document.createElement('div');
-      r.className = 'ric-stat-riga';
-      r.innerHTML = '<div class="testo"><span class="nome"></span><span class="val"></span></div><div class="traccia"><div class="bar"></div></div>';
-      r.querySelector('.nome').textContent = d.testo;
-      r.querySelector('.val').textContent = d.n + ' · ' + pct(d.n, tot);
-      r.querySelector('.bar').style.width = (d.n / max * 100) + '%';
-      el.appendChild(r);
+      const r = crea('div', 'ric-stat-riga');
+      const testo = crea('div', 'testo');
+      testo.append(crea('span', 'nome', d.testo), crea('span', 'val', d.n + ' · ' + pct(d.n, tot)));
+      const traccia = crea('div', 'traccia');
+      const bar = crea('div', 'bar');
+      bar.style.width = (d.n / max * 100) + '%';
+      if(d.colore) bar.style.setProperty('--colore', d.colore);
+      traccia.appendChild(bar);
+      r.append(testo, traccia);
+      dove.appendChild(r);
     });
   };
 
-  tiles([
-    [fmt(tot, 0), 'ricoveri totali', 'dal ' + primo.toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' })],
-    [fmt(questoMese, 0), 'questo mese', oggi.toLocaleDateString('it-IT', { month:'long' })],
-    [fmt(tot / mesiTot), 'al mese', 'in media'],
-    [fmt(tot / giorniTot), 'al giorno', 'in media su ' + giorniTot + ' giorn' + (giorniTot === 1 ? 'o' : 'i')],
+  // numero guida: totale e medie
+  const hero = card('Dal ' + primo.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' }));
+  hero.classList.add('ric-stat-hero');
+  const big = crea('div', 'big');
+  big.append(crea('b', '', fmt(tot, 0)), crea('span', '', tot === 1 ? 'ricovero' : 'ricoveri'));
+  hero.appendChild(big);
+  const medie = crea('div', 'medie');
+  const unaMedia = (v, t, cls) => { const d = crea('div'); d.append(crea('b', cls || '', v), ' ' + t); medie.appendChild(d); };
+  unaMedia(fmt(tot / mesiTot), 'al mese');
+  unaMedia(fmt(tot / giorniTot), 'al giorno');
+  unaMedia(fmt(questoMese, 0), 'a ' + oggi.toLocaleDateString('it-IT', { month:'long' }), 'ora');
+  hero.appendChild(medie);
+  tiles(el, [
     [fmt(tot / giorniConRic), 'per giorno di ricovero', giorniConRic + ' giorn' + (giorniConRic === 1 ? 'o' : 'i') + ' con ricoveri'],
     [record ? fmt(record[1], 0) : '–', 'record in un giorno', record ? formattaGiornoEsteso(record[0]) : '']
   ]);
 
-  sezione('Ricoveri per mese');
-  colonne(mesi, ['ricovero', 'ricoveri']);
+  // mesi: teal il mese in corso, più chiaro il mese record
+  const cMesi = card('Ricoveri per mese');
+  const maxPassati = Math.max(0, ...mesi.slice(0, -1).map(m => m.n));
+  mesi.forEach((m, i) => {
+    if(i === mesi.length - 1){ m.colore = 'var(--signal)'; m.accento = true; }
+    else if(m.n && m.n === maxPassati) m.colore = 'var(--st-bar-hi)';
+  });
+  colonne(cMesi, mesi, ['ricovero', 'ricoveri']);
+  cMesi.appendChild(crea('div', 'ric-stat-nota', 'In teal il mese in corso; più chiaro il mese record.'));
 
-  sezione('Per giorno della settimana');
-  colonne(perSett.map((n, i) => ({ etichetta: GIORNI[i], n })), ['ricovero', 'ricoveri']);
+  // giorni della settimana: il weekend più chiaro
+  const cSett = card('Per giorno della settimana');
+  colonne(cSett, perSett.map((n, i) => ({ etichetta: GIORNI[i], n, colore: i >= 5 ? 'var(--st-bar-hi)' : '' })), ['ricovero', 'ricoveri']);
 
-  sezione('Pazienti');
-  tiles([
-    [fmt(femmine, 0), 'femmine', pct(femmine, tot) + ' · età media ' + etaPerSesso('F')],
-    [fmt(maschi, 0), 'maschi', pct(maschi, tot) + ' · età media ' + etaPerSesso('M')],
-    [eta.length ? fmt(media) : '–', 'età media', eta.length ? 'mediana ' + fmt(mediana) : 'età non indicata'],
-    [eta.length ? eta[0] + '–' + eta[eta.length - 1] : '–', 'età minima e massima', eta.length < tot ? (tot - eta.length) + ' senza età' : '']
-  ]);
-  const barraSesso = document.createElement('div');
-  barraSesso.className = 'ric-stat-sesso';
-  barraSesso.innerHTML = '<div class="f"></div><div class="m"></div>';
-  barraSesso.querySelector('.f').style.flexGrow = femmine;
-  barraSesso.querySelector('.m').style.flexGrow = maschi;
-  barraSesso.title = `F ${femmine} (${pct(femmine, tot)}) · M ${maschi} (${pct(maschi, tot)})`;
-  el.appendChild(barraSesso);
-  const legSesso = document.createElement('div');
-  legSesso.className = 'ric-stat-legenda';
-  legSesso.innerHTML = '<span><i class="f"></i>F ' + pct(femmine, tot) + '</span><span><i class="m"></i>M ' + pct(maschi, tot) + '</span>';
-  el.appendChild(legSesso);
-
+  // pazienti: ciambella F/M con l'età media al centro
+  const cPaz = card('Pazienti');
+  const legPaz = ciambella(cPaz, [
+    { testo: 'Femmine', n: femmine, colore: 'var(--st-f)' },
+    { testo: 'Maschi', n: maschi, colore: 'var(--st-m)' }
+  ], 128, eta.length ? [fmt(media), 'età media'] : null);
+  voceLeg(legPaz, 'var(--st-f)', 'Femmine', '', `${femmine} · ${pct(femmine, tot)} · ${etaPerSesso('F')} anni`);
+  voceLeg(legPaz, 'var(--st-m)', 'Maschi', '', `${maschi} · ${pct(maschi, tot)} · ${etaPerSesso('M')} anni`);
   if(eta.length){
-    sezione('Fasce d’età');
-    colonne(fasce, ['paziente', 'pazienti']);
+    const altro = crea('div', 'dim sotto', `mediana ${fmt(mediana)} · ${eta[0]}–${eta[eta.length - 1]}` + (eta.length < tot ? ` · ${tot - eta.length} senza età` : ''));
+    legPaz.appendChild(altro);
   }
 
+  // fasce d'età: una sola tinta, più intensa con l'età
+  if(eta.length){
+    const cEta = card('Fasce d’età');
+    fasce.forEach((f, i) => { f.colore = `var(--st-eta-${i + 1})`; });
+    colonne(cEta, fasce, ['paziente', 'pazienti']);
+  }
+
+  // reparti: ciambella, il reparto principale in teal e gli altri in grigio
   if(Object.keys(perReparto).length > 1){
-    sezione('Per reparto');
-    righe(Object.entries(perReparto).sort((a, b) => b[1] - a[1]).map(([testo, n]) => ({ testo, n })));
+    const cRep = card('Per reparto');
+    const grigi = ['var(--st-bar-hi)', 'var(--st-bar)', 'var(--ink-faint)', 'var(--line)'];
+    const rep = Object.entries(perReparto).sort((a, b) => b[1] - a[1]).map(([testo, n], i) => ({ testo, n, colore: i === 0 ? 'var(--signal)' : grigi[(i - 1) % grigi.length] }));
+    const legRep = ciambella(cRep, rep, 100);
+    rep.forEach(r => voceLeg(legRep, r.colore, r.testo, `${r.n} · ${pct(r.n, tot)}`));
   }
 
+  // diagnosi più frequenti: la prima in teal
   if(diagnosi.length){
-    sezione('Diagnosi più frequenti');
-    righe(diagnosi);
+    const cDia = card('Diagnosi più frequenti');
+    righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
   }
 }
 
