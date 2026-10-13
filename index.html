@@ -15819,10 +15819,11 @@ const OPT = {
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
     {value:'sofferente', m:'sofferente', f:'sofferente', excludes:['non_sofferente'], gruppo:'dolore'},
     {value:'non_sofferente', label:'non sofferente', excludes:['sofferente'], gruppo:'dolore'},
-    {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','orientato','collaborante'], gruppo:'contattabilita'},
+    {value:'nega_algie', label:'nega algie', excludes:['nega_dolore','non_contattabile'], gruppo:'dolore'},
+    {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','nega_algie','orientato','collaborante'], gruppo:'contattabilita'},
     {value:'occhi_aperti', label:'mantiene gli occhi aperti', gruppo:'contattabilita'},
     {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'},
-    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile'], gruppo:'contattabilita'}
+    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile','nega_algie'], gruppo:'contattabilita'}
   ],
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
@@ -16331,7 +16332,7 @@ function renderAll(){
 const TRANQUILLO_PARTNERS = ['disorientato','a_tratti_disorientato','rallentato','non_collaborante'];
 // questi non sono aggettivi da elencare con virgole, ma frasi a sé stanti
 // (es. "Nega dolore." invece di "..., nega dolore.")
-const DESCRITTORI_FRASE_A_SE = ['nega_dolore','risponde_domande','astenico'];
+const DESCRITTORI_FRASE_A_SE = ['nega_dolore','nega_algie','risponde_domande','astenico'];
 // questi vanno PRIMA, come frase a sé, invece che nell'elenco con "e"
 const DESCRITTORI_FRASE_INIZIALE = ['occhi_aperti'];
 
