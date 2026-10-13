@@ -15819,11 +15819,12 @@ const OPT = {
     {value:'rallentato', m:'rallentato', f:'rallentata', gruppo:'aspetto'},
     {value:'sofferente', m:'sofferente', f:'sofferente', excludes:['non_sofferente'], gruppo:'dolore'},
     {value:'non_sofferente', label:'non sofferente', excludes:['sofferente'], gruppo:'dolore'},
+    {spacer:true, gruppo:'dolore'},   // "nega algie"/"nega dolore" sotto, su una riga a sé
     {value:'nega_algie', label:'nega algie', excludes:['nega_dolore','non_contattabile'], gruppo:'dolore'},
+    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile','nega_algie'], gruppo:'dolore'},
     {value:'non_contattabile', label:'non contattabile', excludes:['risponde_domande','nega_dolore','nega_algie','orientato','collaborante'], gruppo:'contattabilita'},
     {value:'occhi_aperti', label:'mantiene gli occhi aperti', gruppo:'contattabilita'},
-    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'},
-    {value:'nega_dolore', label:'nega dolore', excludes:['non_contattabile','nega_algie'], gruppo:'contattabilita'}
+    {value:'risponde_domande', label:'risponde alle domande poste', excludes:['non_contattabile'], gruppo:'contattabilita'}
   ],
   respiroTipo: [
     {value:'eupnoico', m:'Eupnoico', f:'Eupnoica'},
