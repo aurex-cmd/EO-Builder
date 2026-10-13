@@ -377,6 +377,13 @@
   .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
   .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
+  /* dimissione con CV ancora in sede: pillola pesca col triangolo */
+  .diario-aiuti .aiuto.cv{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.cv svg{ width:15px; height:15px; flex-shrink:0; }
   .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
   .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
@@ -2367,6 +2374,13 @@
   .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
   .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
+  /* dimissione con CV ancora in sede: pillola pesca col triangolo */
+  .diario-aiuti .aiuto.cv{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.cv svg{ width:15px; height:15px; flex-shrink:0; }
   .diario-aiuti .aiuto.rene{ border-color:#a86400; color:#a86400; cursor:pointer; }
   .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
@@ -12650,11 +12664,38 @@ function numeroRomano(n){
 
 // riga di "etichette" sotto il titolo del diario: antibiotici, richieste in
 // sospeso (✓ per chiuderle) e avvisi rene/farmaci
+// DIMISSIONE CON CV: se nelle aggiunte c'è una dimissione (o un
+// trasferimento) per oggi o per un giorno a venire ("dimesso domani",
+// "dimessa mercoledì"...) e nel diario c'è ancora il catetere vescicale
+// (diuresi "in sacca di CV", oppure "CV"/"catetere vescicale" scritto a
+// mano), sopra il diario compare "Valuta rimozione CV". Sparisce se il
+// diario parla già della rimozione ("rimosso CV", "rimozione del CV"...)
+const RE_CV = /\bCV\b|catetere\s+vescicale/;
+const RE_CV_RIMOSSO = /(?:rimoss[oa]|rimozione|rimuover\w*|rimuov\w*|tolt[oa]|sfilat[oa]|sfilamento)\s+(?:(?:del|il|di|lo|dello)\s+)?(?:CV|catetere)\b|\b(?:CV|catetere(?:\s+vescicale)?)\s+(?:è\s+stato\s+|viene\s+|già\s+)?(?:rimoss[oa]|tolt[oa]|sfilat[oa])/i;
+function avvisoRimozioneCV(p, id){
+  const st = (id === currentPatientId) ? state : (p && p.state);
+  if(!st) return false;
+  const extra = st.outputExtra || '';
+  const date = dateDimissionePaziente(p, id, extra);
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  if(!date.some(d => d.getTime() >= oggi.getTime())) return false;
+  const testo = getRefertoFor(st) || '';
+  if(RE_CV_RIMOSSO.test(testo)) return false;
+  return RE_CV.test(testo);
+}
 function rigaAiutiDiario(p, id){
   const atb = antibioticiInCorso(p, id), ric = richiesteInSospeso(p, id), ren = avvisiReneFarmaci(p, id);
-  if(!atb.length && !ric.length && !ren.length) return null;
+  const cv = avvisoRimozioneCV(p, id);
+  if(!cv && !atb.length && !ric.length && !ren.length) return null;
   const riga = document.createElement('div');
   riga.className = 'diario-aiuti';
+  if(cv){
+    const c = document.createElement('span');
+    c.className = 'aiuto cv';
+    c.title = 'Dimissione programmata con catetere vescicale in sede';
+    c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="#7a3810"/><path d="M12 9v4.6" stroke="#fde2cc" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" fill="#fde2cc"/></svg>Valuta rimozione CV';
+    riga.appendChild(c);
+  }
   // etichetta dell'antibiotico con i giorni; dal 7° giorno diventa un avviso
   // arancione, dal 14° rosso
   atb.forEach(a => {
