@@ -366,7 +366,14 @@
   /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
   .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
   .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
-  .diario-aiuti .aiuto.atb.liv1{ border-color:#e0a030; color:#e0a030; }
+  /* 7° giorno: pillola arancione piena col triangolo */
+  .diario-aiuti .aiuto.atb.liv1{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.atb.liv1 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
   .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#ff7070; font-weight:700; }
   /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
   .diario-aiuti .aiuto.richiesta{
@@ -2363,7 +2370,14 @@
   /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
   .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
   .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
-  .diario-aiuti .aiuto.atb.liv1{ border-color:#a86400; color:#a86400; }
+  /* 7° giorno: pillola arancione piena col triangolo */
+  .diario-aiuti .aiuto.atb.liv1{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-weight:600; font-size:12.5px;
+    background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
+  }
+  .diario-aiuti .aiuto.atb.liv1 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
   .diario-aiuti .aiuto.atb.liv2{ border-color:#e05050; color:#c62f36; font-weight:700; }
   /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
   .diario-aiuti .aiuto.richiesta{
@@ -12705,7 +12719,8 @@ function rigaAiutiDiario(p, id){
     // richieste: "Amoxi/clav IV gg" (solo a video: a.etichetta, "gg4", resta
     // com'è per le consegne)
     const gg = `<span class="gg">${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</span>`;
-    if(a.livello) c.innerHTML = '⚠ ' + aggConsEsc(a.nome) + ' ' + gg;
+    if(a.livello === 1) c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="#3a2000"/><path d="M12 9v4.6" stroke="#f0a23a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" fill="#f0a23a"/></svg>' + aggConsEsc(a.nome) + ' ' + gg;
+    else if(a.livello) c.innerHTML = '⚠ ' + aggConsEsc(a.nome) + ' ' + gg;
     else {
       c.classList.add('liv0');
       // capsula in diagonale: metà piena verde scuro, metà chiara
