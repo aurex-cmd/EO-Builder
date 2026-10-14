@@ -728,6 +728,17 @@
   .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
   .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
   .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
+  /* X per cancellare una riga rimasta da ieri: sopra la textarea, a destra */
+  .x-strato-ieri{ position:absolute; inset:0; pointer-events:none; z-index:2; }
+  .bed-text-wrap textarea.bed-text, .bed-text-wrap .bed-text-specchio{ padding-right:30px; }
+  .x-riga-ieri{
+    position:absolute; right:4px; width:26px; height:22px; padding:0;
+    border:none; background:transparent; color:var(--ink-dim); opacity:.45;
+    font-size:17px; line-height:22px; text-align:center; cursor:pointer; pointer-events:auto;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .x-riga-ieri:hover{ opacity:.9; }
+  .bed-text-wrap.in-modifica .x-strato-ieri, .bed-text-wrap:not(.con-ieri) .x-strato-ieri{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -2739,6 +2750,17 @@
   .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
   .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
   .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
+  /* X per cancellare una riga rimasta da ieri: sopra la textarea, a destra */
+  .x-strato-ieri{ position:absolute; inset:0; pointer-events:none; z-index:2; }
+  .bed-text-wrap textarea.bed-text, .bed-text-wrap .bed-text-specchio{ padding-right:30px; }
+  .x-riga-ieri{
+    position:absolute; right:4px; width:26px; height:22px; padding:0;
+    border:none; background:transparent; color:var(--ink-dim); opacity:.45;
+    font-size:17px; line-height:22px; text-align:center; cursor:pointer; pointer-events:auto;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .x-riga-ieri:hover{ opacity:.9; }
+  .bed-text-wrap.in-modifica .x-strato-ieri, .bed-text-wrap:not(.con-ieri) .x-strato-ieri{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -13112,26 +13134,54 @@ function renderRiepilogo(){
       const specchio = document.createElement('div');
       specchio.className = 'bed-text bed-text-specchio';
       specchio.setAttribute('aria-hidden', 'true');
+      const xStrato = document.createElement('div');
+      xStrato.className = 'x-strato-ieri';
       const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       body._aggiornaSpecchio = () => {
         const v = body.value;
         // in "Nascondi E.O." il box contiene già solo le aggiunte
         const inizioExtra = diariSoloConsegneAttivo ? 0 : (v.indexOf('\n\n') === -1 ? Infinity : v.indexOf('\n\n') + 2);
-        let pos = 0, almenoUna = false;
+        let pos = 0, almenoUna = false, nRiga = 0;
         const html = v.split('\n').map(riga => {
+          nRiga++;
           const inExtra = pos >= inizioExtra;
           pos += riga.length + 1;
-          if(inExtra && riga.trim() && righeIeri.has(riga.trim())){ almenoUna = true; return `<span class="dal-ieri">${esc(riga)}</span>`; }
+          if(inExtra && riga.trim() && righeIeri.has(riga.trim())){ almenoUna = true; return `<span class="dal-ieri" data-riga="${nRiga - 1}">${esc(riga)}</span>`; }
           return esc(riga);
         }).join('\n');
         specchio.innerHTML = html + '\n';
         wrap.classList.toggle('con-ieri', almenoUna);
+        // una piccola X a destra di ogni riga rimasta da ieri: la cancella
+        // con un tocco (sul telefono, senza selezionarla e premere canc)
+        xStrato.innerHTML = '';
+        specchio.querySelectorAll('.dal-ieri').forEach(sp => {
+          const x = document.createElement('button');
+          x.type = 'button';
+          x.className = 'x-riga-ieri';
+          x.title = 'Cancella questa riga';
+          x.setAttribute('aria-label', 'Cancella questa riga di ieri');
+          x.textContent = '×';
+          x.style.top = sp.offsetTop + 'px';
+          // pointerdown: senza dare il focus alla textarea (niente tastiera)
+          x.addEventListener('pointerdown', e => e.preventDefault());
+          x.onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const righe = body.value.split('\n');
+            righe.splice(+sp.dataset.riga, 1);
+            body.value = righe.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\n+$/, '');
+            body.dispatchEvent(new Event('input', { bubbles:true }));
+            autoResizeTextarea(body);
+            body._aggiornaSpecchio();
+          };
+          xStrato.appendChild(x);
+        });
       };
       body.addEventListener('focus', () => wrap.classList.add('in-modifica'));
       body.addEventListener('blur', () => { wrap.classList.remove('in-modifica'); body._aggiornaSpecchio(); });
       body._specchio = specchio;
       wrap.appendChild(specchio);
       wrap.appendChild(body);
+      wrap.appendChild(xStrato);
       block.appendChild(wrap);
       body._aggiornaSpecchio();
     } else {
@@ -14803,21 +14853,15 @@ function renderAddomeAlvo(){
   const onCambioData = () => {
     a.data = dataInput.value || '';
     if(a.data) a.attivo = true;
-    // "con clisma" ha senso solo per l'alvo di oggi: scegliendo una data
-    // diversa si disattiva da sola (vedi renderAddomeAlvo qui sotto, che
-    // la nasconde/disabilita comunque anche visivamente)
-    if(a.data && a.data !== oggiChiave) a.clisma = false;
     update();
   };
   dataInput.oninput = onCambioData;
   dataInput.onchange = onCambioData;
 
   if(clismaChip){
-    // visibile solo se "Alvo +" è acceso; selezionabile solo se non c'è
-    // una data, o se la data scelta è proprio oggi — altrimenti disabilitato
-    // (grigio, non cliccabile) e comunque spento, come richiesto
-    const dataÈOggiONessuna = !a.data || a.data === oggiChiave;
-    const abilitato = a.attivo && dataÈOggiONessuna;
+    // visibile solo se "Alvo +" è acceso, sia per oggi sia per un giorno
+    // passato ("Alvo canalizzato con clisma ieri.")
+    const abilitato = a.attivo;
     clismaChip.style.display = a.attivo ? '' : 'none';
     if(!abilitato && a.clisma) a.clisma = false;
     clismaChip.classList.toggle('active', abilitato && a.clisma);
@@ -16764,9 +16808,9 @@ function composeAlvoAddome(alvo){
   const msOggi = new Date(chiaveGiorno(Date.now()) + 'T00:00:00').getTime();
   const giorniTrascorsi = Math.round((msOggi - msAlvo) / 86400000);
   if(giorniTrascorsi <= 0) return 'Alvo positivo oggi.'; // data di oggi o (per errore) nel futuro
-  if(giorniTrascorsi === 1) return 'Alvo canalizzato ieri.';
+  if(giorniTrascorsi === 1) return alvo.clisma ? 'Alvo canalizzato con clisma ieri.' : 'Alvo canalizzato ieri.';
   const numeroGiornata = giorniTrascorsi + 1; // il giorno dell'alvo stesso conta come "prima giornata"
-  return `Alvo non canalizzato in ${ordinaleGiornata(numeroGiornata)} giornata.`;
+  return `Alvo non canalizzato in ${ordinaleGiornata(numeroGiornata)} giornata` + (alvo.clisma ? ', ultima evacuazione con clisma.' : '.');
 }
 
 // nota libera degli edemi: prima sovrascriveva tutto il resto, ora si
