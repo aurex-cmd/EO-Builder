@@ -1951,6 +1951,12 @@
   .diff-ieri .d-ieri, .diff-ieri-barra .d-ieri{ background:rgba(217,105,95,.22); color:var(--ink); text-decoration:line-through; text-decoration-color:rgba(217,105,95,.9); border-radius:3px; }
   .diff-ieri .d-oggi, .diff-ieri-barra .d-oggi{ background:rgba(52,199,160,.25); color:var(--ink); border-radius:3px; }
   .diff-ieri .d-ieri + .d-oggi{ margin-left:4px; }
+  .diff-ieri .d-blocco{ margin-top:12px; padding:3px 7px; border-radius:5px; white-space:pre-wrap; }
+  .diff-ieri .d-blocco.primo{ margin-top:0; }
+  .diff-ieri .d-blocco.attaccato{ margin-top:4px; }
+  .diff-ieri .d-blocco-uguale{ color:var(--ink-faint); padding-left:0; padding-right:0; }
+  .diff-ieri .d-blocco-ieri{ background:rgba(217,105,95,.22); color:var(--ink); }
+  .diff-ieri .d-blocco-oggi{ background:rgba(52,199,160,.25); color:var(--ink); }
   .diff-ieri .diff-nessuna{ font-family:var(--font-body); font-style:italic; color:var(--ink-dim); margin-bottom:6px; }
   .diff-ieri-barra{ display:flex; align-items:center; gap:8px; margin:0 0 7px; font-size:11.5px; font-family:var(--font-mono); }
   .diff-ieri-barra > span{ padding:1px 6px; }
@@ -11062,10 +11068,10 @@ function testoDiarioOggiPerIeri(id, pIeri){
   if(!pz || !schedaHaDati(pz.state) || !isOggi(pz.esameAggiornatoIl || pz.savedAt)) return null;
   return (id === currentPatientId && typeof state !== 'undefined') ? getRefertoFor(state) : getRefertoFor(pz.state);
 }
-// differenze parola per parola (sottosequenza comune più lunga) tra il
-// diario di ieri e quello di oggi: in comune in grigio, solo di ieri
-// barrato, solo di oggi evidenziato
-function renderDiffIeriOggi(el, ieri, oggi){
+// differenze parola per parola (sottosequenza comune più lunga) tra
+// l'esame obiettivo di ieri e quello di oggi: in comune in grigio, solo di
+// ieri barrato, solo di oggi evidenziato
+function diffParoleIeriOggi(ieri, oggi){
   const tok = t => t.match(/\s+|[^\s]+/g) || [];
   const a = tok(ieri), b = tok(oggi);
   const n = a.length, m = b.length;
@@ -11140,8 +11146,48 @@ function renderDiffIeriOggi(el, ieri, oggi){
     if(/\s$/.test(grezzo) && ops[fine] && !/^\s/.test(ops[fine].t)) metti('uguale', grezzo.match(/\s+$/)[0].includes('\n') ? '\n' : ' ');
     k = fine;
   }
+  return pezzi;
+}
+// il diario diviso in esame obiettivo (prima della riga vuota), righe degli
+// esami (ematochimici, EGA, VFG: vedi AGG_CONS_RIGA_ESAMI) e provvedimenti
+// (tutto il resto delle aggiunte)
+function dividiDiarioIeriOggi(t){
+  t = (t || '').replace(/\r/g, '');
+  const k = t.indexOf('\n\n');
+  const eo = (k < 0 ? t : t.slice(0, k)).trim();
+  const righe = [];
+  (k < 0 ? '' : t.slice(k + 2)).split('\n').forEach(r => {
+    // parentesi aperta e non chiusa: la riga continua sotto (come in consegne)
+    const ultima = righe.length ? righe[righe.length - 1] : null;
+    const aperte = ultima === null ? 0 : (ultima.match(/\(/g) || []).length - (ultima.match(/\)/g) || []).length;
+    if(aperte > 0 && r.trim()) righe[righe.length - 1] = ultima.replace(/\s+$/, '') + '\n' + r;
+    else righe.push(r);
+  });
+  const esami = [], provv = [];
+  righe.forEach(r => { if(r.trim()) (AGG_CONS_RIGA_ESAMI.test(r) ? esami : provv).push(r.replace(/\s+$/, '')); });
+  return { eo, esami: esami.join('\n'), provv: provv.join('\n') };
+}
+// confronto ieri/oggi: l'esame obiettivo parola per parola (barrato quel
+// che è cambiato); esami e provvedimenti invece interi, senza barrare,
+// prima tutto il testo di ieri in rosso e sotto quello di oggi in verde
+// (rileggerli spezzettati e barrati non serve: si vogliono leggere uno
+// sotto l'altro). Se una parte è identica resta una volta sola, in grigio
+function renderDiffIeriOggi(el, ieri, oggi){
+  const A = dividiDiarioIeriOggi(ieri), B = dividiDiarioIeriOggi(oggi);
+  const pezzi = diffParoleIeriOggi(A.eo, B.eo);
+  let diverso = pezzi.some(x => x.tipo !== 'uguale');
+  const blocchi = [];
+  ['esami', 'provv'].forEach(parte => {
+    const a = A[parte], b = B[parte];
+    if(!a && !b) return;
+    const norm = x => x.replace(/\s+/g, ' ').trim();
+    if(norm(a) === norm(b)){ blocchi.push({ tipo:'uguale', t:b }); return; }
+    diverso = true;
+    if(a) blocchi.push({ tipo:'ieri', t:a });
+    if(b) blocchi.push({ tipo:'oggi', t:b, attaccato:!!a });
+  });
   el.innerHTML = '';
-  if(!pezzi.some(x => x.tipo !== 'uguale')){
+  if(!diverso){
     const nota = document.createElement('div');
     nota.className = 'diff-nessuna';
     nota.textContent = 'Nessuna differenza rispetto a oggi.';
@@ -11152,6 +11198,12 @@ function renderDiffIeriOggi(el, ieri, oggi){
     sp.className = 'd-' + x.tipo;
     sp.textContent = x.t;
     el.appendChild(sp);
+  });
+  blocchi.forEach((x, i) => {
+    const d = document.createElement('div');
+    d.className = 'd-blocco d-blocco-' + x.tipo + (x.attaccato ? ' attaccato' : '') + (!pezzi.length && !i ? ' primo' : '');
+    d.textContent = x.t;
+    el.appendChild(d);
   });
 }
 
