@@ -11072,17 +11072,73 @@ function renderDiffIeriOggi(el, ieri, oggi){
   const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
   for(let i = n - 1; i >= 0; i--) for(let j = m - 1; j >= 0; j--)
     L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  // 1) operazioni parola per parola
+  const ops = [];
+  let i = 0, j = 0;
+  while(i < n || j < m){
+    if(i < n && j < m && a[i] === b[j]){ ops.push({ tipo:'u', t:a[i] }); i++; j++; }
+    // a parità, prima la parola di ieri e poi quella di oggi
+    else if(i < n && (j >= m || L[i + 1][j] >= L[i][j + 1])){ ops.push({ tipo:'i', t:a[i] }); i++; }
+    else { ops.push({ tipo:'o', t:b[j] }); j++; }
+  }
+  const spazio = t => /^\s+$/.test(t);
+  const lung = arr => arr.reduce((s, x) => s + (spazio(x.t) ? 0 : x.t.length), 0);
+  // 2) parole in comune brevi e "incastrate" tra due modifiche (il "MV" di
+  // "MV presente su TAP" -> "MV ventila bilateralmente" va bene, ma un "in"
+  // o un "Non" isolato in mezzo spezzetterebbe la frase in tanti pezzetti
+  // alternati): diventano parte della modifica, tolte e rimesse
+  let cambiato = true;
+  while(cambiato){
+    cambiato = false;
+    for(let k = 0; k < ops.length; k++){
+      if(ops[k].tipo !== 'u') continue;
+      let e = k; while(e < ops.length && ops[e].tipo === 'u') e++;
+      const uguali = ops.slice(k, e);
+      const parole = uguali.filter(x => !spazio(x.t)).length;
+      let s0 = k; while(s0 > 0 && ops[s0 - 1].tipo !== 'u') s0--;
+      let e1 = e; while(e1 < ops.length && ops[e1].tipo !== 'u') e1++;
+      const prima = ops.slice(s0, k), dopo = ops.slice(e, e1);
+      const lato = arr => Math.max(lung(arr.filter(x => x.tipo === 'i')), lung(arr.filter(x => x.tipo === 'o')));
+      if(parole && parole <= 3 && prima.length && dopo.length && !uguali.some(x => /\n/.test(x.t))
+         && lung(uguali) <= lato(prima) && lung(uguali) <= lato(dopo)){
+        const rimpiazzo = [];
+        uguali.forEach(x => rimpiazzo.push({ tipo:'i', t:x.t }));
+        uguali.forEach(x => rimpiazzo.push({ tipo:'o', t:x.t }));
+        ops.splice(k, uguali.length, ...rimpiazzo);
+        cambiato = true;
+        break;
+      }
+      k = e - 1;
+    }
+  }
+  // 3) ogni tratto modificato (anche se attraversa spazi in comune) diventa
+  // UN blocco: prima tutto il testo di ieri barrato, poi quello di oggi
   const pezzi = [];
   const metti = (tipo, t) => {
+    if(!t) return;
     const ult = pezzi[pezzi.length - 1];
     if(ult && ult.tipo === tipo) ult.t += t; else pezzi.push({ tipo, t });
   };
-  let i = 0, j = 0;
-  while(i < n || j < m){
-    if(i < n && j < m && a[i] === b[j]){ metti('uguale', a[i]); i++; j++; }
-    // a parità, prima la parola di ieri (barrata) e poi quella di oggi
-    else if(i < n && (j >= m || L[i + 1][j] >= L[i][j + 1])){ metti(/^\s+$/.test(a[i]) ? 'uguale' : 'ieri', a[i]); i++; }
-    else { metti(/^\s+$/.test(b[j]) ? 'uguale' : 'oggi', b[j]); j++; }
+  for(let k = 0; k < ops.length;){
+    if(ops[k].tipo === 'u'){ metti('uguale', ops[k].t); k++; continue; }
+    let e = k, fine = k;
+    while(e < ops.length && (ops[e].tipo !== 'u' || (spazio(ops[e].t) && !/\n/.test(ops[e].t)))){
+      if(ops[e].tipo !== 'u') fine = e + 1;
+      e++;
+    }
+    const tratto = ops.slice(k, fine);
+    const testoDi = lato => tratto.filter(x => x.tipo === lato || x.tipo === 'u').map(x => x.t).join('').replace(/[ \t]+/g, ' ').trim();
+    const tIeri = testoDi('i'), tOggi = testoDi('o');
+    // gli spazi ai bordi del tratto (tolti col trim) non devono incollare
+    // il blocco alle parole in comune accanto
+    const grezzo = tratto.map(x => x.t).join('');
+    const ultimo = pezzi.length ? pezzi[pezzi.length - 1].t : '';
+    if(/^\s/.test(grezzo) && ultimo && !/\s$/.test(ultimo)) metti('uguale', grezzo.match(/^\s+/)[0].includes('\n') ? '\n' : ' ');
+    metti('ieri', tIeri);
+    if(tIeri && tOggi) metti('uguale', ' ');
+    metti('oggi', tOggi);
+    if(/\s$/.test(grezzo) && ops[fine] && !/^\s/.test(ops[fine].t)) metti('uguale', grezzo.match(/\s+$/)[0].includes('\n') ? '\n' : ' ');
+    k = fine;
   }
   el.innerHTML = '';
   if(!pezzi.some(x => x.tipo !== 'uguale')){
