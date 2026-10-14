@@ -728,15 +728,19 @@
   .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
   .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
   .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
-  /* X per cancellare una riga rimasta da ieri (Esame obiettivo): sopra la textarea, a destra */
-  .x-strato-ieri{ position:absolute; inset:0; pointer-events:none; z-index:2; }
-  .x-riga-ieri{
-    position:absolute; right:4px; width:26px; height:22px; padding:0;
-    border:none; background:transparent; color:var(--ink-dim); opacity:.45;
-    font-size:17px; line-height:22px; text-align:center; cursor:pointer; pointer-events:auto;
+  /* note libere dell'esame obiettivo: X a destra che svuota il campo (il
+     testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
+  .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
+  .campo-x > input{ padding-right:34px; }
+  .campo-x > .x-campo{
+    position:absolute; right:3px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; padding:0; border:none; border-radius:50%;
+    background:transparent; color:var(--ink-dim); opacity:.55;
+    font-size:19px; line-height:30px; text-align:center; cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
-  .x-riga-ieri:hover{ opacity:.9; }
+  .campo-x > .x-campo:hover{ opacity:.95; }
+  .campo-x > input:placeholder-shown + .x-campo{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -1135,15 +1139,6 @@
     font-size:13px; line-height:1.65; box-shadow:var(--clay-in-sm);
   }
   textarea#output:focus{ outline:none; border-color:var(--signal); }
-  /* righe rimaste da ieri: X a destra per cancellarle (vedi aggiornaXOutput).
-     La copia del testo serve solo a misurare dove cade ogni riga */
-  .output-wrap{ position:relative; }
-  textarea#output{ padding-right:32px; }
-  #output-specchio{
-    visibility:hidden; z-index:0; font-family:var(--font-mono); font-size:13px; line-height:1.65;
-    padding:13px 32px 13px 13px; border:1px solid transparent; white-space:pre-wrap;
-  }
-  .output-wrap .x-riga-ieri{ margin-top:1px; }
   .row{ display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
   .btn{
     font-family:var(--font-body);
@@ -2757,15 +2752,19 @@
   .bed-text-wrap.in-modifica .bed-text-specchio *{ color:transparent; }
   .referto-block textarea.bed-text{ overflow-wrap:break-word; word-break:normal; -webkit-appearance:none; appearance:none; }
   .bed-text-specchio .dal-ieri{ color:var(--ink-dim); opacity:.6; }
-  /* X per cancellare una riga rimasta da ieri (Esame obiettivo): sopra la textarea, a destra */
-  .x-strato-ieri{ position:absolute; inset:0; pointer-events:none; z-index:2; }
-  .x-riga-ieri{
-    position:absolute; right:4px; width:26px; height:22px; padding:0;
-    border:none; background:transparent; color:var(--ink-dim); opacity:.45;
-    font-size:17px; line-height:22px; text-align:center; cursor:pointer; pointer-events:auto;
+  /* note libere dell'esame obiettivo: X a destra che svuota il campo (il
+     testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
+  .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
+  .campo-x > input{ padding-right:34px; }
+  .campo-x > .x-campo{
+    position:absolute; right:3px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; padding:0; border:none; border-radius:50%;
+    background:transparent; color:var(--ink-dim); opacity:.55;
+    font-size:19px; line-height:30px; text-align:center; cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
-  .x-riga-ieri:hover{ opacity:.9; }
+  .campo-x > .x-campo:hover{ opacity:.95; }
+  .campo-x > input:placeholder-shown + .x-campo{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
   #ricoveri-view textarea, #ricovero-singolo-view textarea{
@@ -3164,15 +3163,6 @@
     font-size:13px; line-height:1.65; box-shadow:var(--clay-in-sm);
   }
   textarea#output:focus{ outline:none; border-color:var(--signal); }
-  /* righe rimaste da ieri: X a destra per cancellarle (vedi aggiornaXOutput).
-     La copia del testo serve solo a misurare dove cade ogni riga */
-  .output-wrap{ position:relative; }
-  textarea#output{ padding-right:32px; }
-  #output-specchio{
-    visibility:hidden; z-index:0; font-family:var(--font-mono); font-size:13px; line-height:1.65;
-    padding:13px 32px 13px 13px; border:1px solid transparent; white-space:pre-wrap;
-  }
-  .output-wrap .x-riga-ieri{ margin-top:1px; }
   .row{ display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
   .btn{
     font-family:var(--font-body);
@@ -5024,11 +5014,7 @@ applicaTema(temaAttuale());
 <!-- OUTPUT -->
 <div class="card" id="output-card">
   <h2><svg class="hicon" viewBox="0 0 24 24"><path d="M7 3h6.5L18 7.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M13.5 3v4.5H18"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="18" x2="12.5" y2="18"/></svg> Esame obiettivo</h2>
-  <div class="output-wrap">
-    <textarea id="output"></textarea>
-    <div class="bed-text-specchio" id="output-specchio" aria-hidden="true"></div>
-    <div class="x-strato-ieri" id="output-x"></div>
-  </div>
+  <textarea id="output"></textarea>
   <div class="row">
     <button class="btn primary" onclick="copyOutput()">Copia referto</button>
     <button class="btn" id="reset-btn" onclick="resetAll()">Azzera tutto</button>
@@ -17483,6 +17469,29 @@ const CAMPI_VITALI_IDS = ['v-sat','v-pas','v-pad','v-fc','temp-valore'];
 // segnava come aggiornato oggi o creava una scheda "Paziente N" vuota.
 // Germe dell'isolamento e data dell'alvo hanno già un gestore proprio
 // (vedi renderIsolamentoToggle/renderAddomeAlvo)
+// X dentro le note libere (e il germe dell'isolamento): un tocco svuota il
+// campo, senza dover cancellare carattere per carattere sul telefono
+document.querySelectorAll('#clinical-view input[type=text].wide').forEach(el => {
+  const box = document.createElement('span');
+  box.className = 'campo-x';
+  if(el.style.marginTop){ box.style.marginTop = el.style.marginTop; el.style.marginTop = ''; }
+  el.parentNode.insertBefore(box, el);
+  box.appendChild(el);
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 'x-campo';
+  x.textContent = '×';
+  x.title = 'Cancella';
+  x.setAttribute('aria-label', 'Cancella la nota');
+  // senza dare il focus al campo: niente tastiera
+  x.addEventListener('pointerdown', e => e.preventDefault());
+  x.onclick = () => {
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles:true }));
+    el.dispatchEvent(new Event('change', { bubbles:true }));
+  };
+  box.appendChild(x);
+});
 const CAMPI_CON_GESTORE_PROPRIO = ['isolamento-germe', 'addome-alvo-data'];
 document.querySelectorAll('#clinical-view input').forEach(el => {
   if(CAMPI_VITALI_IDS.includes(el.id) || CAMPI_CON_GESTORE_PROPRIO.includes(el.id)) return;
@@ -17585,59 +17594,6 @@ function correggiItaliano(testo){
     if(out.clientWidth !== larghezza){ larghezza = out.clientWidth; requestAnimationFrame(adatta); }
   }).observe(out);
   adatta();
-})();
-
-// ESAME OBIETTIVO: righe delle aggiunte rimaste da ieri (stesse del diario
-// precedente, vedi diarioRigheDiIeri) con una piccola X a destra che le
-// cancella con un tocco, senza dover selezionare e premere canc sul telefono
-function aggiornaXOutput(){
-  const out = document.getElementById('output');
-  const specchio = document.getElementById('output-specchio');
-  const strato = document.getElementById('output-x');
-  if(!out || !specchio || !strato) return;
-  strato.innerHTML = '';
-  const p = (typeof currentPatientId !== 'undefined' && currentPatientId) ? loadPatients()[currentPatientId] : null;
-  const righeIeri = p ? diarioRigheDiIeri(p) : new Set();
-  const v = out.value;
-  const sep = v.indexOf('\n\n');
-  if(!righeIeri.size || sep === -1 || out.offsetParent === null){ specchio.innerHTML = ''; return; }
-  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  let pos = 0;
-  specchio.innerHTML = v.split('\n').map((riga, i) => {
-    const inExtra = pos >= sep + 2;
-    pos += riga.length + 1;
-    return (inExtra && riga.trim() && righeIeri.has(riga.trim())) ? `<span class="dal-ieri" data-riga="${i}">${esc(riga)}</span>` : esc(riga);
-  }).join('\n') + '\n';
-  specchio.querySelectorAll('.dal-ieri').forEach(sp => {
-    const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'x-riga-ieri';
-    x.title = 'Cancella questa riga';
-    x.setAttribute('aria-label', 'Cancella questa riga di ieri');
-    x.textContent = '×';
-    x.style.top = sp.offsetTop + 'px';
-    x.addEventListener('pointerdown', e => e.preventDefault());
-    x.onclick = (e) => {
-      e.preventDefault(); e.stopPropagation();
-      const righe = out.value.split('\n');
-      righe.splice(+sp.dataset.riga, 1);
-      out.value = righe.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\n+$/, '');
-      out.dispatchEvent(new Event('input', { bubbles:true }));
-    };
-    strato.appendChild(x);
-  });
-}
-(function(){
-  const out = document.getElementById('output');
-  if(!out) return;
-  let attesa = 0;
-  const pianifica = () => { cancelAnimationFrame(attesa); attesa = requestAnimationFrame(() => requestAnimationFrame(aggiornaXOutput)); };
-  const desc = Object.getOwnPropertyDescriptor(out, 'value');
-  if(desc && desc.set){
-    Object.defineProperty(out, 'value', { configurable:true, get(){ return desc.get.call(this); }, set(v){ desc.set.call(this, v); pianifica(); } });
-  }
-  out.addEventListener('input', pianifica);
-  if(window.ResizeObserver) new ResizeObserver(pianifica).observe(out);
 })();
 
 document.querySelectorAll('#ricoveri-view textarea, #ricovero-singolo-view textarea, #output').forEach(el => {
