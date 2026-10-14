@@ -13247,17 +13247,23 @@ function renderStrisciaRepartoDiari(nomi){
       // valore vero dallo stile, più i pallini che sporgono sotto i letti
       aggiornaAltezzaHeader();
       const fissa = testa && testa.classList.contains('fissa') ? testa : el;
-      const fondoTesta = () => (parseFloat(getComputedStyle(fissa).top) || 0) + fissa.offsetHeight;
       const MARGINE = 14;
-      window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - fondoTesta() - MARGINE, behavior: 'smooth' });
-      // a scorrimento finito si ricontrolla (caratteri caricati tardi,
-      // intestazione che cambia altezza...) e si corregge se serve
-      clearTimeout(el._correzione);
-      el._correzione = setTimeout(() => {
-        const sotto = fissa.getBoundingClientRect().bottom + MARGINE;
-        const diff = block.getBoundingClientRect().top - sotto;
-        if(Math.abs(diff) > 2) window.scrollBy({ top: diff, behavior: 'smooth' });
-      }, 700);
+      // un solo movimento, ricalcolato a ogni fotogramma sulle posizioni
+      // vere: se qualcosa cambia altezza mentre la pagina scorre (caratteri,
+      // testa che si blocca in alto...) la destinazione si aggiorna da sola,
+      // senza arrivare nel punto sbagliato e poi correggere con uno scatto
+      cancelAnimationFrame(el._anim);
+      let passi = 0, ultimoY = -1;
+      const passo = () => {
+        const fondo = (parseFloat(getComputedStyle(fissa).top) || 0) + fissa.offsetHeight + MARGINE;
+        const resto = block.getBoundingClientRect().top - fondo;
+        // arrivato, o la pagina non può scorrere oltre (ultimi letti)
+        if(Math.abs(resto) < 1 || passi++ > 90 || window.scrollY === ultimoY) return;
+        ultimoY = window.scrollY;
+        window.scrollBy({ top: Math.abs(resto) < 3 ? resto : resto * 0.22, behavior:'instant' });
+        el._anim = requestAnimationFrame(passo);
+      };
+      el._anim = requestAnimationFrame(passo);
     };
     grid.appendChild(tile);
   });
