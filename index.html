@@ -11177,10 +11177,23 @@ function formattaOrarioData(timestamp){
   return `${hh}:${mm}, ${d.getDate()} ${MESI_ITALIANI[d.getMonth()]}`;
 }
 
-function haEsamiDomani(testoExtra){
+function haFrasiEsamiDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
   return FRASI_ESAMI_DOMANI.some(frase => normalizzato.includes(frase));
+}
+// pallino "E": le frasi esatte qui sopra OPPURE qualunque formulazione che
+// le consegne riconoscono come esami programmati per domani ("si
+// richiedono/si programmano EEC di controllo per domani", "EE domani",
+// "emocromo per domani", "esami giovedì" detto di mercoledì...)
+function haEsamiDomani(testoExtra){
+  if(!testoExtra) return false;
+  if(haFrasiEsamiDomani(testoExtra)) return true;
+  if(typeof aggConsEsamiProgrammati !== 'function') return false;
+  const domani = oggiRiferimento(); domani.setDate(domani.getDate() + 1);
+  try{
+    return aggConsEsamiProgrammati(testoExtra, aggConsDataEsami(testoExtra)).some(v => v.data.getTime() === domani.getTime());
+  } catch(e){ return false; }
 }
 
 // stesso meccanismo di haEsamiDomani/FRASI_ESAMI_DOMANI, ma per il pallino
@@ -13383,7 +13396,7 @@ function aggConsDataDaGiornoMese(g, m){
 // per sabato", "EE lunedì", "esami il 6/10"
 function aggConsDataEsami(extra){
   const t = (extra || '').split('\n').filter(r => !AGG_CONS_RIGA_ESAMI.test(r)).join('\n').toLowerCase().replace(/\s+/g, ' ');
-  if(typeof haEsamiDomani === 'function' && haEsamiDomani(t)){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
+  if(typeof haFrasiEsamiDomani === 'function' && haFrasiEsamiDomani(t)){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
   const esami = String.raw`(?:esami|ee|eec)(?:\s+(?:ematochimici|ematici|di\s+controllo|programmati|previsti))*(?:\s+(?:per|il|di|da\s+fare|fissati\s+per))?`;
   // "esami (di controllo) domani" anche senza le frasi esatte della E
   if(new RegExp(esami + String.raw`\s+domani(?![a-zà-ù])`).test(t)){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
