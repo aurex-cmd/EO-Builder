@@ -12595,45 +12595,6 @@ function antibioticiInCorso(p, idPaziente){
   return risultati;
 }
 
-// ---------- 3. andamento esami ----------
-// riga degli esami di un testo e valori: { 'hb': '114', ... } (chiave
-// normalizzata del nome), dalla riga "Agli EE: ..." / "EE: ..." / "Esami: ..."
-function rigaEsami(testo){
-  return (testo || '').split('\n').find(r => AGG_CONS_RIGA_ESAMI.test(r) && !/^\s*(?:vfg|ega)\s*:/i.test(r)) || null;
-}
-function valoriEsami(riga){
-  const out = {};
-  if(!riga) return out;
-  riga.replace(/^[^:]*:\s*/, '').split(/[,;]/).forEach(pezzo => {
-    // "Hb 114 g/L", "Hb 121 -> 114 g/L": si tiene l'ULTIMO valore
-    const m = pezzo.trim().match(/^([\p{L}][\p{L}\p{N}.\s\/+-]*?)\s+((?:\d+(?:[.,]\d+)?\s*->\s*)*)(\d+(?:[.,]\d+)?)/u);
-    if(m) out[m[1].toLowerCase().replace(/\s+/g, ' ').trim()] = m[3];
-  });
-  return out;
-}
-// riga di oggi con le frecce: "Hb 114 g/L" → "Hb 121 -> 114 g/L" (solo per
-// i valori senza freccia e presenti in un diario precedente)
-function rigaEsamiConAndamento(p, idPaziente, rigaOggi){
-  const giorni = diarioGiorniPaziente(p, idPaziente).filter(g => g.giorno < chiaveGiorno(Date.now())).reverse();
-  const precedenti = {};
-  giorni.forEach(g => {
-    const v = valoriEsami(rigaEsami(soloAggiunte(g.testo) || g.testo));
-    Object.keys(v).forEach(k => { if(!(k in precedenti)) precedenti[k] = v[k]; });
-  });
-  let cambiati = 0;
-  const intestazione = rigaOggi.match(/^[^:]*:\s*/)[0];
-  const corpo = rigaOggi.slice(intestazione.length).split(/([,;])/).map(pezzo => {
-    if(/^[,;]$/.test(pezzo) || /->/.test(pezzo)) return pezzo;
-    const m = pezzo.match(/^(\s*)([\p{L}][\p{L}\p{N}.\s\/+-]*?)(\s+)(\d+(?:[.,]\d+)?)/u);
-    if(!m) return pezzo;
-    const prima = precedenti[m[2].toLowerCase().replace(/\s+/g, ' ').trim()];
-    if(prima === undefined) return pezzo;
-    cambiati++;
-    return m[1] + m[2] + m[3] + prima + ' -> ' + pezzo.slice(m[0].length - m[4].length);
-  }).join('');
-  return cambiati ? intestazione + corpo : null;
-}
-
 // ---------- 4. avvisi rene/farmaci ----------
 function avvisiReneFarmaci(p, idPaziente){
   if(typeof mdcValutaRene !== 'function' || typeof FARMACI_DB === 'undefined') return [];
@@ -12993,25 +12954,6 @@ function renderRiepilogo(){
         isolamentoBadge.textContent = 'i';
         isolamentoBadge.onclick = (e) => { e.stopPropagation(); apriIsolamentoModal(isoStato); };
         rightWrap.appendChild(isolamentoBadge);
-      }
-    }
-    // "-> esami": aggiunge alla riga degli esami di oggi i valori dell'ultimo
-    // diario precedente ("Hb 121 -> 114"); compare solo se c'è qualcosa da fare
-    if(!diariMostraIeri){
-      const rigaOggi = rigaEsami(soloAggiunte(testo));
-      const nuova = rigaOggi ? rigaEsamiConAndamento(p, id, rigaOggi) : null;
-      if(nuova){
-        const b = document.createElement('button');
-        b.className = 'copia-btn';
-        b.textContent = '-> esami';
-        b.title = 'Aggiungi i valori precedenti agli esami di oggi';
-        b.onclick = () => {
-          const r = rigaEsami(body.value);
-          const n2 = r ? rigaEsamiConAndamento(p, id, r) : null;
-          if(n2){ body.value = body.value.replace(r, n2); body.dispatchEvent(new Event('input', { bubbles:true })); }
-          b.remove();
-        };
-        rightWrap.appendChild(b);
       }
     }
     rightWrap.appendChild(copiaBtn);
