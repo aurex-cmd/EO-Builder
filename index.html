@@ -13241,12 +13241,23 @@ function renderStrisciaRepartoDiari(nomi){
     tile.onclick = () => {
       const block = document.querySelector(`#riepilogo-lista .referto-block[data-letto="${CSS.escape(nome)}"]`);
       if(!block) return;
-      const header = document.querySelector('header');
       // si parte dall'intestazione del letto, appena sotto la testa fissa
-      // (barra Oggi/Reparto/Consegne + striscia dei letti)
+      // (barra Oggi/Reparto/Consegne + striscia dei letti). La testa si
+      // ferma a "top" (= altezza dell'intestazione dell'app): si legge il
+      // valore vero dallo stile, più i pallini che sporgono sotto i letti
+      aggiornaAltezzaHeader();
       const fissa = testa && testa.classList.contains('fissa') ? testa : el;
-      const sopra = (header ? header.offsetHeight : 0) + fissa.offsetHeight + 8;
-      window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - sopra, behavior: 'smooth' });
+      const fondoTesta = () => (parseFloat(getComputedStyle(fissa).top) || 0) + fissa.offsetHeight;
+      const MARGINE = 14;
+      window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY - fondoTesta() - MARGINE, behavior: 'smooth' });
+      // a scorrimento finito si ricontrolla (caratteri caricati tardi,
+      // intestazione che cambia altezza...) e si corregge se serve
+      clearTimeout(el._correzione);
+      el._correzione = setTimeout(() => {
+        const sotto = fissa.getBoundingClientRect().bottom + MARGINE;
+        const diff = block.getBoundingClientRect().top - sotto;
+        if(Math.abs(diff) > 2) window.scrollBy({ top: diff, behavior: 'smooth' });
+      }, 700);
     };
     grid.appendChild(tile);
   });
@@ -13259,6 +13270,10 @@ function aggiornaAltezzaHeader(){
   if(header) document.documentElement.style.setProperty('--altezza-header', header.offsetHeight + 'px');
 }
 window.addEventListener('resize', aggiornaAltezzaHeader);
+// l'intestazione può cambiare altezza senza che la finestra cambi (caratteri
+// caricati dopo, data, pallino di sincronizzazione): la testa fissa di Diari
+// deve fermarsi sempre esattamente sotto
+if(window.ResizeObserver){ const h = document.querySelector('header'); if(h) new ResizeObserver(aggiornaAltezzaHeader).observe(h); }
 
 function toccaDiariGiorno(){
   const attivo = !diariVistaConsegne && !diariVistaReparto;
