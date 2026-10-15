@@ -352,54 +352,37 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px; margin:0 0 7px; }
-  .diario-aiuti .aiuto{ font-size:11.5px; padding:2px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
-  /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
-  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#5dff7e; color:#5dff7e; }
-  /* livello normale: pillola chiara verde menta con la capsula */
-  .diario-aiuti .aiuto.atb.liv0{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#dcf3eb; border-color:#bfe6d8; color:#1f5f50; padding:3px 10px 3px 8px;
+  /* etichette del diario: sobrie, sfondo neutro e una barretta colorata
+     davanti a icona e nome. Il colore dice il tipo: antibiotico (verde,
+     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (viola),
+     avviso (pesca/ambra), dose già adeguata al rene (verde) */
+  /* le etichette partono poco prima del testo del diario (rientro della casella) */
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px 10px; }
+  .diario-aiuti .aiuto{
+    --acc:#93a4b1;
+    position:relative; display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--font-body); font-weight:600; font-size:12px; line-height:1.35;
+    padding:2px 8px 2px 11px; border-radius:6px; border:none;
+    background:rgba(255,255,255,.055); color:var(--ink);
   }
-  .diario-aiuti .aiuto.atb.liv0 svg{ width:13px; height:13px; flex-shrink:0; }
-  /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
-  .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
-  .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
-  /* 7° giorno: pillola arancione piena col triangolo */
-  .diario-aiuti .aiuto.atb.liv1{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
+  .diario-aiuti .aiuto::before{
+    content:''; position:absolute; left:3px; top:4px; bottom:4px; width:3px; border-radius:2px; background:var(--acc);
   }
-  .diario-aiuti .aiuto.atb.liv1 svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
-  /* dal 14° giorno: pillola rossa piena col triangolo */
-  .diario-aiuti .aiuto.atb.liv2{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:700; font-size:12.5px;
-    background:#d9443f; border-color:#d9443f; color:#fff; padding:3px 10px 3px 8px;
-  }
-  .diario-aiuti .aiuto.atb.liv2 svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ffe1df; opacity:1; }
-  /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
-  .diario-aiuti .aiuto.richiesta{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
-  }
-  .diario-aiuti .aiuto.richiesta svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
-  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
-  /* dimissione con CV ancora in sede: pillola pesca col triangolo */
-  .diario-aiuti .aiuto.cv{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
-  }
-  .diario-aiuti .aiuto.cv svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
-  .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
+  .diario-aiuti .aiuto svg{ width:13px; height:13px; flex-shrink:0; }
+  .diario-aiuti .aiuto svg .p{ fill:var(--acc); }
+  .diario-aiuti .aiuto svg .ps{ stroke:var(--acc); fill:none; }
+  .diario-aiuti .aiuto svg .b{ stroke:#1d252e; }
+  .diario-aiuti .aiuto svg .bf{ fill:#1d252e; }
+  .diario-aiuti .aiuto .gg{ font-size:11px; font-weight:500; color:var(--ink-dim); }
+  .diario-aiuti .aiuto.atb{ --acc:#35d0ae; }
+  .diario-aiuti .aiuto.atb.liv1{ --acc:#f0a23a; }
+  .diario-aiuti .aiuto.atb.liv2{ --acc:#ef5a52; }
+  .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ef5a52; font-weight:700; }
+  .diario-aiuti .aiuto.richiesta{ --acc:#b18cf0; }
+  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--ink-dim); font-weight:700; padding:0 0 0 5px; margin-left:1px; border-left:1px solid rgba(255,255,255,.14); }
+  .diario-aiuti .aiuto.cv{ --acc:#f29a64; }
+  .diario-aiuti .aiuto.rene{ --acc:#e0a030; cursor:pointer; }
+  .diario-aiuti .aiuto.rene.ok{ --acc:#35d0ae; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
   .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
   .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
@@ -2390,54 +2373,37 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px; margin:0 0 7px; }
-  .diario-aiuti .aiuto{ font-size:11.5px; padding:2px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
-  /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
-  .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#0a765f; color:#0a765f; }
-  /* livello normale: pillola chiara verde menta con la capsula */
-  .diario-aiuti .aiuto.atb.liv0{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#dcf3eb; border-color:#bfe6d8; color:#1f5f50; padding:3px 10px 3px 8px;
+  /* etichette del diario: sobrie, sfondo neutro e una barretta colorata
+     davanti a icona e nome. Il colore dice il tipo: antibiotico (verde,
+     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (viola),
+     avviso (pesca/ambra), dose già adeguata al rene (verde) */
+  /* le etichette partono poco prima del testo del diario (rientro della casella) */
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px 10px; }
+  .diario-aiuti .aiuto{
+    --acc:#4f5d68;
+    position:relative; display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--font-body); font-weight:600; font-size:12px; line-height:1.35;
+    padding:2px 8px 2px 11px; border-radius:6px; border:none;
+    background:rgba(20,30,40,.055); color:var(--ink);
   }
-  .diario-aiuti .aiuto.atb.liv0 svg{ width:13px; height:13px; flex-shrink:0; }
-  /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
-  .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
-  .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
-  /* 7° giorno: pillola arancione piena col triangolo */
-  .diario-aiuti .aiuto.atb.liv1{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
+  .diario-aiuti .aiuto::before{
+    content:''; position:absolute; left:3px; top:4px; bottom:4px; width:3px; border-radius:2px; background:var(--acc);
   }
-  .diario-aiuti .aiuto.atb.liv1 svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
-  /* dal 14° giorno: pillola rossa piena col triangolo */
-  .diario-aiuti .aiuto.atb.liv2{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:700; font-size:12.5px;
-    background:#d9443f; border-color:#d9443f; color:#fff; padding:3px 10px 3px 8px;
-  }
-  .diario-aiuti .aiuto.atb.liv2 svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ffe1df; opacity:1; }
-  /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
-  .diario-aiuti .aiuto.richiesta{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
-  }
-  .diario-aiuti .aiuto.richiesta svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
-  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
-  /* dimissione con CV ancora in sede: pillola pesca col triangolo */
-  .diario-aiuti .aiuto.cv{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--font-body); font-weight:600; font-size:12.5px;
-    background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
-  }
-  .diario-aiuti .aiuto.cv svg{ width:13px; height:13px; flex-shrink:0; }
-  .diario-aiuti .aiuto.rene{ border-color:#a86400; color:#a86400; cursor:pointer; }
-  .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
+  .diario-aiuti .aiuto svg{ width:13px; height:13px; flex-shrink:0; }
+  .diario-aiuti .aiuto svg .p{ fill:var(--acc); }
+  .diario-aiuti .aiuto svg .ps{ stroke:var(--acc); fill:none; }
+  .diario-aiuti .aiuto svg .b{ stroke:#eef1f3; }
+  .diario-aiuti .aiuto svg .bf{ fill:#eef1f3; }
+  .diario-aiuti .aiuto .gg{ font-size:11px; font-weight:500; color:var(--ink-dim); }
+  .diario-aiuti .aiuto.atb{ --acc:#0a8a6c; }
+  .diario-aiuti .aiuto.atb.liv1{ --acc:#d9822b; }
+  .diario-aiuti .aiuto.atb.liv2{ --acc:#d23a34; }
+  .diario-aiuti .aiuto.atb.liv2 .gg{ color:#d23a34; font-weight:700; }
+  .diario-aiuti .aiuto.richiesta{ --acc:#7b4fd0; }
+  .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--ink-dim); font-weight:700; padding:0 0 0 5px; margin-left:1px; border-left:1px solid rgba(20,30,40,.16); }
+  .diario-aiuti .aiuto.cv{ --acc:#e07a3c; }
+  .diario-aiuti .aiuto.rene{ --acc:#c98a10; cursor:pointer; }
+  .diario-aiuti .aiuto.rene.ok{ --acc:#0a8a6c; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
   .diario-consegna-pallini{ display:inline-flex; gap:4px; margin-left:10px; cursor:pointer; align-self:center; }
   .diario-consegna-pallino{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
@@ -12911,7 +12877,7 @@ function rigaAiutiDiario(p, id){
     const c = document.createElement('span');
     c.className = 'aiuto cv';
     c.title = 'Dimissione programmata con catetere vescicale in sede';
-    c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="#7a3810"/><path d="M12 9v4.6" stroke="#fde2cc" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" fill="#fde2cc"/></svg>Valuta rimozione CV';
+    c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" class="p"/><path d="M12 9v4.6" class="b" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" class="bf"/></svg>Valuta rimozione CV';
     riga.appendChild(c);
   }
   // etichetta dell'antibiotico con i giorni; dal 7° giorno diventa un avviso
@@ -12923,12 +12889,12 @@ function rigaAiutiDiario(p, id){
     // richieste: "Amoxi/clav IV gg" (solo a video: a.etichetta, "gg4", resta
     // com'è per le consegne)
     const gg = `<span class="gg">${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</span>`;
-    if(a.livello === 1) c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="#3a2000"/><path d="M12 9v4.6" stroke="#f0a23a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" fill="#f0a23a"/></svg>' + aggConsEsc(a.nome) + ' ' + gg;
-    else if(a.livello) c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="#fff"/><path d="M12 9v4.6" stroke="#d9443f" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" fill="#d9443f"/></svg>' + aggConsEsc(a.nome) + ' ' + gg;
+    if(a.livello === 1) c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" class="p"/><path d="M12 9v4.6" class="b" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" class="bf"/></svg>' + aggConsEsc(a.nome) + ' ' + gg;
+    else if(a.livello) c.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" class="p"/><path d="M12 9v4.6" class="b" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.3" class="bf"/></svg>' + aggConsEsc(a.nome) + ' ' + gg;
     else {
       c.classList.add('liv0');
       // capsula in diagonale: metà piena verde scuro, metà chiara
-      c.innerHTML = '<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="3" y="7.5" width="18" height="9" rx="4.5" fill="#cfeee3" stroke="#1f5f50" stroke-width="1.6"/><path d="M7.5 7.5H12v9H7.5a4.5 4.5 0 010-9z" fill="#1f5f50"/></g></svg>' + aggConsEsc(a.nome) + ' ' + gg;
+      c.innerHTML = '<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="3" y="7.5" width="18" height="9" rx="4.5" class="ps" stroke-width="1.8"/><path d="M7.5 7.5H12v9H7.5a4.5 4.5 0 010-9z" class="p"/></g></svg>' + aggConsEsc(a.nome) + ' ' + gg;
     }
     c.title = a.livello === 2 ? 'Oltre 14 giorni di antibiotico: valutare sospensione' : a.livello === 1 ? '7 giorni di antibiotico: valutare durata o de-escalation' : 'Giorni di terapia antibiotica';
     riga.appendChild(c);
@@ -12938,7 +12904,7 @@ function rigaAiutiDiario(p, id){
     c.className = 'aiuto richiesta';
     c.title = 'Richiesta ancora senza esito — tocca ✓ se fatta';
     // icona: modulo di richiesta (cartellina con righe), piena in giallo scuro
-    c.innerHTML = `<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17.5" rx="2.6" fill="#6a5210"/><rect x="8.6" y="2.4" width="6.8" height="3.6" rx="1.3" fill="#6a5210" stroke="#fbf1c4" stroke-width="1.2"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4" stroke="#fbf1c4" stroke-width="1.7" stroke-linecap="round"/></svg><span class="r">${aggConsEsc(r.testo)}</span> <span class="gg">${r.giorni ? r.giorni + ' g' : 'oggi'}</span> <span class="ok">✓</span>`;
+    c.innerHTML = `<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17.5" rx="2.6" class="p"/><rect x="8.6" y="2.4" width="6.8" height="3.6" rx="1.3" class="p b" stroke-width="1.2"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4" class="b" stroke-width="1.7" stroke-linecap="round"/></svg><span class="r">${aggConsEsc(r.testo)}</span> <span class="gg">${r.giorni ? r.giorni + ' g' : 'oggi'}</span> <span class="ok">✓</span>`;
     c.querySelector('.ok').onclick = (e) => { e.stopPropagation(); chiudiRichiesta(id, r); renderRiepilogo(); };
     riga.appendChild(c);
   });
