@@ -2018,6 +2018,10 @@
   #diari-reparto-strip{ padding:0 0 12px; }
   #diari-reparto-strip .bed-grid{ grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); column-gap:7px; row-gap:9px; }
   #diari-reparto-strip .bed-tile{ font-size:12.5px; cursor:pointer; }
+  /* il tocco arriva sempre al riquadro del letto, mai a nome/pallini al suo
+     interno: quelli vengono riscritti quando la striscia si aggiorna (es.
+     il diario che perde il focus proprio per quel tocco) e il tocco andava perso */
+  #diari-reparto-strip .bed-grid > * *{ pointer-events:none; }
   /* tag della data in alto a destra: solo da leggere, niente freccia */
   .active-bed-pill.pill-data{ cursor:default; font-size:10.5px; padding:3px 9px; top:-6px; }
   .active-bed-pill.pill-data::after{ display:none; }
@@ -13344,9 +13348,8 @@ function renderStrisciaRepartoDiari(nomi){
   nomiStrisciaReparto = nomi.slice();
   const el = document.getElementById('diari-reparto-strip');
   if(!el) return;
-  el.innerHTML = '';
   const testa = document.getElementById('diari-testa');
-  if(!nomi.length){ el.style.display = 'none'; if(testa) testa.classList.remove('fissa'); return; }
+  if(!nomi.length){ el.innerHTML = ''; el.style.display = 'none'; if(testa) testa.classList.remove('fissa'); return; }
   el.style.display = '';
   if(testa) testa.classList.add('fissa');
   const patients = loadPatients(), consegne = loadConsegne(), critici = loadCritici();
@@ -13367,6 +13370,11 @@ function renderStrisciaRepartoDiari(nomi){
     tile.onclick = () => {
       const block = document.querySelector(`#riepilogo-lista .referto-block[data-letto="${CSS.escape(nome)}"]`);
       if(!block) return;
+      // su iPhone, toccando un letto la casella in cui si stava scrivendo
+      // resta attiva (tastiera aperta): Safari continuerebbe a riportare la
+      // pagina sul cursore, e la tastiera che si chiude a metà movimento
+      // cambia l'altezza dello schermo. Si chiude prima di partire
+      if(document.activeElement && document.activeElement !== document.body && document.activeElement.blur) document.activeElement.blur();
       // si parte dall'intestazione del letto, appena sotto la testa fissa
       // (barra Oggi/Reparto/Consegne + striscia dei letti). La testa si
       // ferma a "top" (= altezza dell'intestazione dell'app): si legge il
@@ -13379,21 +13387,63 @@ function renderStrisciaRepartoDiari(nomi){
       // testa che si blocca in alto...) la destinazione si aggiorna da sola,
       // senza arrivare nel punto sbagliato e poi correggere con uno scatto
       cancelAnimationFrame(el._anim);
-      let passi = 0, ultimoY = -1;
+      (el._correzioni || []).forEach(clearTimeout);
+      const resto = () => block.getBoundingClientRect().top - ((parseFloat(getComputedStyle(fissa).top) || 0) + fissa.offsetHeight + MARGINE);
+      // se nel frattempo si tocca o si scorre la pagina a mano, il
+      // movimento (e le correzioni sotto) si fermano: comanda chi scorre
+      let interrotto = false;
+      const ferma = () => { interrotto = true; };
+      window.addEventListener('touchstart', ferma, { once:true, passive:true });
+      window.addEventListener('wheel', ferma, { once:true, passive:true });
+      let passi = 0, fermi = 0, ultimoY = -1;
       const passo = () => {
-        const fondo = (parseFloat(getComputedStyle(fissa).top) || 0) + fissa.offsetHeight + MARGINE;
-        const resto = block.getBoundingClientRect().top - fondo;
-        // arrivato, o la pagina non può scorrere oltre (ultimi letti)
-        if(Math.abs(resto) < 1 || passi++ > 90 || window.scrollY === ultimoY) return;
+        if(interrotto) return;
+        const r = resto();
+        if(Math.abs(r) < 1 || passi++ > 120) return;
+        // fermo per più fotogrammi di fila: la pagina non può scorrere oltre
+        // (ultimi letti). Un solo fotogramma fermo non basta: Safari a volte
+        // non applica un passo (arrotondamenti, barra degli indirizzi)
+        fermi = window.scrollY === ultimoY ? fermi + 1 : 0;
+        if(fermi >= 4) return;
         ultimoY = window.scrollY;
-        window.scrollBy({ top: Math.abs(resto) < 3 ? resto : resto * 0.22, behavior:'instant' });
+        // passi di almeno 1px (sotto il pixel Safari non si muove affatto)
+        const d = Math.abs(r) < 4 ? r : Math.sign(r) * Math.max(1, Math.abs(r) * 0.22);
+        window.scrollBy({ top: d, behavior:'instant' });
         el._anim = requestAnimationFrame(passo);
       };
       el._anim = requestAnimationFrame(passo);
+      // a movimento finito la pagina può ancora cambiare sotto (tastiera che
+      // si chiude, barra degli indirizzi, altezze delle caselle ricalcolate):
+      // si ricontrolla un paio di volte e, se serve, si corregge di colpo
+      el._correzioni = [500, 1000].map(ms => setTimeout(() => {
+        if(interrotto) return;
+        const r = resto();
+        if(Math.abs(r) > 2) window.scrollBy({ top: r, behavior:'instant' });
+      }, ms));
     };
+    tile.dataset.letto = nome;
     grid.appendChild(tile);
   });
-  el.appendChild(grid);
+  // stessi letti di prima (succede a ogni aggiornamento mentre si scrive, e
+  // quando un diario perde il focus perché si tocca un letto): si aggiornano
+  // i riquadri esistenti invece di sostituirli. Sostituendoli, il letto
+  // appena toccato spariva prima che il tocco arrivasse, e la pagina non
+  // andava al diario giusto
+  const vecchiaGriglia = el.querySelector('.bed-grid');
+  const vecchi = vecchiaGriglia ? [...vecchiaGriglia.children] : [];
+  const nuovi = [...grid.children];
+  if(vecchi.length === nuovi.length && nuovi.every((t, i) => vecchi[i].dataset.letto === t.dataset.letto)){
+    nuovi.forEach((t, i) => {
+      const v = vecchi[i];
+      if(v.className !== t.className) v.className = t.className;
+      if(v.innerHTML !== t.innerHTML) v.innerHTML = t.innerHTML;
+      if(v.title !== t.title) v.title = t.title;
+      if(v.getAttribute('style') !== t.getAttribute('style')){ if(t.getAttribute('style') === null) v.removeAttribute('style'); else v.setAttribute('style', t.getAttribute('style')); }
+    });
+  } else {
+    el.innerHTML = '';
+    el.appendChild(grid);
+  }
   aggiornaAltezzaHeader();
 }
 // la striscia si ferma subito sotto l'intestazione (anch'essa fissa)
@@ -14138,7 +14188,9 @@ function autoResizeTextarea(el){
   if(window.scrollY !== yPrima) window.scrollTo(0, yPrima);
   // mentre si scrive, la riga del cursore resta visibile sopra il fondo
   // dello schermo (o sopra la tastiera), senza spostare altro
-  if(document.activeElement === el) mostraRigaCursore(el);
+  // (solo subito dopo un tasto: non quando l'altezza si ricalcola per altri
+  // motivi, es. la barra di Safari o la tastiera che si chiude)
+  if(document.activeElement === el && performance.now() - ultimoTastoDiario < 400) mostraRigaCursore(el);
   // diario con righe del giorno prima: riallinea la copia in grigio ogni
   // volta che il testo cambia, anche da codice (score, farmaci, EGA...)
   if(el._aggiornaSpecchio){
@@ -14149,6 +14201,8 @@ function autoResizeTextarea(el){
     if(sp && sp.scrollHeight > el.clientHeight) el.style.height = (sp.scrollHeight + bordi + 2) + 'px';
   }
 }
+let ultimoTastoDiario = -1e9;
+document.addEventListener('input', () => { ultimoTastoDiario = performance.now(); }, true);
 // posizione verticale (nella pagina) della riga del cursore in una casella
 // che si allunga col testo: una copia invisibile con lo stesso carattere e
 // la stessa larghezza, riempita fino al cursore
