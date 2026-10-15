@@ -11312,10 +11312,16 @@ const FRASI_DIMISSIONE_DOMANI = [
   'dimissione programmata per domani',
   'programmate dimissioni per domani'
 ];
+// oltre alle frasi fisse, "dimesso/a" o "dimissione/i" seguiti da "domani"
+// nella stessa frase ("si confermano dimissioni domani", "dimissione
+// prevista per domani", "dimesso in mattinata domani"), senza esami o un
+// altro giorno in mezzo
+const RE_DIMISSIONE_DOMANI = /\b(?:dimess[oa]|dimission[ei])\b(?:(?!esami|\bee\b|\beec\b|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,30}?\bdomani\b/;
 function haDimissioneDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
-  return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase));
+  return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase))
+    || RE_DIMISSIONE_DOMANI.test(testoExtra.toLowerCase().replace(/[ \t]+/g, ' '));
 }
 
 // variante per la dimissione di OGGI (non "programmata", già decisa/in
@@ -11327,6 +11333,7 @@ const FRASI_DIMISSIONE_OGGI = [
   'oggi dimessa',
   'oggi dimesso',
   'dimissione oggi',
+  'dimissioni oggi',
   'dimissione odierna'
 ];
 function haDimissioneOggi(testoExtra){
