@@ -6122,11 +6122,11 @@ function aggiungiUnitaMancantiTesto(testo){
     // PRIMA della regex del valore singolo qui sotto, altrimenti quella si
     // fermerebbe (giustamente prudente) al primo valore, senza mai
     // arrivare a riconoscere l'andamento nel suo insieme
-    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, catena) => {
       return `${nomeMatch}${spazio}${catena} ${voce.unit}`;
     });
-    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
       return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
     });
@@ -12582,7 +12582,11 @@ function richiesteDelTesto(testo){
 function esitoPresente(chiave, testo){
   if(!chiave) return false;
   const t = (testo || '').toLowerCase().replace(/\bvisita\s+/g, 'v. ').replace(/\bvalutazione\s+/g, 'val. ').replace(/\bconsulenza\s+/g, 'cons. ');
-  const k = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  let k = chiave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  // "R rivalutazione infettivologica" si chiude anche con "Consulenza
+  // infettivologica: …" o "Visita infettivologica: …": conta lo specialista
+  const mTipo = chiave.match(/^(?:v\.|val\.|cons\.|rivalutazion\w*|riv\.)\s+(.+)$/);
+  if(mTipo) k = String.raw`(?:v\.|val\.|cons\.|rivalutazion\w*|riv\.)\s+` + mTipo[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
   return new RegExp(String.raw`(?:^|\n|[.;]\s*)\s*(?:[-–•]\s*)?` + k + String.raw`[^\n:]{0,50}:|\beseguit[aoie]\s+(?:[a-zà-ù]+\s+){0,2}` + k + String.raw`|\b` + k + String.raw`\s+(?:eseguit|effettuat|refertat)\w*|\b` + k + String.raw`\s+(?:negativ|nella\s+norma|positiv)\w*`, 'i').test(t);
 }
 function richiesteInSospeso(p, idPaziente){
@@ -12741,6 +12745,16 @@ function antibioticiInCorso(p, idPaziente){
       // qui conta la frase intera ("prosegue Levofloxacina, II giornata");
       // il punto spezza la frase solo se non è dentro una data ("3.10")
       const frasiIntere = (giorni[i].testo || '').split(/[;\n]|\.(?!\d)/).filter(f => reG.test(f));
+      // "si avvia Linezolid" senza data né giornata: è la I giornata di quel
+      // giorno, anche se un'altra frase (una consulenza: "durata da
+      // calcolare a partire dal 07/10") riporta una data più vecchia
+      if(frasi(giorni[i].testo).some(f => RE_INIZIO_ATB.test(f) && !RE_STOP_ATB.test(f))){
+        const conAvvio = frasiIntere.filter(f => RE_INIZIO_ATB.test(f));
+        if(!conAvvio.some(f => dataInizioScritta(f, giorni[i].giorno) || giornataScritta(f))){
+          n = giorniTra(giorni[i].giorno, oggi) + 1;
+          break;
+        }
+      }
       // data d'inizio scritta ("Tazocin iniziato il 03/10"): si contano i
       // giorni da lì a oggi, il giorno d'inizio è la I giornata
       const dInizio = frasiIntere.map(f => dataInizioScritta(f, giorni[i].giorno)).find(x => x);
@@ -12777,10 +12791,15 @@ function avvisiReneFarmaci(p, idPaziente){
   terapia = terapia.toLowerCase();
   const nomi = Object.keys(FARMACI_DB).concat(Object.keys(FARMACI_ALIAS || {}));
   const visti = new Set(), out = [];
+  // un antibiotico sospeso ("si sospendono ceftriaxone ed ampicillina")
+  // resta nominato nel diario, ma non serve più l'avviso sulla dose
+  const atbAttivi = new Set(antibioticiInCorso(p, idPaziente).map(a => a.nome));
   nomi.forEach(n => {
     const chiave = (FARMACI_ALIAS && FARMACI_ALIAS[n]) || n;
     const def = FARMACI_DB[chiave];
     if(!def || !def.fasce || visti.has(chiave)) return;
+    const atb = ANTIBIOTICI.find(([, re]) => new RegExp(String.raw`^(?:` + re.source + String.raw`)$`, 'i').test(n));
+    if(atb && !atbAttivi.has(atb[0])) return;
     if(!new RegExp(String.raw`\b` + n + String.raw`\w*`, 'i').test(terapia)) return;
     const fasce = def.fasce;
     const i = fasce.findIndex(f => r.vfg >= f.min && r.vfg < f.max);
