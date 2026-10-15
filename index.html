@@ -354,9 +354,10 @@
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
   /* etichette del diario: sobrie, sfondo neutro e una barretta colorata
      davanti a icona e nome. Il colore dice il tipo: antibiotico (verde,
-     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (giallo),
+     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (viola),
      avviso (pesca/ambra), dose già adeguata al rene (verde) */
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px; }
+  /* le etichette partono poco prima del testo del diario (rientro della casella) */
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px 10px; }
   .diario-aiuti .aiuto{
     --acc:#93a4b1;
     position:relative; display:inline-flex; align-items:center; gap:5px;
@@ -377,7 +378,7 @@
   .diario-aiuti .aiuto.atb.liv1{ --acc:#f0a23a; }
   .diario-aiuti .aiuto.atb.liv2{ --acc:#ef5a52; }
   .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ef5a52; font-weight:700; }
-  .diario-aiuti .aiuto.richiesta{ --acc:#e6c14a; }
+  .diario-aiuti .aiuto.richiesta{ --acc:#b18cf0; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--ink-dim); font-weight:700; padding:0 0 0 5px; margin-left:1px; border-left:1px solid rgba(255,255,255,.14); }
   .diario-aiuti .aiuto.cv{ --acc:#f29a64; }
   .diario-aiuti .aiuto.rene{ --acc:#e0a030; cursor:pointer; }
@@ -2374,9 +2375,10 @@
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
   /* etichette del diario: sobrie, sfondo neutro e una barretta colorata
      davanti a icona e nome. Il colore dice il tipo: antibiotico (verde,
-     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (giallo),
+     arancione dal 7° giorno, rosso dal 14°), richiesta in sospeso (viola),
      avviso (pesca/ambra), dose già adeguata al rene (verde) */
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px; }
+  /* le etichette partono poco prima del testo del diario (rientro della casella) */
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 7px 10px; }
   .diario-aiuti .aiuto{
     --acc:#4f5d68;
     position:relative; display:inline-flex; align-items:center; gap:5px;
@@ -2397,7 +2399,7 @@
   .diario-aiuti .aiuto.atb.liv1{ --acc:#d9822b; }
   .diario-aiuti .aiuto.atb.liv2{ --acc:#d23a34; }
   .diario-aiuti .aiuto.atb.liv2 .gg{ color:#d23a34; font-weight:700; }
-  .diario-aiuti .aiuto.richiesta{ --acc:#c9a227; }
+  .diario-aiuti .aiuto.richiesta{ --acc:#7b4fd0; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:var(--ink-dim); font-weight:700; padding:0 0 0 5px; margin-left:1px; border-left:1px solid rgba(20,30,40,.16); }
   .diario-aiuti .aiuto.cv{ --acc:#e07a3c; }
   .diario-aiuti .aiuto.rene{ --acc:#c98a10; cursor:pointer; }
