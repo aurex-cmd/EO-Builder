@@ -1114,6 +1114,7 @@
      vero: niente JS da mantenere, funziona anche sui campi aggiunti in
      futuro, basta che abbiano un placeholder. */
   #clinical-view input[type=text]:not(:placeholder-shown),
+  #clinical-view #diuresi-volume:not(:placeholder-shown),
   #clinical-view textarea:not(#output):not(:placeholder-shown){
     border-color:var(--signal);
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
@@ -3144,6 +3145,7 @@
      vero: niente JS da mantenere, funziona anche sui campi aggiunti in
      futuro, basta che abbiano un placeholder. */
   #clinical-view input[type=text]:not(:placeholder-shown),
+  #clinical-view #diuresi-volume:not(:placeholder-shown),
   #clinical-view textarea:not(#output):not(:placeholder-shown){
     border-color:var(--signal);
     box-shadow:var(--clay-in-sm), 0 0 0 1px var(--signal);
@@ -4812,7 +4814,7 @@ applicaTema(temaAttuale());
   </div>
   <div class="group">
     <div class="inline-fields">
-      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100"></div>
+      <div class="field"><label>ml</label><input type="number" id="diuresi-volume" min="0" step="100" placeholder=" "></div>
       <div class="chips" id="diuresi-oligo"></div>
       <input type="text" class="wide" id="diuresi-note" placeholder="Nota libera">
     </div>
