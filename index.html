@@ -12651,6 +12651,9 @@ function dataInizioScritta(frase, giornoDiario){
 }
 const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|fine\s+terapia)\b/i;
 const RE_INIZIO_ATB = /\b(?:inizi\w*|avvi\w*|impost\w*|intrapres\w*|introdott\w*|aggiunt\w*|si\s+aggiunge|start)\b/i;
+// tutti i verbi che decidono di un antibiotico (stop, inizio, prosegue):
+// per capire a quale farmaco si riferisce ciascuno, vedi antibioticiInCorso
+const RE_VERBI_ATB = new RegExp(RE_STOP_ATB.source + '|' + RE_INIZIO_ATB.source + String.raw`|\b(?:prosegu\w*|continu\w*|mantien\w*|mantenut\w*|in\s+corso|in\s+atto)\b`, 'gi');
 // (aggiornato) l'antibiotico resta in corso anche nei giorni in cui il diario
 // non lo nomina più ("continua terapia in atto", o niente del tutto): il
 // conteggio prosegue finché non compare uno stop — del farmaco ("stop
@@ -12666,9 +12669,32 @@ function antibioticiInCorso(p, idPaziente){
   const risultati = [];
   ANTIBIOTICI.forEach(([nome, re]) => {
     const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)`, 'i');
-    // (anche la virgola separa: in "prosegue Ceftriaxone, inizia Tazocin"
-    // l'"inizia" è del Tazocin, non del Ceftriaxone)
-    const frasi = t => (t || '').split(/[.;,\n]/).filter(f => reG.test(f));
+    // per ogni citazione del farmaco, il verbo che lo riguarda: quello della
+    // sua parte di frase (la virgola separa: in "prosegue Ceftriaxone,
+    // inizia Tazocin" l'"inizia" è del Tazocin), il più vicino PRIMA del
+    // farmaco ("si sospende Ceftriaxone e si inizia Ampicillina"); se la
+    // sua parte non ha verbi è un elenco e vale quello della frase ("si
+    // sospendono Ceftriaxone, Ampicillina e Clindamicina": tutti e tre)
+    const frasi = t => {
+      const out = [];
+      (t || '').split(/[.;\n]/).forEach(fr => {
+        if(!reG.test(fr)) return;
+        const verbi = [...fr.matchAll(RE_VERBI_ATB)].map(m => ({ i:m.index, t:m[0] }));
+        const reTutti = new RegExp(reG.source, 'gi');
+        let m;
+        while((m = reTutti.exec(fr))){
+          const pos = m.index;
+          const inizioParte = fr.lastIndexOf(',', pos) + 1;
+          let fineParte = fr.indexOf(',', pos); if(fineParte < 0) fineParte = fr.length;
+          const nella = verbi.filter(v => v.i >= inizioParte && v.i < fineParte);
+          const cerca = nella.length ? nella : verbi;
+          const prima = cerca.filter(v => v.i < pos), dopo = cerca.filter(v => v.i > pos);
+          const v = prima.length ? prima[prima.length - 1] : dopo[0];
+          out.push((v ? v.t + ' ' : '') + m[0]);
+        }
+      });
+      return out;
+    };
     const eStop = f => RE_STOP_ATB.test(f) && !RE_INIZIO_ATB.test(f);
     // ultimo giorno in cui il farmaco è nominato
     let ultimo = -1;
@@ -13485,7 +13511,7 @@ const AGG_CONS_ABBREVIAZIONI = [
   [/\becografi[ae]\s+(?:dell['’]\s*|della\s+|del\s+|dello\s+|degli\s+|dei\s+|delle\s+)?/gi, 'Eco '],
   [/\bterapia\s+antibiotica\b|\bantibioticoterapia\b/gi, 'ATB'],
   [/\besami\s+(?:ematochimici|ematici|di\s+laboratorio)(?:\s+di\s+controllo)?\b|\besami\s+di\s+controllo\b/gi, 'EE'],
-  [/\bsi\s+sospende\b|\bsospes[oaie]\b|\bsospend[oe]\b|\bsospendere\b/gi, 'stop'],
+  [/\bsi\s+sospend(?:e|ono)\b|\bsospes[oaie]\b|\bsospend[oe]\b|\bsospendere\b/gi, 'stop'],
   [/\bsoluzione\s+fisiologica\b/gi, 'SF'],
   [/\bcatetere\s+vescicale\b/gi, 'CV'],
   [/\bossigenoterapia\b/gi, 'O2tp'],
