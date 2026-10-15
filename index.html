@@ -14098,6 +14098,15 @@ function autoResizeTextarea(el){
   // nascosta (vista non aperta): niente misure, varrebbero 0 — la si
   // ridimensiona quando torna visibile (vedi ridimensionaTextareaVisibili)
   if(!el.offsetParent) return;
+  // per misurare, la casella si accorcia un istante ("auto"): con un diario
+  // lungo la pagina si accorciava con lei, il browser riportava su lo
+  // scorrimento e poi, ridata l'altezza, la pagina saltava e l'ultima riga
+  // scritta finiva sotto il bordo dello schermo (o sotto la tastiera). Il
+  // contenitore tiene l'altezza mentre si misura, e lo scorrimento resta
+  const contenitore = el.parentElement;
+  const yPrima = window.scrollY;
+  const minPrima = contenitore ? contenitore.style.minHeight : '';
+  if(contenitore) contenitore.style.minHeight = contenitore.offsetHeight + 'px';
   el.style.height = 'auto';
   // con box-sizing:border-box l'altezza comprende anche il bordo, che
   // scrollHeight non conta: senza aggiungerlo l'ultima riga restava
@@ -14105,6 +14114,12 @@ function autoResizeTextarea(el){
   // (zoom dell'app, schermi ad alta densità)
   const bordi = el.offsetHeight - el.clientHeight;
   el.style.height = (el.scrollHeight + bordi + 2) + 'px';
+  if(contenitore) contenitore.style.minHeight = minPrima;
+  el.scrollTop = 0;
+  if(window.scrollY !== yPrima) window.scrollTo(0, yPrima);
+  // mentre si scrive, la riga del cursore resta visibile sopra il fondo
+  // dello schermo (o sopra la tastiera), senza spostare altro
+  if(document.activeElement === el) mostraRigaCursore(el);
   // diario con righe del giorno prima: riallinea la copia in grigio ogni
   // volta che il testo cambia, anche da codice (score, farmaci, EGA...)
   if(el._aggiornaSpecchio){
@@ -14114,6 +14129,34 @@ function autoResizeTextarea(el){
     const sp = el._specchio;
     if(sp && sp.scrollHeight > el.clientHeight) el.style.height = (sp.scrollHeight + bordi + 2) + 'px';
   }
+}
+// posizione verticale (nella pagina) della riga del cursore in una casella
+// che si allunga col testo: una copia invisibile con lo stesso carattere e
+// la stessa larghezza, riempita fino al cursore
+function mostraRigaCursore(el){
+  try{
+    const cs = getComputedStyle(el);
+    const copia = document.createElement('div');
+    ['fontFamily','fontSize','fontWeight','fontStyle','letterSpacing','lineHeight','paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth','boxSizing','wordSpacing','textIndent','tabSize'].forEach(k => { copia.style[k] = cs[k]; });
+    copia.style.cssText += ';position:absolute;visibility:hidden;left:-9999px;top:0;white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;border-style:solid;';
+    copia.style.width = el.offsetWidth + 'px';
+    copia.textContent = el.value.slice(0, el.selectionEnd) + '\u200b';
+    document.body.appendChild(copia);
+    const altRiga = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.4;
+    const fondoCursore = el.getBoundingClientRect().top + copia.offsetHeight - parseFloat(cs.paddingBottom || 0) - parseFloat(cs.borderBottomWidth || 0);
+    copia.remove();
+    const vv = window.visualViewport;
+    const fondoVisibile = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const MARGINE = 16;
+    if(fondoCursore > fondoVisibile - MARGINE) window.scrollBy(0, fondoCursore - fondoVisibile + MARGINE);
+    else {
+      // in alto non deve finire sotto l'intestazione fissa (e la testa di Diari)
+      let alto = vv ? vv.offsetTop : 0;
+      document.querySelectorAll('header, #diari-testa.fissa').forEach(h => { const r = h.getBoundingClientRect(); if(r.height && getComputedStyle(h).position.match(/sticky|fixed/)) alto = Math.max(alto, r.bottom); });
+      const cimaCursore = fondoCursore - altRiga;
+      if(cimaCursore < alto + 4) window.scrollBy(0, cimaCursore - alto - 4);
+    }
+  } catch(e){}
 }
 // ricalcola l'altezza di tutte le caselle che si allungano col testo e che
 // sono visibili ora: quando cambia la larghezza utile o il carattere, le
