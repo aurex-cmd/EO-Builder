@@ -352,8 +352,8 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
-  .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px; margin:0 0 7px; }
+  .diario-aiuti .aiuto{ font-size:11.5px; padding:2px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
   /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
   .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#5dff7e; color:#5dff7e; }
   /* livello normale: pillola chiara verde menta con la capsula */
@@ -362,7 +362,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#dcf3eb; border-color:#bfe6d8; color:#1f5f50; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv0 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv0 svg{ width:13px; height:13px; flex-shrink:0; }
   /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
   .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
   .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
@@ -372,7 +372,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv1 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv1 svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
   /* dal 14° giorno: pillola rossa piena col triangolo */
   .diario-aiuti .aiuto.atb.liv2{
@@ -380,7 +380,7 @@
     font-family:var(--font-body); font-weight:700; font-size:12.5px;
     background:#d9443f; border-color:#d9443f; color:#fff; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv2 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv2 svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ffe1df; opacity:1; }
   /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
   .diario-aiuti .aiuto.richiesta{
@@ -388,7 +388,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
   }
-  .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.richiesta svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
   /* dimissione con CV ancora in sede: pillola pesca col triangolo */
@@ -397,7 +397,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.cv svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.cv svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.rene{ border-color:#e0a030; color:#e0a030; cursor:pointer; }
   .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
@@ -635,27 +635,34 @@
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
   /* intestazione del diario: tondo con l'icona del letto, nome grande,
      orario sotto, pulsante Copia con icona */
-  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:8px; }
-  .referto-block .bed-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:6px; }
+  .referto-block .bed-head{ display:flex; align-items:center; gap:8px; min-width:0; }
   /* tondo pieno: oro da copiare, teal copiato, icona scura */
   .referto-block .bed-avatar{
-    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
     background:var(--folder); color:var(--panel-3); display:flex; align-items:center; justify-content:center;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   }
-  .referto-block .bed-avatar svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .bed-avatar svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-avatar svg .pieno{ fill:currentColor; stroke:none; }
   .referto-block.copiato .bed-avatar{ background:var(--signal); color:var(--panel-3); }
-  .referto-block .bed-head-testo{ min-width:0; }
+  .referto-block .bed-head-testo{ min-width:0; display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; }
   .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:15.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:16px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
   .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
-  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:1px 0 0; color:var(--ink-dim); }
+  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:0; color:var(--ink-dim); }
   /* stesse misure del Copia di prima, più l'icona */
-  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; gap:5px; }
+  /* Copia: solo l'icona, in un tondo */
+  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border-radius:50%; }
+  /* pallini E/D/i dell'intestazione del diario: una via di mezzo tra i
+     18px di prima e il tondo del Copia, per leggerli al volo */
+  .referto-block .bed-title-row .diario-esami-badge, .referto-block .bed-title-row .diario-dimissione-badge,
+  .referto-block .bed-title-row .diario-isolamento-badge{ width:23px; height:23px; font-size:12px; }
+  .referto-block .bed-title-row .diario-isolamento-badge{ font-size:13.5px; }
+  .referto-block .bed-title-row .diario-esami-badge + .diario-dimissione-badge{ margin-left:-11px; box-shadow:0 0 0 2px var(--panel-2); }
   .referto-block.copiato .copia-btn.copia-grande{ border-color:rgba(53,208,174,.38); color:#8fe8cc; }
   .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
-  .referto-block .copia-btn.copia-grande svg{ width:13px; height:13px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .copia-btn.copia-grande svg{ width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
@@ -2383,8 +2390,8 @@
   .bed-tile-consegna-badge.e{ background:#b18cf0; left:9px; }
   .bed-tile-consegna-badge.s{ background:#4dd0e1; left:24px; }
   .bed-tile-consegna-badge.c{ background:#e08cc0; left:39px; }
-  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px; }
-  .diario-aiuti .aiuto{ font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
+  .diario-aiuti{ display:flex; flex-wrap:wrap; gap:5px; margin:0 0 7px; }
+  .diario-aiuti .aiuto{ font-size:11.5px; padding:2px 8px; border-radius:999px; border:1px solid var(--clay-border); background:var(--panel); color:var(--ink); line-height:1.35; }
   /* antibiotico: verde; dal 7° giorno arancione, dal 14° rosso */
   .diario-aiuti .aiuto.atb{ font-family:var(--font-mono); border-color:#0a765f; color:#0a765f; }
   /* livello normale: pillola chiara verde menta con la capsula */
@@ -2393,7 +2400,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#dcf3eb; border-color:#bfe6d8; color:#1f5f50; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv0 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv0 svg{ width:13px; height:13px; flex-shrink:0; }
   /* giornata ("IV gg"): stessa misura/peso di "oggi" nelle richieste, tono tenue */
   .diario-aiuti .aiuto.atb .gg{ font-family:var(--font-body); font-size:11px; font-weight:500; opacity:.8; }
   .diario-aiuti .aiuto.atb.liv0 .gg{ color:#4f8a79; opacity:1; }
@@ -2403,7 +2410,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#f0a23a; border-color:#f0a23a; color:#3a2000; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv1 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv1 svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.atb.liv1 .gg{ color:#5a3500; opacity:1; }
   /* dal 14° giorno: pillola rossa piena col triangolo */
   .diario-aiuti .aiuto.atb.liv2{
@@ -2411,7 +2418,7 @@
     font-family:var(--font-body); font-weight:700; font-size:12.5px;
     background:#d9443f; border-color:#d9443f; color:#fff; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.atb.liv2 svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.atb.liv2 svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.atb.liv2 .gg{ color:#ffe1df; opacity:1; }
   /* richieste in sospeso: stessa pillola chiara dell'antibiotico, in giallo pastello */
   .diario-aiuti .aiuto.richiesta{
@@ -2419,7 +2426,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#fbf1c4; border-color:#efdc92; color:#6a5210; padding:3px 9px 3px 8px;
   }
-  .diario-aiuti .aiuto.richiesta svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.richiesta svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.richiesta .gg{ color:#8f7a3c; font-size:11px; font-weight:500; }
   .diario-aiuti .aiuto.richiesta .ok{ cursor:pointer; color:#6a5210; font-weight:700; padding:0 1px 0 3px; margin-left:1px; border-left:1px solid #e6d07e; }
   /* dimissione con CV ancora in sede: pillola pesca col triangolo */
@@ -2428,7 +2435,7 @@
     font-family:var(--font-body); font-weight:600; font-size:12.5px;
     background:#fde2cc; border-color:#f2bf98; color:#7a3810; padding:3px 10px 3px 8px;
   }
-  .diario-aiuti .aiuto.cv svg{ width:15px; height:15px; flex-shrink:0; }
+  .diario-aiuti .aiuto.cv svg{ width:13px; height:13px; flex-shrink:0; }
   .diario-aiuti .aiuto.rene{ border-color:#a86400; color:#a86400; cursor:pointer; }
   .diario-aiuti .aiuto.rene.ok{ border-color:#bfe6d8; background:#dcf3eb; color:#1f5f50; font-weight:600; }
   .referto-block.ha-consegne{ box-shadow:var(--clay-out-sm), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
@@ -2666,27 +2673,34 @@
   .referto-block .copia-btn:hover{ border-color:var(--folder); }
   /* intestazione del diario: tondo con l'icona del letto, nome grande,
      orario sotto, pulsante Copia con icona */
-  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:8px; }
-  .referto-block .bed-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .referto-block .bed-title-row:has(.bed-head){ margin-bottom:6px; }
+  .referto-block .bed-head{ display:flex; align-items:center; gap:8px; min-width:0; }
   /* tondo pieno: oro da copiare, teal copiato, icona scura */
   .referto-block .bed-avatar{
-    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
     background:var(--folder); color:var(--panel-3); display:flex; align-items:center; justify-content:center;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
   }
-  .referto-block .bed-avatar svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .bed-avatar svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-avatar svg .pieno{ fill:currentColor; stroke:none; }
   .referto-block.copiato .bed-avatar{ background:var(--signal); color:var(--panel-3); }
-  .referto-block .bed-head-testo{ min-width:0; }
+  .referto-block .bed-head-testo{ min-width:0; display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; }
   .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:15.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:16px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
   .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
-  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:1px 0 0; color:var(--ink-dim); }
+  .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:0; color:var(--ink-dim); }
   /* stesse misure del Copia di prima, più l'icona */
-  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; gap:5px; }
+  /* Copia: solo l'icona, in un tondo */
+  .referto-block .copia-btn.copia-grande{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border-radius:50%; }
+  /* pallini E/D/i dell'intestazione del diario: una via di mezzo tra i
+     18px di prima e il tondo del Copia, per leggerli al volo */
+  .referto-block .bed-title-row .diario-esami-badge, .referto-block .bed-title-row .diario-dimissione-badge,
+  .referto-block .bed-title-row .diario-isolamento-badge{ width:23px; height:23px; font-size:12px; }
+  .referto-block .bed-title-row .diario-isolamento-badge{ font-size:13.5px; }
+  .referto-block .bed-title-row .diario-esami-badge + .diario-dimissione-badge{ margin-left:-11px; box-shadow:0 0 0 2px var(--panel-2); }
   .referto-block.copiato .copia-btn.copia-grande{ border-color:rgba(10,118,95,.38); color:#0a765f; }
   .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
-  .referto-block .copia-btn.copia-grande svg{ width:13px; height:13px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .referto-block .copia-btn.copia-grande svg{ width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
     background:var(--panel-2); border:1px solid var(--clay-border); border-radius:12px;
@@ -12464,7 +12478,7 @@ function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
 // icone dell'intestazione dei diari (tondo del letto e pulsante Copia),
 // condivise dai diari normali e dai box "consegnato · non visitato"
 const SVG_LETTO_DIARIO = '<svg viewBox="0 0 24 24"><path d="M3 6v13M3 15.5h18V19"/><rect class="pieno" x="5.6" y="9.6" width="4.4" height="3.6" rx="1.2"/><path d="M11.5 15.5V11h6.5a3 3 0 013 3v1.5"/></svg>';
-const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005 6.5v13a2 2 0 002 2h10a2 2 0 002-2v-13a2 2 0 00-2-2h-1.5"/><rect x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/></svg>Copia';
+const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005 6.5v13a2 2 0 002 2h10a2 2 0 002-2v-13a2 2 0 00-2-2h-1.5"/><rect x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/></svg>';
 
 function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const block = document.createElement('div');
@@ -12498,6 +12512,7 @@ function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const copiaBtn = document.createElement('button');
   copiaBtn.className = 'copia-btn copia-grande';
   copiaBtn.innerHTML = SVG_COPIA_DIARIO;
+  copiaBtn.title = 'Copia'; copiaBtn.setAttribute('aria-label', 'Copia');
   titleRow.appendChild(copiaBtn);
   block.appendChild(titleRow);
   const body = document.createElement('textarea');
@@ -12932,7 +12947,9 @@ function rigaAiutiDiario(p, id){
     const vfgTxt = String(a.vfg).replace('.', ',');
     // dose scritta già giusta per la fascia: etichetta verde, non un avviso
     c.className = 'aiuto rene' + (a.ok ? ' ok' : '');
-    c.textContent = a.ok ? `✓ ${a.nome} ${a.scritta.testo}: adeguata a VFG ${vfgTxt}` : `⚠ ${a.nome}: VFG ${vfgTxt}`;
+    // dose già giusta: basta un "✓ Apixaban" piccolo (non chiede niente);
+    // il dettaglio è nella scheda che si apre toccandolo
+    c.textContent = a.ok ? `✓ ${a.nome}` : `⚠ ${a.nome}: VFG ${vfgTxt}`;
     c.title = `VFG ${vfgTxt} mL/min ${a.fonte} · fascia ${a.fascia}` + (a.ok ? '' : ': dose da verificare') + ' — tocca per la scheda';
     // la scheda che si apre mostra anche da dove arriva la VFG (il title
     // sul telefono non si vede)
@@ -13085,7 +13102,8 @@ function renderRiepilogo(){
       if(orarioCompilazione){
         const dateEl = document.createElement('div');
         dateEl.className = 'bed-date';
-        dateEl.textContent = orarioCompilazione.replace(', ', ' · ');
+        // nella vista di oggi la data è sempre oggi: basta l'orario
+        dateEl.textContent = orarioCompilazione.split(', ')[0];
         titleCol.appendChild(dateEl);
       }
     }
@@ -13093,6 +13111,7 @@ function renderRiepilogo(){
     const copiaBtn = document.createElement('button');
     copiaBtn.className = 'copia-btn copia-grande';
     copiaBtn.innerHTML = SVG_COPIA_DIARIO;
+    copiaBtn.title = 'Copia'; copiaBtn.setAttribute('aria-label', 'Copia');
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
       if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); aggiornaStrisciaRepartoDiari(); }
