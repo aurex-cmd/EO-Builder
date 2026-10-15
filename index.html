@@ -648,7 +648,7 @@
   .referto-block.copiato .bed-avatar{ background:var(--signal); color:var(--panel-3); }
   .referto-block .bed-head-testo{ min-width:0; display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; }
   .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:14.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:16px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
   .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
   .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:0; color:var(--ink-dim); }
   /* stesse misure del Copia di prima, più l'icona */
@@ -2680,7 +2680,7 @@
   .referto-block.copiato .bed-avatar{ background:var(--signal); color:var(--panel-3); }
   .referto-block .bed-head-testo{ min-width:0; display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; }
   .referto-block .bed-head-riga{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:14.5px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
+  .referto-block .bed-head .bed-title{ font-family:var(--font-display); font-size:16px; letter-spacing:.005em; color:var(--folder); line-height:1.2; }
   .referto-block.copiato .bed-head .bed-title{ color:var(--signal); }
   .referto-block .bed-head .bed-date{ font-family:var(--font-body); font-size:11.5px; font-weight:400; margin:0; color:var(--ink-dim); }
   /* stesse misure del Copia di prima, più l'icona */
@@ -12465,8 +12465,6 @@ function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
 // viene visitato, compare il suo diario normale al posto di questo box
 // icone dell'intestazione dei diari (tondo del letto e pulsante Copia),
 // condivise dai diari normali e dai box "consegnato · non visitato"
-// nell'intestazione l'icona del letto sta al posto della parola: "16.1"
-function nomeLettoBreve(nome){ return String(nome || '').replace(/^letto\s+/i, ''); }
 const SVG_LETTO_DIARIO = '<svg viewBox="0 0 24 24"><path d="M3 6v13M3 15.5h18V19"/><rect class="pieno" x="5.6" y="9.6" width="4.4" height="3.6" rx="1.2"/><path d="M11.5 15.5V11h6.5a3 3 0 013 3v1.5"/></svg>';
 const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005 6.5v13a2 2 0 002 2h10a2 2 0 002-2v-13a2 2 0 00-2-2h-1.5"/><rect x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/></svg>';
 
@@ -12491,7 +12489,7 @@ function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   titleWrap.appendChild(titleCol);
   const title = document.createElement('div');
   title.className = 'bed-title';
-  title.textContent = nomeLettoBreve(nome);
+  title.textContent = nome;
   titleLine.appendChild(title);
   aggiungiPalliniConsegnaDiari(titleLine, block, voce);
   const sotto = document.createElement('div');
@@ -13073,7 +13071,7 @@ function renderRiepilogo(){
 
     const title = document.createElement('div');
     title.className = 'bed-title';
-    title.textContent = nomeLettoBreve(p.name);
+    title.textContent = p.name;
     titleLine.appendChild(title);
     if(consegneOggi[p.name]) aggiungiPalliniConsegnaDiari(titleLine, block, consegneOggi[p.name]);
 
