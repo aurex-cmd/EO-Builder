@@ -13042,25 +13042,32 @@ function renderRiepilogo(){
     const rightWrap = document.createElement('div');
     rightWrap.style.cssText = 'display:flex; align-items:center; gap:8px; flex-shrink:0;';
     const extraTestoBadge = diariMostraIeri ? soloExtra : ((id === currentPatientId) ? state.outputExtra : p.state.outputExtra);
-    const pallD = diariMostraIeri
-      ? { esamiDomani: haEsamiDomani(extraTestoBadge), dimOggi: haDimissioneOggi(extraTestoBadge), dimDomani: haDimissioneDomani(extraTestoBadge) }
-      : pallinidataLetto(p, id, extraTestoBadge);
-    if(pallD.esamiDomani){
-      const esamiBadge = document.createElement('div');
-      esamiBadge.className = 'diario-esami-badge';
-      esamiBadge.title = 'Esami di controllo programmati per domani';
-      esamiBadge.textContent = 'E';
-      rightWrap.appendChild(esamiBadge);
-    }
-    // stesso meccanismo, per il pallino azzurro "D" (dimissione di oggi o
-    // programmata per domani, vedi haDimissioneOggi/haDimissioneDomani)
-    if(pallD.dimOggi || pallD.dimDomani){
-      const dimissioneBadge = document.createElement('div');
-      dimissioneBadge.className = 'diario-dimissione-badge';
-      dimissioneBadge.title = pallD.dimOggi ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
-      dimissioneBadge.textContent = 'D';
-      rightWrap.appendChild(dimissioneBadge);
-    }
+    // E e D si ridisegnano anche mentre si scrive nel diario (vedi
+    // l'evento input più sotto): scrivendo "esami per domani" la E compare
+    // subito nell'intestazione, senza dover uscire e rientrare in Diari
+    const disegnaPalliniED = (extraTesto) => {
+      rightWrap.querySelectorAll('.diario-esami-badge, .diario-dimissione-badge').forEach(x => x.remove());
+      const pallD = pallinidataLetto(p, id, extraTesto);
+      const nuovi = [];
+      if(pallD.esamiDomani){
+        const esamiBadge = document.createElement('div');
+        esamiBadge.className = 'diario-esami-badge';
+        esamiBadge.title = 'Esami di controllo programmati per domani';
+        esamiBadge.textContent = 'E';
+        nuovi.push(esamiBadge);
+      }
+      // stesso meccanismo, per il pallino azzurro "D" (dimissione di oggi o
+      // programmata per domani, vedi haDimissioneOggi/haDimissioneDomani)
+      if(pallD.dimOggi || pallD.dimDomani){
+        const dimissioneBadge = document.createElement('div');
+        dimissioneBadge.className = 'diario-dimissione-badge';
+        dimissioneBadge.title = pallD.dimOggi ? 'Dimissione di oggi' : 'Dimissione programmata per domani';
+        dimissioneBadge.textContent = 'D';
+        nuovi.push(dimissioneBadge);
+      }
+      nuovi.reverse().forEach(x => rightWrap.insertBefore(x, rightWrap.firstChild));
+    };
+    disegnaPalliniED(extraTestoBadge);
     // pallino "i" (isolamento): solo nella vista di oggi, non in quella di
     // "ieri" (lì le voci sono testo congelato, senza uno stato strutturato
     // da consultare per i tipi di isolamento — vedi schedeConDatiPerGiorno)
@@ -13134,6 +13141,10 @@ function renderRiepilogo(){
     // alle caselle già presenti — vedi fondo di quel blocco)
     if(typeof attivaMenuComandi === 'function') attivaMenuComandi(body);
     body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
+    body.addEventListener('input', () => {
+      const t = body.value, k = t.indexOf('\n\n');
+      disegnaPalliniED(diariSoloConsegneAttivo ? t : (k === -1 ? '' : t.slice(k + 2)));
+    });
     body.addEventListener('input', () => {
       // salvataggio (localStorage + cloud dell'intero archivio pazienti)
       // poco dopo l'ultimo tasto, non a ogni carattere: vedi
