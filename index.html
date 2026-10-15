@@ -645,6 +645,9 @@
   .referto-block .bed-title-row .diario-esami-badge + .diario-dimissione-badge{ margin-left:-11px; box-shadow:0 0 0 2px var(--panel-2); }
   .referto-block.copiato .copia-btn.copia-grande{ border-color:rgba(53,208,174,.38); color:#8fe8cc; }
   .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
+  .referto-block .copia-btn.copia-grande.fatto{ border-color:var(--signal); color:var(--signal); }
+  .referto-block .copia-btn.copia-grande.fatto svg{ stroke-width:2.8; animation:baffo-copiato .25s ease-out; }
+  @keyframes baffo-copiato{ from{ transform:scale(.4); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .referto-block .copia-btn.copia-grande svg{ width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
@@ -2670,6 +2673,9 @@
   .referto-block .bed-title-row .diario-esami-badge + .diario-dimissione-badge{ margin-left:-11px; box-shadow:0 0 0 2px var(--panel-2); }
   .referto-block.copiato .copia-btn.copia-grande{ border-color:rgba(10,118,95,.38); color:#0a765f; }
   .referto-block.copiato .copia-btn.copia-grande:hover{ border-color:var(--signal); }
+  .referto-block .copia-btn.copia-grande.fatto{ border-color:var(--signal); color:var(--signal); }
+  .referto-block .copia-btn.copia-grande.fatto svg{ stroke-width:2.8; animation:baffo-copiato .25s ease-out; }
+  @keyframes baffo-copiato{ from{ transform:scale(.4); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .referto-block .copia-btn.copia-grande svg{ width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .referto-block .bed-text{
     font-family:var(--font-mono); font-size:13px; line-height:1.6; color:var(--ink);
@@ -12450,6 +12456,15 @@ function aggiungiPalliniConsegnaDiari(titleWrap, block, voce){
 const SVG_LETTO_DIARIO = '<svg viewBox="0 0 24 24"><path d="M3 6v13M3 15.5h18V19"/><rect class="pieno" x="5.6" y="9.6" width="4.4" height="3.6" rx="1.2"/><path d="M11.5 15.5V11h6.5a3 3 0 013 3v1.5"/></svg>';
 const SVG_COPIA_DIARIO = '<svg viewBox="0 0 24 24"><path d="M8.5 4.5H7A2 2 0 005 6.5v13a2 2 0 002 2h10a2 2 0 002-2v-13a2 2 0 00-2-2h-1.5"/><rect x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/></svg>';
 
+// dopo "Copia": per un istante un baffo verde al posto della cartellina
+const SVG_BAFFO_COPIATO = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+function baffoCopiato(btn){
+  clearTimeout(btn._baffo);
+  btn.innerHTML = SVG_BAFFO_COPIATO;
+  btn.classList.add('fatto');
+  btn._baffo = setTimeout(() => { btn.innerHTML = SVG_COPIA_DIARIO; btn.classList.remove('fatto'); }, 1200);
+}
+
 function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
   const block = document.createElement('div');
   block.dataset.letto = nome;
@@ -12497,7 +12512,7 @@ function renderBoxConsegnaDiari(container, nome, voce, areeTesto){
     autoResizeTextarea(body);
   });
   body.addEventListener('blur', () => eseguiSalvataggioDiario(body));
-  copiaBtn.onclick = () => { if(body.value.trim()){ copiaTesto(body.value); block.classList.add('copiato'); } };
+  copiaBtn.onclick = () => { if(body.value.trim()){ copiaTesto(body.value); block.classList.add('copiato'); baffoCopiato(copiaBtn); } };
   block.appendChild(body);
   container.appendChild(block);
   areeTesto.push(body);
@@ -13084,6 +13099,7 @@ function renderRiepilogo(){
     copiaBtn.title = 'Copia'; copiaBtn.setAttribute('aria-label', 'Copia');
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
+      baffoCopiato(copiaBtn);
       if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); aggiornaStrisciaRepartoDiari(); }
     };
 
