@@ -10879,7 +10879,12 @@ function chiudiPaziente(){
 // di martedì). Con l'account collegato parte solo DOPO una sincronizzazione
 // riuscita, così non si decide su una copia locale rimasta indietro;
 // l'eliminazione arriva poi agli altri dispositivi come una normale
-// "Elimina scheda" (vedi fondiSchedePazienti)
+// "Elimina scheda" (vedi fondiSchedePazienti).
+// Nei giorni feriali vale una regola più larga: si eliminano le schede
+// ferme da più di 3 giorni (giovedì sparisce una scheda toccata l'ultima
+// volta domenica; una di lunedì resta). Una scheda di venerdì rimasta
+// intatta nel weekend arriva quindi viva al lunedì
+const GIORNI_SCHEDA_FERMA = 3;
 function inizioUltimoFeriale(oggi){
   const d = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
   for(let i = 0; i < 14; i++){
@@ -10931,8 +10936,10 @@ function pulisciSchedeWeekend(){
   // dopo la sincronizzazione): prima si liberano i letti dei dimessi
   pulisciSchedeDimessi();
   const oggi = new Date();
-  if(!eFestivo(oggi)) return 0;
-  const limite = inizioUltimoFeriale(oggi);
+  const festivo = eFestivo(oggi);
+  const d = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate() - GIORNI_SCHEDA_FERMA);
+  let limite = chiaveGiorno(d.getTime());
+  if(festivo){ const f = inizioUltimoFeriale(oggi); if(f > limite) limite = f; }
   const patients = loadPatients();
   const daEliminare = Object.keys(patients).filter(id => {
     const p = patients[id];
@@ -10948,7 +10955,8 @@ function pulisciSchedeWeekend(){
     renderWardMap();
   }
   if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
-  showToast(daEliminare.length === 1 ? 'Weekend: 1 scheda vecchia eliminata' : `Weekend: ${daEliminare.length} schede vecchie eliminate`);
+  const motivo = festivo ? 'Weekend' : `Ferme da più di ${GIORNI_SCHEDA_FERMA} giorni`;
+  showToast(daEliminare.length === 1 ? `${motivo}: 1 scheda vecchia eliminata` : `${motivo}: ${daEliminare.length} schede vecchie eliminate`);
   return daEliminare.length;
 }
 
