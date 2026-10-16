@@ -13584,6 +13584,11 @@ function diariIndietro(){
 
 const AGG_CONS_RIGA_ESAMI = /^\s*(?:[-–•*]\s*)?(?:agli\s+(?:ee|eec|esami)\b|all[a'’]\s*(?:ega|emogas\w*)\b|(?:ee|eec)\s*[:.]|esami(?:\s+(?:ematochimici|ematici|di\s+laboratorio|del\s+sangue))?\s*:|ematochimici\s*:|emocromo\s*:|vfg\s*:|ega\s*:|emogas\w*\s*:)/i;
 const AGG_CONS_ABBREVIAZIONI = [
+  // inciso tra virgole subito dopo il verbo ("Si richiedono, come da
+  // valutazione neurologica, TC cerebrale e EEG"): va prima del verbo
+  // ("come da valutazione neurologica, si richiedono TC…"), così la
+  // richiesta resta attaccata agli esami e diventa "R TC…, R EEG"
+  [/\b(si\s+richied\w*|si\s+chied(?:e|ono)|richied(?:o|iamo)|chied(?:o|iamo)|si\s+programm\w*|programm(?:o|iamo))\s*,\s*((?:come\s+da|come\s+indicato|su\s+(?:indicazione|consiglio|richiesta)|in\s+accordo|d['’]\s*accordo|secondo|previo|dopo)\b[^,;\n]{2,70}?)\s*,\s*/gi, '$2, $1 '],
   [/\bmantenere\s+(?:l'|la\s+)?indicazione\s+(?:a|al|alla|allo|ai|agli|alle)\s+/gi, ''],
   // verbi di richiesta → "R": richiedo, si richiede/richiedono, richiesto/a/i/e,
   // richiedere, chiedo, si chiede/chiedono, chiesto/a/i/e. NON "chiede" da
