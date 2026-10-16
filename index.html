@@ -14431,6 +14431,8 @@ function renderMultiEsclusivo(containerId, options, getSet){
       el.appendChild(sp);
       return;
     }
+    // voce che dipende da un'altra (soloCon): si vede solo se quella è accesa
+    if(opt.soloCon && !s.has(opt.soloCon)) return;
     const b = document.createElement('div');
     const active = s.has(opt.value);
     b.className = 'chip' + (active ? ' active' : '');
@@ -14438,6 +14440,8 @@ function renderMultiEsclusivo(containerId, options, getSet){
     b.onclick = () => {
       if(!active && opt.excludes) opt.excludes.forEach(v => s.delete(v));
       active ? s.delete(opt.value) : s.add(opt.value);
+      // spenta la voce da cui dipendono, si spengono anche le sue dipendenti
+      options.forEach(o => { if(o.soloCon && !s.has(o.soloCon)) s.delete(o.value); });
       update();
     };
     el.appendChild(b);
@@ -16085,6 +16089,9 @@ const OPT = {
     {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico','confabulante'], gruppo:'linguaggio'},
+    // compare solo con "mutacico" acceso, e va nella frase subito dopo, con
+    // la virgola: "mutacica, segue con lo sguardo"
+    {value:'segue_sguardo', label:'segue con lo sguardo', soloCon:'mutacico', gruppo:'linguaggio'},
     {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'confabulante', m:'confabulante', f:'confabulante', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
@@ -16623,8 +16630,11 @@ function composeCoscienza(){
   const tuttiSelezionati = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
   const frasiInizio = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_INIZIALE.includes(o.value));
   const frasiASe = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_A_SE.includes(o.value));
+  // "segue con lo sguardo" non è una voce a sé dell'elenco: si attacca a
+  // "mutacica" con la virgola (vedi etichetta più sotto)
+  const segueSguardo = state.coscienza.descrittori.has('segue_sguardo') && state.coscienza.descrittori.has('mutacico');
   const selected = tuttiSelezionati.filter(o =>
-    !DESCRITTORI_FRASE_A_SE.includes(o.value) && !DESCRITTORI_FRASE_INIZIALE.includes(o.value)
+    !DESCRITTORI_FRASE_A_SE.includes(o.value) && !DESCRITTORI_FRASE_INIZIALE.includes(o.value) && o.value !== 'segue_sguardo'
   );
   // "tranquillo" deve sempre venire prima di "collaborante" nella frase, anche
   // se in UI "collaborante" è il primo chip del gruppo Atteggiamento
@@ -16638,7 +16648,8 @@ function composeCoscienza(){
 
   const etichetta = o => {
     const fragGiusto = o.fragM !== undefined ? (state.sesso === 'F' ? o.fragF : o.fragM) : o.frag;
-    return fragGiusto || g(o);
+    const testo = fragGiusto || g(o);
+    return (o.value === 'mutacico' && segueSguardo) ? testo + ', segue con lo sguardo' : testo;
   };
   // "X ma tranquillo e collaborante": il "ma" regge TUTTO l'atteggiamento
   // positivo (tranquillo e/o collaborante), e la coppia va in fondo
