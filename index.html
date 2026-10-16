@@ -703,6 +703,7 @@
   table.agg-cons .agg-cons-etichetta{ display:block; width:100%; margin-bottom:5px; text-align:left; white-space:normal; font-weight:400; line-height:1.35; }
   table.agg-cons .agg-cons-etichetta .ico-sotto{ display:block; text-align:right; line-height:1; margin-top:2px; }
   table.agg-cons .agg-cons-etichetta .ee{ background:#edabee; color:#12181e; font-weight:700; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-etichetta .ee.agg{ font-weight:400; hyphens:auto; -webkit-hyphens:auto; overflow-wrap:anywhere; }
   table.agg-cons .agg-cons-etichetta .dim{ background:#00ffff; color:#12181e; padding:0 3px; border-radius:3px; }
   table.agg-cons .agg-cons-vuoto{ font-size:12px; color:var(--ink-dim); }
   /* riquadro del letto (come in Reparto) sotto il nome: solo da guardare.
@@ -2731,6 +2732,7 @@
   table.agg-cons .agg-cons-etichetta{ display:block; width:100%; margin-bottom:5px; text-align:left; white-space:normal; font-weight:400; line-height:1.35; }
   table.agg-cons .agg-cons-etichetta .ico-sotto{ display:block; text-align:right; line-height:1; margin-top:2px; }
   table.agg-cons .agg-cons-etichetta .ee{ background:#edabee; color:#12181e; font-weight:700; padding:0 3px; border-radius:3px; }
+  table.agg-cons .agg-cons-etichetta .ee.agg{ font-weight:400; hyphens:auto; -webkit-hyphens:auto; overflow-wrap:anywhere; }
   table.agg-cons .agg-cons-etichetta .dim{ background:#00ffff; color:#12181e; padding:0 3px; border-radius:3px; }
   table.agg-cons .agg-cons-vuoto{ font-size:12px; color:var(--ink-dim); }
   /* riquadro del letto (come in Reparto) sotto il nome: solo da guardare.
@@ -13691,6 +13693,37 @@ const AGG_CONS_ESAMI_SPECIFICI = [
 ];
 const AGG_CONS_RE_SPECIFICO = String.raw`(?:emocromo|elettroliti|ionogramma|pcr|inr|funzione\s+renale|funzionalit[àa]\s+renale|troponina|tropo|tni|sodio|natremia|sodiemia|na|potassio|kaliemia|potassiemia|k)(?![\p{L}])`;
 const AGG_CONS_RE_GIORNO_ESAME = String.raw`(?:(?:per|il|di|da\s+fare|programmat[oiae]\s+per|previst[oiae]\s+per)\s+)?(?:(?:prossimo|il)\s+)?(domani|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica|(?<=(?:per|il|entro|del|dal)\s+)\d{1,2}[\/.]\d{1,2})(?![a-zà-ù\d])`;
+// AGGIUNTE agli esami programmati: "richiedo esami per lunedì con
+// valproatemia", "EE domani comprensivi di indici di flogosi e INR". Vanno
+// nell'etichetta violetta ("EE 19/10 con valproatemia"), non in consegna.
+// L'aggiunta finisce al punto/punto e virgola; dopo una virgola continua
+// solo se il pezzo è breve e non comincia un'altra consegna ("con INR,
+// prosegue eparina": resta solo INR)
+const AGG_CONS_RE_AGGIUNTA = String.raw`\s*,?\s*(?:con|comprensiv[oiae]\s+(?:di|de(?:gli|i|lla|llo|lle|l))|inclus[oiae]|compres[oiae]|più)\s+([^.;\n]+)`;
+const AGG_CONS_RE_FINE_AGGIUNTA = /\s*,\s*|\s+(?:e|ed)\s+(?=(?:si|prosegu\w*|inizi\w*|sospes\w*|sospend\w*|stop|riduc\w*|aument\w*|rivalut\w*|poi|quindi|se|pz|paziente|dimess\w*|dimission\w*|richied\w*|chied\w*|domani|oggi)(?![\p{L}]))/iu;
+const AGG_CONS_RE_NON_AGGIUNTA = /^(?:e\s+|ed\s+)?(?:si|prosegu\w*|inizi\w*|sospes\w*|sospend\w*|stop|riduc\w*|aument\w*|rivalut\w*|poi|quindi|se|in|pz|paziente|paz|dimess\w*|dimission\w*|richied\w*|chied\w*|domani|oggi|terapia|atb|vedi|attendere|attesa|segue|seguir\w*|monitor\w*|controll\w*|r|rx|tc|tac|rmn?|eco\w*|doppler|visita|v\.|val\.|valutazion\w*|cons\.|consulenz\w*|ecg|eeg|egds|colonscopia|holter|fkt|emocoltur\w*|urinocoltur\w*|uro)(?![\p{L}])/iu;
+function aggConsDividiAggiunta(s){
+  // → [aggiunta, resto da lasciare in consegna]
+  let tenuto = '', resto = s;
+  for(let primo = true; resto; primo = false){
+    const m = resto.match(AGG_CONS_RE_FINE_AGGIUNTA);
+    const pezzo = m ? resto.slice(0, m.index) : resto;
+    if(!primo && (AGG_CONS_RE_NON_AGGIUNTA.test(pezzo) || pezzo.trim().split(/\s+/).length > 4)) break;
+    tenuto += (primo ? '' : ', ') + pezzo.replace(/^(?:e|ed)\s+/i, '');
+    if(!m){ resto = ''; break; }
+    if(!/,/.test(m[0])){ resto = ', ' + resto.slice(m.index + m[0].length); break; }
+    resto = resto.slice(m.index + m[0].length);
+    if(AGG_CONS_RE_NON_AGGIUNTA.test(resto) || resto.trim().split(/\s+/).length > 4 && !resto.match(AGG_CONS_RE_FINE_AGGIUNTA)){ resto = ', ' + resto; break; }
+  }
+  tenuto = tenuto.replace(/\s+(?:e|ed)\s*$/i, '').trim();
+  return [tenuto, resto];
+}
+function aggConsTestoAggiunta(s){
+  let x = s;
+  AGG_CONS_ABBREVIAZIONI.forEach(([re, sost]) => { x = x.replace(re, sost); });
+  return x.replace(/\s{2,}/g, ' ').trim();
+}
+const AGG_CONS_RE_ESAME_GENERICO = String.raw`(?:esami|ee|eec)(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine|programmati|previsti))*`;
 function aggConsDataDaParola(parola){
   if(parola === 'domani'){ const d = oggiRiferimento(); d.setDate(d.getDate() + 1); return d; }
   if(AGG_CONS_GIORNI[parola] !== undefined) return aggConsProssimoGiorno(AGG_CONS_GIORNI[parola]);
@@ -13705,10 +13738,17 @@ function aggConsEsamiProgrammati(extra, dataGenerici){
   const aggiungi = (d, dettaglio) => {
     if(!d) return;
     const k = d.getTime();
-    if(!perData.has(k)) perData.set(k, { data: d, generici: false, dettagli: [] });
+    if(!perData.has(k)) perData.set(k, { data: d, generici: false, dettagli: [], aggiunte: [] });
     const v = perData.get(k);
     if(dettaglio === null) v.generici = true;
     else if(!v.dettagli.includes(dettaglio)) v.dettagli.push(dettaglio);
+  };
+  const aggiungiAggiunta = (d, testo) => {
+    if(!d || !testo) return;
+    const k = d.getTime();
+    if(!perData.has(k)) perData.set(k, { data: d, generici: true, dettagli: [], aggiunte: [] });
+    const v = perData.get(k);
+    if(!v.aggiunte.includes(testo)) v.aggiunte.push(testo);
   };
   if(dataGenerici) aggiungi(dataGenerici, null);
   const re = new RegExp(String.raw`\b(` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)(?:\s+di\s+controllo)?\s*` + AGG_CONS_RE_GIORNO_ESAME, 'giu');
@@ -13723,9 +13763,17 @@ function aggConsEsamiProgrammati(extra, dataGenerici){
     const d = aggConsDataDaParola(m[1]);
     AGG_CONS_ESAMI_SPECIFICI.forEach(([nome, r]) => { if(r.test(m[2])) aggiungi(d, nome); });
   }
+  // aggiunte ("con valproatemia"): sul testo con le maiuscole originali
+  const tc = (extra || '').split('\n').filter(r => !AGG_CONS_RIGA_ESAMI.test(r)).join('\n').replace(/[ \t]+/g, ' ').replace(/\bp\.\s?v\./gi, 'pv');
+  const DOPO_GIORNO = String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]))*`;
+  const esame = String.raw`(?:` + AGG_CONS_RE_ESAME_GENERICO + '|' + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)`;
+  const reAgg = new RegExp(String.raw`\b` + esame + String.raw`(?:\s+di\s+controllo)?\s*` + AGG_CONS_RE_GIORNO_ESAME + DOPO_GIORNO + AGG_CONS_RE_AGGIUNTA, 'giu');
+  while((m = reAgg.exec(tc))) aggiungiAggiunta(aggConsDataDaParola(m[1].toLowerCase()), aggConsTestoAggiunta(aggConsDividiAggiunta(m[2])[0]));
+  const reAggPrima = new RegExp(AGG_CONS_RE_GIORNO_PRIMA + esame + String.raw`(?![\p{L}])(?!\s*:)` + AGG_CONS_RE_AGGIUNTA, 'giu');
+  while((m = reAggPrima.exec(tc))) aggiungiAggiunta(aggConsDataDaParola(m[1].toLowerCase()), aggConsTestoAggiunta(aggConsDividiAggiunta(m[2])[0]));
   return [...perData.values()]
     .sort((a, b) => a.data - b.data)
-    .map(v => ({ data: v.data, dettagli: v.generici ? [] : v.dettagli }));
+    .map(v => ({ data: v.data, dettagli: v.generici ? [] : v.dettagli, aggiunte: v.aggiunte }));
 }
 
 
@@ -13752,9 +13800,26 @@ function aggConsTogliProgrammati(riga){
     COND + String.raw`(?:\s*\bed?\s+)?(?:\b(?:si\s+)?(?:richied\w*|chied(?:o|e|ono|iamo)|programm\w*|pianific\w*|prenot\w*|fiss\w*|preved\w*)\s+|\b(?:(?:sono|è|saranno|vengono|verranno)\s+)?(?:richiest|chiest|programmat|pianificat|prenotat|fissat|previst)[aoie]\s+)?(?:(?:la\s+|il\s+)?(?:ripetizione|ripeter[e]?|controllo|ricontrollo|rivalutazione)\s+(?:di\s+|degli\s+|dei\s+|del\s+|della\s+)?)?(?:\b(?:gli|i)\s+)?\b(?:esami|ee|eec|` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)\b(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*\s*(?:(?:per|il|di|da\s+fare|programmati\s+per|previsti\s+per)\s+)?(?:(?:prossimo|il)\s+)?` + giorni + String.raw`(?:\s+(?:prossimo\s+venturo|prossimo|pv|mattin[ao]|mattina))*`, 'giu');
   // stesso, col giorno prima: "giovedì (pv) esami di controllo"
   const reEsamiPrima = new RegExp(COND + String.raw`(?:\s*\bed?\s+)?` + AGG_CONS_RE_GIORNO_PRIMA + String.raw`(?:esami|ee|eec|` + AGG_CONS_RE_SPECIFICO + String.raw`(?:\s*(?:,|\be\b|\bed\b)\s*` + AGG_CONS_RE_SPECIFICO + String.raw`)*)(?![\p{L}])(?!\s*:)(?:\s+(?:ematochimici|ematici|del\s+sangue|di\s+laboratorio|di\s+controllo|di\s+routine))*`, 'giu');
-  return riga
-    .replace(reEsami, '')
-    .replace(reEsamiPrima, '')
+  // l'aggiunta ("con valproatemia") va nell'etichetta: si toglie insieme
+  // agli esami, il resto dopo la virgola ("prosegue eparina") resta
+  const reAgg = new RegExp(AGG_CONS_RE_AGGIUNTA, 'iuy');
+  const applica = (txt, re) => {
+    // sostituzione a mano: si scorre il testo per poter consumare anche
+    // l'aggiunta che segue gli esami
+    let out = '', i = 0, m;
+    re.lastIndex = 0;
+    while((m = re.exec(txt))){
+      if(!m[0].length){ re.lastIndex++; continue; }
+      out += txt.slice(i, m.index);
+      let fine = m.index + m[0].length;
+      reAgg.lastIndex = fine;
+      const a = reAgg.exec(txt);
+      if(a){ out += aggConsDividiAggiunta(a[1])[1]; fine += a[0].length; }
+      i = fine; re.lastIndex = fine;
+    }
+    return out + txt.slice(i);
+  };
+  return applica(applica(riga, reEsami), reEsamiPrima)
     // \"giovedì pv trasferito presso OdC...\", \"trasferimento in RSA mercoledì\"
     .replace(new RegExp(COND + PEZZO + String.raw`\b` + giorni + PEZZO + String.raw`\b` + uscita + PEZZO, 'giu'), '')
     .replace(new RegExp(COND + PEZZO + String.raw`\b` + uscita + PEZZO + String.raw`\b` + giorni + PEZZO, 'giu'), '')
@@ -14136,12 +14201,16 @@ function renderAggiornaConsegne(container, entries){
     const tdEE = tdLetto;
     // una etichetta violetta per data: "EE 06/10", oppure "EE 06/10
     // (emocromo)" se per quel giorno è previsto solo un esame specifico
-    esamiFuturi.forEach(({ data, dettagli }) => {
-      const t = 'EE ' + aggConsData(data) + (dettagli.length ? ` (${dettagli.join(', ')})` : '');
+    esamiFuturi.forEach(({ data, dettagli, aggiunte }) => {
+      const t = 'EE ' + aggConsData(data) + (dettagli.length ? ` (${dettagli.join(', ')})` : '') + (aggiunte && aggiunte.length ? ` con ${aggiunte.join(', ')}` : '');
       const b = document.createElement('button');
       b.className = 'agg-cons-etichetta';
       b.title = 'Copia formattato';
-      b.innerHTML = `<span class="ee">${t}</span> ⧉`;
+      // con le aggiunte ("con valproatemia") la colonna è stretta: l'aggiunta
+      // va sotto, meno marcata, e l'icona su una riga sua
+      b.innerHTML = aggiunte && aggiunte.length
+        ? `<span class="ee">${t.slice(0, t.indexOf(' con '))}</span> <span class="ee agg">${escapeHtml(t.slice(t.indexOf(' con ') + 1))}</span><span class="ico-sotto">⧉</span>`
+        : `<span class="ee">${t}</span> ⧉`;
       b.onclick = () => aggConsCopia(aggConsHtmlEtichetta(t, '#edabee', true), t, b);
       tdEE.appendChild(b);
     });
