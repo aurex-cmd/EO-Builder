@@ -10108,9 +10108,8 @@ function rimuoviAppoggio(settore, nome){
 }
 // TONDO "+" PER GLI APPOGGI: sta nella stessa riga dell'ultima fila di
 // letti, allineato a destra con l'ultimo letto della fila sopra (non è un
-// riquadro e non aggiunge righe: "Parametri vitali" non si sposta). Si
-// posiziona misurando i riquadri dopo il disegno; se l'ultima fila è piena
-// e non c'è spazio, scende in una riga sua sotto i letti
+// riquadro e non aggiunge righe: "Parametri vitali" non si sposta). Se
+// l'ultima fila è piena scende in una fila sua sotto i letti
 function posizionaTondoAppoggio(inExtra){
   const grid = document.getElementById('bed-grid');
   const riga = document.getElementById('appoggio-aggiungi-riga');
@@ -10127,41 +10126,30 @@ function posizionaTondoAppoggio(inExtra){
   }
   riga.style.display = 'none';
   if(inExtra){ tondo.remove(); return; }
-  grid.style.position = 'relative';
+  // il tondo è un elemento della griglia: nell'ultima colonna (allineato
+  // all'ultimo letto delle file sopra) e, se l'ultima fila è piena, da solo
+  // in una fila sotto. Niente misure in pixel: al restringersi della
+  // finestra (o con la barra di scorrimento che compare) resta al suo posto
+  grid.style.position = '';
   grid.appendChild(tondo);
-  tondo.style.position = 'absolute';
-  // osserva la griglia: quando cambia dimensione (Reparto che diventa
-  // visibile, rotazione del telefono) il tondo si riposiziona
+  tondo.style.position = ''; tondo.style.left = ''; tondo.style.top = '';
+  tondo.style.justifySelf = 'end';
+  tondo.style.alignSelf = 'center';
+  // con i letti tutti in una fila (finestra larga): subito dopo l'ultimo
+  const sistema = () => {
+    // le colonne si contano col tondo in posizione automatica: una colonna
+    // fissata a mano ne creerebbe di implicite, oltre il bordo
+    tondo.style.gridColumn = '';
+    const colonne = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+    const letti = [...grid.children].filter(c => c !== tondo).length;
+    if(colonne > 1 && letti < colonne){ tondo.style.gridColumn = String(letti + 1); tondo.style.justifySelf = 'start'; }
+    else { tondo.style.gridColumn = '-2 / -1'; tondo.style.justifySelf = 'end'; }
+  };
+  sistema();
   if(!grid._osservata && window.ResizeObserver){
     grid._osservata = true;
-    new ResizeObserver(() => posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA)).observe(grid);
+    new ResizeObserver(() => { const t = document.getElementById('appoggio-aggiungi-tondo'); if(t && t.parentElement === grid) posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA); }).observe(grid);
   }
-  const sistema = () => {
-    if(!grid.offsetParent) return; // Reparto nascosto: ci pensa l'osservatore quando ricompare
-    const tiles = [...grid.querySelectorAll('.bed-tile')];
-    if(!tiles.length){ tondo.style.left = '0px'; tondo.style.top = '0px'; return; }
-    const gr = grid.getBoundingClientRect();
-    const box = tiles.map(t => t.getBoundingClientRect());
-    const ultimaTop = Math.max(...box.map(b => Math.round(b.top)));
-    const ultimaFila = box.filter(b => Math.round(b.top) === ultimaTop);
-    const filaSopra = box.filter(b => Math.round(b.top) < ultimaTop);
-    const topSopra = filaSopra.length ? Math.max(...filaSopra.map(b => Math.round(b.top))) : null;
-    const destraSopra = topSopra !== null ? Math.max(...filaSopra.filter(b => Math.round(b.top) === topSopra).map(b => b.right)) : null;
-    const destraUltima = Math.max(...ultimaFila.map(b => b.right));
-    const lato = tondo.offsetWidth || 26;
-    const altezzaFila = ultimaFila[0].height;
-    // allineato a destra con l'ultimo letto della fila sopra; con una sola
-    // fila, subito dopo l'ultimo letto
-    let destra = destraSopra !== null ? destraSopra : destraUltima + 8 + lato;
-    if(destra - destraUltima < lato + 8){
-      // niente spazio nell'ultima fila: in una riga sua sotto i letti
-      tondo.remove(); riga.appendChild(tondo); tondo.style.position = ''; tondo.style.left = ''; tondo.style.top = '';
-      riga.style.display = ''; return;
-    }
-    tondo.style.left = (destra - gr.left - lato) + 'px';
-    tondo.style.top = (ultimaTop - gr.top + (altezzaFila - lato) / 2) + 'px';
-  };
-  requestAnimationFrame(sistema);
 }
 window.addEventListener('resize', () => { if(document.getElementById('bed-grid')) posizionaTondoAppoggio(settoreAttivo === SETTORE_EXTRA); });
 
