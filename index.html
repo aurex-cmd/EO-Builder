@@ -7078,6 +7078,14 @@ function collegaEsameObiettivo(id){
     patients[patientId].state = snapshotEsameRicovero();
     savePatients(patients);
   }
+  // il sesso scelto nel ricovero vale anche per l'esame obiettivo
+  // ("vigile, orientata", "disartrica"...)
+  const sessoRicovero = (rec.campi && rec.campi.sesso) || 'F';
+  if((sessoRicovero === 'M' || sessoRicovero === 'F') && patients[patientId].state.sesso !== sessoRicovero){
+    patients[patientId].state.sesso = sessoRicovero;
+    patients[patientId].savedAt = Date.now();
+    savePatients(patients);
+  }
 
   const testo = getRefertoFor(patients[patientId].state);
   const esameObiettivoPrima = list[idx].esameObiettivo;
