@@ -16123,7 +16123,7 @@ function renderNeuroLinguaggio(){
     const b = document.createElement('div');
     const active = s.has(opt.value);
     b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = opt.label;
+    b.textContent = g(opt);
     b.onclick = () => {
       if(opt.negativo){
         s.clear();
@@ -16484,8 +16484,8 @@ const OPT = {
   ],
   neuroLinguaggio: [
     {value:'non_disartria', label:'Non disartria', negativo:true},
-    {value:'disartrico', label:'Disartrico'},
-    {value:'afasico', label:'Afasico'}
+    {value:'disartrico', label:'Disartrico', m:'Disartrico', f:'Disartrica'},
+    {value:'afasico', label:'Afasico', m:'Afasico', f:'Afasica'}
   ],
   neuroMotorio: [
     {value:'paresi', label:'Paresi'},
@@ -17460,7 +17460,7 @@ function composeNeuro(){
 
   OPT.neuroGenerale.filter(o => n.generale.has(o.value)).forEach(o => parts.push(o.frag));
 
-  const linguaggioLabel = { non_disartria:'non disartria', disartrico:'disartrico', afasico:'afasico' };
+  const linguaggioLabel = { non_disartria:'non disartria', disartrico: state.sesso === 'F' ? 'disartrica' : 'disartrico', afasico: state.sesso === 'F' ? 'afasica' : 'afasico' };
   const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
   if(ling.length) parts.push(joinIt(ling));
 
