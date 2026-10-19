@@ -11346,10 +11346,16 @@ const FRASI_DIMISSIONE_OGGI = [
   'dimissioni oggi',
   'dimissione odierna'
 ];
+// anche "conferma trasferimento in Hospice/RSA/Riabilitazione/OdC" (o
+// "si conferma il trasferimento presso RSA", "confermato trasferimento a
+// OdC") vale come dimissione di oggi — a meno che nella stessa frase ci sia
+// "domani" o un giorno della settimana: quello resta del Calendario
+const RE_TRASFERIMENTO_CONFERMATO = /\bconferm[a-zà-ù]*\s+(?:(?:il|del|di|al)\s+)?trasferimento\s+(?:(?:in|presso|a|al|alla|all'|c\/o)\s*)?(?:(?:struttura|reparto|centro)\s+(?:di\s+)?)?(?:hospice|rsa|riabilitazion[ei]|odc)\b(?:(?!domani|lunedì|lunedi|martedì|martedi|mercoledì|mercoledi|giovedì|giovedi|venerdì|venerdi|sabato|domenica)[^.;\n])*(?=[.;\n]|$)/;
 function haDimissioneOggi(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
-  return FRASI_DIMISSIONE_OGGI.some(frase => normalizzato.includes(frase));
+  return FRASI_DIMISSIONE_OGGI.some(frase => normalizzato.includes(frase))
+    || RE_TRASFERIMENTO_CONFERMATO.test(testoExtra.toLowerCase().replace(/[ \t]+/g, ' '));
 }
 
 // per il Calendario dimissioni: a differenza di haDimissioneDomani (che si
@@ -11426,7 +11432,7 @@ function estraiDimissioniProgrammate(testoExtra){
   // stesse frasi già riconosciute per il pallino "D" di oggi (vedi
   // haDimissioneOggi/FRASI_DIMISSIONE_OGGI), qui usate per far comparire
   // la dimissione anche nel Calendario, con la data di oggi
-  if(haDimissioneOggi(normalizzato)){
+  if(haDimissioneOggi(testoExtra)){
     risultati.push(oggiRiferimento());
   }
 
