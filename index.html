@@ -2031,6 +2031,9 @@
   .active-bed-pill.pill-data::after{ display:none; }
   /* parti dell'esame obiettivo nascoste in Impostazioni: solo il titolo,
      una riga che si apre toccandola */
+  /* esame obiettivo aperto dentro un ricovero: è già dentro due riquadri,
+     le parti dell'esame usano tutta la larghezza */
+  #ricovero-eo-inline .card{ margin-left:0; margin-right:0; padding-left:12px; padding-right:12px; }
   #clinical-view .card.sezione-nascosta > h2{ cursor:pointer; user-select:none; -webkit-user-select:none; }
   #clinical-view .card.sezione-nascosta > h2::after{
     content:'›'; margin-left:auto; font-size:22px; line-height:1; color:var(--ink-dim); transition:transform .15s ease;
@@ -14812,12 +14815,12 @@ function costruisciSedeToraciceMulti(inner, locSetArray, extraOptions, opzioni){
   const scomponiTap = () => { if(g.tap){ g.tap = false; g.emi = {sx:true, dx:true}; } };
 
   const griglia = document.createElement('div');
-  griglia.style.cssText = 'display:grid; grid-template-columns:max-content 72px 72px; justify-content:start; gap:6px 10px; align-items:center; flex-basis:100%; margin:2px 0 4px;';
+  griglia.style.cssText = 'display:grid; grid-template-columns:max-content minmax(40px, 72px) minmax(40px, 72px); justify-content:start; gap:6px 10px; align-items:center; flex-basis:100%; margin:2px 0 4px;';
   inner.appendChild(griglia);
   const spazio = document.createElement('div');
   griglia.appendChild(spazio);
 
-  const stileCasella = 'width:72px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box; font-size:12.5px;';
+  const stileCasella = 'width:100%; height:36px; padding:0; display:flex; align-items:center; justify-content:center; box-sizing:border-box; font-size:12.5px;';
   ['sx','dx'].forEach(l => {
     const h = document.createElement('div');
     const on = colonnaAccesa(l);
