@@ -5964,6 +5964,8 @@ const DIZ_EMATOCHIMICI = {
   'cloro':{label:'Cl', unit:'mmol/L'},
   'creatinina':{label:'creatinina', unit:'mg/dL'},
   'crea':{label:'creatinina', unit:'mg/dL'},
+  'creat':{label:'creatinina', unit:'mg/dL'},
+  'creatininemia':{label:'creatinina', unit:'mg/dL'},
   'egfr':{label:'eGFR', unit:'mL/min'},
   'urea':{label:'urea', unit:'mg/dL'},
   'azotemia':{label:'urea', unit:'mg/dL'},
@@ -6130,11 +6132,11 @@ function aggiungiUnitaMancantiTesto(testo){
     // PRIMA della regex del valore singolo qui sotto, altrimenti quella si
     // fermerebbe (giustamente prudente) al primo valore, senza mai
     // arrivare a riconoscere l'andamento nel suo insieme
-    const reTrend = new RegExp(`\\b(${nomeEsc})\\b(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    const reTrend = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, catena) => {
       return `${nomeMatch}${spazio}${catena} ${voce.unit}`;
     });
-    const re = new RegExp(`\\b(${nomeEsc})\\b(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
+    const re = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
       return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
     });
