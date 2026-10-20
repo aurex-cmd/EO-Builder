@@ -6073,7 +6073,9 @@ const DIZ_EMATOCHIMICI = {
 // aggiungendo l'unità di misura corretta a ogni esame riconosciuto
 function formattaEsamiEmatochimici(raw){
   if(!raw || !raw.trim()) return '';
-  return raw.split(',')
+  // la virgola tra due cifre è un decimale ("fT3 4,1" = 4.1); quella
+  // seguita da spazio o da una lettera separa due esami ("Na 140, K 4")
+  return raw.split(/(?<!\d),|,(?!\d)/)
     .map(seg => seg.trim())
     .filter(Boolean)
     .map(seg => {
@@ -6086,7 +6088,7 @@ function formattaEsamiEmatochimici(raw){
         const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
         const voce = DIZ_EMATOCHIMICI[chiave];
         if(voce){
-          const catena = mTrend[2].trim();
+          const catena = mTrend[2].trim().replace(/(\d),(\d)/g, '$1.$2');
           return voce.unit ? `${voce.label} ${catena} ${voce.unit}` : `${voce.label} ${catena}`;
         }
       }
