@@ -16796,9 +16796,22 @@ function composeCoscienza(){
   // la clausola col "ma" contiene già una "e": si attacca con la
   // virgola, non con un'altra "e" ("discretamente orientato, rallentato
   // ma tranquillo e collaborante")
-  if(descLabels.length || clausolaMa) parts.push([descLabels.length ? joinIt(descLabels) : '', clausolaMa].filter(Boolean).join(', '));
+  // "mutacica, segue con lo sguardo" è una frase a sé, e quello che viene
+  // dopo nell'elenco ne fa un'altra: "Assopita, risvegliabile. Mutacica,
+  // segue con lo sguardo. Non collaborante."
+  const idxMut = segueSguardo ? selected.filter(o => !(partner && MA_POSITIVI.includes(o.value)) && !(partner && o.value === partner.value)).findIndex(o => o.value === 'mutacico') : -1;
+  let fraseMut = '', fraseDopo = '';
+  let descPrima = descLabels;
+  if(idxMut > -1){
+    descPrima = descLabels.slice(0, idxMut);
+    fraseMut = descLabels[idxMut];
+    fraseDopo = [joinIt(descLabels.slice(idxMut + 1)), clausolaMa].filter(Boolean).join(', ');
+    clausolaMa = '';
+  }
+  if(descPrima.length || clausolaMa) parts.push([descPrima.length ? joinIt(descPrima) : '', clausolaMa].filter(Boolean).join(', '));
   const corpo = parts.join(', ');
   let s = corpo ? cap(corpo) + '.' : '';
+  [fraseMut, fraseDopo].filter(Boolean).forEach(f => { s += (s ? ' ' : '') + cap(f) + '.'; });
 
   frasiASe.forEach(o => { s += (s ? ' ' : '') + cap(g(o)) + '.'; });
 
