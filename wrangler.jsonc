@@ -1,0 +1,9 @@
+// Configurazione Cloudflare Workers: l'app è un sito statico (index.html), senza codice lato server.
+// Serve anche alle anteprime dei rami (`wrangler versions upload`), che non riconoscono da sole i file statici.
+{
+  "name": "eo-builder",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "./"
+  }
+}
