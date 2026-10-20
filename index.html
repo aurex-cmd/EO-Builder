@@ -12903,6 +12903,7 @@ function numeroRomano(n){
 // diario parla già della rimozione ("rimosso CV", "rimozione del CV"...)
 const RE_CV = /\bCV\b|catetere\s+vescicale/;
 const RE_CV_RIMOSSO = /(?:rimoss[oa]|rimozione|rimuover\w*|rimuov\w*|tolt[oa]|sfilat[oa]|sfilamento)\s+(?:(?:del|il|di|lo|dello)\s+)?(?:CV|catetere)\b|\b(?:CV|catetere(?:\s+vescicale)?)\s+(?:è\s+stato\s+|viene\s+|già\s+)?(?:rimoss[oa]|tolt[oa]|sfilat[oa])/i;
+const RE_CV_MANTENUTO = /\b(?:con|portatore\s+di|portatrice\s+di|mantien\w*|mantenut[oa]|mantenere|lasciat[oa])\s+(?:(?:il|di|del|lo)\s+)?(?:CV|catetere(?:\s+vescicale)?)\b|\b(?:CV|catetere(?:\s+vescicale)?)\s+(?:mantenut[oa]|lasciat[oa])\b/i;
 function avvisoRimozioneCV(p, id){
   const st = (id === currentPatientId) ? state : (p && p.state);
   if(!st) return false;
@@ -12912,6 +12913,9 @@ function avvisoRimozioneCV(p, id){
   if(!date.some(d => d.getTime() >= oggi.getTime())) return false;
   const testo = getRefertoFor(st) || '';
   if(RE_CV_RIMOSSO.test(testo)) return false;
+  // il catetere resta per scelta, scritto nelle aggiunte: "dimissione
+  // odierna con CV", "dimessa con catetere vescicale", "si mantiene CV"
+  if(RE_CV_MANTENUTO.test(extra)) return false;
   return RE_CV.test(testo);
 }
 function rigaAiutiDiario(p, id){
