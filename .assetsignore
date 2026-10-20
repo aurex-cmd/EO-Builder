@@ -1,0 +1,6 @@
+# file del repository da non pubblicare
+.git
+.github
+README.md
+wrangler.jsonc
+.assetsignore
