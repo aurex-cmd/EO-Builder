@@ -12704,7 +12704,13 @@ const RE_VERBI_ATB = new RegExp(RE_STOP_ATB.source + '|' + RE_INIZIO_ATB.source 
 const RE_STOP_TUTTI_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|conclus\w*)\b[^.;\n]{0,25}\b(?:atb|antibiotic\w*|antibioticoterapia|terapia\s+antibiotica)\b|\b(?:atb|antibiotic\w*|antibioticoterapia|terapia\s+antibiotica)\b[^.;\n]{0,15}\b(?:stop|sospes\w*|terminat\w*|conclus\w*)\b/i;
 const RE_SWITCH_ATB = /\b(?:switch|shift|passa(?:ggio)?\s+a|si\s+passa\s+a|sostituit\w*|in\s+sostituzione|al\s+posto\s+d\w*|cambio\s+(?:atb|antibiotico|terapia))\b/i;
 function antibioticiInCorso(p, idPaziente){
-  const giorni = diarioGiorniPaziente(p, idPaziente);
+  // i punti delle abbreviazioni non chiudono la frase: "amoxicillina/ac.
+  // clavulanico dal 18/10", "ceftriaxone 2 g e.v. dal 18/10" (altrimenti
+  // la data finisce in un'altra frase e non vale per il farmaco)
+  const senzaPuntiAbbreviazioni = t => (t || '')
+    .replace(/(?<![\p{L}])(ac|acid)\.\s*(?=\p{L})/giu, '$1 ')
+    .replace(/(?<![\p{L}])([a-z])\.\s?([a-z])\.(?=[\s,;)]|$)/gim, '$1$2');
+  const giorni = diarioGiorniPaziente(p, idPaziente).map(x => Object.assign({}, x, { testo: senzaPuntiAbbreviazioni(x.testo) }));
   const oggi = chiaveGiorno(Date.now());
   if(!giorni.length || giorni[giorni.length - 1].giorno !== oggi) return [];
   const risultati = [];
