@@ -4,3 +4,7 @@
 README.md
 wrangler.jsonc
 .assetsignore
+.agents
+.claude
+skills-lock.json
+.taste-skill
