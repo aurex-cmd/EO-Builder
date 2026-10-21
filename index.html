@@ -3967,12 +3967,12 @@
   :root #comandi-menu{ box-shadow:var(--clay-out); }
   :root #aurex-egg{ background:rgba(20,30,40,.4); }
 </style>
-<!-- stile Classico, tema scuro: in Diari il riquadro che contiene i diari è
-     bianco, così ogni diario (scuro) resta staccato dagli altri. Il resto
+<!-- stile Classico, tema scuro: in Diari il riquadro che contiene i diari ha
+     lo stesso grigio chiaro della pagina, così ogni diario (scuro) resta staccato dagli altri. Il resto
      della pagina Diari non cambia -->
 <style>
-  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view{ background:#ffffff !important; }
-  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view #diari-testa.fissa{ background:#ffffff; border-bottom-color:#e3e8ec; box-shadow:0 8px 12px -10px rgba(0,0,0,.18); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view{ background:var(--page) !important; border-color:transparent; box-shadow:none; }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view #diari-testa.fissa{ background:var(--page); border-bottom-color:var(--page-line); box-shadow:0 8px 12px -10px rgba(0,0,0,.18); }
   html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35); }
   html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.copiato{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 1px var(--signal), var(--glow-signal); }
   html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.ha-consegne{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
@@ -4022,7 +4022,7 @@
   html[data-stile="osteo"] .topnav-btn.vista-attiva{ background:var(--signal-soft); color:var(--signal); border-bottom-color:var(--signal); font-weight:700; }
   html[data-stile="osteo"] .topnav-btn.vista-attiva .topnav-icon{ color:var(--signal); }
   html[data-stile="osteo"] .topnav-btn.vista-attiva .topnav-icon .su-pieno{ stroke:var(--o-bg); }
-  /* tema chiaro, e Diari del tema scuro (pagina bianca): gli stessi verdi
+  /* tema chiaro, e Diari del tema scuro (pagina grigio chiaro): gli stessi verdi
      dell'intestazione classica, leggibili su fondo chiaro */
   html[data-stile="osteo"]:is([data-tema="chiaro"], [data-tema="scuro"]:has(body.vista-diari)) .topnav-btn.vista-attiva{ background:#e3f3ed; color:#1f6f5a; border-bottom-color:#5fb79a; }
   html[data-stile="osteo"]:is([data-tema="chiaro"], [data-tema="scuro"]:has(body.vista-diari)) .topnav-btn.vista-attiva .topnav-icon{ color:#2f8a70; }
@@ -4116,12 +4116,13 @@
   html[data-stile="osteo"] .referto-block.ha-consegne{ box-shadow:inset 0 0 0 2px var(--consegna); }
   html[data-stile="osteo"] .referto-block.critico{ box-shadow:inset 0 0 0 2px var(--o-viola); }
   html[data-stile="osteo"] .referto-block.critico.ha-consegne{ box-shadow:inset 0 0 0 2px var(--o-viola), inset 0 0 0 4px var(--consegna); }
-  /* tema scuro, Diari: pagina bianca e ogni diario un riquadro scuro
+  /* tema scuro, Diari: pagina grigio chiaro (lo stesso --page del tema
+     scuro classico) e ogni diario un riquadro scuro
      staccato dagli altri. Sulla pagina tornano i toni chiari di Osteo,
      dentro ogni diario quelli scuri (le variabili vanno ridichiarate anche
      lì: --ink, --panel... sono già risolte sulla pagina) */
   html[data-stile="osteo"][data-tema="scuro"] body.vista-diari{
-    --o-bg:#ffffff; --o-fill:#f4f5f7; --o-box:#e8ebef; --o-ink:#172231; --o-muted:#6b7584; --o-faint:#b5beca; --o-line:#e6e9ee;
+    --o-bg:var(--page); --o-fill:#e2e7eb; --o-box:#dde3e7; --o-ink:#172231; --o-muted:#57646e; --o-faint:#9aa6b0; --o-line:var(--page-line);
     --o-accent:#2b587d; --o-on-accent:#ffffff; --o-tile:#ffffff;
     --o-teal:#0e7571; --o-teal-box:#e3f4f3; --o-blu:#2f5f96; --o-blu-box:#e4edf8;
     background:var(--o-bg);
@@ -10121,7 +10122,7 @@ function mostraVista(v){
     animaIngressoVista(document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v + '-view'));
   }
   vistaAnimataPrima = v;
-  // Diari nel tema scuro (stile Osteo): pagina bianca, diari scuri
+  // Diari nel tema scuro (stile Osteo): pagina grigio chiaro, diari scuri
   document.body.classList.toggle('vista-diari', v === 'riepilogo');
 }
 var vistaAnimataPrima = null;
