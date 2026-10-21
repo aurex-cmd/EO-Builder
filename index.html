@@ -4318,6 +4318,18 @@ if(UI_MINIMAL){
   applicaTema('chiaro');
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
+  // icona e nome propri ("Aggiungi a Home" prende quelli della pagina aperta)
+  const testa = document.head;
+  testa.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]').forEach(l => l.remove());
+  [['apple-touch-icon', 'minimal/apple-touch-icon-180.png'], ['icon', 'minimal/favicon.svg'], ['icon', 'minimal/favicon-32.png'], ['manifest', 'minimal/manifest.webmanifest']].forEach(([rel, href]) => {
+    const l = document.createElement('link'); l.rel = rel; l.href = href;
+    if(href.endsWith('.svg')) l.type = 'image/svg+xml';
+    if(href.endsWith('-32.png')) l.sizes = '32x32';
+    testa.appendChild(l);
+  });
+  testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'EO Minimal';
+  testa.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = 'default';
+  testa.querySelector('meta[name="theme-color"]').content = '#ffffff';
 }
 </script>
 </head>
@@ -22760,11 +22772,11 @@ function editorLettereSvuota(){
   .m-settori button[aria-pressed="true"]{ color:var(--m-ink); }
 
   .m-letti{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  .m-letto{ position:relative; height:64px; padding:0 0 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-bg); color:var(--m-muted); font-family:inherit; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; cursor:pointer; transition:transform .14s var(--m-molla), background .3s, color .3s, border-color .3s; animation:m-compare .34s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms); }
+  .m-letto{ position:relative; height:64px; padding:0 0 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-bg); color:var(--m-ink); font-family:inherit; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; cursor:pointer; transition:transform .14s var(--m-molla), background .3s, color .3s, border-color .3s; animation:m-compare .34s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms); }
   .m-letto:active{ transform:scale(.93); }
   .m-letto.m-oggi-l{ background:var(--m-teal-box); border-color:transparent; color:var(--m-teal); font-weight:700; }
   .m-letto.m-recente{ background:var(--m-viola-box); border-color:transparent; color:var(--m-viola); font-weight:700; }
-  .m-letto.m-vecchio{ background:var(--m-box); border-color:transparent; color:var(--m-muted); }
+  .m-letto.m-vecchio{ background:var(--m-box); border-color:transparent; color:var(--m-ink); }
   .m-letto.m-consegnato:not(.m-oggi-l){ background:var(--m-bg); border:1.5px solid var(--m-blu); color:var(--m-ink); }
   .m-letto.m-critico{ border:1.5px solid var(--m-critico); color:var(--m-ink); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
   .m-letto.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
@@ -22848,6 +22860,9 @@ function editorLettereSvuota(){
   .m-blocco:focus-within::after, .m-riga:focus-within::after{ transform:scaleX(1); }
   .m-riga{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; column-gap:10px; padding:12px 2px; border-bottom:1px solid var(--m-line); cursor:text; transition:background .25s; animation:m-compare .3s var(--m-molla) both; }
   .m-riga-nome{ font-weight:600; font-size:.93rem; white-space:nowrap; cursor:pointer; }
+  input.m-nome-esame{ width:7.5em; border:0; background:none; padding:0; margin:0; font:inherit; font-weight:600; font-size:.93rem; color:var(--m-ink); outline:none; box-shadow:none; cursor:text; }
+  input.m-nome-esame::placeholder{ color:var(--m-faint); font-weight:500; }
+  .m-riga-altro{ animation:m-compare .3s var(--m-molla) both; }
   .m-riga textarea.m-testo{ font-size:.93rem; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
   .m-riga.m-vuota{ cursor:pointer; }
   .m-riga.m-vuota textarea.m-testo{ display:none; }
@@ -23221,12 +23236,17 @@ function fineVisita(){
 // il diario è un testo solo: esame obiettivo, riga vuota, aggiunte. Le
 // aggiunte si dividono in "Agli EE", referti strumentali e il resto
 // (provvedimenti); riscrivendo si ricompone nello stesso ordine
-const STRUM_FISSI = ['Rx torace', 'TC cerebrale'];
-const STRUM_ALTRI = ['Rx addome', 'TC torace', 'TC addome', 'Ecografia addome', 'ECG', 'EGA'];
-const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+// in vista c'è solo "Agli EE"; i referti si aggiungono dai pulsanti sotto
+// (anche "Altro", con il nome dell'esame scritto a mano). I nomi vecchi
+// (Rx addome, TC torace...) si riconoscono ancora nei diari già scritti
+const STRUM_ALTRI = ['TC cerebrale', 'TC total body con mdc', 'Rx torace', 'Ecografia addome', 'ECG', 'EGA'];
+const STRUM_NOTI = [...STRUM_ALTRI, 'TC total body', 'Rx addome', 'TC torace', 'TC addome', 'TC encefalo'];
+const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|TC total body con mdc|TC total body|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+// referto di un esame "Altro": Nome: "testo". (le virgolette lo distinguono dai provvedimenti)
+const RE_ALTRO = /^\s*([^\s\-"][^:"\n]{0,40}?)\s*:\s*(".+")\.?\s*$/;
 const RE_EE = /^\s*-?\s*agli\s+ee\s*:?\s*(.*)$/i;
 const SENZA_VIRGOLETTE = /^(ECG|EGA)$/i;
-function nomeStrum(n){ const all = [...STRUM_FISSI, ...STRUM_ALTRI, 'TC encefalo']; return all.find(x => x.toLowerCase() === n.toLowerCase()) || n; }
+function nomeStrum(n){ return STRUM_NOTI.find(x => x.toLowerCase() === n.toLowerCase()) || (n.toLowerCase() === 'eco addome' ? 'Ecografia addome' : n); }
 function leggiDiario(id){
   const p = loadPatients()[id]; if(!p) return null;
   const testo = getRefertoFor(statoScheda(id, p));
@@ -23237,7 +23257,7 @@ function leggiDiario(id){
   extra.split('\n').forEach(r => {
     let m;
     if(!d.ee && (m = r.match(RE_EE))){ d.ee = m[1].trim().replace(/[.;\s]+$/, ''); return; }
-    if((m = r.match(RE_STRUM))){
+    if((m = r.match(RE_STRUM)) || (m = r.match(RE_ALTRO))){
       const n = nomeStrum(m[1]); d.strum[n] = m[2].trim().replace(/\.$/, '').replace(/^"(.*)"\.?$/, '$1').replace(/^"|"$/g, ''); if(!d.ordine.includes(n)) d.ordine.push(n); return;
     }
     d.provv.push(r);
@@ -23248,7 +23268,7 @@ function leggiDiario(id){
 function componi(d){
   const righe = [];
   if(d.ee.trim()) righe.push(`Agli EE: ${d.ee.trim().replace(/[.,;\s]+$/, '')}.`);
-  [...STRUM_FISSI, ...d.ordine.filter(n => !STRUM_FISSI.includes(n))].forEach(n => {
+  d.ordine.forEach(n => {
     const t = formattaStrumentale(d.strum[n] || '').replace(/^"|"$/g, '');
     if(t) righe.push(`${n}: ${SENZA_VIRGOLETTE.test(n) ? t : '"' + t + '"'}.`.replace(/\.(["]?)\.$/, '.$1'));
   });
@@ -23303,6 +23323,14 @@ function riga(id, nome, val, ph, nota){
     <div class="m-nota" data-nota="${esc(nota)}"><span>${esc(nota)}</span></div>
   </div>`;
 }
+function rigaAltro(){
+  return `<div class="m-riga m-riga-altro" data-riga="altro" data-m="riga">
+    <input class="m-riga-nome m-nome-esame" data-campo="altro-nome" placeholder="Esame" aria-label="Nome dell'esame" autocapitalize="sentences">
+    <textarea class="m-testo" rows="1" data-campo="s:altro" placeholder="Referto" aria-label="Referto"></textarea>
+    ${ICON.piu}
+    <div class="m-nota" data-nota="Nome dell'esame, poi il referto."><span>Nome dell'esame, poi il referto.</span></div>
+  </div>`;
+}
 function rigaStrum(n){
   return riga('s:' + n, n, formattaStrumentale(D.strum[n] || ''), 'Incolla o scrivi il referto',
     SENZA_VIRGOLETTE.test(n) ? 'Si riporta così come lo scrivi.' : 'Un referto su più righe va su una riga sola.');
@@ -23312,7 +23340,7 @@ function disegnaScheda(){
   $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato oggi' : 'Da copiare'}</span></div>
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
-  const presenti = [...STRUM_FISSI, ...D.ordine.filter(n => !STRUM_FISSI.includes(n))];
+  const presenti = D.ordine;
   $m('#m-s-corpo').innerHTML = `
     <div class="m-aiuti" id="m-aiuti"></div>
     <div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
@@ -23320,7 +23348,7 @@ function disegnaScheda(){
     <div class="m-lbl">Esami</div>
     ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
     ${presenti.map(rigaStrum).join('')}
-    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>
+    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}<button data-m="esame-altro" class="m-fisso">+ Altro</button></div>
     <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
@@ -23379,6 +23407,23 @@ function apriRiga(r){
 function chiudiRiga(r){
   const t = r.querySelector('textarea'), id = r.dataset.riga;
   const nota = r.querySelector('.m-nota'), ns = nota.firstElementChild;
+  if(id === 'altro'){
+    // esame "Altro": col nome scritto diventa una riga come le altre
+    const nomeScritto = r.querySelector('input').value.replace(/[:"]/g, '').trim();
+    const testo = formattaStrumentale(t.value).replace(/^"|"$/g, '');
+    if(!testo.trim()){ if(!nomeScritto) r.remove(); return; }
+    const n = nomeStrum(nomeScritto || 'Altro');
+    D.strum[n] = D.strum[n] && D.strum[n].trim() ? D.strum[n] + ' ' + testo : testo;
+    if(!D.ordine.includes(n)) D.ordine.push(n);
+    const tmp = document.createElement('div'); tmp.innerHTML = rigaStrum(n);
+    const nuova = tmp.firstElementChild;
+    const gia = [...document.querySelectorAll('#m-s-corpo .m-riga')].find(x => x.dataset.riga === 's:' + n);
+    if(gia){ gia.replaceWith(nuova); r.remove(); } else r.replaceWith(nuova);
+    const bottone = [...document.querySelectorAll('.m-aggiungi [data-x]')].find(b => b.dataset.x === n); if(bottone) bottone.remove();
+    alza(nuova.querySelector('textarea'));
+    salvaOra(); disegnaAiuti();
+    return;
+  }
   let v = t.value;
   if(id === 'ee'){
     const f = formattaEsamiEmatochimici(v.replace(/\n+/g, ', '));
@@ -23465,6 +23510,13 @@ document.getElementById('m-app').addEventListener('click', e => {
     setTimeout(() => el.remove(), 220);
     apriRiga(r);
   }
+  else if(a === 'esame-altro'){
+    const tmp = document.createElement('div'); tmp.innerHTML = rigaAltro();
+    const r = tmp.firstElementChild;
+    $m('.m-aggiungi').before(r);
+    r.querySelector('input').focus({ preventScroll:true });
+    setTimeout(() => r.scrollIntoView({ block:'nearest', behavior:'smooth' }), 80);
+  }
   else if(a === 'chiudi-ric'){
     const box = $m('#m-aiuti'), r = (box._ric || [])[+el.dataset.r], c = el.closest('.m-aiuto');
     if(!r) return;
@@ -23496,7 +23548,7 @@ sc.addEventListener('input', e => {
 });
 sc.addEventListener('focusout', e => {
   const t = e.target;
-  if(t.matches('textarea[data-campo]')){
+  if(t.matches('[data-campo]')){
     const r = t.closest('.m-riga');
     setTimeout(() => { if(r.isConnected && !r.contains(document.activeElement)) chiudiRiga(r); }, 120);
   }
@@ -23512,6 +23564,7 @@ sc.addEventListener('focusout', e => {
 sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.value.trim()) e.target.value = '- '; });
 sc.addEventListener('keydown', e => {
   const t = e.target;
+  if(t.matches('.m-nome-esame') && e.key === 'Enter'){ e.preventDefault(); t.closest('.m-riga').querySelector('textarea').focus(); return; }
   // a capo dopo una riga col trattino: la nuova riga parte già col trattino
   // (Invio che ha già scelto una voce del menu "/" non va a capo)
   if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey && !e.defaultPrevented){
