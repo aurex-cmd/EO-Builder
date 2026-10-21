@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#0a0e13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style id="tema-scuro">
   :root{
@@ -3967,6 +3967,224 @@
   :root #comandi-menu{ box-shadow:var(--clay-out); }
   :root #aurex-egg{ background:rgba(20,30,40,.4); }
 </style>
+<!-- STILE OSTEO: la grafica di Osteoclick / Osteo Help (fondo pulito, Inter,
+     riquadri tondi senza rilievi, righe con la freccia, animazioni al tocco)
+     sopra il tema scelto, chiaro o scuro. Vale per Diari, Reparto, Ricoveri,
+     Strumenti e le altre pagine: la compilazione dei tag (#clinical-view)
+     resta com'è, con i suoi colori e caratteri. Si sceglie in Impostazioni →
+     Stile (vedi applicaStile); con "Classico" niente di questo si applica -->
+<style id="stile-osteo">
+  html[data-stile="osteo"]{
+    --o-bg:#ffffff; --o-fill:#f4f5f7; --o-box:#e8ebef; --o-ink:#172231; --o-muted:#6b7584; --o-faint:#b5beca; --o-line:#e6e9ee;
+    --o-accent:#2b587d; --o-on-accent:#ffffff; --o-tile:#ffffff;
+    --o-teal:#0e7571; --o-teal-box:#e3f4f3; --o-coral:#b04e37; --o-coral-box:#f7ebe7;
+    --o-viola:#6a5c92; --o-viola-box:#f1eefb; --o-blu:#2f5f96; --o-blu-box:#e4edf8; --o-oro:#9a6b1f; --o-oro-box:#f8eedc;
+    --o-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --o-premi:cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-stile="osteo"][data-tema="scuro"]{
+    --o-bg:#12161d; --o-fill:#1b212a; --o-box:#262e39; --o-ink:#e6ebf2; --o-muted:#8e99a8; --o-faint:#4a5462; --o-line:#2a323e;
+    --o-accent:#8db4e2; --o-on-accent:#12161d; --o-tile:#2b3039;
+    --o-teal:#83cec8; --o-teal-box:#112726; --o-coral:#e99a85; --o-coral-box:#3a2420;
+    --o-viola:#c1b5ea; --o-viola-box:#24202f; --o-blu:#8db4e2; --o-blu-box:#1a2636; --o-oro:#d9ae62; --o-oro-box:#2f2716;
+  }
+
+  /* ---------- cornice: fondo, intestazione, schede in alto ---------- */
+  html[data-stile="osteo"] body{ background:var(--o-bg); color:var(--o-ink); }
+  html[data-stile="osteo"] header{ background:var(--o-bg); border-bottom-color:var(--o-line); font-family:var(--o-sans); }
+  html[data-stile="osteo"] header h1{ font-family:var(--o-sans); font-weight:800; letter-spacing:-.02em; }
+  html[data-stile="osteo"] header h1 .t-eo{ color:var(--o-ink); }
+  html[data-stile="osteo"] header .sub{ color:var(--o-muted); font-family:var(--o-sans); font-size:12px; letter-spacing:-.005em; }
+  html[data-stile="osteo"] .brand-logo{ background:var(--o-fill); box-shadow:none; border-radius:14px; }
+  html[data-stile="osteo"] .active-bed-pill{ box-shadow:none; font-family:var(--o-sans); }
+  html[data-stile="osteo"] .sync-status-dot{ box-shadow:0 0 0 2px var(--o-bg); }
+  html[data-stile="osteo"] .topnav-btn{
+    font-family:var(--o-sans); color:var(--o-muted); border-radius:12px 12px 0 0;
+    transition:color .2s ease, border-color .25s ease, background .25s ease, transform .12s var(--o-premi);
+  }
+  html[data-stile="osteo"] .topnav-btn:hover{ color:var(--o-ink); }
+  html[data-stile="osteo"] .topnav-btn:active{ opacity:1; transform:scale(.95); }
+  html[data-stile="osteo"] .topnav-btn.vista-attiva{ background:var(--o-fill); color:var(--o-ink); border-bottom-color:var(--o-ink); font-weight:700; }
+  html[data-stile="osteo"] .topnav-btn.vista-attiva .topnav-icon{ color:var(--o-ink); }
+  html[data-stile="osteo"] .topnav-btn.vista-attiva .topnav-icon .su-pieno{ stroke:var(--o-fill); }
+  html[data-stile="osteo"] .topnav-btn.vista-attiva .topnav-icon{ animation:osteo-pop .32s var(--o-premi); }
+
+  /* ---------- pagine (tutte tranne l'esame obiettivo) ----------
+     i colori dell'app vengono ridefiniti dentro queste pagine: tutto ciò che
+     usa --panel, --line, --ink... prende i toni di Osteo, senza rilievi */
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view){
+    --panel:var(--o-bg); --panel-2:var(--o-fill); --panel-3:var(--o-fill);
+    --line:var(--o-line); --line-soft:var(--o-line);
+    --ink:var(--o-ink); --ink-dim:var(--o-muted); --ink-faint:var(--o-faint);
+    --clay-border:transparent;
+    --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none;
+    --font-body:var(--o-sans); --font-display:var(--o-sans);
+    background:transparent !important; border:none; box-shadow:none; border-radius:0;
+    margin:0 auto; max-width:620px; padding:6px 16px 18px;
+    font-family:var(--o-sans);
+  }
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) h2{
+    font-family:var(--o-sans); font-size:1.55rem; font-weight:800; letter-spacing:-.025em; line-height:1.15; margin:10px 0 16px;
+  }
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) h2 .hicon{ stroke:var(--o-ink); }
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) .group-label{
+    font-size:.82rem; font-weight:500; color:var(--o-muted);
+  }
+  html[data-stile="osteo"] .back-link{ font-family:var(--o-sans); color:var(--o-muted); font-weight:500; }
+  html[data-stile="osteo"] .back-link:hover{ color:var(--o-ink); background:none; }
+
+  /* pulsanti: riquadri pieni e tondi, il principale nel blu di Osteoclick */
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) .btn{
+    font-family:var(--o-sans); font-weight:600; border:0; border-radius:16px; background:var(--o-fill); color:var(--o-ink);
+    padding:11px 16px; box-shadow:none;
+  }
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) .btn.primary{
+    background:var(--o-accent); color:var(--o-on-accent); font-weight:700; box-shadow:none;
+  }
+
+  /* righe degli elenchi (Strumenti, Ricoveri, Appoggi): come "Consulta" */
+  html[data-stile="osteo"] .ric-lista-minimale{ border-top:0; }
+  html[data-stile="osteo"] .ric-lista-riga{
+    font-family:var(--o-sans); font-weight:600; font-size:.95rem; padding:14px 2px; color:var(--o-ink);
+    border-bottom-color:var(--o-line); border-radius:10px;
+    transition:background .2s ease, transform .12s var(--o-premi);
+  }
+  html[data-stile="osteo"] .ric-lista-riga:last-child{ border-bottom:0; }
+  html[data-stile="osteo"] .ric-lista-riga:hover{ color:var(--o-ink); }
+  html[data-stile="osteo"] .ric-lista-riga:active{ background:var(--o-fill); transform:scale(.985); }
+  html[data-stile="osteo"] .ric-lista-riga.attivo{ color:var(--o-accent); }
+  html[data-stile="osteo"] #app-view .ric-lista-riga:not(:has([id$="-chev"]))::after{
+    content:''; width:16px; height:16px; flex-shrink:0; margin-left:auto; background:var(--o-faint);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  html[data-stile="osteo"] #app-view .str-ico{ width:24px; height:24px; margin-right:14px; stroke:var(--o-muted); }
+  html[data-stile="osteo"] #app-view .str-ico .pieno{ fill:var(--o-muted); }
+  html[data-stile="osteo"] .strumenti-gruppo{
+    font-family:var(--o-sans); font-size:.68rem; font-weight:700; letter-spacing:.1em; color:var(--o-muted); margin:14px 2px 2px;
+  }
+  html[data-stile="osteo"] #app-view .group:first-child .strumenti-gruppo{ margin-top:6px; }
+
+  /* ---------- Diari ---------- */
+  /* Oggi · Reparto · Consegne: binario grigio, la voce scelta è un riquadro
+     chiaro con un'ombra appena accennata (come l'età in Osteoclick) */
+  html[data-stile="osteo"] .diari-seg{ background:var(--o-box); border:0; border-radius:14px; padding:4px; gap:2px; }
+  html[data-stile="osteo"] .diari-seg button{
+    font-family:var(--o-sans); color:var(--o-muted); border-radius:11px; padding:9px 4px;
+    transition:background .25s ease, color .2s ease, box-shadow .25s ease, transform .12s var(--o-premi);
+  }
+  html[data-stile="osteo"] .diari-seg button:active{ transform:scale(.95); }
+  html[data-stile="osteo"] .diari-seg button.attivo{ background:var(--o-bg); color:var(--o-ink); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  html[data-stile="osteo"][data-tema="scuro"] .diari-seg button.attivo{ background:var(--o-tile); }
+  html[data-stile="osteo"] .diari-seg button#diari-seg-oggi.giorno-ieri.attivo{ background:var(--o-teal-box); color:var(--o-teal); }
+  html[data-stile="osteo"] .diari-seg button.we{ color:var(--o-blu); }
+  html[data-stile="osteo"] .diari-seg button.we.attivo{ background:var(--o-blu-box); color:var(--o-blu); }
+  html[data-stile="osteo"] #diari-testa.fissa{ background:var(--o-bg); border-bottom-color:var(--o-line); box-shadow:0 10px 14px -14px rgba(0,0,0,.3); margin-left:-16px; margin-right:-16px; padding-left:16px; padding-right:16px; }
+
+  /* ogni diario: riquadro grigio tondo, senza bordi né rilievi */
+  html[data-stile="osteo"] .referto-block{
+    background:var(--o-fill); border:0; border-radius:22px; padding:14px 14px 14px; margin-bottom:12px; box-shadow:none;
+    transition:background .3s ease, box-shadow .3s ease;
+  }
+  html[data-stile="osteo"] .referto-block.copiato{ background:var(--o-teal-box); border:0; box-shadow:none; }
+  html[data-stile="osteo"] .referto-block.ha-consegne{ box-shadow:inset 0 0 0 2px var(--consegna); }
+  html[data-stile="osteo"] .referto-block.critico{ box-shadow:inset 0 0 0 2px var(--o-viola); }
+  html[data-stile="osteo"] .referto-block.critico.ha-consegne{ box-shadow:inset 0 0 0 2px var(--o-viola), inset 0 0 0 4px var(--consegna); }
+  html[data-stile="osteo"] .referto-block .bed-title-row{ margin-bottom:10px; }
+  html[data-stile="osteo"] .referto-block .bed-head{ gap:12px; }
+  html[data-stile="osteo"] .referto-block .bed-avatar{
+    width:42px; height:42px; border-radius:13px; background:var(--o-tile); color:var(--o-oro); box-shadow:none;
+    transition:background .3s ease, color .3s ease;
+  }
+  html[data-stile="osteo"] .referto-block .bed-avatar svg{ width:22px; height:22px; }
+  html[data-stile="osteo"] .referto-block.copiato .bed-avatar{ background:var(--o-teal); color:var(--o-bg); }
+  html[data-stile="osteo"] .referto-block .bed-head-testo{ flex-direction:column; align-items:flex-start; row-gap:0; }
+  html[data-stile="osteo"] .referto-block .bed-head .bed-title,
+  html[data-stile="osteo"] .referto-block.copiato .bed-head .bed-title{
+    font-family:var(--o-sans); font-weight:800; font-size:1.15rem; letter-spacing:-.015em; color:var(--o-ink); line-height:1.25;
+  }
+  html[data-stile="osteo"] .referto-block .bed-head .bed-date{ font-family:var(--o-sans); font-size:.8rem; color:var(--o-muted); }
+  html[data-stile="osteo"] .referto-block .copia-btn.copia-grande{
+    width:42px; height:42px; border:0; background:var(--o-tile); color:var(--o-ink);
+    transition:background .25s ease, color .25s ease, transform .12s var(--o-premi);
+  }
+  html[data-stile="osteo"] .referto-block .copia-btn.copia-grande svg{ width:17px; height:17px; }
+  html[data-stile="osteo"] .referto-block .copia-btn.copia-grande:active{ transform:scale(.88); }
+  html[data-stile="osteo"] .referto-block.copiato .copia-btn.copia-grande{ color:var(--o-teal); }
+  html[data-stile="osteo"] .referto-block .copia-btn.copia-grande.fatto{ background:var(--o-teal); color:var(--o-bg); animation:osteo-pop .35s var(--o-premi); }
+  html[data-stile="osteo"] .referto-block .bed-title-row .diario-esami-badge + .diario-dimissione-badge{ box-shadow:0 0 0 2px var(--o-fill); }
+  /* testo del diario: Inter su fondo chiaro dentro il riquadro grigio */
+  html[data-stile="osteo"] .referto-block .bed-text{
+    font-family:var(--o-sans); font-size:.92rem; line-height:1.6; color:var(--o-ink);
+    background:var(--o-bg); border:0; border-radius:16px; padding:12px 14px; box-shadow:none;
+    transition:box-shadow .2s ease;
+  }
+  html[data-stile="osteo"][data-tema="scuro"] .referto-block .bed-text{ background:var(--o-bg); }
+  html[data-stile="osteo"] .referto-block .bed-text-wrap textarea.bed-text{ background:transparent; }
+  html[data-stile="osteo"] .referto-block textarea.bed-text:focus{ box-shadow:0 0 0 2px var(--o-accent); }
+  html[data-stile="osteo"] .referto-block .bed-text-wrap:focus-within .bed-text-specchio{ box-shadow:0 0 0 2px var(--o-accent); }
+  html[data-stile="osteo"] .referto-block .bed-text-wrap textarea.bed-text:focus{ box-shadow:none; }
+  html[data-stile="osteo"] .diff-ieri-barra{ font-family:var(--o-sans); }
+  html[data-stile="osteo"] .diff-ieri-barra button{ border:0; background:var(--o-bg); border-radius:10px; }
+
+  /* ---------- Reparto ---------- */
+  html[data-stile="osteo"] .sync-box{ background:var(--o-fill); border:0; border-radius:20px; box-shadow:none; }
+  html[data-stile="osteo"] .sync-box input:is([type="email"], [type="password"], [type="text"]){
+    background:var(--o-bg); color:var(--o-ink); border:1px solid var(--o-line); border-radius:12px; padding:10px 12px; font-size:16px;
+  }
+  html[data-stile="osteo"] .settore-dot{ font-family:var(--o-sans); transition:background .25s ease, color .2s ease, box-shadow .25s ease, transform .12s var(--o-premi); }
+  html[data-stile="osteo"] .settore-dot:active{ transform:scale(.9); }
+  html[data-stile="osteo"] .settore-dot.active{ box-shadow:0 0 0 4px var(--signal-soft); animation:osteo-pop .32s var(--o-premi); }
+  html[data-stile="osteo"] :is(#wardmap-view, #diari-reparto-strip) .bed-tile{ font-family:var(--o-sans); border-radius:14px; transition:transform .12s var(--o-premi), background .25s ease; }
+  html[data-stile="osteo"] :is(#wardmap-view, #diari-reparto-strip) .bed-tile:active{ transform:scale(.93); }
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) input:not([type="checkbox"]):not([type="radio"]){
+    font-family:var(--o-sans); border-radius:12px;
+  }
+
+  /* ---------- animazioni al tocco ---------- */
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) :is(.btn, .chip, .back-link){
+    transition:background .2s ease, color .2s ease, transform .12s var(--o-premi);
+  }
+  html[data-stile="osteo"] :is(.btn, .back-link, .ric-lista-del):active{ transform:scale(.96); }
+
+  /* pagina appena aperta: sale e compare; in Diari i riquadri arrivano uno
+     dopo l'altro (classe messa da mostraVista e tolta poco dopo, così i
+     ridisegni successivi — salvataggi, sincronizzazione — non riaccendono
+     l'animazione) */
+  html[data-stile="osteo"] .osteo-entra{ animation:osteo-entra .32s var(--o-premi) both; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra{ animation:none; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra :is(#diari-testa, .referto-block){ animation:osteo-entra .4s var(--o-premi) both; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(2){ animation-delay:.05s; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(3){ animation-delay:.1s; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(4){ animation-delay:.15s; }
+  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(n+5){ animation-delay:.2s; }
+  html[data-stile="osteo"] #app-view.osteo-entra{ animation:none; }
+  html[data-stile="osteo"] #app-view.osteo-entra .group{ animation:osteo-entra .38s var(--o-premi) both; }
+  html[data-stile="osteo"] #app-view.osteo-entra .group:nth-child(2){ animation-delay:.05s; }
+  html[data-stile="osteo"] #app-view.osteo-entra .group:nth-child(n+3){ animation-delay:.1s; }
+  @keyframes osteo-entra{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  @keyframes osteo-pop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.14); } 100%{ transform:scale(1); } }
+
+  /* finestre (EGA, VFG, farmaci, rubrica...): il velo sfuma, il riquadro
+     sale dal basso come il pannello delle schede CFS di Osteoclick */
+  html[data-stile="osteo"] [id$="-overlay"].show{ animation:osteo-velo .22s ease both; }
+  html[data-stile="osteo"] [id$="-overlay"].show > *{ animation:osteo-sale .34s var(--o-premi) both; }
+  @keyframes osteo-velo{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes osteo-sale{ from{ opacity:0; transform:translateY(28px) scale(.98); } to{ opacity:1; transform:none; } }
+  html[data-stile="osteo"] #toast{ font-family:var(--o-sans); box-shadow:0 6px 20px rgba(0,0,0,.18); transition:opacity .2s ease, transform .3s var(--o-premi); }
+
+  @media (prefers-reduced-motion:reduce){
+    html[data-stile="osteo"] *, html[data-stile="osteo"] *::before, html[data-stile="osteo"] *::after{ animation:none !important; transition:none !important; }
+  }
+</style>
 <script>
 // tema scelto in Impostazioni: applicato qui, nell'<head>, prima che la
 // pagina venga disegnata (niente lampo dell'altro tema all'apertura)
@@ -3999,6 +4217,39 @@ function renderImpostazioniTema(){
   if(btnScuro) btnScuro.classList.toggle('active', t === 'scuro');
 }
 applicaTema(temaAttuale());
+// stile grafico (Impostazioni → Stile), indipendente dal tema: "osteo" (la
+// grafica di Osteoclick / Osteo Help, predefinito) o "classico" (quella di
+// prima). Come il tema: preferenza di questo dispositivo, non sincronizzata
+const STILE_KEY = 'eo_builder_stile_v1';
+function stileAttuale(){
+  let s = null;
+  try{ s = localStorage.getItem(STILE_KEY); } catch(e){}
+  return s === 'classico' ? 'classico' : 'osteo';
+}
+function applicaStile(s){ document.documentElement.dataset.stile = s; }
+function impostaStile(s){
+  try{ localStorage.setItem(STILE_KEY, s); } catch(e){}
+  applicaStile(s);
+  renderImpostazioniStile();
+}
+function renderImpostazioniStile(){
+  const s = stileAttuale();
+  const bOsteo = document.getElementById('impostazioni-stile-osteo');
+  const bClassico = document.getElementById('impostazioni-stile-classico');
+  if(bOsteo) bOsteo.classList.toggle('active', s === 'osteo');
+  if(bClassico) bClassico.classList.toggle('active', s === 'classico');
+}
+applicaStile(stileAttuale());
+// pagina appena mostrata: animazione d'ingresso (solo stile Osteo), con la
+// classe tolta subito dopo — vedi .osteo-entra nel foglio stile-osteo
+function animaIngressoVista(el){
+  if(!el || document.documentElement.dataset.stile !== 'osteo') return;
+  el.classList.remove('osteo-entra');
+  void el.offsetWidth;
+  el.classList.add('osteo-entra');
+  clearTimeout(el._timerEntra);
+  el._timerEntra = setTimeout(() => el.classList.remove('osteo-entra'), 700);
+}
 </script>
 </head>
 <body>
@@ -4324,6 +4575,14 @@ applicaTema(temaAttuale());
     <div class="inline-fields" style="align-items:center; justify-content:center;">
       <div class="chip" id="impostazioni-tema-chiaro" onclick="impostaTema('chiaro')">Chiaro</div>
       <div class="chip" id="impostazioni-tema-scuro" onclick="impostaTema('scuro')">Scuro</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label" style="text-align:center;">Stile</div>
+    <div class="inline-fields" style="align-items:center; justify-content:center;">
+      <div class="chip" id="impostazioni-stile-osteo" onclick="impostaStile('osteo')">Osteo</div>
+      <div class="chip" id="impostazioni-stile-classico" onclick="impostaStile('classico')">Classico</div>
     </div>
   </div>
 
@@ -9804,7 +10063,7 @@ function mostraVista(v){
   if(v === 'ricoveri') renderRicoveriLista();
   if(v === 'vitali') renderVitaliSettore();
   if(v === 'backup') renderBackupLista();
-  if(v === 'impostazioni'){ renderImpostazioniSezioni(); renderImpostazioniTema(); renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
+  if(v === 'impostazioni'){ renderImpostazioniSezioni(); renderImpostazioniTema(); renderImpostazioniStile(); renderImpostazioniTagNormale(); renderImpostazioniResetGiornaliero(); if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync(); }
   if(v === 'consegne') renderConsegneLista();
   if(v === 'dimissioni') renderCalendarioDimissioni();
 
@@ -9814,7 +10073,14 @@ function mostraVista(v){
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
+  // stile Osteo: la pagina appena aperta entra con un'animazione (non
+  // l'esame obiettivo né l'editor, e non se si ridisegna la stessa pagina)
+  if(v !== vistaAnimataPrima && v !== 'clinical' && v !== 'editor'){
+    animaIngressoVista(document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v + '-view'));
+  }
+  vistaAnimataPrima = v;
 }
+var vistaAnimataPrima = null;
 function toggleWardMap(){
   wardMapOpen ? chiudiWardMap() : apriWardMap();
 }
@@ -18094,7 +18360,7 @@ document.addEventListener('keydown', (e) => {
 
 try{
   DEFAULT_SNAPSHOT_JSON = JSON.stringify(computeDefaultSnapshot());
-  renderImpostazioniTema();
+  renderImpostazioniTema(); renderImpostazioniStile();
   renderImpostazioniTagNormale();
   renderImpostazioniResetGiornaliero();
   renderWardMap();
