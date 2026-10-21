@@ -13,6 +13,10 @@ App a pagina singola (nessuna dipendenza da server per il funzionamento di base)
   - `VFG` o `Cockroft`/`Cockcroft` → calcolatore Cockcroft-Gault; stesso comportamento alla chiusura
   - `/Arixtra`, `/Inhixa`, `/NAO` o `/DOAC` → box informativi con i dosaggi renali (fondaparinux, enoxaparina, i 4 anticoagulanti orali diretti), che evidenziano la fascia giusta se nel diario è già presente una VFG
 
+## EO Minimal
+
+All'indirizzo `.../minimal/` (es. `https://<tuo-username-github>.github.io/eo-builder/minimal/`) si apre la stessa app con un'interfaccia essenziale e chiara: una home con due ingressi, **Visita** (si sceglie il letto e si compila l'esame obiettivo con i tag) e **Diari** (si tocca il letto e il suo diario si apre a tutto schermo, diviso in esame obiettivo, "Agli EE", referti e provvedimenti, con antibiotici, richieste e i pallini E/D/i). Sotto i due ingressi ci sono **Consegne**, **Ricoveri** (con calendario e statistiche animate) e **Impostazioni** (compreso l'account per la sincronizzazione); gli appoggi di ogni settore stanno sotto i suoi letti, col "+" per aggiungerne uno. I dati sono gli stessi dell'app normale, sincronizzazione compresa; l'app aperta all'indirizzo normale non cambia. Per gli strumenti clinici c'è il collegamento all'app completa.
+
 ## Pubblicarla su GitHub Pages
 
 1. Vai su [github.com/new](https://github.com/new) e crea un nuovo repository (es. `eo-builder`), pubblico, senza README/gitignore (verranno caricati questi file).
