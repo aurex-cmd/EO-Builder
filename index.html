@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#0a0e13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style id="tema-scuro">
   :root{
@@ -4307,6 +4307,18 @@ function renderImpostazioniStile(){
   if(bClassico) bClassico.classList.toggle('active', s === 'classico');
 }
 applicaStile(stileAttuale());
+// EO MINIMAL: la stessa app con un'altra interfaccia (home con Visita e
+// Diari, scheda del letto a tutto schermo), aperta da .../minimal/ (che
+// rimanda qui con ?ui=minimal). Stessi dati e stessa sincronizzazione; solo
+// tema chiaro, e nessuno dei due stili (Osteo/Classico) si applica. Aperta
+// normalmente, l'app non cambia in niente — vedi il blocco "EO MINIMAL" in
+// fondo alla pagina
+const UI_MINIMAL = new URLSearchParams(location.search).get('ui') === 'minimal';
+if(UI_MINIMAL){
+  applicaTema('chiaro');
+  document.documentElement.dataset.stile = 'minimal';
+  document.documentElement.dataset.ui = 'minimal';
+}
 </script>
 </head>
 <body>
@@ -22665,5 +22677,719 @@ function editorLettereSvuota(){
   editorLettereSalvaOra();
 }
 </script>
+<!-- ===================== EO MINIMAL =====================
+     Interfaccia alternativa, attiva solo con ?ui=minimal (vedi UI_MINIMAL
+     nell'<head> e minimal/index.html). Home con due ingressi (Visita, Diari),
+     letti del settore con le stesse regole visive di Reparto, esame
+     obiettivo nella schermata dei tag dell'app, diario del letto in una
+     scheda a tutto schermo. Legge e scrive gli stessi dati (loadPatients,
+     aggiornaDiarioTesto, segnaRefertoCopiato...), quindi le due interfacce
+     restano sempre allineate. Tutto il CSS è sotto html[data-ui="minimal"]
+     o su classi m-*: senza ?ui=minimal niente di questo si vede -->
+<style id="stile-minimal">
+  html[data-ui="minimal"]{
+    --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
+    --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
+    --m-home-a:#b0dfcc; --m-home-b:#f7c6b7; --m-home-sub:#333c49;
+    --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
+    --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
+    --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --m-scheda:'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --m-molla:cubic-bezier(.2,.9,.25,1);
+    /* l'app sotto (tag, finestre degli strumenti) con gli stessi toni, senza rilievi */
+    --page:#ffffff; --signal:#0e7571; --signal-dim:#e3f4f3; --signal-soft:rgba(14,117,113,.12); --on-signal:#ffffff;
+    --clay-border:#e1e5eb; --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none; --glow-signal:none;
+    --font-body:var(--m-sans); --font-display:var(--m-sans);
+  }
+  html[data-ui="minimal"] body{ background:var(--m-bg); color:var(--m-ink); font-family:var(--m-sans); font-variant-numeric:tabular-nums; padding-bottom:0; }
+  html[data-ui="minimal"] body > header{ display:none !important; }
+  #m-app{ display:none; }
+  html[data-ui="minimal"] #m-app{ display:block; }
+
+  .m-bar{ position:sticky; top:0; z-index:30; background:var(--m-bg); padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px; }
+  .m-bar-in{ max-width:560px; margin:0 auto; display:grid; grid-template-columns:44px 1fr 64px; align-items:center; height:44px; }
+  .m-bar-t{ text-align:center; font-weight:600; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m-bar .m-indietro{ border:0; background:none; width:44px; height:44px; display:grid; place-items:center; color:var(--m-muted); cursor:pointer; transition:transform .12s var(--m-molla), color .2s; }
+  .m-bar .m-indietro svg{ width:22px; height:22px; }
+  .m-bar .m-indietro:active{ transform:scale(.88); color:var(--m-ink); }
+  .m-bar .m-azione{ justify-self:end; border:0; background:none; padding:6px 0; color:var(--m-teal); font-weight:600; font-size:.9rem; cursor:pointer; font-family:inherit; }
+  .m-bar.m-home .m-bar-in{ grid-template-columns:1fr auto; }
+  /* durante la visita la barra resta fissa sopra la schermata dei tag */
+  html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; box-shadow:0 1px 0 var(--m-line); }
+  html[data-m-eo] #clinical-view{ padding-top:calc(64px + env(safe-area-inset-top,0px)); }
+  .m-marchio{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; letter-spacing:-.01em; }
+  .m-marchio i{ width:32px; height:32px; border-radius:9px; background:var(--m-ink); color:var(--m-bg); display:grid; place-items:center; font-style:normal; font-size:13px; font-weight:800; }
+  .m-data{ font-size:.8rem; color:var(--m-muted); }
+
+  .m-main{ max-width:560px; margin:0 auto; padding:4px 16px 120px; }
+  .m-vista{ display:flex; flex-direction:column; gap:14px; }
+  .m-vista.m-avanti{ animation:m-avanti .32s var(--m-molla) both; }
+  .m-vista.m-indietro-anim{ animation:m-indietro .32s var(--m-molla) both; }
+  @keyframes m-avanti{ from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:none; } }
+  @keyframes m-indietro{ from{ opacity:0; transform:translateX(-20px); } to{ opacity:1; transform:none; } }
+  @keyframes m-compare{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  @keyframes m-pop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.4); } 100%{ transform:scale(1); } }
+  @keyframes m-scelto{ 0%{ transform:scale(.94); } 60%{ transform:scale(1.04); } 100%{ transform:none; } }
+  .m-h1{ font-size:29.6px; line-height:1.05; font-weight:800; letter-spacing:-.025em; text-transform:uppercase; margin:18px 0 0; }
+  .m-rule{ height:1px; background:var(--m-line); margin:-2px 0 0; }
+  .m-h2{ font-size:1.45rem; line-height:1.15; font-weight:800; letter-spacing:-.02em; margin:6px 0 0; }
+  .m-sub{ color:var(--m-muted); margin:0; font-size:14.7px; line-height:1.45; }
+  .m-lbl{ font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--m-muted); margin:16px 0 -6px; }
+
+  .m-ingressi{ display:grid; grid-auto-rows:1fr; gap:12px; margin-top:6px; }
+  .m-ingresso{ display:flex; align-items:center; gap:14px; width:100%; min-height:92px; padding:14px 16px 14px 14px; border:0; border-radius:22px; background:var(--hb); text-align:left; font-family:inherit; color:var(--m-ink); cursor:pointer; transition:transform .12s var(--m-molla); }
+  .m-ingresso:active{ transform:scale(.98); }
+  .m-ingresso .m-ic{ width:54px; height:54px; border-radius:14px; background:#fff; display:grid; place-items:center; flex:0 0 auto; }
+  .m-ingresso .m-ic svg{ width:27px; height:27px; }
+  .m-ingresso .m-t{ flex:1; min-width:0; }
+  .m-ingresso b{ display:block; font-size:17.9px; font-weight:700; letter-spacing:-.01em; line-height:1.3; }
+  .m-ingresso small{ display:block; margin-top:3px; font-size:13.3px; color:var(--m-home-sub); line-height:1.4; }
+  .m-ingresso .m-chev{ width:16px; height:16px; color:var(--m-home-sub); opacity:.5; }
+  .m-i-visita{ --hb:var(--m-home-a); } .m-i-diari{ --hb:var(--m-home-b); }
+  .m-oggi{ font-size:.84rem; color:var(--m-muted); margin:2px 2px 0; }
+  .m-oggi b{ color:var(--m-ink); font-weight:600; }
+  .m-piede{ font-size:.8rem; color:var(--m-muted); text-align:center; margin-top:24px; }
+  .m-piede a{ color:var(--m-teal); font-weight:600; text-decoration:none; }
+
+  .m-settori{ position:relative; display:grid; grid-auto-columns:1fr; grid-auto-flow:column; background:var(--m-box); border-radius:9px; padding:3px; }
+  .m-settori .m-pill{ position:absolute; top:3px; bottom:3px; left:3px; border-radius:7px; background:var(--m-bg); box-shadow:0 1px 2px rgba(0,0,0,.08); transition:transform .36s var(--m-molla), width .36s var(--m-molla); }
+  .m-settori button{ position:relative; z-index:1; border:0; background:none; padding:7px 0; font-weight:600; font-size:.86rem; color:var(--m-muted); font-family:inherit; cursor:pointer; transition:color .25s; }
+  .m-settori button[aria-pressed="true"]{ color:var(--m-ink); }
+
+  .m-letti{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .m-letto{ position:relative; height:64px; padding:0 0 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-bg); color:var(--m-muted); font-family:inherit; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; cursor:pointer; transition:transform .14s var(--m-molla), background .3s, color .3s, border-color .3s; animation:m-compare .34s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms); }
+  .m-letto:active{ transform:scale(.93); }
+  .m-letto.m-oggi-l{ background:var(--m-teal-box); border-color:transparent; color:var(--m-teal); font-weight:700; }
+  .m-letto.m-recente{ background:var(--m-viola-box); border-color:transparent; color:var(--m-viola); font-weight:700; }
+  .m-letto.m-vecchio{ background:var(--m-box); border-color:transparent; color:var(--m-muted); }
+  .m-letto.m-consegnato:not(.m-oggi-l){ background:var(--m-bg); border:1.5px solid var(--m-blu); color:var(--m-ink); }
+  .m-letto.m-critico{ border:1.5px solid var(--m-critico); color:var(--m-ink); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
+  .m-letto.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
+  .m-letto.m-appena{ animation:m-pop .5s var(--m-molla); }
+  .m-pallini{ position:absolute; display:flex; }
+  .m-pallini.m-basso{ right:5px; bottom:5px; }
+  .m-pallini.m-alto{ left:5px; top:5px; gap:2px; }
+  .m-pal{ width:14px; height:14px; border-radius:50%; display:grid; place-items:center; font-size:8.5px; font-weight:800; color:#fff; font-style:normal; box-shadow:0 0 0 1.5px var(--m-bg); }
+  .m-pallini.m-basso .m-pal + .m-pal{ margin-left:-4px; }
+  .m-pallini.m-alto .m-pal{ width:12px; height:12px; font-size:7px; color:#1b2433; }
+  .m-pal.e{ background:var(--m-p-e); } .m-pal.d{ background:var(--m-p-d); }
+  .m-pal.arancione{ background:#e0a03a; } .m-pal.blu{ background:#4a90d9; } .m-pal.rosso{ background:#d9534f; } .m-pal.verde{ background:#3cb464; }
+  .m-pal.v{ background:var(--m-p-v); } .m-pal.es{ background:var(--m-p-es); } .m-pal.s{ background:var(--m-p-s); } .m-pal.c{ background:var(--m-p-c); }
+  .m-spunta{ position:absolute; top:5px; right:5px; width:15px; height:15px; border-radius:50%; background:var(--m-teal); color:#fff; display:grid; place-items:center; box-shadow:0 0 0 1.5px var(--m-bg); }
+  .m-spunta svg{ width:9px; height:9px; }
+  .m-legenda-apri{ align-self:flex-start; border:0; background:none; padding:2px 0; font:inherit; font-size:.8rem; font-weight:600; color:var(--m-muted); display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .m-legenda-apri svg{ width:14px; height:14px; transition:transform .3s var(--m-molla); }
+  .m-legenda-apri.m-aperta svg{ transform:rotate(180deg); }
+  .m-legenda-wrap{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--m-molla); }
+  .m-legenda-wrap.m-aperta{ grid-template-rows:1fr; }
+  .m-legenda-wrap > div{ overflow:hidden; }
+  .m-legenda{ display:grid; grid-template-columns:44px 1fr; gap:8px 12px; align-items:center; padding:6px 0 4px; font-size:.82rem; color:var(--m-muted); }
+  .m-legenda .m-letto{ display:grid; place-items:center; height:34px; font-size:.78rem; animation:none; pointer-events:none; padding:0 0 6px; }
+  .m-legenda .m-letto .m-pal{ width:12px; height:12px; font-size:7px; }
+  .m-legenda .m-letto .m-spunta{ width:12px; height:12px; top:3px; right:3px; }
+  .m-legenda .m-letto .m-pallini.m-basso{ right:3px; bottom:3px; }
+  .m-legenda .m-letto .m-pallini.m-alto{ left:3px; top:3px; }
+  .m-legenda b{ color:var(--m-ink); font-weight:600; }
+
+  /* esame obiettivo: la schermata dei tag dell'app, piatta e chiara */
+  html[data-ui="minimal"] #clinical-view{ max-width:560px; margin:0 auto; padding-bottom:40px; }
+  html[data-ui="minimal"] #clinical-view .card{ background:transparent !important; border:0; border-bottom:1px solid var(--m-line); border-radius:0; box-shadow:none; margin:0 16px; padding:14px 0 16px; }
+  html[data-ui="minimal"] #clinical-view .card h2{ font-family:var(--m-sans); font-size:.98rem; font-weight:700; letter-spacing:0; color:var(--m-ink); margin-bottom:10px; }
+  html[data-ui="minimal"] #clinical-view .card h2 .hicon{ stroke:var(--m-muted); width:17px; height:17px; }
+  html[data-ui="minimal"] #clinical-view .card h2 .hicon .pieno{ fill:var(--m-muted); }
+  html[data-ui="minimal"] #clinical-view .group-label{ font-size:.75rem; color:var(--m-muted); }
+  html[data-ui="minimal"] #clinical-view .chip{ border:1px solid var(--m-line); background:transparent; border-radius:7px; padding:6px 10px; font-family:var(--m-sans); font-size:.84rem; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s ease, color .28s ease, border-color .28s ease, transform .18s var(--m-molla); }
+  html[data-ui="minimal"] #clinical-view .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; animation:m-scelto .4s var(--m-molla); }
+  html[data-ui="minimal"] #clinical-view .chip:active{ transform:scale(.94); }
+  html[data-ui="minimal"] #clinical-view #output-card{ border-bottom:0; }
+  html[data-ui="minimal"] #clinical-view textarea, html[data-ui="minimal"] #clinical-view input[type=text], html[data-ui="minimal"] #clinical-view input[type=number]{ box-shadow:none; border:1px solid var(--m-line); border-radius:9px; background:var(--m-bg); }
+  html[data-ui="minimal"] #toast{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.18); font-family:var(--m-sans); }
+
+  /* scheda del letto */
+  .m-velo{ position:fixed; inset:0; z-index:60; background:rgba(15,20,28,.32); opacity:0; pointer-events:none; transition:opacity .3s; }
+  .m-velo.m-su{ opacity:1; pointer-events:auto; }
+  .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 10px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:22px 22px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:16.2px; color:var(--m-ink); }
+  .m-scheda.m-su{ transform:none; }
+  .m-scheda.m-trascina{ transition:none; }
+  .m-s-testa{ position:relative; padding:24px 18px 8px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; touch-action:none; cursor:grab; }
+  .m-s-testa::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
+  .m-s-testa h2{ margin:0; font-size:1.6rem; font-weight:800; letter-spacing:-.025em; }
+  .m-s-titolo{ display:flex; align-items:center; gap:10px; }
+  .m-s-titolo .m-pallini{ position:static; gap:4px; }
+  .m-s-titolo .m-pal{ width:20px; height:20px; font-size:10.5px; box-shadow:none; }
+  .m-stato{ font-size:.78rem; font-weight:600; color:#9a6b1f; }
+  .m-stato.m-ok{ color:var(--m-teal); }
+  .m-chiudi{ width:30px; height:30px; border-radius:50%; border:0; background:var(--m-box); color:var(--m-muted); display:grid; place-items:center; flex:0 0 auto; cursor:pointer; transition:transform .12s var(--m-molla); }
+  .m-chiudi:active{ transform:scale(.88); }
+  .m-chiudi svg{ width:15px; height:15px; }
+  .m-s-corpo{ flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 18px 120px; display:flex; flex-direction:column; gap:6px; }
+  .m-scheda .m-lbl{ margin-bottom:0; }
+  .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:.8rem; font-weight:600; color:var(--m-teal); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
+  .m-modifica:active{ transform:scale(.94); opacity:.7; }
+  .m-aiuti{ display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 2px; }
+  .m-aiuto{ display:inline-flex; align-items:center; gap:7px; max-width:100%; background:var(--m-box); border-radius:8px; padding:5px 10px 5px 9px; font-size:.8rem; font-weight:600; overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
+  .m-aiuto i{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--acc); }
+  .m-aiuto em{ font-style:normal; font-weight:500; color:var(--m-muted); font-size:.92em; }
+  .m-aiuto.atb{ --acc:var(--m-atb0); } .m-aiuto.atb.liv1{ --acc:var(--m-atb1); } .m-aiuto.atb.liv2{ --acc:var(--m-atb2); } .m-aiuto.atb.liv2 em{ color:var(--m-atb2); font-weight:700; }
+  .m-aiuto.ric{ --acc:var(--m-viola); }
+  .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 8px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-muted); font-weight:700; font-size:.85rem; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
+  .m-aiuto .m-ok:active{ transform:scale(.85); color:var(--m-teal); }
+  .m-aiuto.m-chiusa{ opacity:0; transform:scale(.85); max-width:0; padding-left:0; padding-right:0; margin-right:-6px; }
+  .m-aiuto.m-nuovo, .m-pal.m-nuovo{ animation:m-scelto .45s var(--m-molla); }
+  textarea.m-testo{ display:block; width:100%; border:0; background:transparent; padding:0; margin:0; font:inherit; font-size:.95rem; line-height:1.6; color:var(--m-ink); resize:none; overflow:hidden; min-height:1.6em; box-shadow:none; }
+  textarea.m-testo:focus{ outline:none; }
+  textarea.m-testo::placeholder{ color:var(--m-faint); }
+  .m-blocco{ position:relative; padding:8px 0 12px; border-bottom:1px solid var(--m-line); }
+  .m-blocco::after, .m-riga::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:1.5px; background:var(--m-teal); transform:scaleX(0); transform-origin:left; transition:transform .38s var(--m-molla); }
+  .m-blocco:focus-within::after, .m-riga:focus-within::after{ transform:scaleX(1); }
+  .m-riga{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; column-gap:10px; padding:12px 2px; border-bottom:1px solid var(--m-line); cursor:text; transition:background .25s; animation:m-compare .3s var(--m-molla) both; }
+  .m-riga-nome{ font-weight:600; font-size:.93rem; white-space:nowrap; cursor:pointer; }
+  .m-riga textarea.m-testo{ font-size:.93rem; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
+  .m-riga.m-vuota{ cursor:pointer; }
+  .m-riga.m-vuota textarea.m-testo{ display:none; }
+  .m-riga.m-vuota:active{ background:var(--m-box); }
+  .m-riga .m-piu{ width:18px; height:18px; color:var(--m-faint); align-self:center; grid-column:3; transition:transform .35s var(--m-molla), color .2s, opacity .2s; }
+  .m-riga:not(.m-vuota) .m-piu{ opacity:0; transform:rotate(45deg) scale(.6); pointer-events:none; }
+  .m-nota{ grid-column:2 / 4; display:grid; grid-template-rows:0fr; transition:grid-template-rows .32s var(--m-molla); }
+  .m-nota > span{ overflow:hidden; font-size:.74rem; color:var(--m-muted); transition:color .3s; }
+  .m-riga:focus-within .m-nota, .m-nota.m-fatto{ grid-template-rows:1fr; }
+  .m-riga:focus-within .m-nota > span, .m-nota.m-fatto > span{ padding-top:4px; }
+  .m-nota.m-fatto > span{ color:var(--m-teal); font-weight:600; }
+  @keyframes m-scrivi{ from{ opacity:0; transform:translateX(8px); } to{ opacity:1; transform:none; } }
+  .m-aggiungi{ display:flex; flex-wrap:wrap; gap:4px 14px; padding:10px 2px 0; }
+  .m-aggiungi button{ border:0; background:none; padding:4px 0; font:inherit; font-size:.82rem; font-weight:500; color:var(--m-muted); cursor:pointer; transition:color .2s, opacity .25s, transform .14s var(--m-molla); }
+  .m-aggiungi button:active{ color:var(--m-ink); transform:scale(.94); }
+  .m-aggiungi button.m-via{ opacity:0; transform:scale(.8); }
+  .m-s-piede{ position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--m-bg) 72%, transparent); }
+  .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:12px; height:52px; background:var(--m-ink); color:#fff; font:inherit; font-weight:600; font-size:.95rem; cursor:pointer; transition:transform .16s var(--m-molla); }
+  .m-copia:active{ transform:scale(.97); }
+  .m-copia::before{ content:""; position:absolute; inset:0; background:var(--m-teal); transform:scaleX(0); transform-origin:left; transition:transform .55s var(--m-molla); }
+  .m-copia.m-fatto::before{ transform:scaleX(1); }
+  .m-copia .m-et{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:9px; transition:transform .45s var(--m-molla), opacity .3s; }
+  .m-copia .m-et svg{ width:17px; height:17px; }
+  .m-copia .m-et.m-dopo{ transform:translateY(110%); opacity:0; }
+  .m-copia.m-fatto .m-et.m-prima{ transform:translateY(-110%); opacity:0; }
+  .m-copia.m-fatto .m-et.m-dopo{ transform:none; opacity:1; transition-delay:.12s; }
+  .m-copia.m-fatto .m-et.m-dopo svg{ animation:m-pop .5s var(--m-molla) .2s both; }
+  .m-copia.m-subito::before, .m-copia.m-subito .m-et, .m-copia.m-subito .m-et svg{ transition:none !important; animation:none !important; }
+  .m-lampo{ animation:m-lampo .9s ease-out both; animation-delay:calc(var(--k) * 55ms); }
+  @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
+  .m-scheda.m-entra .m-s-corpo > *{ animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--k) * 30ms + 120ms); }
+  html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
+  @media (prefers-reduced-motion:reduce){ #m-app *, #m-app *::before, #m-app *::after{ animation:none !important; transition:none !important; } }
+</style>
+<div id="m-app" aria-live="polite">
+  <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
+  <main class="m-main" id="m-main"><div class="m-vista" id="m-vista"></div></main>
+  <div class="m-velo" id="m-velo"></div>
+  <section class="m-scheda" id="m-scheda" role="dialog" aria-modal="true" aria-label="Diario del letto">
+    <div class="m-s-testa" id="m-s-testa"></div>
+    <div class="m-s-corpo" id="m-s-corpo"></div>
+    <div class="m-s-piede"><button class="m-copia" id="m-copia" type="button"></button></div>
+  </section>
+</div>
+<script>
+(function(){
+if(!UI_MINIMAL) return;
+document.title = 'EO Minimal';
+
+const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false };
+const $m = s => document.querySelector(s);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const ICON = {
+  indietro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  chev:'<svg class="m-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  giu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  steto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0010 0V3"/><path d="M11 14v2a5 5 0 0010 0v-2"/><circle cx="21" cy="11" r="2"/></svg>',
+  diario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  piu:'<svg class="m-piu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  copia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>',
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+// le viste dell'app (le stesse di mostraVista): in minimal si vede solo la
+// schermata dei tag, e solo durante la visita di un letto
+const VISTE_APP = ['clinical-view','wardmap-view','riepilogo-view','app-view','backup-view','impostazioni-view','dimissioni-view','consegne-view','ricoveri-view','ricovero-singolo-view','vitali-settore-view','postdegenze-view','editor-view'];
+function nascondiViste(){ VISTE_APP.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; }); }
+
+/* ---------- dati (le stesse funzioni di Reparto e Diari) ---------- */
+function settori(){ const wm = getWardMap(); return Object.keys(wm).filter(s => repartoDelSettore(s) === getReparto() && s !== SETTORE_EXTRA); }
+function voce(nome){ return Object.entries(loadPatients()).find(([, p]) => p.name === nome) || null; }
+function statoScheda(id, p){ return (id === currentPatientId && typeof state !== 'undefined') ? state : p.state; }
+function infoLetto(nome){
+  const e = voce(nome);
+  const occupato = !!(e && schedaHaDati(e[1].state));
+  const p = e && e[1], id = e && e[0];
+  const st = e ? statoScheda(id, p) : null;
+  const extra = st ? (st.outputExtra || '') : '';
+  const pall = e ? pallinidataLetto(p, id, extra) : {};
+  const iso = coloreIsolamento(isolamentoPerLetto(nome, st ? st.isolamento : null));
+  const cons = loadConsegne()[nome];
+  return {
+    e, id, p, occupato,
+    diOggi: occupato && isOggi(p.esameAggiornatoIl),
+    giorniFa: occupato ? giorniDiDifferenza(p.esameAggiornatoIl) : null,
+    copiato: !!(p && p.refertoCopiato && isOggi(p.refertoCopiatoIl)),
+    pall, iso,
+    consegne: cons ? ['V','E','S','C'].filter(l => cons[l] && !cons['fatto' + l]) : null,
+    critico: !!loadCritici()[nome]
+  };
+}
+function classiLetto(i){
+  const c = [];
+  if(i.occupato) c.push(i.diOggi ? 'm-oggi-l' : (i.giorniFa > 3 ? 'm-vecchio' : 'm-recente'));
+  if(i.consegne) c.push('m-consegnato');
+  if(i.critico) c.push('m-critico');
+  if(i.pall.dimOggi) c.push('m-dimesso');
+  return c.join(' ');
+}
+function palliniBasso(i, cls){
+  return [i.pall.esamiDomani && '<i class="m-pal e" title="Esami di controllo domani">E</i>',
+    (i.pall.dimOggi || i.pall.dimDomani) && `<i class="m-pal d" title="Dimissione ${i.pall.dimOggi ? 'oggi' : 'domani'}">D</i>`,
+    i.iso && `<i class="m-pal ${i.iso}" title="Isolamento">i</i>`].filter(Boolean).join('');
+}
+function htmlPallini(i){
+  const basso = palliniBasso(i);
+  const alto = (i.consegne || []).map(l => `<i class="m-pal ${l === 'E' ? 'es' : l.toLowerCase()}">${l}</i>`).join('');
+  return (alto ? `<span class="m-pallini m-alto">${alto}</span>` : '')
+    + (i.copiato ? `<span class="m-spunta">${ICON.ok}</span>` : '')
+    + (basso ? `<span class="m-pallini m-basso">${basso}</span>` : '');
+}
+
+/* ---------- navigazione ---------- */
+function vai(vista, opz){ M.pila.push({ vista:M.vista, letto:M.letto, id:M.id }); Object.assign(M, { vista }, opz || {}); disegna('m-avanti'); }
+function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p); disegna('m-indietro-anim'); }
+function disegna(verso){
+  const v = $m('#m-vista');
+  document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo');
+  if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
+  nascondiViste();
+  $m('#m-main').style.display = '';
+  v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
+  if(verso) v.classList.add(verso);
+  window.scrollTo(0, 0);
+  M.vista === 'home' ? vHome() : vSettore();
+}
+function barra(titolo, azione){
+  const bar = $m('#m-bar'); bar.classList.toggle('m-home', M.vista === 'home');
+  $m('#m-bar-in').innerHTML = M.vista === 'home'
+    ? `<span class="m-marchio"><i>EO</i>EO Builder</span><span class="m-data">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</span>`
+    : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
+}
+
+/* ---------- home ---------- */
+function vHome(){
+  barra();
+  const pz = Object.values(loadPatients()).filter(p => schedaHaDati(p.state) && isOggi(p.esameAggiornatoIl));
+  const copiati = pz.filter(p => p.refertoCopiato && isOggi(p.refertoCopiatoIl)).length;
+  $m('#m-vista').innerHTML = `
+    <h1 class="m-h1">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
+    <div class="m-rule"></div>
+    <p class="m-sub">Il giro di oggi, letto per letto.</p>
+    <div class="m-ingressi">
+      <button class="m-ingresso m-i-visita" data-m="visita"><span class="m-ic">${ICON.steto}</span><span class="m-t"><b>Visita</b><small>Esame obiettivo al letto del paziente</small></span>${ICON.chev}</button>
+      <button class="m-ingresso m-i-diari" data-m="diari"><span class="m-ic">${ICON.diario}</span><span class="m-t"><b>Diari</b><small>Esami, referti e provvedimenti di oggi</small></span>${ICON.chev}</button>
+    </div>
+    <p class="m-oggi"><b>${pz.length}</b> visitati oggi · <b>${pz.length - copiati}</b> da copiare · <b>${copiati}</b> copiati</p>
+    <p class="m-piede">Consegne, ricoveri, strumenti e impostazioni: <a href="./">app completa</a></p>`;
+}
+
+/* ---------- settore: Visita o Diari ---------- */
+const LEGENDA = [
+  ['', '', 'Letto libero'],
+  ['m-oggi-l', '', 'Esame obiettivo di <b>oggi</b>'],
+  ['m-recente', '', 'Aggiornato negli ultimi 3 giorni'],
+  ['m-vecchio', '', 'Aggiornato più di 3 giorni fa'],
+  ['m-consegnato', '', 'Consegnato, ancora da scrivere'],
+  ['m-critico', '', 'Paziente critico'],
+  ['m-oggi-l m-dimesso', '<span class="m-pallini m-basso"><i class="m-pal d">D</i></span>', 'Dimissione di oggi (solo D: domani)'],
+  ['m-oggi-l', '<span class="m-spunta">' + ICON.ok + '</span>', 'Diario copiato oggi'],
+  ['m-oggi-l', '<span class="m-pallini m-basso"><i class="m-pal e">E</i></span>', 'Esami di controllo domani'],
+  ['m-oggi-l', '<span class="m-pallini m-basso"><i class="m-pal arancione">i</i></span>', 'Isolamento (arancio contatto/droplet, blu aereo, rosso tutti, verde Clostridium)'],
+  ['m-consegnato', '<span class="m-pallini m-alto"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>', 'Consegne: visita, esami, strumentale, colturale']
+];
+function vSettore(){
+  const diari = M.vista === 'diari';
+  barra('');
+  const ss = settori();
+  if(!ss.includes(M.settore)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
+  $m('#m-vista').innerHTML = `
+    <h2 class="m-h2">${diari ? 'Diari' : 'Visita'}</h2>
+    <div class="m-settori" id="m-settori"><span class="m-pill" id="m-pill"></span>${ss.map(s => `<button data-m="settore" data-s="${esc(s)}" aria-pressed="${s === M.settore}">${esc(s.replace(/^.*?(Settore\s+)/, '$1'))}</button>`).join('')}</div>
+    <div class="m-letti" id="m-letti"></div>
+    <button class="m-legenda-apri" data-m="legenda">Legenda ${ICON.giu}</button>
+    <div class="m-legenda-wrap" id="m-legenda-wrap"><div><div class="m-legenda">${LEGENDA.map(([c, pal, t]) => `<span class="m-letto ${c}">12${pal}</span><span>${t}</span>`).join('')}</div></div></div>`;
+  disegnaLetti();
+  requestAnimationFrame(muoviPill);
+}
+function muoviPill(){
+  const box = $m('#m-settori'); if(!box) return;
+  const btn = [...box.querySelectorAll('button')].find(b => b.dataset.s === M.settore); if(!btn) return;
+  const pill = $m('#m-pill');
+  pill.style.width = btn.offsetWidth + 'px';
+  pill.style.transform = `translateX(${btn.offsetLeft - 3}px)`;
+}
+function disegnaLetti(appena){
+  const el = $m('#m-letti'); if(!el || !M.settore) return;
+  el.innerHTML = (getWardMap()[M.settore] || []).map((n, k) => {
+    const nome = bedName(n), i = infoLetto(nome);
+    return `<button class="m-letto ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}" style="--i:${k}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)}">${esc(etichettaLetto(n))}${htmlPallini(i)}</button>`;
+  }).join('');
+}
+
+/* ---------- visita: la schermata dei tag dell'app ---------- */
+function apriVisita(nome, daScheda){
+  vai('eo', { letto:nome, daScheda:!!daScheda });
+  apriLetto(nome);
+  mostraVista('clinical');
+  window.scrollTo(0, 0);
+}
+function fineVisita(){
+  const nome = M.letto, torna = M.daScheda;
+  if(typeof eseguiTuttiSalvataggiDiario === 'function') eseguiTuttiSalvataggiDiario();
+  indietro();
+  if(torna){ const e = voce(nome); if(e) setTimeout(() => apriScheda(nome), 120); }
+  else disegnaLetti(nome);
+}
+
+/* ---------- scheda del diario ---------- */
+// il diario è un testo solo: esame obiettivo, riga vuota, aggiunte. Le
+// aggiunte si dividono in "Agli EE", referti strumentali e il resto
+// (provvedimenti); riscrivendo si ricompone nello stesso ordine
+const STRUM_FISSI = ['Rx torace', 'TC cerebrale'];
+const STRUM_ALTRI = ['Rx addome', 'TC torace', 'TC addome', 'Ecografia addome', 'ECG', 'EGA'];
+const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+const RE_EE = /^\s*-?\s*agli\s+ee\s*:?\s*(.*)$/i;
+const SENZA_VIRGOLETTE = /^(ECG|EGA)$/i;
+function nomeStrum(n){ const all = [...STRUM_FISSI, ...STRUM_ALTRI, 'TC encefalo']; return all.find(x => x.toLowerCase() === n.toLowerCase()) || n; }
+function leggiDiario(id){
+  const p = loadPatients()[id]; if(!p) return null;
+  const testo = getRefertoFor(statoScheda(id, p));
+  const k = testo.indexOf('\n\n');
+  const eo = k === -1 ? testo : testo.slice(0, k);
+  const extra = k === -1 ? '' : testo.slice(k + 2).replace(/^\s+/, '');
+  const d = { eo, ee:'', strum:{}, ordine:[], provv:[] };
+  extra.split('\n').forEach(r => {
+    let m;
+    if(!d.ee && (m = r.match(RE_EE))){ d.ee = m[1].trim().replace(/[.;\s]+$/, ''); return; }
+    if((m = r.match(RE_STRUM))){
+      const n = nomeStrum(m[1]); d.strum[n] = m[2].trim().replace(/\.$/, '').replace(/^"(.*)"\.?$/, '$1').replace(/^"|"$/g, ''); if(!d.ordine.includes(n)) d.ordine.push(n); return;
+    }
+    d.provv.push(r);
+  });
+  d.provv = d.provv.join('\n').replace(/^\n+|\n+$/g, '');
+  return d;
+}
+function componi(d){
+  const righe = [];
+  if(d.ee.trim()) righe.push(`Agli EE: ${d.ee.trim().replace(/[.,;\s]+$/, '')}.`);
+  [...STRUM_FISSI, ...d.ordine.filter(n => !STRUM_FISSI.includes(n))].forEach(n => {
+    const t = formattaStrumentale(d.strum[n] || '').replace(/^"|"$/g, '');
+    if(t) righe.push(`${n}: ${SENZA_VIRGOLETTE.test(n) ? t : '"' + t + '"'}.`.replace(/\.(["]?)\.$/, '.$1'));
+  });
+  const provv = (d.provv || '').replace(/\n-\s*$/, '').replace(/^-\s*$/, '').trimEnd();
+  if(provv.trim()) righe.push(provv);
+  const eo = (d.eo || '').trim();
+  return righe.length ? eo + '\n\n' + righe.join('\n') : eo;
+}
+let D = null;           // diario della scheda aperta
+let timerSalva = null, modificato = false;
+function salvaOra(){
+  clearTimeout(timerSalva);
+  if(!M.id || !D) return;
+  const prima = getRefertoFor(statoScheda(M.id, loadPatients()[M.id]));
+  const ora = componi(D);
+  if(ora === prima) return;
+  aggiornaDiarioTesto(M.id, ora);
+  // il testo è cambiato dopo la copia: va ricopiato
+  const ps = loadPatients();
+  if(ps[M.id] && ps[M.id].refertoCopiato){ ps[M.id].refertoCopiato = false; savePatients(ps); }
+  segnaStato(false);
+}
+function salvaPresto(){ clearTimeout(timerSalva); timerSalva = setTimeout(() => { salvaOra(); disegnaAiuti(); }, 500); }
+function segnaStato(copiato){
+  const s = $m('#m-stato'); if(!s) return;
+  s.textContent = copiato ? 'Copiato oggi' : 'Da copiare'; s.classList.toggle('m-ok', copiato);
+  if(!copiato) $m('#m-copia').classList.remove('m-fatto');
+}
+function apriScheda(nome){
+  const e = voce(nome); if(!e) return;
+  M.letto = nome; M.id = e[0];
+  D = leggiDiario(M.id);
+  disegnaScheda();
+  $m('#m-velo').classList.add('m-su');
+  const sh = $m('#m-scheda'); sh.classList.add('m-entra'); clearTimeout(sh._t); sh._t = setTimeout(() => sh.classList.remove('m-entra'), 900);
+  requestAnimationFrame(() => sh.classList.add('m-su'));
+  document.body.style.overflow = 'hidden';
+}
+function chiudiScheda(){
+  document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  salvaOra();
+  $m('#m-scheda').classList.remove('m-su'); $m('#m-velo').classList.remove('m-su');
+  document.body.style.overflow = '';
+  if(M.vista === 'diari') disegnaLetti(M.letto);
+}
+function riga(id, nome, val, ph, nota){
+  const fid = 'm-f-' + id.replace(/[^a-z0-9]/gi, '');
+  return `<div class="m-riga${val.trim() ? '' : ' m-vuota'}" data-riga="${esc(id)}" data-m="riga">
+    <label class="m-riga-nome" for="${fid}">${esc(nome)}:</label>
+    <textarea class="m-testo" id="${fid}" rows="1" data-campo="${esc(id)}" placeholder="${esc(ph)}">${esc(val)}</textarea>
+    ${ICON.piu}
+    <div class="m-nota" data-nota="${esc(nota)}"><span>${esc(nota)}</span></div>
+  </div>`;
+}
+function rigaStrum(n){
+  return riga('s:' + n, n, formattaStrumentale(D.strum[n] || ''), 'Incolla o scrivi il referto',
+    SENZA_VIRGOLETTE.test(n) ? 'Si riporta così come lo scrivi.' : 'Un referto su più righe va su una riga sola.');
+}
+function disegnaScheda(){
+  const i = infoLetto(M.letto);
+  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato oggi' : 'Da copiare'}</span></div>
+    <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
+  const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
+  const presenti = [...STRUM_FISSI, ...D.ordine.filter(n => !STRUM_FISSI.includes(n))];
+  $m('#m-s-corpo').innerHTML = `
+    <div class="m-aiuti" id="m-aiuti"></div>
+    <div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
+    <div class="m-blocco"><textarea class="m-testo" id="m-eo" rows="3" aria-label="Esame obiettivo">${esc(D.eo)}</textarea></div>
+    <div class="m-lbl">Esami</div>
+    ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
+    ${presenti.map(rigaStrum).join('')}
+    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>
+    <div class="m-lbl">Provvedimenti</div>
+    <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
+  [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
+  const provv = $m('#m-provv');
+  provv.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, provv.value).length);
+  provv.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, provv.value).length);
+  if(typeof attivaMenuComandi === 'function') attivaMenuComandi(provv);
+  aggiornaCopia(i.copiato);
+  disegnaAiuti(true);
+  $m('#m-s-corpo').scrollTop = 0;
+  requestAnimationFrame(() => document.querySelectorAll('#m-s-corpo textarea').forEach(alza));
+}
+// pallini del titolo, giorni di antibiotico e richieste in sospeso: le
+// funzioni dell'app (leggono anche i diari dei giorni passati)
+function disegnaAiuti(primaVolta){
+  if(!M.id) return;
+  const p = loadPatients()[M.id]; if(!p) return;
+  const extra = (statoScheda(M.id, p).outputExtra || '');
+  const i = infoLetto(M.letto);
+  i.pall = pallinidataLetto(p, M.id, extra);
+  const pal = palliniBasso(i);
+  const sp = $m('#m-s-pallini');
+  if(sp && sp.innerHTML !== pal){ sp.innerHTML = pal; if(!primaVolta) sp.querySelectorAll('.m-pal').forEach(x => x.classList.add('m-nuovo')); }
+  const box = $m('#m-aiuti'); if(!box) return;
+  let atb = [], ric = [];
+  try{ atb = antibioticiInCorso(p, M.id); } catch(e){}
+  try{ ric = richiesteInSospeso(p, M.id); } catch(e){}
+  const voci = [
+    ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
+    ...ric.map((r, n) => ({ k:'r:' + r.chiave, html:`<span class="m-aiuto ric" data-k="r:${esc(r.chiave)}" title="Richiesta ancora senza esito"><i></i>${esc(r.testo)} <em>${r.giorni ? r.giorni + ' g' : 'oggi'}</em><button class="m-ok" data-m="chiudi-ric" data-r="${n}" aria-label="Fatta">✓</button></span>` }))
+  ];
+  box._ric = ric;
+  const ora = voci.map(v => v.k).join('|');
+  if(box.dataset.ora === ora) return;
+  const prima = new Set([...box.children].map(x => x.dataset.k));
+  box.dataset.ora = ora;
+  box.innerHTML = voci.map(v => v.html).join('');
+  box.hidden = !voci.length;
+  if(!primaVolta) [...box.children].forEach(x => { if(!prima.has(x.dataset.k)) x.classList.add('m-nuovo'); });
+}
+function aggiornaCopia(copiato){
+  const c = $m('#m-copia');
+  c.innerHTML = `<span class="m-et m-prima">${ICON.copia}Copia il diario</span><span class="m-et m-dopo">${ICON.ok}Copiato</span>`;
+  c.classList.add('m-subito');
+  c.classList.toggle('m-fatto', !!copiato);
+  void c.offsetWidth;
+  requestAnimationFrame(() => c.classList.remove('m-subito'));
+}
+function alza(t){ t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+function apriRiga(r){
+  r.classList.remove('m-vuota');
+  const t = r.querySelector('textarea');
+  t.focus({ preventScroll:true }); alza(t);
+  setTimeout(() => r.scrollIntoView({ block:'nearest', behavior:'smooth' }), 80);
+}
+function chiudiRiga(r){
+  const t = r.querySelector('textarea'), id = r.dataset.riga;
+  const nota = r.querySelector('.m-nota'), ns = nota.firstElementChild;
+  let v = t.value;
+  if(id === 'ee'){
+    const f = formattaEsamiEmatochimici(v.replace(/\n+/g, ', '));
+    if(f && f !== v.trim()){ v = f; ns.textContent = 'Unità di misura aggiunte'; nota.classList.add('m-fatto'); }
+    D.ee = v.trim();
+  } else {
+    v = formattaStrumentale(v).replace(/^"|"$/g, '');
+    const n = id.slice(2); D.strum[n] = v;
+    if(!D.ordine.includes(n)) D.ordine.push(n);
+  }
+  t.value = v; alza(t);
+  r.classList.toggle('m-vuota', !v.trim());
+  clearTimeout(nota._t);
+  nota._t = setTimeout(() => { nota.classList.remove('m-fatto'); setTimeout(() => ns.textContent = nota.dataset.nota, 350); }, 2000);
+  salvaOra(); disegnaAiuti();
+}
+function copia(){
+  if(document.activeElement && document.activeElement.closest && document.activeElement.closest('#m-scheda')){
+    const r = document.activeElement.closest('.m-riga');
+    if(r) chiudiRiga(r);
+  }
+  salvaOra();
+  const testo = componi(D);
+  copiaTesto(testo);
+  segnaRefertoCopiato(M.id);
+  $m('#m-copia').classList.add('m-fatto');
+  segnaStato(true);
+  document.querySelectorAll('#m-s-corpo > .m-blocco, #m-s-corpo > .m-riga:not(.m-vuota)').forEach((el, k) => {
+    el.classList.remove('m-lampo'); void el.offsetWidth; el.style.setProperty('--k', k); el.classList.add('m-lampo');
+  });
+  try{ navigator.vibrate && navigator.vibrate(12); } catch(e){}
+}
+// gli strumenti del diario (EGA, VFG, farmaci...) salvano rilanciando
+// "input" sulla casella; se nel frattempo la scheda è stata chiusa, si
+// riscrivono solo i provvedimenti di quel letto, mai il diario intero
+const salvaDiarioDaBoxApp = salvaDiarioDaBox;
+salvaDiarioDaBox = function(el, patientId, testo){
+  if(el && el.dataset && el.dataset.mProvv && !el.isConnected){
+    const d = leggiDiario(patientId); if(!d) return;
+    d.provv = testo; aggiornaDiarioTesto(patientId, componi(d)); return;
+  }
+  return salvaDiarioDaBoxApp.apply(this, arguments);
+};
+
+/* ---------- tocchi ---------- */
+document.getElementById('m-app').addEventListener('click', e => {
+  const el = e.target.closest('[data-m]'); if(!el) return;
+  const a = el.dataset.m;
+  if(a === 'indietro'){ M.vista === 'eo' ? fineVisita() : indietro(); }
+  else if(a === 'fatto') fineVisita();
+  else if(a === 'visita' || a === 'diari') vai(a);
+  else if(a === 'settore'){
+    if(el.dataset.s === M.settore) return;
+    M.settore = el.dataset.s;
+    document.querySelectorAll('#m-settori button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === M.settore));
+    muoviPill(); disegnaLetti();
+  }
+  else if(a === 'legenda'){ $m('#m-legenda-wrap').classList.toggle('m-aperta'); el.classList.toggle('m-aperta'); }
+  else if(a === 'letto'){
+    const nome = el.dataset.n;
+    if(M.vista === 'visita') apriVisita(nome);
+    else if(infoLetto(nome).occupato) apriScheda(nome);
+    else { showToast('Nessun diario: parti dall\'esame obiettivo'); apriVisita(nome); }
+  }
+  else if(a === 'chiudi') chiudiScheda();
+  else if(a === 'modifica'){ const nome = M.letto; chiudiScheda(); setTimeout(() => apriVisita(nome, true), 260); }
+  else if(a === 'riga'){ if(el.classList.contains('m-vuota')) apriRiga(el); else if(e.target === el) el.querySelector('textarea').focus(); }
+  else if(a === 'altro'){
+    const n = el.dataset.x;
+    if(D.ordine.includes(n)) return;
+    D.ordine.push(n);
+    el.classList.add('m-via');
+    const tmp = document.createElement('div'); tmp.innerHTML = rigaStrum(n);
+    const r = tmp.firstElementChild;
+    $m('.m-aggiungi').before(r);
+    setTimeout(() => el.remove(), 220);
+    apriRiga(r);
+  }
+  else if(a === 'chiudi-ric'){
+    const box = $m('#m-aiuti'), r = (box._ric || [])[+el.dataset.r], c = el.closest('.m-aiuto');
+    if(!r) return;
+    chiudiRichiesta(M.id, r);
+    c.classList.add('m-chiusa');
+    setTimeout(() => { box.dataset.ora = ''; disegnaAiuti(); }, 420);
+  }
+});
+$m('#m-velo').addEventListener('click', chiudiScheda);
+$m('#m-copia').addEventListener('click', copia);
+
+const sc = $m('#m-scheda');
+sc.addEventListener('input', e => {
+  const t = e.target;
+  if(t.matches('textarea')) alza(t);
+  if(t.id === 'm-eo'){ D.eo = t.value; salvaPresto(); }
+  if(t.id === 'm-provv'){
+    D.provv = t.value; salvaPresto();
+    // gli stessi strumenti richiamabili scrivendo nel diario in Diari
+    const id = M.id, v = t.value;
+    try{
+      egaControllaTrigger(v, t, id); vfgControllaTrigger(v, t, id); farmacoControllaTrigger(v, t, id);
+      scoreControllaTrigger(v, t, id); mdcControllaTrigger(v, t, id); premedControllaTrigger(v, t, id);
+      rubricaControllaTrigger(v, t, id);
+      if(typeof strumentiControllaTrigger === 'function') strumentiControllaTrigger(v, t, id);
+      ecgsimControllaTrigger(v, t); soffiControllaTrigger(v, t);
+    } catch(err){}
+  }
+});
+sc.addEventListener('focusout', e => {
+  const t = e.target;
+  if(t.matches('textarea[data-campo]')){
+    const r = t.closest('.m-riga');
+    setTimeout(() => { if(r.isConnected && !r.contains(document.activeElement)) chiudiRiga(r); }, 120);
+  }
+  if(t.id === 'm-provv'){
+    let v = t.value.replace(/\n-\s*$/, '').replace(/^-\s*$/, '');
+    if(typeof correggiItaliano === 'function') v = correggiItaliano(v);
+    v = aggiungiUnitaMancantiTesto(v);
+    if(v !== t.value){ t.value = v; alza(t); }
+    D.provv = v; salvaOra(); disegnaAiuti();
+  }
+  if(t.id === 'm-eo'){ D.eo = t.value; salvaOra(); }
+});
+sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.value.trim()) e.target.value = '- '; });
+sc.addEventListener('keydown', e => {
+  const t = e.target;
+  // a capo dopo una riga col trattino: la nuova riga parte già col trattino
+  if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey){
+    const i = t.selectionStart, v = t.value;
+    const rigaCorrente = v.slice(v.lastIndexOf('\n', i - 1) + 1, i);
+    if(/^\s*-\s/.test(rigaCorrente)){
+      e.preventDefault();
+      t.value = v.slice(0, i) + '\n- ' + v.slice(t.selectionEnd);
+      t.selectionStart = t.selectionEnd = i + 3;
+      t.dispatchEvent(new Event('input', { bubbles:true }));
+    }
+  }
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
+sc.addEventListener('paste', e => {
+  const t = e.target;
+  if(!t.matches('textarea[data-campo^="s:"]')) return;
+  const testo = (e.clipboardData || window.clipboardData)?.getData('text');
+  if(!testo || !/\n/.test(testo)) return;
+  e.preventDefault();
+  const i = t.selectionStart;
+  t.value = t.value.slice(0, i) + formattaStrumentale(testo) + t.value.slice(t.selectionEnd);
+  alza(t);
+  const nota = t.closest('.m-riga').querySelector('.m-nota');
+  nota.firstElementChild.textContent = 'Referto portato su una riga'; nota.classList.add('m-fatto');
+});
+// trascina giù la scheda per chiuderla
+(() => {
+  const testa = $m('#m-s-testa');
+  let y0 = null, dy = 0;
+  testa.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; y0 = e.clientY; dy = 0; sc.classList.add('m-trascina'); testa.setPointerCapture(e.pointerId); });
+  testa.addEventListener('pointermove', e => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); sc.style.transform = `translateY(${dy}px)`; });
+  const fine = () => { if(y0 === null) return; sc.classList.remove('m-trascina'); sc.style.transform = ''; if(dy > 120) chiudiScheda(); y0 = null; };
+  testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
+})();
+window.addEventListener('resize', muoviPill);
+
+// dati arrivati dalla sincronizzazione (o salvati altrove): l'app ridisegna
+// Reparto; qui si ridisegnano i letti visibili
+const renderWardMapApp = renderWardMap;
+renderWardMap = function(){
+  const r = renderWardMapApp.apply(this, arguments);
+  if(M.vista === 'visita' || M.vista === 'diari') disegnaLetti();
+  if(M.vista === 'home') vHome();
+  return r;
+};
+
+nascondiViste();
+disegna();
+})();
+</script>
+<!-- =================== fine EO MINIMAL =================== -->
 </body>
 </html>
