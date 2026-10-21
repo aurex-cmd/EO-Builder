@@ -3967,6 +3967,19 @@
   :root #comandi-menu{ box-shadow:var(--clay-out); }
   :root #aurex-egg{ background:rgba(20,30,40,.4); }
 </style>
+<!-- stile Classico, tema scuro: in Diari il riquadro che contiene i diari è
+     bianco, così ogni diario (scuro) resta staccato dagli altri. Il resto
+     della pagina Diari non cambia -->
+<style>
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view{ background:#ffffff !important; }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view #diari-testa.fissa{ background:#ffffff; border-bottom-color:#e3e8ec; box-shadow:0 8px 12px -10px rgba(0,0,0,.18); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.copiato{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 1px var(--signal), var(--glow-signal); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.ha-consegne{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 2px var(--consegna), 0 0 10px rgba(var(--consegna-rgb),.35); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.critico{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.5); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view .referto-block.critico.ha-consegne{ box-shadow:0 6px 16px -6px rgba(18,24,31,.35), 0 0 0 2px #6a1fb0, 0 0 12px rgba(106,31,176,.45), inset 0 0 16px rgba(160,90,240,.45); }
+  html[data-tema="scuro"]:not([data-stile="osteo"]) #riepilogo-view > .group > .group-label{ color:#57646e; }
+</style>
 <!-- STILE OSTEO: la grafica di Osteoclick / Osteo Help (fondo pulito, Inter,
      riquadri tondi senza rilievi, righe con la freccia, animazioni al tocco)
      sopra il tema scelto, chiaro o scuro. Vale per Diari, Reparto, Ricoveri,
