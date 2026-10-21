@@ -22690,7 +22690,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"]{
     --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
-    --m-home-a:#b0dfcc; --m-home-b:#f7c6b7; --m-home-sub:#333c49;
+    --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
     --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -22699,7 +22699,10 @@ function editorLettereSvuota(){
     /* l'app sotto (tag, finestre degli strumenti) con gli stessi toni, senza rilievi */
     --page:#ffffff; --signal:#0e7571; --signal-dim:#e3f4f3; --signal-soft:rgba(14,117,113,.12); --on-signal:#ffffff;
     --clay-border:#e1e5eb; --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none; --glow-signal:none;
-    --font-body:var(--m-sans); --font-display:var(--m-sans);
+    --font-body:var(--m-sans); --font-display:var(--m-sans); --font-mono:var(--m-sans);
+    /* statistiche dei ricoveri: grigi chiari, teal per l'accento */
+    --st-bar:#d3dae2; --st-bar-hi:#9eabb8; --st-f:#e0896b; --st-m:#6b97c6;
+    --st-eta-1:#cbe9e2; --st-eta-2:#93d3c3; --st-eta-3:#52b59d; --st-eta-4:#1f927a; --st-eta-5:#0e7571;
   }
   html[data-ui="minimal"] body{ background:var(--m-bg); color:var(--m-ink); font-family:var(--m-sans); font-variant-numeric:tabular-nums; padding-bottom:0; }
   html[data-ui="minimal"] body > header{ display:none !important; }
@@ -22827,13 +22830,13 @@ function editorLettereSvuota(){
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:.8rem; font-weight:600; color:var(--m-teal); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
   .m-modifica:active{ transform:scale(.94); opacity:.7; }
-  .m-aiuti{ display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 2px; }
-  .m-aiuto{ display:inline-flex; align-items:center; gap:7px; max-width:100%; background:var(--m-box); border-radius:8px; padding:5px 10px 5px 9px; font-size:.8rem; font-weight:600; overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
-  .m-aiuto i{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--acc); }
-  .m-aiuto em{ font-style:normal; font-weight:500; color:var(--m-muted); font-size:.92em; }
-  .m-aiuto.atb{ --acc:var(--m-atb0); } .m-aiuto.atb.liv1{ --acc:var(--m-atb1); } .m-aiuto.atb.liv2{ --acc:var(--m-atb2); } .m-aiuto.atb.liv2 em{ color:var(--m-atb2); font-weight:700; }
+  .m-aiuti{ display:flex; flex-wrap:wrap; gap:5px; padding:4px 0 0; }
+  .m-aiuto{ display:inline-flex; align-items:center; gap:5px; max-width:100%; background:none; border:1px solid var(--m-line); border-radius:6px; padding:0 7px 0 6px; font-size:11.5px; line-height:20px; font-weight:500; color:var(--m-muted); overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
+  .m-aiuto i{ width:5px; height:5px; border-radius:50%; flex:0 0 auto; background:var(--acc); }
+  .m-aiuto em{ font-style:normal; font-weight:400; color:var(--m-faint); }
+  .m-aiuto.atb{ --acc:var(--m-atb0); } .m-aiuto.atb.liv1{ --acc:var(--m-atb1); } .m-aiuto.atb.liv2{ --acc:var(--m-atb2); } .m-aiuto.atb.liv2 em{ color:var(--m-atb2); font-weight:500; }
   .m-aiuto.ric{ --acc:var(--m-viola); }
-  .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 8px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-muted); font-weight:700; font-size:.85rem; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
+  .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 6px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-faint); font-weight:500; font-size:11px; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
   .m-aiuto .m-ok:active{ transform:scale(.85); color:var(--m-teal); }
   .m-aiuto.m-chiusa{ opacity:0; transform:scale(.85); max-width:0; padding-left:0; padding-right:0; margin-right:-6px; }
   .m-aiuto.m-nuovo, .m-pal.m-nuovo{ animation:m-scelto .45s var(--m-molla); }
@@ -22877,7 +22880,107 @@ function editorLettereSvuota(){
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
   .m-scheda.m-entra .m-s-corpo > *{ animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--k) * 30ms + 120ms); }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
-  @media (prefers-reduced-motion:reduce){ #m-app *, #m-app *::before, #m-app *::after{ animation:none !important; transition:none !important; } }
+  /* home: le voci sotto i due ingressi, come l'elenco "Consulta" di Osteoclick */
+  .m-righe{ display:flex; flex-direction:column; }
+  .m-rigalink{ display:flex; align-items:center; gap:12px; width:100%; border:0; border-bottom:1px solid var(--m-line); background:none; padding:10px 0; text-align:left; font:inherit; font-size:15.2px; font-weight:600; color:var(--m-ink); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 45ms + 90ms); }
+  .m-rigalink:last-child{ border-bottom:0; }
+  .m-rigalink:active{ transform:scale(.985); opacity:.65; }
+  .m-rigalink > svg:first-child{ width:26px; height:26px; color:var(--m-muted); flex:0 0 auto; margin-right:6px; }
+  .m-rigalink > span:not(.m-conta){ flex:1; min-width:0; }
+  .m-rigalink small{ display:block; font-weight:400; color:var(--m-muted); font-size:12.8px; margin-top:1px; }
+  .m-rigalink .m-chev{ color:var(--m-faint); opacity:1; flex:0 0 auto; width:16px; height:16px; }
+  .m-rigalink .m-conta{ flex:0 0 auto; font-size:11.5px; font-weight:600; color:var(--m-teal); background:var(--m-teal-box); border-radius:999px; padding:1px 8px; }
+
+  /* appoggi del settore, sotto i letti */
+  .m-letto.m-appoggio{ font-size:.95rem; }
+  .m-letto.m-nuovo-app{ display:grid; place-items:center; padding:0; border:1.5px dashed var(--m-line); background:none; color:var(--m-faint); }
+  .m-letto.m-nuovo-app svg{ width:20px; height:20px; transition:transform .4s var(--m-molla); }
+  .m-letto.m-nuovo-app:active svg{ transform:rotate(90deg); }
+  .m-letto.m-nuovo-app.m-scrivi{ border:1.5px solid var(--m-teal); background:var(--m-teal-box); animation:m-scelto .4s var(--m-molla); }
+  .m-letto.m-nuovo-app input{ width:84%; border:0; background:none; outline:none; text-align:center; font:inherit; font-weight:700; font-size:.95rem; color:var(--m-teal); text-transform:uppercase; padding:0; }
+  .m-letto.m-nuovo-app input::placeholder{ color:var(--m-teal); opacity:.45; text-transform:none; font-weight:500; }
+  .m-togli{ position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; display:grid; place-items:center; color:var(--m-faint); transition:background .2s, color .2s, transform .2s var(--m-molla); }
+  .m-togli svg{ width:9px; height:9px; }
+  .m-letto.m-armato{ border:1.5px solid var(--m-p-e); color:var(--m-p-e); animation:m-scelto .35s var(--m-molla); }
+  .m-letto.m-armato .m-togli{ background:var(--m-p-e); color:#fff; transform:scale(1.1); }
+
+  /* consegne, ricoveri, impostazioni: le pagine dell'app sotto la barra minimal, piatte */
+  html[data-ui="minimal"] .m-pagina{ background:transparent !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; max-width:560px; margin:0 auto !important; padding:calc(70px + env(safe-area-inset-top,0px)) 16px 60px !important; font-family:var(--m-sans); color:var(--m-ink); animation:m-avanti .32s var(--m-molla) both; }
+  html[data-ui="minimal"] .m-pagina > .back-link, html[data-ui="minimal"] .m-pagina > h2{ display:none !important; }
+  html[data-ui="minimal"] .m-pagina .group{ background:none; border:0; box-shadow:none; padding:0; margin:0 0 18px; }
+  html[data-ui="minimal"] .m-pagina .group-label{ font-family:var(--m-sans); color:var(--m-muted); }
+  html[data-ui="minimal"] .m-pagina .chip{ border:1px solid var(--m-line); background:transparent; border-radius:9px; padding:7px 14px; font-family:var(--m-sans); font-size:.86rem; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s, color .28s, border-color .28s, transform .18s var(--m-molla); }
+  html[data-ui="minimal"] .m-pagina .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; animation:m-scelto .4s var(--m-molla); }
+  html[data-ui="minimal"] .m-pagina .chip:active{ transform:scale(.94); }
+  html[data-ui="minimal"] .m-pagina .btn{ border:1px solid var(--m-line); background:var(--m-bg); color:var(--m-ink); border-radius:12px; box-shadow:none; font-family:var(--m-sans); font-weight:600; font-size:.9rem; padding:11px 16px; transition:transform .14s var(--m-molla), background .2s; }
+  html[data-ui="minimal"] .m-pagina .btn:active{ transform:scale(.97); }
+  html[data-ui="minimal"] .m-pagina .btn.primary{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; }
+  html[data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:#fff !important; }
+  html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:12px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
+  html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-teal); outline:none; }
+  html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
+  html[data-ui="minimal"] .m-pagina .sync-box{ background:var(--m-box); border:0; border-radius:20px; box-shadow:none; padding:16px; margin-bottom:22px; }
+  html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:700; color:var(--m-ink); }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-bg); width:100%; max-width:none !important; padding:11px 12px; }
+  html[data-ui="minimal"] .m-pagina .sync-box .inline-fields{ flex-direction:column; gap:8px; }
+  html[data-ui="minimal"] #consegne-view textarea{ width:100%; padding:12px; }
+  html[data-ui="minimal"] #consegne-view .group > .group-label:first-child{ font-size:12.5px; line-height:1.5; }
+  html[data-ui="minimal"] #consegne-view input[type=file]{ font-family:var(--m-sans); font-size:.85rem; color:var(--m-muted); }
+  html[data-ui="minimal"] #consegne-view input[type=file]::file-selector-button{ border:1px solid var(--m-line); background:var(--m-bg); border-radius:10px; padding:8px 12px; margin-right:10px; font:inherit; font-weight:600; color:var(--m-ink); cursor:pointer; }
+  /* impostazioni: un elenco di righe, come le opzioni di Osteo Help */
+  html[data-ui="minimal"] #impostazioni-view .group:not(.sync-box){ border-bottom:1px solid var(--m-line); padding:4px 0 16px; margin:0 0 14px; }
+  html[data-ui="minimal"] #impostazioni-view .group:not(.sync-box) > .group-label:first-child{ text-align:left !important; font-size:14.5px; font-weight:600; color:var(--m-ink); margin-bottom:10px; }
+  html[data-ui="minimal"] #impostazioni-view .inline-fields, html[data-ui="minimal"] #impostazioni-view #impostazioni-sezioni{ justify-content:flex-start !important; }
+  html[data-ui="minimal"] #impostazioni-view .group-label[style*="11.5px"]{ text-align:left !important; }
+  html[data-ui="minimal"] #impostazioni-view .ric-lista-nome{ font-size:14.5px; font-weight:600; color:var(--m-ink); }
+  /* ricoveri: calendario e testata senza riquadri */
+  html[data-ui="minimal"] #ricoveri-view .admit-block{ background:none; border:0; box-shadow:none; }
+  html[data-ui="minimal"] #ricoveri-view .admit-block-head{ background:none; border:0; padding:4px 0 10px; }
+  html[data-ui="minimal"] #ricoveri-view .admit-block-title{ font-family:var(--m-sans); font-size:.95rem; font-weight:700; color:var(--m-ink); letter-spacing:0; }
+  html[data-ui="minimal"] #ricoveri-view .ric-stat-link{ color:var(--m-muted); font-weight:500; }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-grid{ background:none; }
+  html[data-ui="minimal"] #ricoveri-view .admit-block > div:not(.admit-block-head){ background:none; }
+  .m-ric-tab{ margin:0 0 16px; }
+
+  /* statistiche dei ricoveri: riquadri Osteo e tutto che entra in scena */
+  html[data-ui="minimal"] .ric-stat{ gap:12px; padding-top:0; }
+  html[data-ui="minimal"] .ric-stat-card{ background:var(--m-box); border:0; border-radius:20px; padding:16px; gap:14px; }
+  html[data-ui="minimal"] .ric-stat-hero{ background:var(--m-home-a); position:relative; overflow:hidden; }
+  html[data-ui="minimal"] .ric-stat-hero::after{ content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.28); transform:scale(0); transition:transform 1.1s var(--m-molla) .25s; }
+  html[data-ui="minimal"] .ric-stat-hero.m-vis::after{ transform:scale(1); }
+  html[data-ui="minimal"] .ric-stat-hero .ric-stat-tit, html[data-ui="minimal"] .ric-stat-hero .medie, html[data-ui="minimal"] .ric-stat-hero .big span{ color:var(--m-home-sub); }
+  html[data-ui="minimal"] .ric-stat-hero .big b{ font-size:58px; font-weight:800; letter-spacing:-.04em; }
+  html[data-ui="minimal"] .ric-stat-hero .medie b.ora{ color:var(--m-ink); background:rgba(255,255,255,.55); border-radius:6px; padding:0 5px; }
+  html[data-ui="minimal"] .ric-stat-tit{ font-family:var(--m-sans); font-size:.68rem; letter-spacing:.1em; color:var(--m-muted); }
+  html[data-ui="minimal"] .ric-stat-tile{ background:var(--m-box); border:0; border-radius:18px; padding:14px; }
+  html[data-ui="minimal"] .ric-stat-tile:last-child{ background:var(--m-home-b); }
+  html[data-ui="minimal"] .ric-stat-tile:last-child :is(.l, .n){ color:var(--m-home-sub); }
+  html[data-ui="minimal"] .ric-stat-tile .v, html[data-ui="minimal"] .ric-stat-estremo .val b{ font-weight:800; letter-spacing:-.03em; }
+  html[data-ui="minimal"] .ric-stat-estremo{ background:var(--m-bg); border:0; border-radius:14px; }
+  html[data-ui="minimal"] .ric-stat-estremo .badge{ font-family:var(--m-sans); }
+  html[data-ui="minimal"] .ric-stat-bars{ border-bottom-color:var(--m-line); }
+  html[data-ui="minimal"] .ric-stat-col .bar{ border-radius:6px 6px 2px 2px; }
+  html[data-ui="minimal"] .ric-stat-riga .traccia{ background:var(--m-bg); }
+  html[data-ui="minimal"] .ric-stat-torta svg circle:first-of-type{ stroke:var(--m-bg) !important; }
+  /* entrata: ogni riquadro quando arriva sullo schermo */
+  .m-anim :is(.ric-stat-card, .ric-stat-tile){ opacity:0; transform:translateY(18px) scale(.98); transition:opacity .5s ease, transform .6s var(--m-molla); }
+  .m-anim :is(.ric-stat-card, .ric-stat-tile).m-vis{ opacity:1; transform:none; }
+  .m-anim .ric-stat-col .bar{ transform:scaleY(0); transform-origin:bottom; transition:transform .75s var(--m-molla); transition-delay:calc(var(--j) * 45ms + 150ms); }
+  .m-anim .ric-stat-col .num{ opacity:0; transform:translateY(6px); transition:opacity .3s, transform .4s var(--m-molla); transition-delay:calc(var(--j) * 45ms + 500ms); }
+  .m-anim .m-vis .ric-stat-col .bar, .m-anim .m-vis .ric-stat-col .num{ transform:none; opacity:1; }
+  .m-anim .ric-stat-col:active .bar{ filter:brightness(.92); }
+  .m-anim .ric-stat-riga .bar{ transform:scaleX(0); transform-origin:left; transition:transform .9s var(--m-molla); transition-delay:calc(var(--j) * 90ms + 200ms); }
+  .m-anim .m-vis .ric-stat-riga .bar{ transform:none; }
+  .m-anim .ric-stat-torta svg{ transform:rotate(-120deg) scale(.7); opacity:0; transition:transform 1s var(--m-molla), opacity .4s; }
+  .m-anim .m-vis .ric-stat-torta svg{ transform:none; opacity:1; }
+  .m-anim .ric-stat-torta circle{ transition:stroke-dasharray 1s var(--m-molla); }
+  .m-anim .ric-stat-leg > div{ opacity:0; transform:translateX(10px); transition:opacity .35s, transform .45s var(--m-molla); transition-delay:calc(var(--j) * 80ms + 450ms); }
+  .m-anim .m-vis .ric-stat-leg > div{ opacity:1; transform:none; }
+  .m-anim .ric-stat-estremo{ opacity:0; transform:scale(.9); transition:opacity .4s, transform .6s var(--m-molla); transition-delay:calc(var(--j) * 120ms + 150ms); }
+  .m-anim .m-vis .ric-stat-estremo{ opacity:1; transform:none; }
+  .m-anim .ric-stat-estremo .badge{ animation:none; }
+  .m-anim .m-vis .ric-stat-estremo .badge{ animation:m-pop .6s var(--m-molla) 1.1s both; }
+  @media (prefers-reduced-motion:reduce){ #m-app *, #m-app *::before, #m-app *::after, .m-pagina *, .m-pagina *::before, .m-pagina *::after{ animation:none !important; transition:none !important; } .m-anim *{ opacity:1 !important; transform:none !important; } }
 </style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
@@ -22894,7 +22997,9 @@ function editorLettereSvuota(){
 if(!UI_MINIMAL) return;
 document.title = 'EO Minimal';
 
-const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false };
+const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
+// pagine dell'app aperte da minimal (sotto la barra minimal)
+const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni' };
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 const ICON = {
@@ -22906,7 +23011,10 @@ const ICON = {
   piu:'<svg class="m-piu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   copia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>',
-  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  consegne:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 3h6v3H9zM8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>',
+  ricoveri:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6M3 16h18M3 19v2M21 19v2"/><circle cx="7.5" cy="7" r="1.8"/></svg>',
+  impostazioni:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
 };
 // le viste dell'app (le stesse di mostraVista): in minimal si vede solo la
 // schermata dei tag, e solo durante la visita di un letto
@@ -22958,12 +23066,13 @@ function htmlPallini(i){
 }
 
 /* ---------- navigazione ---------- */
-function vai(vista, opz){ M.pila.push({ vista:M.vista, letto:M.letto, id:M.id }); Object.assign(M, { vista }, opz || {}); disegna('m-avanti'); }
+function vai(vista, opz){ M.pila.push({ vista:M.vista, letto:M.letto, id:M.id, pag:M.pag }); Object.assign(M, { vista }, opz || {}); disegna('m-avanti'); }
 function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p); disegna('m-indietro-anim'); }
 function disegna(verso){
   const v = $m('#m-vista');
-  document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo');
+  document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
+  if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(PAGINE[M.pag] || ''); mostraVista(M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
@@ -22983,16 +23092,26 @@ function vHome(){
   barra();
   const pz = Object.values(loadPatients()).filter(p => schedaHaDati(p.state) && isOggi(p.esameAggiornatoIl));
   const copiati = pz.filter(p => p.refertoCopiato && isOggi(p.refertoCopiatoIl)).length;
+  const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
+  let ric = []; try{ ric = loadRicoveri(); } catch(e){}
+  const ricOggi = ric.filter(r => isOggi(r.creatoIl)).length;
   $m('#m-vista').innerHTML = `
     <h1 class="m-h1">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
     <div class="m-rule"></div>
     <p class="m-sub">Il giro di oggi, letto per letto.</p>
     <div class="m-ingressi">
       <button class="m-ingresso m-i-visita" data-m="visita"><span class="m-ic">${ICON.steto}</span><span class="m-t"><b>Visita</b><small>Esame obiettivo al letto del paziente</small></span>${ICON.chev}</button>
-      <button class="m-ingresso m-i-diari" data-m="diari"><span class="m-ic">${ICON.diario}</span><span class="m-t"><b>Diari</b><small>Esami, referti e provvedimenti di oggi</small></span>${ICON.chev}</button>
+      <button class="m-ingresso m-i-diari" data-m="diari"><span class="m-ic">${ICON.diario}</span><span class="m-t"><b>Diari</b><small>Referti e provvedimenti di oggi</small></span>${ICON.chev}</button>
     </div>
     <p class="m-oggi"><b>${pz.length}</b> visitati oggi · <b>${pz.length - copiati}</b> da copiare · <b>${copiati}</b> copiati</p>
-    <p class="m-piede">Consegne, ricoveri, strumenti e impostazioni: <a href="./">app completa</a></p>`;
+    <p class="m-lbl">Reparto</p>
+    <div class="m-righe">${rigaHome('consegne', 'Consegne', consegnati ? `${consegnati} lett${consegnati === 1 ? 'o' : 'i'} con qualcosa da fare` : 'Incolla le consegne del weekend', consegnati)}${rigaHome('ricoveri', 'Ricoveri', ricOggi ? `${ricOggi} oggi · ${ric.length} in tutto, con le statistiche` : `${ric.length} in tutto, con le statistiche`)}${rigaHome('impostazioni', 'Impostazioni', 'Account, testo, tag e reparto')}</div>
+    <p class="m-piede">Strumenti clinici e tutto il resto: <a href="./">app completa</a></p>`;
+  document.querySelectorAll('#m-vista .m-rigalink').forEach((el, k) => el.style.setProperty('--i', k));
+}
+
+function rigaHome(pag, titolo, sotto, conta){
+  return `<button class="m-rigalink" data-m="pagina" data-p="${pag}">${ICON[pag]}<span>${esc(titolo)}<small>${esc(sotto)}</small></span>${conta ? `<span class="m-conta">${conta}</span>` : ''}${ICON.chev}</button>`;
 }
 
 /* ---------- settore: Visita o Diari ---------- */
@@ -23018,24 +23137,57 @@ function vSettore(){
     <h2 class="m-h2">${diari ? 'Diari' : 'Visita'}</h2>
     <div class="m-settori" id="m-settori"><span class="m-pill" id="m-pill"></span>${ss.map(s => `<button data-m="settore" data-s="${esc(s)}" aria-pressed="${s === M.settore}">${esc(s.replace(/^.*?(Settore\s+)/, '$1'))}</button>`).join('')}</div>
     <div class="m-letti" id="m-letti"></div>
+    <div class="m-lbl">Appoggi</div>
+    <div class="m-letti" id="m-appoggi"></div>
     <button class="m-legenda-apri" data-m="legenda">Legenda ${ICON.giu}</button>
     <div class="m-legenda-wrap" id="m-legenda-wrap"><div><div class="m-legenda">${LEGENDA.map(([c, pal, t]) => `<span class="m-letto ${c}">12${pal}</span><span>${t}</span>`).join('')}</div></div></div>`;
   disegnaLetti();
   requestAnimationFrame(muoviPill);
 }
 function muoviPill(){
-  const box = $m('#m-settori'); if(!box) return;
-  const btn = [...box.querySelectorAll('button')].find(b => b.dataset.s === M.settore); if(!btn) return;
-  const pill = $m('#m-pill');
+  const box = $m('#m-settori'); if(box) spostaPill(box, [...box.querySelectorAll('button')].find(b => b.dataset.s === M.settore));
+  const rt = $m('#m-ric-tab'); if(rt) spostaPill(rt, rt.querySelector('[aria-pressed="true"]'));
+}
+function spostaPill(box, btn){
+  if(!btn) return;
+  const pill = box.querySelector('.m-pill');
   pill.style.width = btn.offsetWidth + 'px';
   pill.style.transform = `translateX(${btn.offsetLeft - 3}px)`;
 }
+let appoggioNuovo = null; // l'ultimo appoggio aggiunto, per farlo "saltare"
 function disegnaLetti(appena){
   const el = $m('#m-letti'); if(!el || !M.settore) return;
-  el.innerHTML = (getWardMap()[M.settore] || []).map((n, k) => {
+  appena = appena || appoggioNuovo; appoggioNuovo = null;
+  const letti = getWardMap()[M.settore] || [];
+  el.innerHTML = letti.map((n, k) => {
     const nome = bedName(n), i = infoLetto(nome);
     return `<button class="m-letto ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}" style="--i:${k}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)}">${esc(etichettaLetto(n))}${htmlPallini(i)}</button>`;
   }).join('');
+  // appoggi: come i letti; quelli senza scheda si tolgono con la × (due tocchi, come in Reparto)
+  const ap = $m('#m-appoggi'); if(!ap) return;
+  ap.innerHTML = (loadAppoggi()[M.settore] || []).map((nome, k) => {
+    const i = infoLetto(nome), armato = rimuoviAppoggioArmato === M.settore + '|' + nome;
+    return `<button class="m-letto m-appoggio ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${letti.length + k}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)} (appoggio)">${esc(inizialiLetto(nome))}${htmlPallini(i)}${i.occupato ? '' : `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>`}</button>`;
+  }).join('') + `<div class="m-letto m-nuovo-app" style="--i:${letti.length}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}</div>`;
+}
+function nuovoAppoggio(tile){
+  if(tile.classList.contains('m-scrivi')) return;
+  tile.classList.add('m-scrivi');
+  tile.innerHTML = '<input placeholder="iniz. o 15.1" autocapitalize="characters" enterkeyhint="done" aria-label="Iniziali o numero del letto">';
+  const inp = tile.querySelector('input');
+  let fatto = false;
+  const chiudi = v => {
+    if(fatto) return; fatto = true;
+    v = (v || '').trim();
+    if(!v){ disegnaLetti(); return; }
+    appoggioNuovo = /^\d+(?:\.\d+)?$/.test(v) ? bedName(v) : v.toUpperCase();
+    const prima = JSON.stringify(loadAppoggi());
+    aggiungiAppoggio(M.settore, v);
+    if(JSON.stringify(loadAppoggi()) === prima){ appoggioNuovo = null; disegnaLetti(); }
+  };
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); chiudi(inp.value); } if(e.key === 'Escape') chiudi(''); });
+  inp.addEventListener('blur', () => chiudi(inp.value));
+  inp.focus();
 }
 
 /* ---------- visita: la schermata dei tag dell'app ---------- */
@@ -23263,7 +23415,14 @@ salvaDiarioDaBox = function(el, patientId, testo){
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
   const a = el.dataset.m;
-  if(a === 'indietro'){ M.vista === 'eo' ? fineVisita() : indietro(); }
+  if(a === 'indietro'){
+    if(M.vista === 'eo') fineVisita();
+    else if(M.vista === 'app' && M.pag === 'ricovero-singolo') apriRicoveri();
+    else indietro();
+  }
+  else if(a === 'pagina') vai('app', { pag:el.dataset.p });
+  else if(a === 'togli-appoggio'){ e.stopPropagation(); rimuoviAppoggio(M.settore, el.dataset.n); }
+  else if(a === 'nuovo-appoggio') nuovoAppoggio(el);
   else if(a === 'fatto') fineVisita();
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'settore'){
@@ -23383,6 +23542,105 @@ renderWardMap = function(){
   const r = renderWardMapApp.apply(this, arguments);
   if(M.vista === 'visita' || M.vista === 'diari') disegnaLetti();
   if(M.vista === 'home') vHome();
+  return r;
+};
+
+/* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
+Object.keys(PAGINE).forEach(v => document.getElementById(v + '-view').classList.add('m-pagina'));
+// in minimal tema e stile non si scelgono (è sempre chiara); l'account, che
+// nell'app sta in Reparto, va in Impostazioni
+['impostazioni-tema-chiaro', 'impostazioni-stile-osteo'].forEach(id => { const g = document.getElementById(id)?.closest('.group'); if(g) g.style.display = 'none'; });
+const syncBox = document.getElementById('sync-group');
+const impostazioniView = document.getElementById('impostazioni-view');
+if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
+// Ricoveri: Calendario | Statistiche in cima, al posto del link "N ricoveri totali"
+const ricTab = document.createElement('div');
+ricTab.className = 'm-settori m-ric-tab'; ricTab.id = 'm-ric-tab';
+ricTab.innerHTML = '<span class="m-pill"></span><button type="button" data-t="cal">Calendario</button><button type="button" data-t="stat">Statistiche</button>';
+document.getElementById('ricoveri-calendario').before(ricTab);
+ricTab.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const stat = b.dataset.t === 'stat';
+  if(stat === ricoveriStatistiche) return;
+  ricoveriStatistiche = stat;
+  renderCalendarioRicoveri(loadRicoveri());
+});
+function segnaRicTab(){
+  ricTab.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.t === 'stat') === !!ricoveriStatistiche)));
+  requestAnimationFrame(muoviPill);
+}
+const renderCalendarioRicoveriApp = renderCalendarioRicoveri;
+renderCalendarioRicoveri = function(){
+  const r = renderCalendarioRicoveriApp.apply(this, arguments);
+  segnaRicTab();
+  const st = document.querySelector('#ricoveri-calendario .ric-stat');
+  if(st) animaStatistiche(st);
+  return r;
+};
+
+// STATISTICHE ANIMATE: ogni riquadro entra quando arriva sullo schermo; le
+// colonne crescono una dopo l'altra, le ciambelle si disegnano spicchio per
+// spicchio, le barre delle diagnosi si allungano e i numeri contano fino al
+// loro valore
+const numeroIt = t => parseFloat(String(t).replace(/\./g, '').replace(',', '.'));
+function contaFino(el, durata){
+  const testo = el.textContent.trim();
+  if(!/^[\d.,]+$/.test(testo)) return;
+  const fine = numeroIt(testo);
+  const dec = (testo.split(',')[1] || '').length;
+  const t0 = performance.now();
+  const passo = ora => {
+    const k = Math.min(1, (ora - t0) / durata), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = (fine * e).toLocaleString('it-IT', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+    if(k < 1) requestAnimationFrame(passo); else el.textContent = testo;
+  };
+  el.textContent = (0).toLocaleString('it-IT', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+  requestAnimationFrame(passo);
+}
+let osservaStat = null;
+function animaStatistiche(st){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  st.classList.add('m-anim');
+  st.querySelectorAll('.ric-stat-bars, .ric-stat-leg, .ric-stat-estremi, .ric-stat-card').forEach(g => {
+    [...g.children].forEach((c, j) => c.style.setProperty('--j', j));
+  });
+  st.querySelectorAll('.ric-stat-riga').forEach((r, j) => r.style.setProperty('--j', j));
+  // ciambelle: gli spicchi partono vuoti
+  st.querySelectorAll('.ric-stat-torta circle[stroke-dasharray]').forEach(c => {
+    c.dataset.arco = c.getAttribute('stroke-dasharray');
+    c.setAttribute('stroke-dasharray', '0 100');
+  });
+  const entra = el => {
+    if(el.classList.contains('m-vis')) return;
+    el.classList.add('m-vis');
+    el.querySelectorAll('.big b, .medie b, .v, .val b, .ric-stat-torta svg text:first-of-type').forEach(n => contaFino(n, n.matches('.big b') ? 1300 : 1000));
+    el.querySelectorAll('circle[data-arco]').forEach((c, j) => {
+      c.style.transitionDelay = (300 + j * 220) + 'ms';
+      requestAnimationFrame(() => requestAnimationFrame(() => c.setAttribute('stroke-dasharray', c.dataset.arco)));
+    });
+  };
+  if(osservaStat) osservaStat.disconnect();
+  const pezzi = st.querySelectorAll('.ric-stat-card, .ric-stat-tile');
+  if(!('IntersectionObserver' in window)){ pezzi.forEach(entra); return; }
+  osservaStat = new IntersectionObserver(voci => voci.forEach(v => { if(v.isIntersecting){ entra(v.target); osservaStat.unobserve(v.target); } }), { threshold:.25 });
+  pezzi.forEach((p, k) => { p.style.transitionDelay = k < 3 ? (k * 70) + 'ms' : ''; osservaStat.observe(p); });
+}
+
+// mostraVista in minimal: non cambia la pagina con cui riparte l'app
+// normale (LAST_VIEW_KEY) e tiene aggiornato il titolo della barra
+const mostraVistaApp = mostraVista;
+mostraVista = function(v){
+  let ultima = null;
+  try{ ultima = localStorage.getItem(LAST_VIEW_KEY); } catch(e){}
+  const r = mostraVistaApp.apply(this, arguments);
+  try{ if(ultima === null) localStorage.removeItem(LAST_VIEW_KEY); else localStorage.setItem(LAST_VIEW_KEY, ultima); } catch(e){}
+  if(M.vista === 'app' && PAGINE[v]){
+    M.pag = v;
+    const t = $m('#m-bar-t'); if(t) t.textContent = PAGINE[v];
+    const el = document.getElementById(v + '-view');
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    window.scrollTo(0, 0);
+  }
   return r;
 };
 
