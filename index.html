@@ -4204,6 +4204,8 @@
   html[data-stile="osteo"] .referto-block .bed-head .bed-title,
   html[data-stile="osteo"] .referto-block.copiato .bed-head .bed-title{ font-size:1.45rem; letter-spacing:-.02em; line-height:1.15; }
   html[data-stile="osteo"] .referto-block.copiato .bed-head .bed-title{ color:var(--o-teal); }
+  /* "Letto 4.1": la parola è aggiunta solo a video (il nome del letto resta "4.1" ovunque) */
+  html[data-stile="osteo"] .referto-block .bed-head .bed-title::before{ content:"Letto "; }
   /* Diari: in cima quanti ne restano da copiare, in oro (= da copiare,
      come il pulsante Oggi); tutti copiati, in verde. Solo stile Osteo */
   .diari-contatore{ display:none; }
