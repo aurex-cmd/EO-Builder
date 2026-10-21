@@ -3975,7 +3975,7 @@
      Stile (vedi applicaStile); con "Classico" niente di questo si applica -->
 <style id="stile-osteo">
   html[data-stile="osteo"]{
-    --o-bg:#ffffff; --o-fill:#f4f5f7; --o-box:#e8ebef; --o-ink:#172231; --o-muted:#6b7584; --o-faint:#b5beca; --o-line:#e6e9ee;
+    --o-bg:#ffffff; --o-fill:#f4f5f7; --o-box:#e8ebef; --o-ink:#172231; --o-muted:#5b6470; --o-faint:#b5beca; --o-line:#e6e9ee;
     --o-accent:#2b587d; --o-on-accent:#ffffff; --o-tile:#ffffff;
     --o-teal:#0e7571; --o-teal-box:#e3f4f3; --o-coral:#b04e37; --o-coral-box:#f7ebe7;
     --o-viola:#6a5c92; --o-viola-box:#f1eefb; --o-blu:#2f5f96; --o-blu-box:#e4edf8; --o-oro:#9a6b1f; --o-oro-box:#f8eedc;
@@ -4088,7 +4088,7 @@
     transition:background .25s ease, color .2s ease, box-shadow .25s ease, transform .12s var(--o-premi);
   }
   html[data-stile="osteo"] .diari-seg button:active{ transform:scale(.95); }
-  html[data-stile="osteo"] .diari-seg button.attivo{ background:var(--folder); color:var(--on-folder); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  html[data-stile="osteo"] .diari-seg button.attivo{ background:var(--folder); color:var(--on-folder); box-shadow:none; }
   html[data-stile="osteo"] .diari-seg button#diari-seg-oggi.giorno-ieri.attivo{ background:var(--signal); color:var(--on-signal); }
   html[data-stile="osteo"] .diari-seg button.we{ color:var(--consegna); }
   html[data-stile="osteo"] .diari-seg button.we.attivo{ background:var(--consegna); color:#fff; }
@@ -4173,8 +4173,8 @@
     padding:7px 14px; font-family:var(--o-sans); font-size:.86rem; font-weight:600;
     transition:background .25s ease, color .2s ease, box-shadow .25s ease, transform .12s var(--o-premi);
   }
-  html[data-stile="osteo"] #impostazioni-view .inline-fields > .chip.active{ background:var(--o-tile); color:var(--signal); box-shadow:0 1px 3px rgba(0,0,0,.12); }
-  html[data-stile="osteo"][data-tema="scuro"] #impostazioni-view .inline-fields > .chip.active{ background:#3a4352; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+  html[data-stile="osteo"] #impostazioni-view .inline-fields > .chip.active{ background:var(--o-tile); color:var(--signal); box-shadow:none; }
+  html[data-stile="osteo"][data-tema="scuro"] #impostazioni-view .inline-fields > .chip.active{ background:#3a4352; }
   html[data-stile="osteo"] #impostazioni-view .inline-fields > .chip:active{ transform:scale(.94); }
   /* dimensione testo: − 100% + */
   html[data-stile="osteo"] #impostazioni-view .inline-fields > .btn{ width:38px; height:38px; padding:0; border-radius:50%; display:inline-grid; place-items:center; }
@@ -4198,6 +4198,39 @@
   html[data-stile="osteo"] #impostazioni-view > .group > .ric-lista-riga{ padding-top:0; padding-bottom:0; border:0; }
   html[data-stile="osteo"] #impostazioni-reparto-sotto{ border-left-color:var(--o-line) !important; }
 
+  /* diario: niente icona nel riquadro, il numero del letto basta (grande);
+     copiato: il numero passa al verde */
+  html[data-stile="osteo"] .referto-block .bed-avatar{ display:none; }
+  html[data-stile="osteo"] .referto-block .bed-head .bed-title,
+  html[data-stile="osteo"] .referto-block.copiato .bed-head .bed-title{ font-size:1.45rem; letter-spacing:-.02em; line-height:1.15; }
+  html[data-stile="osteo"] .referto-block.copiato .bed-head .bed-title{ color:var(--o-teal); }
+  /* "Letto 4.1": la parola è aggiunta solo a video (il nome del letto resta "4.1" ovunque) */
+  html[data-stile="osteo"] .referto-block .bed-head .bed-title::before{ content:"Letto "; }
+  /* Diari: in cima quanti ne restano da copiare, in oro (= da copiare,
+     come il pulsante Oggi); tutti copiati, in verde. Solo stile Osteo */
+  .diari-contatore{ display:none; }
+  html[data-stile="osteo"] .diari-contatore{ display:block; margin:2px 2px 12px; font-family:var(--o-sans); font-size:1.05rem; color:var(--o-muted); }
+  html[data-stile="osteo"] .diari-contatore b{ font-weight:700; color:var(--folder); }
+  html[data-stile="osteo"] .diari-contatore.tutti b{ color:var(--signal); }
+  /* Strumenti: titoli di gruppo in minuscolo normale, non spaziati */
+  html[data-stile="osteo"] .strumenti-gruppo{ text-transform:none; letter-spacing:0; font-size:.85rem; font-weight:600; }
+  /* schermi larghi: l'intestazione sta nella stessa colonna delle pagine
+     (non per l'esame obiettivo, che usa tutta la larghezza) */
+  @media (min-width:700px){
+    html[data-stile="osteo"] body:is([data-vista="riepilogo"], [data-vista="wardmap"], [data-vista="ricoveri"], [data-vista="app"], [data-vista="impostazioni"],
+      [data-vista="backup"], [data-vista="dimissioni"], [data-vista="consegne"], [data-vista="vitali"], [data-vista="postdegenze"]) header{ padding-left:0; padding-right:0; }
+    html[data-stile="osteo"] body:is([data-vista="riepilogo"], [data-vista="wardmap"], [data-vista="ricoveri"], [data-vista="app"], [data-vista="impostazioni"],
+      [data-vista="backup"], [data-vista="dimissioni"], [data-vista="consegne"], [data-vista="vitali"], [data-vista="postdegenze"]) header > *{ max-width:620px; margin-left:auto; margin-right:auto; padding-left:16px; padding-right:16px; }
+  }
+
+  /* cifre a larghezza fissa (letti, orari, percentuali): non ballano quando
+     cambiano, e si allineano in colonna */
+  html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
+    #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view, header){ font-variant-numeric:tabular-nums; }
+  /* nota in fondo a Reparto: leggibile (era 7-8px) */
+  html[data-stile="osteo"] #app-info-box{ font-size:11px !important; line-height:1.5 !important; text-align:left !important; color:var(--o-muted); opacity:1 !important; }
+  html[data-stile="osteo"] #app-info-box > div{ font-size:11px !important; letter-spacing:0 !important; text-align:left !important; }
+
   /* ---------- animazioni al tocco ---------- */
   html[data-stile="osteo"] :is(#riepilogo-view, #wardmap-view, #ricoveri-view, #app-view, #impostazioni-view, #backup-view,
     #dimissioni-view, #consegne-view, #vitali-settore-view, #postdegenze-view) :is(.btn, .chip, .back-link){
@@ -4205,22 +4238,6 @@
   }
   html[data-stile="osteo"] :is(.btn, .back-link, .ric-lista-del):active{ transform:scale(.96); }
 
-  /* pagina appena aperta: sale e compare; in Diari i riquadri arrivano uno
-     dopo l'altro (classe messa da mostraVista e tolta poco dopo, così i
-     ridisegni successivi — salvataggi, sincronizzazione — non riaccendono
-     l'animazione) */
-  html[data-stile="osteo"] .osteo-entra{ animation:osteo-entra .32s var(--o-premi) both; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra{ animation:none; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra :is(#diari-testa, .referto-block){ animation:osteo-entra .4s var(--o-premi) both; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(2){ animation-delay:.05s; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(3){ animation-delay:.1s; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(4){ animation-delay:.15s; }
-  html[data-stile="osteo"] #riepilogo-view.osteo-entra .referto-block:nth-child(n+5){ animation-delay:.2s; }
-  html[data-stile="osteo"] #app-view.osteo-entra{ animation:none; }
-  html[data-stile="osteo"] #app-view.osteo-entra .group{ animation:osteo-entra .38s var(--o-premi) both; }
-  html[data-stile="osteo"] #app-view.osteo-entra .group:nth-child(2){ animation-delay:.05s; }
-  html[data-stile="osteo"] #app-view.osteo-entra .group:nth-child(n+3){ animation-delay:.1s; }
-  @keyframes osteo-entra{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
   @keyframes osteo-pop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.14); } 100%{ transform:scale(1); } }
 
   /* finestre (EGA, VFG, farmaci, rubrica...): il velo sfuma, il riquadro
@@ -4290,16 +4307,6 @@ function renderImpostazioniStile(){
   if(bClassico) bClassico.classList.toggle('active', s === 'classico');
 }
 applicaStile(stileAttuale());
-// pagina appena mostrata: animazione d'ingresso (solo stile Osteo), con la
-// classe tolta subito dopo — vedi .osteo-entra nel foglio stile-osteo
-function animaIngressoVista(el){
-  if(!el || document.documentElement.dataset.stile !== 'osteo') return;
-  el.classList.remove('osteo-entra');
-  void el.offsetWidth;
-  el.classList.add('osteo-entra');
-  clearTimeout(el._timerEntra);
-  el._timerEntra = setTimeout(() => el.classList.remove('osteo-entra'), 700);
-}
 </script>
 </head>
 <body>
@@ -10123,14 +10130,10 @@ function mostraVista(v){
   ['topnav-diari','topnav-app','topnav-reparto','topnav-ricoveri'].forEach(id => {
     document.getElementById(id)?.classList.toggle('vista-attiva', mappaTab[v] === id);
   });
-  // stile Osteo: la pagina appena aperta entra con un'animazione (non
-  // l'esame obiettivo né l'editor, e non se si ridisegna la stessa pagina)
-  if(v !== vistaAnimataPrima && v !== 'clinical' && v !== 'editor'){
-    animaIngressoVista(document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v + '-view'));
-  }
-  vistaAnimataPrima = v;
+  // pagina mostrata ora: lo stile Osteo allinea l'intestazione alla
+  // colonna delle pagine su schermi larghi (vedi body[data-vista])
+  document.body.dataset.vista = v;
 }
-var vistaAnimataPrima = null;
 function toggleWardMap(){
   wardMapOpen ? chiudiWardMap() : apriWardMap();
 }
@@ -13309,6 +13312,16 @@ function rigaAiutiDiario(p, id){
   return riga;
 }
 
+function aggiornaContatoreDiari(){
+  const cont = document.querySelector('#riepilogo-lista > .diari-contatore');
+  if(!cont) return;
+  const diari = [...document.querySelectorAll('#riepilogo-lista > .referto-block:not(.consegna-da-vedere)')];
+  const daCopiare = diari.filter(b => !b.classList.contains('copiato')).length;
+  cont.classList.toggle('tutti', daCopiare === 0);
+  cont.innerHTML = daCopiare === 0
+    ? '<b>' + (diari.length === 1 ? 'Diario copiato' : 'Tutti i ' + diari.length + ' diari copiati') + '</b>'
+    : '<b>' + daCopiare + ' da copiare</b> <span>su ' + diari.length + '</span>';
+}
 function renderRiepilogo(){
   // prima di rileggere i dati: le modifiche ancora in attesa vanno salvate,
   // altrimenti l'elenco ridisegnato mostrerebbe il testo precedente
@@ -13465,7 +13478,7 @@ function renderRiepilogo(){
     copiaBtn.onclick = () => {
       copiaTesto(body.value);
       baffoCopiato(copiaBtn);
-      if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); aggiornaStrisciaRepartoDiari(); }
+      if(!diariMostraIeri){ segnaRefertoCopiato(id); block.classList.add('copiato'); aggiornaStrisciaRepartoDiari(); aggiornaContatoreDiari(); }
     };
 
     titleRow.appendChild(titleWrap);
@@ -13683,6 +13696,15 @@ function renderRiepilogo(){
   // (scrollbar compresa), si può calcolare in sicurezza l'altezza di ogni
   // singola textarea — vedi il commento più sopra
   areeTesto.forEach(autoResizeTextarea);
+
+  // in cima: quanti diari di oggi restano da copiare (solo stile Osteo, vedi
+  // .diari-contatore; i box "da vedere" delle consegne non contano)
+  if(!diariMostraIeri){
+    const cont = document.createElement('div');
+    cont.className = 'diari-contatore';
+    container.insertBefore(cont, container.firstChild);
+    aggiornaContatoreDiari();
+  }
 
   // pulsante in fondo, solo se c'è almeno un diario scritto (il caso
   // "entries.length === 0" è già intercettato dal return più sopra, quindi
