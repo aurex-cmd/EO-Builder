@@ -22880,6 +22880,18 @@ function editorLettereSvuota(){
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
   .m-scheda.m-entra .m-s-corpo > *{ animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--k) * 30ms + 120ms); }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
+  /* menu "/" degli strumenti, dentro la scheda: bianco, filo sottile, voci che scendono */
+  html[data-ui="minimal"] #comandi-menu{ background:var(--m-bg); border:1px solid var(--m-line); border-radius:14px; box-shadow:0 12px 32px rgba(23,34,49,.12), 0 2px 6px rgba(23,34,49,.06); padding:4px; font-family:var(--m-scheda); overscroll-behavior:contain; transform-origin:50% 100%; }
+  html[data-ui="minimal"] #comandi-menu.m-entra{ animation:m-menu .28s var(--m-molla) both; }
+  html[data-ui="minimal"] #comandi-menu.m-entra .comandi-voce{ animation:m-compare .32s var(--m-molla) both; animation-delay:calc(var(--k) * 22ms + 40ms); }
+  @keyframes m-menu{ from{ opacity:0; transform:translateY(6px) scale(.97); } to{ opacity:1; transform:none; } }
+  html[data-ui="minimal"] .comandi-voce{ align-items:center; gap:10px; padding:9px 10px; border-radius:9px; transition:background .18s; }
+  html[data-ui="minimal"] .comandi-voce.attiva, html[data-ui="minimal"] .comandi-voce:hover{ background:var(--m-box); }
+  html[data-ui="minimal"] .comandi-voce:active{ background:var(--m-teal-box); }
+  html[data-ui="minimal"] .comandi-cmd{ font-family:var(--m-scheda); font-size:14px; font-weight:700; color:var(--m-ink); }
+  html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
+  html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
+  html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
   /* home: le voci sotto i due ingressi, come l'elenco "Consulta" di Osteoclick */
   .m-righe{ display:flex; flex-direction:column; }
   .m-rigalink{ display:flex; align-items:center; gap:12px; width:100%; border:0; border-bottom:1px solid var(--m-line); background:none; padding:10px 0; text-align:left; font:inherit; font-size:15.2px; font-weight:600; color:var(--m-ink); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 45ms + 90ms); }
@@ -23309,7 +23321,7 @@ function disegnaScheda(){
     ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
     ${presenti.map(rigaStrum).join('')}
     <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>
-    <div class="m-lbl">Provvedimenti</div>
+    <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
   const provv = $m('#m-provv');
@@ -23439,6 +23451,7 @@ document.getElementById('m-app').addEventListener('click', e => {
     else { showToast('Nessun diario: parti dall\'esame obiettivo'); apriVisita(nome); }
   }
   else if(a === 'chiudi') chiudiScheda();
+  else if(a === 'strumenti') apriStrumenti();
   else if(a === 'modifica'){ const nome = M.letto; chiudiScheda(); setTimeout(() => apriVisita(nome, true), 260); }
   else if(a === 'riga'){ if(el.classList.contains('m-vuota')) apriRiga(el); else if(e.target === el) el.querySelector('textarea').focus(); }
   else if(a === 'altro'){
@@ -23500,7 +23513,8 @@ sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.
 sc.addEventListener('keydown', e => {
   const t = e.target;
   // a capo dopo una riga col trattino: la nuova riga parte già col trattino
-  if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey){
+  // (Invio che ha già scelto una voce del menu "/" non va a capo)
+  if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey && !e.defaultPrevented){
     const i = t.selectionStart, v = t.value;
     const rigaCorrente = v.slice(v.lastIndexOf('\n', i - 1) + 1, i);
     if(/^\s*-\s/.test(rigaCorrente)){
@@ -23544,6 +23558,78 @@ renderWardMap = function(){
   if(M.vista === 'home') vHome();
   return r;
 };
+
+
+/* ---------- menu "/" degli strumenti dentro la scheda ---------- */
+// "Strumenti" accanto a PROVVEDIMENTI: si va a capo con "- /" (o si usa la
+// riga vuota in fondo) e si apre lo stesso menu che compare scrivendo "/"
+function apriStrumenti(){
+  const t = $m('#m-provv'); if(!t) return;
+  t.focus({ preventScroll:true });
+  let v = t.value.replace(/\s+$/, m => m.includes('\n') ? '\n' : '');
+  const ultima = v.slice(v.lastIndexOf('\n') + 1);
+  if(/^\s*-?\s*$/.test(ultima)) v = v.slice(0, v.length - ultima.length) + '- /';
+  else v += '\n- /';
+  t.value = v;
+  t.setSelectionRange(v.length, v.length);
+  alza(t);
+  t.dispatchEvent(new Event('input', { bubbles:true }));
+}
+// il menu dell'app, ma dentro la scheda: sempre sopra la riga che si sta
+// scrivendo (la scheda scorre se serve), mai sotto il pulsante "Copia"
+const corpoScheda = $m('#m-s-corpo');
+function posizionaMenuScheda(){
+  const menu = document.getElementById('comandi-menu');
+  const st = comandiStato;
+  if(!st || !st.el.closest('#m-scheda') || !menu.classList.contains('show')) return;
+  const p = comandiPosizioneCursore(st.el, st.fine);
+  const riga = parseFloat(getComputedStyle(st.el).lineHeight) || 24;
+  const sopraRiga = p.y - riga - 6;
+  const cTop = corpoScheda.getBoundingClientRect().top + 8;
+  const vv = window.visualViewport;
+  const fondo = Math.min($m('#m-copia').getBoundingClientRect().top, vv ? vv.offsetTop + vv.height : innerHeight) - 8;
+  menu.style.maxHeight = '';
+  const h = Math.min(menu.scrollHeight + 2, 260);
+  if(sopraRiga - h < cTop){
+    // poco spazio sopra: si fa scorrere la scheda quanto basta (la riga resta visibile)
+    const manca = cTop - (sopraRiga - h);
+    const puo = corpoScheda.scrollHeight - corpoScheda.clientHeight - corpoScheda.scrollTop;
+    const sposta = Math.min(manca, puo, Math.max(0, p.y - cTop - h));
+    if(sposta > 1 && !posizionaMenuScheda.dentro){
+      posizionaMenuScheda.dentro = true;
+      corpoScheda.scrollTop += sposta;
+      posizionaMenuScheda.dentro = false;
+      return posizionaMenuScheda();
+    }
+  }
+  const spazioSopra = sopraRiga - cTop, spazioSotto = fondo - (p.y + 4);
+  if(spazioSopra >= Math.min(h, 140) || spazioSopra >= spazioSotto){
+    const hh = Math.min(h, Math.max(80, spazioSopra));
+    menu.style.maxHeight = hh + 'px';
+    menu.style.top = (sopraRiga - hh) + 'px';
+    menu.style.transformOrigin = '50% 100%';
+  } else {
+    menu.style.maxHeight = Math.min(h, Math.max(80, spazioSotto)) + 'px';
+    menu.style.top = (p.y + 4) + 'px';
+    menu.style.transformOrigin = '50% 0';
+  }
+}
+const comandiDisegnaApp = comandiDisegna;
+comandiDisegna = function(){
+  const menu = document.getElementById('comandi-menu');
+  const eraAperto = menu.classList.contains('show');
+  const r = comandiDisegnaApp.apply(this, arguments);
+  if(comandiStato && comandiStato.el.closest('#m-scheda')){
+    [...menu.children].forEach((v, k) => v.style.setProperty('--k', Math.min(k, 10)));
+    if(!eraAperto){ menu.classList.remove('m-entra'); void menu.offsetWidth; menu.classList.add('m-entra'); clearTimeout(menu._t); menu._t = setTimeout(() => menu.classList.remove('m-entra'), 600); }
+    posizionaMenuScheda();
+    const attiva = menu.children[comandiStato.attiva];
+    if(attiva) attiva.scrollIntoView({ block:'nearest' });
+  }
+  return r;
+};
+corpoScheda.addEventListener('scroll', () => { if(!posizionaMenuScheda.dentro) posizionaMenuScheda(); }, { passive:true });
+if(window.visualViewport) visualViewport.addEventListener('resize', posizionaMenuScheda);
 
 /* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
 Object.keys(PAGINE).forEach(v => document.getElementById(v + '-view').classList.add('m-pagina'));
