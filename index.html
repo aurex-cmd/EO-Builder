@@ -22555,7 +22555,9 @@ function editorLettereSvuota(){
   .m-copia.m-subito::before, .m-copia.m-subito .m-et, .m-copia.m-subito .m-et svg{ transition:none !important; animation:none !important; }
   .m-lampo{ animation:m-lampo .9s ease-out both; animation-delay:calc(var(--k) * 55ms); }
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
-  .m-scheda.m-entra .m-s-corpo > *{ animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--k) * 30ms + 120ms); }
+  .m-scheda{ will-change:transform; contain:layout paint; }
+  .m-aiuti.m-apre{ animation:m-aiuti-apre .42s var(--m-molla) both; overflow:hidden; }
+  @keyframes m-aiuti-apre{ from{ max-height:0; opacity:0; padding-top:0; } to{ max-height:90px; opacity:1; } }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
   /* menu "/" degli strumenti, dentro la scheda: bianco, filo sottile, voci che scendono */
   html[data-ui="minimal"] #comandi-menu{ background:var(--m-bg); border:1px solid var(--m-line); border-radius:14px; box-shadow:0 12px 32px rgba(23,34,49,.12), 0 2px 6px rgba(23,34,49,.06); padding:4px; font-family:var(--m-scheda); overscroll-behavior:contain; transform-origin:50% 100%; }
@@ -22951,6 +22953,7 @@ function disegnaLetti(appena){
     const i = infoLetto(nome), armato = rimuoviAppoggioArmato === M.settore + '|' + nome;
     return `<button class="m-letto m-appoggio ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${letti.length + k}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)} (appoggio)">${esc(inizialiLetto(nome))}${htmlPallini(i)}${i.occupato ? '' : `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>`}</button>`;
   }).join('') + `<div class="m-letto m-nuovo-app" style="--i:${letti.length}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}</div>`;
+  if(M.vista === 'diari') preparaAiuti();
 }
 function nuovoAppoggio(tile){
   if(tile.classList.contains('m-scrivi')) return;
@@ -23046,20 +23049,32 @@ function salvaOra(){
   if(ps[M.id] && ps[M.id].refertoCopiato){ ps[M.id].refertoCopiato = false; savePatients(ps); }
   segnaStato(false);
 }
-function salvaPresto(){ clearTimeout(timerSalva); timerSalva = setTimeout(() => { salvaOra(); disegnaAiuti(); }, 500); }
+function salvaPresto(){ clearTimeout(timerSalva); timerSalva = setTimeout(() => { salvaOra(); pianificaAiuti(); }, 500); }
 function segnaStato(copiato){
   const s = $m('#m-stato'); if(!s) return;
   s.textContent = copiato ? 'Copiato oggi' : 'Da copiare'; s.classList.toggle('m-ok', copiato);
   if(!copiato) $m('#m-copia').classList.remove('m-fatto');
 }
+// letture ripetute dei pazienti mentre si prepara la scheda: un solo JSON.parse
+function conPazientiFermi(fn){
+  const orig = loadPatients; let copia = null;
+  loadPatients = () => copia || (copia = orig());
+  try{ return fn(); } finally { loadPatients = orig; }
+}
 function apriScheda(nome){
   const e = voce(nome); if(!e) return;
   M.letto = nome; M.id = e[0];
-  D = leggiDiario(M.id);
-  disegnaScheda();
-  $m('#m-velo').classList.add('m-su');
-  const sh = $m('#m-scheda'); sh.classList.add('m-entra'); clearTimeout(sh._t); sh._t = setTimeout(() => sh.classList.remove('m-entra'), 900);
-  requestAnimationFrame(() => sh.classList.add('m-su'));
+  // tutto il lavoro prima che la scheda si muova: durante la salita il
+  // telefono deve solo spostarla (antibiotici e richieste vengono dalla
+  // memoria, vedi calcolaAiuti; se mancano si calcolano a scheda ferma)
+  conPazientiFermi(() => { D = leggiDiario(M.id); disegnaScheda(); });
+  const sh = $m('#m-scheda');
+  void sh.offsetHeight;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $m('#m-velo').classList.add('m-su');
+    sh.classList.add('m-su');
+  }));
+  clearTimeout(sh._t); sh._t = setTimeout(() => pianificaAiuti(true), 480);
   document.body.style.overflow = 'hidden';
 }
 function chiudiScheda(){
@@ -23067,7 +23082,9 @@ function chiudiScheda(){
   salvaOra();
   $m('#m-scheda').classList.remove('m-su'); $m('#m-velo').classList.remove('m-su');
   document.body.style.overflow = '';
-  if(M.vista === 'diari') disegnaLetti(M.letto);
+  clearTimeout($m('#m-scheda')._t);
+  // i letti si ridisegnano a scheda già scesa, per non frenarne la discesa
+  if(M.vista === 'diari'){ const nome = M.letto; setTimeout(() => { if(M.vista === 'diari') disegnaLetti(nome); }, 430); }
 }
 function riga(id, nome, val, ph, nota){
   const fid = 'm-f-' + id.replace(/[^a-z0-9]/gi, '');
@@ -23112,13 +23129,58 @@ function disegnaScheda(){
   provv.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, provv.value).length);
   if(typeof attivaMenuComandi === 'function') attivaMenuComandi(provv);
   aggiornaCopia(i.copiato);
-  disegnaAiuti(true);
+  disegnaAiuti(true, true);
   $m('#m-s-corpo').scrollTop = 0;
-  requestAnimationFrame(() => document.querySelectorAll('#m-s-corpo textarea').forEach(alza));
+  // altezze delle caselle subito (prima tutte le letture, poi le scritture)
+  const aree = [...document.querySelectorAll('#m-s-corpo textarea')];
+  aree.forEach(t => { t.style.height = 'auto'; });
+  aree.map(t => t.scrollHeight).forEach((h, k) => { aree[k].style.height = h + 'px'; });
+}
+// ANTIBIOTICI E RICHIESTE: si calcolano rileggendo i diari dei giorni
+// passati (lento sul telefono), quindi si ricordano finché il diario non
+// cambia, e si preparano in anticipo per i letti del settore mentre il
+// telefono è libero
+const aiutiMemoria = new Map(); // id → { chiave, atb, ric }
+function chiaveAiuti(p, id){
+  const st = p.storico || {};
+  return chiaveGiorno(Date.now()) + '|' + getRefertoFor(statoScheda(id, p)) + '|' + ((p.richiesteChiuse || []).join(',')) + '|' + Object.keys(st).map(k => k + ':' + (st[k] || '').length).join(',');
+}
+function calcolaAiuti(p, id, soloMemoria){
+  const chiave = chiaveAiuti(p, id), m = aiutiMemoria.get(id);
+  if(m && m.chiave === chiave) return m;
+  if(soloMemoria) return null;
+  let atb = [], ric = [];
+  try{ atb = antibioticiInCorso(p, id); } catch(e){}
+  try{ ric = richiesteInSospeso(p, id); } catch(e){}
+  const v = { chiave, atb, ric };
+  aiutiMemoria.set(id, v);
+  return v;
+}
+const quandoLibero = fn => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout:1000 }) : setTimeout(fn, 60));
+let aiutiInAttesa = false;
+function pianificaAiuti(primaVolta){
+  if(aiutiInAttesa) return;
+  aiutiInAttesa = true;
+  quandoLibero(() => { aiutiInAttesa = false; if($m('#m-scheda').classList.contains('m-su')) disegnaAiuti(primaVolta); });
+}
+let codaAiuti = [];
+function preparaAiuti(){
+  const ps = loadPatients();
+  codaAiuti = (getWardMap()[M.settore] || []).map(bedName).concat(loadAppoggi()[M.settore] || [])
+    .map(n => Object.keys(ps).find(id => ps[id].name === n)).filter(id => id && schedaHaDati(ps[id].state));
+  const passo = scadenza => {
+    while(codaAiuti.length && M.vista === 'diari' && !$m('#m-scheda').classList.contains('m-su')){
+      const id = codaAiuti.shift(), p = loadPatients()[id];
+      if(p) calcolaAiuti(p, id);
+      if(!scadenza || !scadenza.timeRemaining || scadenza.timeRemaining() < 12) break;
+    }
+    if(codaAiuti.length && M.vista === 'diari') quandoLibero(passo);
+  };
+  quandoLibero(passo);
 }
 // pallini del titolo, giorni di antibiotico e richieste in sospeso: le
 // funzioni dell'app (leggono anche i diari dei giorni passati)
-function disegnaAiuti(primaVolta){
+function disegnaAiuti(primaVolta, soloMemoria){
   if(!M.id) return;
   const p = loadPatients()[M.id]; if(!p) return;
   const extra = (statoScheda(M.id, p).outputExtra || '');
@@ -23128,9 +23190,9 @@ function disegnaAiuti(primaVolta){
   const sp = $m('#m-s-pallini');
   if(sp && sp.innerHTML !== pal){ sp.innerHTML = pal; if(!primaVolta) sp.querySelectorAll('.m-pal').forEach(x => x.classList.add('m-nuovo')); }
   const box = $m('#m-aiuti'); if(!box) return;
-  let atb = [], ric = [];
-  try{ atb = antibioticiInCorso(p, M.id); } catch(e){}
-  try{ ric = richiesteInSospeso(p, M.id); } catch(e){}
+  const calc = calcolaAiuti(p, M.id, soloMemoria);
+  if(!calc){ if(primaVolta){ box.innerHTML = ''; box.dataset.ora = ''; box.hidden = true; } return; }
+  const { atb, ric } = calc;
   const voci = [
     ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
     ...ric.map((r, n) => ({ k:'r:' + r.chiave, html:`<span class="m-aiuto ric" data-k="r:${esc(r.chiave)}" title="Richiesta ancora senza esito"><i></i>${esc(r.testo)} <em>${r.giorni ? r.giorni + ' g' : 'oggi'}</em><button class="m-ok" data-m="chiudi-ric" data-r="${n}" aria-label="Fatta">✓</button></span>` }))
@@ -23139,10 +23201,13 @@ function disegnaAiuti(primaVolta){
   const ora = voci.map(v => v.k).join('|');
   if(box.dataset.ora === ora) return;
   const prima = new Set([...box.children].map(x => x.dataset.k));
+  const eraVuoto = box.hidden || !box.children.length;
   box.dataset.ora = ora;
   box.innerHTML = voci.map(v => v.html).join('');
   box.hidden = !voci.length;
-  if(!primaVolta) [...box.children].forEach(x => { if(!prima.has(x.dataset.k)) x.classList.add('m-nuovo'); });
+  // comparsi a scheda già aperta: la riga si apre piano invece di spingere giù il testo di colpo
+  if(eraVuoto && voci.length && !soloMemoria){ box.classList.remove('m-apre'); void box.offsetWidth; box.classList.add('m-apre'); }
+  else if(!primaVolta) [...box.children].forEach(x => { if(!prima.has(x.dataset.k)) x.classList.add('m-nuovo'); });
 }
 function aggiornaCopia(copiato){
   const c = $m('#m-copia');
@@ -23176,7 +23241,7 @@ function chiudiRiga(r){
     if(gia){ gia.replaceWith(nuova); r.remove(); } else r.replaceWith(nuova);
     const bottone = [...document.querySelectorAll('.m-aggiungi [data-x]')].find(b => b.dataset.x === n); if(bottone) bottone.remove();
     alza(nuova.querySelector('textarea'));
-    salvaOra(); disegnaAiuti();
+    salvaOra(); pianificaAiuti();
     return;
   }
   let v = t.value;
@@ -23193,7 +23258,7 @@ function chiudiRiga(r){
   r.classList.toggle('m-vuota', !v.trim());
   clearTimeout(nota._t);
   nota._t = setTimeout(() => { nota.classList.remove('m-fatto'); setTimeout(() => ns.textContent = nota.dataset.nota, 350); }, 2000);
-  salvaOra(); disegnaAiuti();
+  salvaOra(); pianificaAiuti();
 }
 function copia(){
   if(document.activeElement && document.activeElement.closest && document.activeElement.closest('#m-scheda')){
@@ -23314,7 +23379,7 @@ sc.addEventListener('focusout', e => {
     if(typeof correggiItaliano === 'function') v = correggiItaliano(v);
     v = aggiungiUnitaMancantiTesto(v);
     if(v !== t.value){ t.value = v; alza(t); }
-    D.provv = v; salvaOra(); disegnaAiuti();
+    D.provv = v; salvaOra(); pianificaAiuti();
   }
   if(t.id === 'm-eo'){ D.eo = t.value; salvaOra(); }
 });
