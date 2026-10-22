@@ -22476,7 +22476,9 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .card h2 .hicon .pieno{ fill:var(--m-muted); }
   html[data-ui="minimal"] #clinical-view .group-label{ font-size:.75rem; color:var(--m-muted); }
   html[data-ui="minimal"] #clinical-view .chip{ border:1px solid var(--m-line); background:transparent; border-radius:7px; padding:6px 10px; font-family:var(--m-sans); font-size:.84rem; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s ease, color .28s ease, border-color .28s ease, transform .18s var(--m-molla); }
-  html[data-ui="minimal"] #clinical-view .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; animation:m-scelto .4s var(--m-molla); }
+  html[data-ui="minimal"] #clinical-view .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; }
+  /* si anima solo il tag appena toccato (l'app ridisegna i tag anche mentre si scrive) */
+  html[data-ui="minimal"] :is(#clinical-view, .m-pagina) .chip.active.m-tocco{ animation:m-scelto .4s var(--m-molla); }
   html[data-ui="minimal"] #clinical-view .chip:active{ transform:scale(.94); }
   html[data-ui="minimal"] #clinical-view #output-card{ border-bottom:0; }
   html[data-ui="minimal"] #clinical-view textarea, html[data-ui="minimal"] #clinical-view input[type=text], html[data-ui="minimal"] #clinical-view input[type=number]{ box-shadow:none; border:1px solid var(--m-line); border-radius:9px; background:var(--m-bg); }
@@ -22661,6 +22663,28 @@ function editorLettereSvuota(){
   button.m-pal:active{ transform:scale(.85); }
   .m-s-titolo .m-pal-tocca{ box-shadow:0 0 0 0 currentColor; animation:m-alone 1.6s ease-out .6s 1; }
   @keyframes m-alone{ 0%{ box-shadow:0 0 0 0 rgba(224,160,58,.55); } 100%{ box-shadow:0 0 0 9px rgba(224,160,58,0); } }
+  /* isolamento: germe in grande, microrganismo nell'angolo in alto a destra */
+  html[data-ui="minimal"] #isolamento-modal.m-iso{ position:relative; overflow:hidden; padding:22px 22px 22px; max-width:380px; background:linear-gradient(160deg, var(--iso-c1) 0, #fff 46%); }
+  .m-iso-germe{ position:absolute; top:-44px; right:-50px; width:210px; height:210px; pointer-events:none; animation:m-germe-entra .8s var(--m-molla) both; }
+  @keyframes m-germe-entra{ from{ opacity:0; transform:scale(.6) rotate(-25deg); } to{ opacity:1; transform:none; } }
+  .m-iso-galleggia{ transform-origin:110px 100px; animation:m-galleggia 7s ease-in-out infinite alternate; }
+  @keyframes m-galleggia{ 0%{ transform:rotate(-4deg) translate(0, 0); } 100%{ transform:rotate(5deg) translate(-5px, 6px); } }
+  html[data-ui="minimal"] #isolamento-modal.m-iso .isolamento-modal-header{ position:relative; z-index:1; margin-bottom:18px; }
+  html[data-ui="minimal"] #isolamento-modal.m-iso .isolamento-modal-header h2{ font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--iso-c2); }
+  html[data-ui="minimal"] #isolamento-modal.m-iso #isolamento-chiudi-btn{ background:rgba(255,255,255,.85); box-shadow:0 1px 4px rgba(23,34,49,.12); }
+  #isolamento-modal.m-iso #isolamento-modal-corpo{ position:relative; z-index:1; }
+  .m-iso-blocco{ margin-bottom:16px; }
+  .m-iso-lbl{ font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--m-muted); margin-bottom:4px; }
+  .m-iso-germe-nome{ font-size:1.45rem; line-height:1.2; font-weight:800; letter-spacing:-.02em; color:var(--m-ink); max-width:78%; animation:m-compare .4s var(--m-molla) .1s both; }
+  .m-iso-tipo{ display:inline-block; margin-top:8px; font-size:.76rem; font-weight:600; color:var(--iso-c2); background:var(--iso-c1); border-radius:999px; padding:2px 10px; animation:m-compare .4s var(--m-molla) .18s both; }
+  .m-iso-chips{ display:flex; flex-wrap:wrap; gap:6px; animation:m-compare .4s var(--m-molla) .24s both; }
+  .m-iso-chip{ font-size:.9rem; font-weight:700; border-radius:9px; padding:4px 11px; background:#fdf0dc; color:#a3600f; }
+  .m-iso-chip.droplets{ background:#fdf0dc; color:#a3600f; }
+  .m-iso-chip.aereo{ background:#e1edfb; color:#2a65b0; }
+  .m-iso-dpi{ font-size:.95rem; line-height:1.5; color:var(--m-ink); padding:12px 14px; background:var(--m-box); border-radius:14px; animation:m-compare .4s var(--m-molla) .3s both; }
+  .m-iso-dpi b{ font-weight:800; }
+  .m-iso-nota{ margin-top:12px; font-size:.86rem; font-weight:600; line-height:1.45; color:#2b9a57; }
+  .m-iso-consegne{ margin-top:12px; font-size:.8rem; line-height:1.45; color:var(--m-muted); }
   /* riquadro dell'isolamento (germe e DPI) in stile minimal */
   html[data-ui="minimal"] #isolamento-modal-overlay{ background:rgba(15,20,28,.32); backdrop-filter:none; -webkit-backdrop-filter:none; }
   html[data-ui="minimal"] #isolamento-modal{ background:var(--m-bg); border:0; border-radius:22px; box-shadow:0 20px 50px rgba(15,20,28,.18); padding:20px 20px 22px; font-family:var(--m-scheda); animation:m-riquadro .36s var(--m-molla) both; }
@@ -22701,7 +22725,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .group{ background:none; border:0; box-shadow:none; padding:0; margin:0 0 18px; }
   html[data-ui="minimal"] .m-pagina .group-label{ font-family:var(--m-sans); color:var(--m-muted); }
   html[data-ui="minimal"] .m-pagina .chip{ border:1px solid var(--m-line); background:transparent; border-radius:9px; padding:7px 14px; font-family:var(--m-sans); font-size:.86rem; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s, color .28s, border-color .28s, transform .18s var(--m-molla); }
-  html[data-ui="minimal"] .m-pagina .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; animation:m-scelto .4s var(--m-molla); }
+  html[data-ui="minimal"] .m-pagina .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; }
   html[data-ui="minimal"] .m-pagina .chip:active{ transform:scale(.94); }
   html[data-ui="minimal"] .m-pagina .btn{ border:1px solid var(--m-line); background:var(--m-bg); color:var(--m-ink); border-radius:12px; box-shadow:none; font-family:var(--m-sans); font-weight:600; font-size:.9rem; padding:11px 16px; transition:transform .14s var(--m-molla), background .2s; }
   html[data-ui="minimal"] .m-pagina .btn:active{ transform:scale(.97); }
@@ -23415,6 +23439,79 @@ function confermaElimina(){
   }, true);
 })();
 
+
+/* ---------- riquadro dell'isolamento ---------- */
+// prima il germe (con un disegno del microrganismo che sporge dall'angolo in
+// alto a destra), poi il tipo di isolamento, poi i DPI su una riga
+const GERMI = {
+  grappolo:      { nome:'Cocchi Gram positivi',  c1:'#eee6fb', c2:'#7a4fc8' },
+  catena:        { nome:'Cocchi Gram positivi',  c1:'#eee6fb', c2:'#7a4fc8' },
+  gneg:          { nome:'Bacilli Gram negativi', c1:'#fde3e9', c2:'#d1486c' },
+  gpos:          { nome:'Bacilli Gram positivi', c1:'#eee6fb', c2:'#7a4fc8' },
+  clostridium:   { nome:'Bacillo Gram positivo sporigeno', c1:'#dcf2e3', c2:'#2b9a57' },
+  micobatterio:  { nome:'Micobatterio (alcol-acido resistente)', c1:'#fde6e1', c2:'#c8442e' },
+  virus:         { nome:'Virus', c1:'#dff1f6', c2:'#2a86a8' },
+  fungo:         { nome:'Lievito', c1:'#fbefd9', c2:'#b7791f' },
+  generico:      { nome:'', c1:'#e5eef0', c2:'#5f7f86' }
+};
+function tipoGerme(germe){
+  const g = (germe || '').toLowerCase();
+  if(haClostridium(germe) || /c\.\s*diff|difficile/.test(g)) return 'clostridium';
+  if(/mycobact|micobatt|tubercol|\btbc?\b|koch/.test(g)) return 'micobatterio';
+  if(/covid|sars|influenz|\brsv\b|sinciziale|norovirus|rotavirus|morbillo|varicella|herpes|virus/.test(g)) return 'virus';
+  if(/candida|auris|aspergill|fung|micet|lievit/.test(g)) return 'fungo';
+  if(/staph|stafilo|mrsa|mssa|aureus/.test(g)) return 'grappolo';
+  if(/strept|enteroc|\bvre\b|pneumococc|faecal|faecium/.test(g)) return 'catena';
+  if(/listeria|bacillus|corynebact|nocardia/.test(g)) return 'gpos';
+  if(/escherichia|e\.\s*coli|\bcoli\b|klebsiel|pseudomon|acinetob|enterobact|proteus|serratia|citrobact|stenotroph|haemoph|legionel|salmonel|shigel|morganel|providenc|\bkpc\b|esbl|\bndm\b|\bvim\b|\boxa\b|\bcre\b|\bcpe\b|gram\s*neg/.test(g)) return 'gneg';
+  if(/gram\s*pos/.test(g)) return 'grappolo';
+  return 'generico';
+}
+function disegnoGerme(tipo){
+  const { c1, c2 } = GERMI[tipo];
+  const cocco = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c1}" stroke="${c2}" stroke-width="3"/><circle cx="${x - r * .35}" cy="${y - r * .35}" r="${r * .28}" fill="#fff" opacity=".7"/>`;
+  const bastone = (x, y, l, w, a, spora) => `<g transform="rotate(${a} ${x} ${y})"><rect x="${x - l / 2}" y="${y - w / 2}" width="${l}" height="${w}" rx="${w / 2}" fill="${c1}" stroke="${c2}" stroke-width="3"/>` +
+    (spora ? `<ellipse cx="${x + l / 2 - w * .55}" cy="${y}" rx="${w * .42}" ry="${w * .36}" fill="${c2}" opacity=".85"/>` : `<rect x="${x - l / 2 + w * .35}" y="${y - w * .18}" width="${l * .45}" height="${w * .16}" rx="${w * .08}" fill="#fff" opacity=".6"/>`) + '</g>';
+  const flagello = (x, y, a) => `<path d="M${x} ${y} q8 -10 16 0 t16 0 t16 0" fill="none" stroke="${c2}" stroke-width="2.2" stroke-linecap="round" transform="rotate(${a} ${x} ${y})" opacity=".7"/>`;
+  let g = '';
+  if(tipo === 'grappolo') [[96,92,22],[136,84,20],[118,120,23],[78,128,19],[158,118,18],[100,158,20],[140,154,19],[60,94,16],[122,48,17]].forEach(([x,y,r]) => g += cocco(x, y, r));
+  else if(tipo === 'catena') [[40,170,16],[64,150,16],[86,128,16],[106,104,16],[124,80,16],[140,56,16],[152,30,16]].forEach(([x,y,r]) => g += cocco(x, y, r)) , [[104,176,15],[128,160,15],[150,142,15],[170,122,15]].forEach(([x,y,r]) => g += cocco(x, y, r));
+  else if(tipo === 'gneg') g += flagello(150, 70, 30) + flagello(70, 150, 200) + bastone(110, 92, 92, 34, -32) + bastone(120, 150, 80, 30, 18) + bastone(60, 60, 64, 26, 70);
+  else if(tipo === 'gpos') g += bastone(104, 84, 96, 34, -28) + bastone(130, 142, 90, 32, 12) + bastone(62, 132, 70, 28, 80);
+  else if(tipo === 'clostridium') g += bastone(110, 88, 104, 34, -30, true) + bastone(124, 148, 92, 32, 14, true) + bastone(58, 128, 74, 28, 76, true);
+  else if(tipo === 'micobatterio') [[100,80,-40],[120,96,-30],[86,118,-50],[132,130,-20],[110,150,-35],[150,104,-45]].forEach(([x,y,a]) => g += bastone(x, y, 70, 14, a));
+  else if(tipo === 'virus'){
+    const cx = 112, cy = 104, r = 52;
+    for(let k = 0; k < 14; k++){ const a = k / 14 * Math.PI * 2, x1 = cx + Math.cos(a) * r, y1 = cy + Math.sin(a) * r, x2 = cx + Math.cos(a) * (r + 18), y2 = cy + Math.sin(a) * (r + 18);
+      g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c2}" stroke-width="3"/><circle cx="${x2}" cy="${y2}" r="7" fill="${c1}" stroke="${c2}" stroke-width="3"/>`; }
+    g += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c1}" stroke="${c2}" stroke-width="3"/><circle cx="${cx - 16}" cy="${cy - 12}" r="9" fill="#fff" opacity=".6"/><circle cx="${cx + 14}" cy="${cy + 16}" r="6" fill="${c2}" opacity=".25"/>`;
+  }
+  else if(tipo === 'fungo') g += `<g transform="rotate(-25 110 100)"><ellipse cx="104" cy="104" rx="42" ry="32" fill="${c1}" stroke="${c2}" stroke-width="3"/><ellipse cx="156" cy="88" rx="22" ry="17" fill="${c1}" stroke="${c2}" stroke-width="3"/><ellipse cx="86" cy="152" rx="26" ry="20" fill="${c1}" stroke="${c2}" stroke-width="3"/><ellipse cx="92" cy="94" rx="10" ry="7" fill="#fff" opacity=".6"/></g>`;
+  else g += cocco(96, 96, 22) + cocco(132, 120, 18) + bastone(120, 64, 70, 26, -30) + bastone(74, 146, 60, 24, 40);
+  return `<svg class="m-iso-germe" viewBox="0 0 200 200" aria-hidden="true"><g class="m-iso-galleggia">${g}</g></svg>`;
+}
+function apriIsolamento(iso){
+  iso = iso || {};
+  const tipi = iso.tipi ? (Array.isArray(iso.tipi) ? iso.tipi : [...iso.tipi]) : [];
+  const germe = (iso.germe || '').trim();
+  const tipo = tipoGerme(germe), info = GERMI[tipo];
+  const ISO = { contatto:['da contatto', 'Guanti e camice'], droplets:['da droplet', 'Mascherina chirurgica (+ occhiali o visiera da vicino)'], aereo:['aereo', 'Facciale filtrante FFP2/FFP3'] };
+  const presenti = Object.keys(ISO).filter(k => tipi.includes(k));
+  const modal = document.getElementById('isolamento-modal');
+  modal.classList.add('m-iso');
+  modal.style.setProperty('--iso-c1', info.c1); modal.style.setProperty('--iso-c2', info.c2);
+  modal.querySelector('.m-iso-germe')?.remove();
+  modal.insertAdjacentHTML('afterbegin', disegnoGerme(tipo));
+  document.getElementById('isolamento-modal-titolo').textContent = 'Isolamento';
+  document.getElementById('isolamento-modal-corpo').innerHTML =
+    `<div class="m-iso-blocco"><div class="m-iso-lbl">Germe</div><div class="m-iso-germe-nome">${germe ? esc(germe) : 'Non indicato'}</div>${info.nome ? `<span class="m-iso-tipo">${esc(info.nome)}</span>` : ''}</div>` +
+    (presenti.length ? `<div class="m-iso-blocco"><div class="m-iso-lbl">Tipo</div><div class="m-iso-chips">${presenti.map(k => `<span class="m-iso-chip ${k}">${ISO[k][0]}</span>`).join('')}</div></div>` : '') +
+    (presenti.length ? `<div class="m-iso-dpi"><b>DPI:</b> ${presenti.map(k => esc(ISO[k][1].charAt(0).toLowerCase() + ISO[k][1].slice(1))).join(' · ')}</div>` : '') +
+    (haClostridium(germe) ? '<div class="m-iso-nota">Lavaggio mani con acqua e sapone: il gel idroalcolico non basta sulle spore.</div>' : '') +
+    (iso.testo ? `<div class="m-iso-consegne">Dalle consegne: ${esc(iso.testo)}</div>` : '');
+  document.getElementById('isolamento-modal-overlay').classList.add('show');
+}
+
 /* ---------- tocchi ---------- */
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
@@ -23422,7 +23519,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   if(a === 'indietro') tornaIndietro();
   else if(a === 'iso'){
     const p = loadPatients()[M.id];
-    apriIsolamentoModal(isolamentoPerLetto(M.letto, p ? statoScheda(M.id, p).isolamento : null));
+    apriIsolamento(isolamentoPerLetto(M.letto, p ? statoScheda(M.id, p).isolamento : null));
   }
   else if(a === 'sotto'){ el.classList.toggle('m-aperta'); el.nextElementSibling.classList.toggle('m-aperta'); }
   else if(a === 'app-azione'){ const orig = azioniApp[+el.dataset.a]; if(orig) orig.click(); }
@@ -23551,6 +23648,17 @@ sc.addEventListener('paste', e => {
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
 window.addEventListener('resize', muoviPill);
+// tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
+// (stessa sezione, stesso testo) e si anima solo lui
+document.addEventListener('click', e => {
+  const c = e.target.closest('#clinical-view .chip, .m-pagina .chip'); if(!c) return;
+  const sezione = c.closest('[id]'), testo = c.textContent.trim();
+  requestAnimationFrame(() => {
+    const nuovo = [...(sezione && sezione.isConnected ? sezione : document).querySelectorAll('.chip')].find(x => x.textContent.trim() === testo) || c;
+    nuovo.classList.add('m-tocco');
+    setTimeout(() => nuovo.classList.remove('m-tocco'), 450);
+  });
+}, true);
 // onda al tocco (Material) sui letti
 document.getElementById('m-app').addEventListener('pointerdown', e => {
   const t = e.target.closest('.m-letto:not(.m-nuovo-app)');
