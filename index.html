@@ -23647,13 +23647,16 @@ function tipoGerme(germe){
 function disegnoGerme(tipo){
   const { c1, c2 } = GERMI[tipo];
   const cocco = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c1}" stroke="${c2}" stroke-width="3"/><circle cx="${x - r * .35}" cy="${y - r * .35}" r="${r * .28}" fill="#fff" opacity=".7"/>`;
-  const bastone = (x, y, l, w, a, spora) => `<g transform="rotate(${a} ${x} ${y})"><rect x="${x - l / 2}" y="${y - w / 2}" width="${l}" height="${w}" rx="${w / 2}" fill="${c1}" stroke="${c2}" stroke-width="3"/>` +
+  // flagello: 1 dal polo destro, -1 dal sinistro; parte da sotto il bordo
+  // del bacillo, così resta attaccato anche ruotando
+  const bastone = (x, y, l, w, a, spora, flagello) => `<g transform="rotate(${a} ${x} ${y})">` +
+    (flagello ? `<path d="M${x + flagello * (l / 2 - 4)} ${y} q${flagello * 8} -10 ${flagello * 16} 0 t${flagello * 16} 0 t${flagello * 16} 0" fill="none" stroke="${c2}" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>` : '') +
+    `<rect x="${x - l / 2}" y="${y - w / 2}" width="${l}" height="${w}" rx="${w / 2}" fill="${c1}" stroke="${c2}" stroke-width="3"/>` +
     (spora ? `<ellipse cx="${x + l / 2 - w * .55}" cy="${y}" rx="${w * .42}" ry="${w * .36}" fill="${c2}" opacity=".85"/>` : `<rect x="${x - l / 2 + w * .35}" y="${y - w * .18}" width="${l * .45}" height="${w * .16}" rx="${w * .08}" fill="#fff" opacity=".6"/>`) + '</g>';
-  const flagello = (x, y, a) => `<path d="M${x} ${y} q8 -10 16 0 t16 0 t16 0" fill="none" stroke="${c2}" stroke-width="2.2" stroke-linecap="round" transform="rotate(${a} ${x} ${y})" opacity=".7"/>`;
   let g = '';
   if(tipo === 'grappolo') [[96,92,22],[136,84,20],[118,120,23],[78,128,19],[158,118,18],[100,158,20],[140,154,19],[60,94,16],[122,48,17]].forEach(([x,y,r]) => g += cocco(x, y, r));
   else if(tipo === 'catena') [[40,170,16],[64,150,16],[86,128,16],[106,104,16],[124,80,16],[140,56,16],[152,30,16]].forEach(([x,y,r]) => g += cocco(x, y, r)) , [[104,176,15],[128,160,15],[150,142,15],[170,122,15]].forEach(([x,y,r]) => g += cocco(x, y, r));
-  else if(tipo === 'gneg') g += flagello(150, 70, 30) + flagello(70, 150, 200) + bastone(110, 92, 92, 34, -32) + bastone(120, 150, 80, 30, 18) + bastone(60, 60, 64, 26, 70);
+  else if(tipo === 'gneg') g += bastone(110, 92, 92, 34, -32, false, 1) + bastone(120, 150, 80, 30, 18, false, -1) + bastone(60, 60, 64, 26, 70);
   else if(tipo === 'gpos') g += bastone(104, 84, 96, 34, -28) + bastone(130, 142, 90, 32, 12) + bastone(62, 132, 70, 28, 80);
   else if(tipo === 'clostridium') g += bastone(110, 88, 104, 34, -30, true) + bastone(124, 148, 92, 32, 14, true) + bastone(58, 128, 74, 28, 76, true);
   else if(tipo === 'micobatterio') [[100,80,-40],[120,96,-30],[86,118,-50],[132,130,-20],[110,150,-35],[150,104,-45]].forEach(([x,y,a]) => g += bastone(x, y, 70, 14, a));
