@@ -6688,6 +6688,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!pross.contains(document.activeElement)) pross.closest('.ric-voce')?.classList.remove('in-modifica');
   }, 120));
   // esame facoltativo aperto e lasciato vuoto: torna a essere solo "+ ..."
+  // su iPhone toccare fuori non toglie il focus: lo si toglie qui
+  view.addEventListener('pointerdown', (e) => {
+    const a = document.activeElement;
+    if(a && a.matches('.ric-pross-riga.opzionale textarea') && !a.value.trim() && !a.closest('.ric-pross-riga').contains(e.target)) a.blur();
+  });
   view.querySelectorAll('.ric-pross-riga.opzionale textarea').forEach(ta => ta.addEventListener('blur', () => {
     setTimeout(() => {
       const riga = ta.closest('.ric-pross-riga');
@@ -21761,8 +21766,16 @@ function comandiDisegna(){
     r.setAttribute('role', 'option');
     r.innerHTML = `<span class="comandi-cmd">${escapeHtml(v.cmd)}</span><span class="comandi-desc">${escapeHtml(v.desc)}</span><span class="comandi-tipo">${v.tipo}</span>`;
     // pointerdown + preventDefault: la textarea non perde il focus (su
-    // iPhone si chiuderebbe la tastiera e il blur nasconderebbe il menu)
-    r.addEventListener('pointerdown', (e) => { e.preventDefault(); comandiScegli(i); });
+    // iPhone si chiuderebbe la tastiera e il blur nasconderebbe il menu);
+    // si sceglie al rilascio e solo se il dito non si è mosso, così
+    // l'elenco si può scorrere (scorrendo arriva pointercancel)
+    r.addEventListener('pointerdown', (e) => { e.preventDefault(); r._giu = { x:e.clientX, y:e.clientY, top:menu.scrollTop }; });
+    r.addEventListener('pointercancel', () => { r._giu = null; });
+    r.addEventListener('pointerup', (e) => {
+      const g = r._giu; r._giu = null;
+      if(!g || Math.hypot(e.clientX - g.x, e.clientY - g.y) > 8 || Math.abs(menu.scrollTop - g.top) > 4) return;
+      e.preventDefault(); comandiScegli(i);
+    });
     menu.appendChild(r);
   });
   const p = comandiPosizioneCursore(st.el, st.fine);
@@ -22520,6 +22533,7 @@ function editorLettereSvuota(){
   .m-aggiungi button{ border:0; background:none; padding:4px 0; font:inherit; font-size:.82rem; font-weight:500; color:var(--m-muted); cursor:pointer; transition:color .2s, opacity .25s, transform .14s var(--m-molla); }
   .m-aggiungi button:active{ color:var(--m-ink); transform:scale(.94); }
   .m-aggiungi button.m-via{ opacity:0; transform:scale(.8); }
+  .m-riga.m-via{ opacity:0; transition:opacity .2s; }
   .m-s-piede{ position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--m-bg) 72%, transparent); }
   .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:12px; height:52px; background:var(--m-ink); color:#fff; font:inherit; font-weight:600; font-size:.95rem; cursor:pointer; transition:transform .16s var(--m-molla); }
   .m-copia:active{ transform:scale(.97); }
@@ -22540,6 +22554,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
   /* menu "/" degli strumenti, dentro la scheda: bianco, filo sottile, voci che scendono */
   html[data-ui="minimal"] #comandi-menu{ background:var(--m-bg); border:1px solid var(--m-line); border-radius:14px; box-shadow:0 12px 32px rgba(23,34,49,.12), 0 2px 6px rgba(23,34,49,.06); padding:4px; font-family:var(--m-scheda); overscroll-behavior:contain; transform-origin:50% 100%; }
+  @media (pointer:fine){ html[data-ui="minimal"] #comandi-menu{ scrollbar-width:thin; } }
   html[data-ui="minimal"] #comandi-menu.m-entra{ animation:m-menu .28s var(--m-molla) both; }
   html[data-ui="minimal"] #comandi-menu.m-entra .comandi-voce{ animation:m-compare .32s var(--m-molla) both; animation-delay:calc(var(--k) * 22ms + 40ms); }
   @keyframes m-menu{ from{ opacity:0; transform:translateY(6px) scale(.97); } to{ opacity:1; transform:none; } }
@@ -22771,10 +22786,10 @@ function editorLettereSvuota(){
   #m-settori .m-anello-in{ display:none; }
   #m-settori .m-anello p{ margin-top:10px; font-size:12px; }
   #m-settori .m-anello p > b:first-child{ color:var(--m-teal); font-weight:800; }
-  .m-lt-altri{ display:flex; flex-wrap:wrap; gap:7px; margin-top:22px; padding-right:12px; }
-  .m-lt-set{ min-width:36px; height:36px; padding:0 9px; border:0; border-radius:11px; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 3px 10px -5px rgba(23,34,49,.2); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
+  .m-lt-altri{ display:flex; gap:5px; width:100%; margin-top:22px; padding-right:10px; }
+  .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 3px 10px -5px rgba(23,34,49,.2); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
   .m-lt-set:active{ transform:scale(.9); }
-  .m-lt-set.m-scelto{ background:var(--m-ink); color:#fff; box-shadow:0 4px 12px -4px rgba(23,34,49,.45); }
+  .m-lt-set.m-scelto{ background:var(--m-teal); color:#fff; box-shadow:0 4px 12px -4px rgba(14,117,113,.55); }
   .m-rep-tit{ font-size:24.6px; font-weight:800; letter-spacing:-.025em; line-height:1.1; margin:2px 0 0; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
@@ -22805,15 +22820,17 @@ function editorLettereSvuota(){
   .m-rep-vitali{ margin-top:22px; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-teal); margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:rgba(255,255,255,.55); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 4px 14px -6px rgba(23,34,49,.2); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:rgba(255,255,255,.62); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 4px 14px -6px rgba(23,34,49,.2); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 2px 6px -3px rgba(23,34,49,.2); }
-  .m-tl.m-oggi-l{ background:rgba(14,117,113,.18); color:#0a5652; box-shadow:inset 0 0 0 1px rgba(14,117,113,.25), 0 6px 16px -6px rgba(14,117,113,.4); }
-  .m-tl.m-recente{ background:rgba(91,69,160,.15); color:#46318a; box-shadow:inset 0 0 0 1px rgba(91,69,160,.22), 0 4px 14px -6px rgba(91,69,160,.3); }
-  .m-tl.m-vecchio{ background:rgba(27,36,51,.07); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
+  .m-tl.m-oggi-l{ background:rgba(14,117,113,.27); color:#064844; box-shadow:inset 0 0 0 1px rgba(14,117,113,.32), 0 6px 16px -6px rgba(14,117,113,.4); }
+  .m-tl.m-recente{ background:rgba(91,69,160,.23); color:#3a2878; box-shadow:inset 0 0 0 1px rgba(91,69,160,.3), 0 4px 14px -6px rgba(91,69,160,.3); }
+  .m-tl.m-vecchio{ background:rgba(27,36,51,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
   .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px rgba(47,128,201,.7), 0 4px 14px -6px rgba(47,128,201,.4); }
-  .m-tl.m-critico{ background-color:rgba(106,31,176,.12); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.1) 0 3px, transparent 3px 9px); }
-  .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
+  .m-tl.m-critico{ background-color:rgba(106,31,176,.18); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
+  .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
+  /* letto segnato vuoto: non conta nell'anello */
+  .m-tl.m-vuoto{ background:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:inset 0 0 0 1.5px rgba(27,36,51,.1); color:var(--m-faint); }
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
   .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
   @keyframes m-tl-esce{ to{ opacity:0; transform:translateX(-8px) scale(.95); } }
@@ -23233,10 +23250,21 @@ function parlaLetto(i){
 }
 // letto material: il numero nel font del minimal, i colori e i pallini di
 // sempre; gli appoggi senza scheda si tolgono con la × (due tocchi)
+// letti segnati vuoti (pressione lunga su un letto senza scheda): per il
+// resto ogni letto si conta come pieno; il segno cade da solo quando il
+// letto riceve una scheda
+const VUOTI_KEY = 'eo_minimal_letti_vuoti_v1';
+function lettiVuoti(){ try{ return JSON.parse(localStorage.getItem(VUOTI_KEY)) || {}; } catch(e){ return {}; } }
+function segnaVuoto(nome, si){
+  const v = lettiVuoti();
+  if(si) v[nome] = 1; else delete v[nome];
+  try{ localStorage.setItem(VUOTI_KEY, JSON.stringify(v)); } catch(e){}
+}
 function tileLetto(nome, etichetta, k, appena, appoggio){
   const i = infoLetto(nome);
   const armato = appoggio && rimuoviAppoggioArmato === M.settore + '|' + nome;
-  return `<button class="m-tl ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
+  const vuoto = !appoggio && !i.occupato && lettiVuoti()[nome];
+  return `<button class="m-tl ${classiLetto(i)}${vuoto ? ' m-vuoto' : ''}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}"${appoggio ? ' data-ap="1"' : ''} aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
 }
 function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
@@ -23247,11 +23275,14 @@ function disegnaLetti(appena){
   $m('#m-appoggi').innerHTML = app.map((nome, k) => tileLetto(nome, inizialiLetto(nome), k, appena, true)).join('')
     + `<div class="m-tl m-tl-nuovo" style="--i:${app.length}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}</div>`;
   el.innerHTML = letti.map((n, k) => tileLetto(bedName(n), etichettaLetto(n), app.length + 1 + k, appena)).join('');
-  // anello: i letti visti oggi tra quelli occupati (appoggi compresi)
-  const info = [...letti.map(bedName), ...app].map(infoLetto).filter(i => i.occupato);
+  // anello: i letti visti oggi tra tutti quelli del settore (appoggi
+  // compresi), tolti quelli segnati vuoti
+  const vu = lettiVuoti();
+  const info = [...letti.map(n => [bedName(n), false]), ...app.map(n => [n, true])]
+    .map(([n, ap]) => [n, ap, infoLetto(n)]).filter(([n, ap, i]) => ap || i.occupato || !vu[n]).map(x => x[2]);
   const visti = info.filter(i => i.diOggi).length;
   aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, '',
-    info.length ? `<b>${Math.round(visti / info.length * 100)}%</b> visti · ${visti} su ${info.length}` : 'Nessun letto occupato');
+    info.length ? `<b>${Math.round(visti / info.length * 100)}%</b> visti · ${visti} su ${info.length}` : 'Tutti i letti sono vuoti');
 }
 // Diari: i letti con l'esame di oggi, divisi per settore (prima quello in
 // uso), in ciascuno gli appoggi per primi e poi i letti in ordine
@@ -23488,6 +23519,12 @@ function riga(id, nome, val, ph, nota){
     <div class="m-nota" data-nota="${esc(nota)}"><span>${esc(nota)}</span></div>
   </div>`;
 }
+function htmlAggiungi(altri){
+  return altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('') + '<button data-m="esame-altro" class="m-fisso">+ Altro</button>';
+}
+function disegnaAggiungi(){
+  const box = $m('.m-aggiungi'); if(box) box.innerHTML = htmlAggiungi(STRUM_ALTRI.filter(n => !D.ordine.includes(n)));
+}
 function rigaAltro(){
   return `<div class="m-riga m-riga-altro" data-riga="altro" data-m="riga">
     <input class="m-riga-nome m-nome-esame" data-campo="altro-nome" placeholder="Esame" aria-label="Nome dell'esame" autocapitalize="sentences">
@@ -23513,7 +23550,7 @@ function disegnaScheda(){
     <div class="m-lbl">Esami</div>
     ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
     ${presenti.map(rigaStrum).join('')}
-    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}<button data-m="esame-altro" class="m-fisso">+ Altro</button></div>
+    <div class="m-aggiungi">${htmlAggiungi(altri)}</div>
     <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
@@ -23646,7 +23683,16 @@ function chiudiRiga(r){
     D.ee = v.trim();
   } else {
     v = formattaStrumentale(v).replace(/^"|"$/g, '');
-    const n = id.slice(2); D.strum[n] = v;
+    const n = id.slice(2);
+    if(!v.trim()){
+      // esame lasciato vuoto: la riga sparisce e torna il suo "+"
+      delete D.strum[n]; D.ordine = D.ordine.filter(x => x !== n);
+      r.classList.add('m-via');
+      setTimeout(() => { r.remove(); disegnaAggiungi(); }, 220);
+      salvaOra(); pianificaAiuti();
+      return;
+    }
+    D.strum[n] = v;
     if(!D.ordine.includes(n)) D.ordine.push(n);
   }
   t.value = v; alza(t);
@@ -23686,7 +23732,9 @@ salvaDiarioDaBox = function(el, patientId, testo){
 
 // PRESSIONE LUNGA (come la × e il pallino del settore dell'app):
 // - su un letto con la scheda: diventa rosso; toccandolo ancora si elimina
-//   la scheda (un tocco altrove, o 4 secondi, annulla)
+//   la scheda (un tocco altrove, o 4 secondi, annulla) e il letto resta vuoto
+// - su un letto senza scheda: allo stesso modo lo si segna vuoto, e non
+//   conta più tra i letti da vedere; su uno già vuoto torna a contare
 // - su un settore: la finestra dell'app per svuotarlo, con la conferma
 let lettoDaEliminare = null, clickDaIgnorare = false;
 function disarmaElimina(){
@@ -23697,16 +23745,24 @@ function disarmaElimina(){
 }
 function armaElimina(el){
   disarmaElimina();
-  const nome = el.dataset.n, e = voce(nome); if(!e) return;
+  const nome = el.dataset.n, e = voce(nome), occupato = infoLetto(nome).occupato;
+  if(!occupato && lettiVuoti()[nome]){
+    segnaVuoto(nome, false);
+    try{ navigator.vibrate && navigator.vibrate(18); } catch(err){}
+    showToast(nome + ' conta di nuovo tra i letti');
+    disegnaLetti(); return;
+  }
   el.classList.add('m-elimina');
   el.insertAdjacentHTML('beforeend', '<span class="m-elimina-et">Elimina</span>');
-  lettoDaEliminare = { el, nome, id:e[0], t:setTimeout(disarmaElimina, 4000) };
+  lettoDaEliminare = { el, nome, id:occupato && e ? e[0] : null, t:setTimeout(disarmaElimina, 4000) };
   try{ navigator.vibrate && navigator.vibrate(18); } catch(err){}
-  showToast('Tocca di nuovo ' + nome + ' per eliminare la scheda');
+  showToast('Tocca di nuovo ' + nome + (lettoDaEliminare.id ? ' per eliminare la scheda' : ': è vuoto e non conta più'));
 }
 function confermaElimina(){
-  const { el, id } = lettoDaEliminare;
+  const { el, id, nome } = lettoDaEliminare;
   clearTimeout(lettoDaEliminare.t); lettoDaEliminare = null;
+  segnaVuoto(nome, true);
+  if(!id){ disarmaElimina(); el.classList.remove('m-elimina'); el.querySelector('.m-elimina-et')?.remove(); disegnaLetti(); return; }
   el.classList.add('m-via');
   aiutiMemoria.delete(id);
   // la stessa eliminazione della × di Reparto (il primo tocco la "arma",
@@ -23721,7 +23777,8 @@ function confermaElimina(){
     if(e.button > 0) return;
     const t = e.target.closest('[data-m="letto"], #m-settori button');
     if(!t || t.classList.contains('m-elimina') || e.target.closest('.m-togli')) return;
-    if(t.dataset.n && !infoLetto(t.dataset.n).occupato) return;
+    // un appoggio senza scheda si toglie con la ×
+    if(t.dataset.ap && !infoLetto(t.dataset.n).occupato) return;
     el = t; x0 = e.clientX; y0 = e.clientY;
     t.classList.add('m-premuto');
     timer = setTimeout(() => {
@@ -23929,6 +23986,12 @@ sc.addEventListener('focusout', e => {
   }
   if(t.id === 'm-eo'){ D.eo = t.value; salvaOra(); }
 });
+// su iPhone toccare fuori da una casella non la chiude: un esame aperto e
+// ancora vuoto si chiude (e sparisce) al primo tocco altrove
+sc.addEventListener('pointerdown', e => {
+  const a = document.activeElement;
+  if(a && a.matches('#m-s-corpo .m-riga textarea') && !a.value.trim() && !a.closest('.m-riga').contains(e.target)) a.blur();
+});
 sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.value.trim()) e.target.value = '- '; });
 sc.addEventListener('keydown', e => {
   const t = e.target;
@@ -24126,8 +24189,10 @@ function posizionaMenuScheda(){
   const p = comandiPosizioneCursore(st.el, st.fine);
   const riga = parseFloat(getComputedStyle(st.el).lineHeight) || 24;
   const sopraRiga = p.y - riga - 6;
-  const cTop = corpoScheda.getBoundingClientRect().top + 8;
   const vv = window.visualViewport;
+  // con la tastiera aperta iPhone può spostare la pagina: la parte visibile
+  // comincia più in basso della scheda, e il menu messo "sopra" finiva fuori
+  const cTop = Math.max(corpoScheda.getBoundingClientRect().top, vv ? vv.offsetTop : 0) + 8;
   const fondo = Math.min($m('#m-copia').getBoundingClientRect().top, vv ? vv.offsetTop + vv.height : innerHeight) - 8;
   menu.style.maxHeight = '';
   const h = Math.min(menu.scrollHeight + 2, 260);
@@ -24147,7 +24212,7 @@ function posizionaMenuScheda(){
   if(spazioSopra >= Math.min(h, 140) || spazioSopra >= spazioSotto){
     const hh = Math.min(h, Math.max(80, spazioSopra));
     menu.style.maxHeight = hh + 'px';
-    menu.style.top = (sopraRiga - hh) + 'px';
+    menu.style.top = Math.max(cTop, sopraRiga - hh) + 'px';
     menu.style.transformOrigin = '50% 100%';
   } else {
     menu.style.maxHeight = Math.min(h, Math.max(80, spazioSotto)) + 'px';
@@ -24176,6 +24241,7 @@ if(window.visualViewport) visualViewport.addEventListener('resize', posizionaMen
 // bassa (diari lunghi): il menu si chiudeva appena aperto. Con il menu
 // della scheda, lo scorrimento della pagina lo riposiziona soltanto
 window.addEventListener('scroll', e => {
+  if(e.target && e.target.id === 'comandi-menu') return;
   if(comandiStato && comandiStato.el.closest('#m-scheda')){ e.stopImmediatePropagation(); posizionaMenuScheda(); }
 }, { capture:true, passive:true });
 if(window.visualViewport) visualViewport.addEventListener('scroll', posizionaMenuScheda);
