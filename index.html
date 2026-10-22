@@ -22855,9 +22855,12 @@ function editorLettereSvuota(){
   #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ border:0; background:none; color:var(--m-muted); }
   #m-aggcons table.agg-cons .agg-cons-vuoto{ font-size:.84rem; color:var(--m-faint); }
   #m-aggcons table.agg-cons textarea.agg-cons-testo{ width:100%; border:0; border-radius:12px; background:var(--m-box); padding:9px 11px; font-family:var(--m-sans); font-size:.92rem; line-height:1.5; color:var(--m-ink); outline:none; box-shadow:inset 0 0 0 1.5px var(--m-teal); }
-  #m-aggcons table.agg-cons .agg-cons-azioni{ gap:8px; margin-top:10px; }
-  #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:6px 14px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
-  #m-aggcons table.agg-cons .agg-cons-azioni button:first-child{ background:var(--m-ink); color:#fff; }
+  /* Copia qui non serve (le etichette e le richieste si copiano da sole):
+     resta solo un piccolo "Esami" per vederli */
+  #m-aggcons table.agg-cons .agg-cons-azioni{ gap:6px; margin-top:8px; }
+  #m-aggcons table.agg-cons .agg-cons-azioni button:first-child{ display:none; }
+  #m-aggcons table.agg-cons .agg-cons-azioni:not(:has(button + button)){ display:none; }
+  #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:3px 10px; background:var(--m-box); color:var(--m-muted); font:inherit; font-size:.72rem; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
   #m-aggcons table.agg-cons .agg-cons-azioni button:active{ transform:scale(.94); }
   #m-aggcons table.agg-cons .agg-cons-esami{ margin-top:10px; padding:10px 12px; border:0; border-radius:12px; background:var(--m-box); color:var(--m-muted); font-size:.82rem; }
 </style>
