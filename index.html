@@ -22774,7 +22774,7 @@ function editorLettereSvuota(){
   #m-app:has(.m-rep) .m-bar{ background:rgba(255,255,255,.55); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
   .m-rep .m-anello-f{ stroke:rgba(255,255,255,.85); }
   .m-rep .m-rep-link{ background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9); }
-  .m-rep .m-tl-nuovo{ box-shadow:inset 0 0 0 2px rgba(27,36,51,.13); }
+  .m-rep .m-tl-nuovo{ box-shadow:inset 0 0 0 1.5px rgba(27,36,51,.12); }
   .m-rep-sx{ position:relative; padding-top:2px; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
   .m-lt-top{ margin:2px 0 0; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
@@ -22830,6 +22830,7 @@ function editorLettereSvuota(){
   .m-tl.m-vecchio{ background:rgba(27,36,51,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
   .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px rgba(47,128,201,.85), 0 4px 14px -6px rgba(47,128,201,.4); }
   .m-tl.m-critico{ background-color:rgba(106,31,176,.18); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
+  .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); }
   .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
   /* letto segnato vuoto: non conta nell'anello */
   .m-tl.m-vuoto{ background:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:inset 0 0 0 2px rgba(27,36,51,.12); color:var(--m-faint); }
@@ -22842,10 +22843,10 @@ function editorLettereSvuota(){
   .m-tl .m-togli{ top:-6px; right:-6px; background:#fff; box-shadow:0 1px 3px rgba(23,34,49,.18); color:var(--m-muted); }
   .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
   .m-tl.m-armato .m-togli{ background:var(--m-p-e); color:#fff; }
-  .m-tl-nuovo{ display:grid; place-items:center; background:none; box-shadow:inset 0 0 0 2px var(--m-line); color:var(--m-faint); }
+  .m-tl-nuovo{ display:grid; place-items:center; background:none; box-shadow:inset 0 0 0 1.5px var(--m-line); color:var(--m-faint); }
   .m-tl-nuovo svg{ width:18px; height:18px; transition:transform .4s var(--m-molla); }
   .m-tl-nuovo:active svg{ transform:rotate(90deg); }
-  .m-tl-nuovo.m-scrivi{ background:var(--m-teal-box); box-shadow:inset 0 0 0 2px var(--m-teal); }
+  .m-tl-nuovo.m-scrivi{ background:var(--m-teal-box); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
   .m-tl-nuovo input{ width:86%; border:0; background:none; outline:none; text-align:center; font:inherit; font-weight:700; font-size:.9rem; color:var(--m-teal); text-transform:uppercase; }
   .m-tl-nuovo input::placeholder{ color:var(--m-teal); opacity:.5; text-transform:none; font-weight:500; font-size:.72rem; }
 
