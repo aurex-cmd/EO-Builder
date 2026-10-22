@@ -23424,9 +23424,9 @@ function fineVisita(){
 // in vista c'è solo "Agli EE"; i referti si aggiungono dai pulsanti sotto
 // (anche "Altro", con il nome dell'esame scritto a mano). I nomi vecchi
 // (Rx addome, TC torace...) si riconoscono ancora nei diari già scritti
-const STRUM_ALTRI = ['TC cerebrale', 'TC total body con mdc', 'Rx torace', 'Ecografia addome', 'ECG', 'EGA'];
+const STRUM_ALTRI = ['TC cerebrale', 'TC total body con mdc', 'Rx torace', 'Ecografia addome', 'EGDS', 'ECG', 'EGA'];
 const STRUM_NOTI = [...STRUM_ALTRI, 'TC total body', 'Rx addome', 'TC torace', 'TC addome', 'TC encefalo'];
-const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|TC total body con mdc|TC total body|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|TC total body con mdc|TC total body|Ecografia addome|Eco addome|EGDS|ECG|EGA)\s*:\s*(.*)$/i;
 // referto di un esame "Altro": Nome: "testo". (le virgolette lo distinguono dai provvedimenti)
 const RE_ALTRO = /^\s*([^\s\-"][^:"\n]{0,40}?)\s*:\s*(".+")\.?\s*$/;
 const RE_EE = /^\s*-?\s*agli\s+ee\s*:?\s*(.*)$/i;
