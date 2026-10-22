@@ -22571,6 +22571,28 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
+  /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
+     la legenda la pagina non si sposta */
+  html[data-ui="minimal"]{ scrollbar-gutter:stable; }
+  /* pressione lunga: su un letto scritto lo fa diventare rosso (un altro
+     tocco elimina la scheda), su un settore chiede se svuotarlo */
+  .m-letto, .m-settori button{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .m-letto::before{ content:""; position:absolute; inset:0; background:rgba(217,83,79,.42); transform:scaleY(0); transform-origin:bottom; pointer-events:none; }
+  .m-letto.m-premuto::before{ transform:scaleY(1); transition:transform .55s linear .1s; }
+  .m-letto.m-elimina{ background:#d9534f !important; background-image:none !important; color:#fff !important; box-shadow:0 2px 10px rgba(217,83,79,.45) !important; animation:m-scelto .35s var(--m-molla); }
+  .m-letto.m-elimina::before{ display:none; }
+  .m-letto.m-elimina .m-pallini, .m-letto.m-elimina .m-spunta, .m-letto.m-elimina .m-togli{ display:none; }
+  .m-elimina-et{ position:absolute; left:0; right:0; bottom:7px; font-size:10.5px; font-weight:700; letter-spacing:.02em; }
+  .m-letto.m-via{ transform:scale(.6) !important; opacity:0; transition:transform .25s var(--m-molla), opacity .2s; }
+  .m-settori button.m-premuto{ color:#d9534f; transition:color .55s linear .1s; }
+  /* finestra "Svuota settore" in stile minimal */
+  html[data-ui="minimal"] #svuota-settore-overlay{ background:rgba(15,20,28,.32); backdrop-filter:none; -webkit-backdrop-filter:none; z-index:220; }
+  html[data-ui="minimal"] #svuota-settore-modal{ background:var(--m-bg); border:0; border-radius:22px; box-shadow:0 20px 50px rgba(15,20,28,.18); padding:20px 20px 18px; font-family:var(--m-scheda); animation:m-riquadro .36s var(--m-molla) both; }
+  html[data-ui="minimal"] #svuota-settore-modal h2{ font-family:var(--m-scheda); font-size:1.3rem; font-weight:800; letter-spacing:-.02em; }
+  html[data-ui="minimal"] #svuota-settore-modal .svuota-settore-x{ background:var(--m-box); border:0; box-shadow:none; color:var(--m-muted); width:30px; height:30px; font-size:13px; }
+  html[data-ui="minimal"] #svuota-settore-modal .isolamento-modal-riga{ font-size:15px; line-height:1.55; color:var(--m-ink); }
+  html[data-ui="minimal"] #svuota-settore-modal .btn{ border-radius:12px; box-shadow:none; font-family:var(--m-sans); font-weight:600; padding:10px 16px; border:1px solid var(--m-line); background:var(--m-bg); color:var(--m-ink); }
+  html[data-ui="minimal"] #svuota-settore-modal #svuota-settore-conferma{ background:#d9534f; border-color:#d9534f; color:#fff; }
   /* letti "material": riquadri pieni con ombra, che si abbassano al tocco */
   .m-letti{ gap:10px; }
   .m-letto{ border:0; border-radius:14px; background:#fff; color:var(--m-ink); font-weight:700; overflow:hidden; box-shadow:0 1px 2px rgba(23,34,49,.16), 0 2px 6px 1px rgba(23,34,49,.08); transition:transform .14s var(--m-molla), box-shadow .2s, background .3s, color .3s; }
@@ -22609,7 +22631,7 @@ function editorLettereSvuota(){
   /* home: i due ingressi restano fermi, scorre solo l'elenco sotto */
   .m-main.m-main-home{ padding-bottom:0; }
   .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
-  .m-home-su{ flex:none; display:flex; flex-direction:column; gap:14px; padding-bottom:4px; }
+  .m-home-su{ flex:none; display:flex; flex-direction:column; gap:14px; padding-bottom:16px; }
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px calc(28px + env(safe-area-inset-bottom,0px)); box-shadow:inset 0 1px 0 transparent; transition:box-shadow .25s; -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 24px), transparent); mask-image:linear-gradient(to bottom, #000 calc(100% - 24px), transparent); }
   .m-home-giu.m-scorso{ box-shadow:inset 0 1px 0 var(--m-line); }
   .m-home-giu .m-lbl{ margin:20px 0 2px; }
@@ -23327,6 +23349,71 @@ salvaDiarioDaBox = function(el, patientId, testo){
   }
   return salvaDiarioDaBoxApp.apply(this, arguments);
 };
+
+
+// PRESSIONE LUNGA (come la × e il pallino del settore dell'app):
+// - su un letto con la scheda: diventa rosso; toccandolo ancora si elimina
+//   la scheda (un tocco altrove, o 4 secondi, annulla)
+// - su un settore: la finestra dell'app per svuotarlo, con la conferma
+let lettoDaEliminare = null, clickDaIgnorare = false;
+function disarmaElimina(){
+  if(!lettoDaEliminare) return;
+  clearTimeout(lettoDaEliminare.t);
+  const el = lettoDaEliminare.el; lettoDaEliminare = null;
+  if(el.isConnected){ el.classList.remove('m-elimina'); el.querySelector('.m-elimina-et')?.remove(); }
+}
+function armaElimina(el){
+  disarmaElimina();
+  const nome = el.dataset.n, e = voce(nome); if(!e) return;
+  el.classList.add('m-elimina');
+  el.insertAdjacentHTML('beforeend', '<span class="m-elimina-et">Elimina</span>');
+  lettoDaEliminare = { el, nome, id:e[0], t:setTimeout(disarmaElimina, 4000) };
+  try{ navigator.vibrate && navigator.vibrate(18); } catch(err){}
+  showToast('Tocca di nuovo ' + nome + ' per eliminare la scheda');
+}
+function confermaElimina(){
+  const { el, id } = lettoDaEliminare;
+  clearTimeout(lettoDaEliminare.t); lettoDaEliminare = null;
+  el.classList.add('m-via');
+  aiutiMemoria.delete(id);
+  // la stessa eliminazione della × di Reparto (il primo tocco la "arma",
+  // il secondo elimina e la propaga agli altri dispositivi)
+  setTimeout(() => { eliminaSchedaDaLetto(id); eliminaSchedaDaLetto(id); }, 230);
+}
+(() => {
+  const app = document.getElementById('m-app');
+  let timer = null, el = null, x0 = 0, y0 = 0;
+  const annulla = () => { clearTimeout(timer); timer = null; if(el) el.classList.remove('m-premuto'); el = null; };
+  app.addEventListener('pointerdown', e => {
+    if(e.button > 0) return;
+    const t = e.target.closest('.m-letto[data-m="letto"], #m-settori button');
+    if(!t || t.classList.contains('m-elimina') || e.target.closest('.m-togli')) return;
+    if(t.matches('.m-letto') && !infoLetto(t.dataset.n).occupato) return;
+    el = t; x0 = e.clientX; y0 = e.clientY;
+    t.classList.add('m-premuto');
+    timer = setTimeout(() => {
+      const x = el; annulla();
+      clickDaIgnorare = true;
+      if(x.matches('.m-letto')) armaElimina(x);
+      else { try{ navigator.vibrate && navigator.vibrate(18); } catch(err){} apriSvuotaSettore(x.dataset.s); }
+    }, 650);
+  });
+  app.addEventListener('pointermove', e => { if(el && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) annulla(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => app.addEventListener(n, () => {
+    annulla();
+    if(clickDaIgnorare) setTimeout(() => { clickDaIgnorare = false; }, 450);
+  }));
+  app.addEventListener('contextmenu', e => { if(e.target.closest('.m-letto, #m-settori button')) e.preventDefault(); });
+  // prima degli altri tocchi: dopo una pressione lunga il click non apre il
+  // letto; con un letto rosso, toccarlo elimina e toccare altrove annulla
+  app.addEventListener('click', e => {
+    if(clickDaIgnorare){ clickDaIgnorare = false; e.stopImmediatePropagation(); e.preventDefault(); return; }
+    if(!lettoDaEliminare) return;
+    const t = e.target.closest('.m-letto');
+    e.stopImmediatePropagation(); e.preventDefault();
+    if(t && t === lettoDaEliminare.el) confermaElimina(); else disarmaElimina();
+  }, true);
+})();
 
 /* ---------- tocchi ---------- */
 document.getElementById('m-app').addEventListener('click', e => {
