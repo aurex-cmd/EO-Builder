@@ -22571,6 +22571,41 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
+  /* letti "material": riquadri pieni con ombra, che si abbassano al tocco */
+  .m-letti{ gap:10px; }
+  .m-letto{ border:0; border-radius:14px; background:#fff; color:var(--m-ink); font-weight:700; overflow:hidden; box-shadow:0 1px 2px rgba(23,34,49,.16), 0 2px 6px 1px rgba(23,34,49,.08); transition:transform .14s var(--m-molla), box-shadow .2s, background .3s, color .3s; }
+  .m-letto:active{ transform:scale(.96); box-shadow:0 1px 1px rgba(23,34,49,.14); }
+  .m-letto.m-oggi-l{ background:#cdebe7; color:#0a5652; box-shadow:0 1px 2px rgba(14,117,113,.28), 0 3px 8px 1px rgba(14,117,113,.16); }
+  .m-letto.m-recente{ background:#e2d9f7; color:#46318a; box-shadow:0 1px 2px rgba(91,69,160,.26), 0 3px 8px 1px rgba(91,69,160,.14); }
+  .m-letto.m-vecchio{ background:#e6e9ee; color:var(--m-ink); box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 5px rgba(23,34,49,.06); }
+  .m-letto.m-consegnato:not(.m-oggi-l){ border:0; background:#fff; color:var(--m-ink); box-shadow:inset 0 0 0 2px var(--m-blu), 0 2px 7px 1px rgba(47,128,201,.18); }
+  .m-letto.m-critico{ border:0; box-shadow:inset 0 0 0 2px var(--m-critico), 0 2px 8px 1px rgba(106,31,176,.2); }
+  .m-letto.m-armato{ border:0; box-shadow:inset 0 0 0 2px var(--m-p-e), 0 2px 6px rgba(217,105,95,.2); }
+  .m-letto.m-nuovo-app{ box-shadow:none; border:1.5px dashed #c3cad4; background:none; }
+  .m-legenda .m-letto{ box-shadow:0 1px 2px rgba(23,34,49,.14); }
+  .m-onda{ position:absolute; border-radius:50%; background:currentColor; opacity:.16; transform:scale(0); animation:m-onda .55s ease-out forwards; pointer-events:none; }
+  @keyframes m-onda{ to{ transform:scale(1); opacity:0; } }
+  .m-rigalink.m-vitali{ margin-top:4px; padding:12px 14px; border:0; border-radius:16px; background:#fff; box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 6px 1px rgba(23,34,49,.07); animation:none; }
+  .m-rigalink.m-vitali svg:first-child{ color:var(--m-teal); }
+  /* parametri vitali del settore: una scheda per letto */
+  html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:flex; flex-direction:column; gap:10px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ background:#fff; border:0; border-radius:16px; padding:10px 12px 8px; margin:0; box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 6px 1px rgba(23,34,49,.07); animation:m-compare .35s var(--m-molla) both; }
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ box-shadow:inset 0 0 0 2px var(--m-teal), 0 3px 10px 1px rgba(14,117,113,.16); }
+  html[data-ui="minimal"] #vitali-settore-view .riga-label{ font-family:var(--m-sans); font-size:14px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--m-ink); display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  html[data-ui="minimal"] #vitali-settore-view .riga-label .riga-stato{ font-size:11.5px; font-weight:500; color:var(--m-muted); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ background:none; border:0; box-shadow:none; padding:0; margin:0; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ font-family:var(--m-sans); font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--m-muted); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-scheda); font-size:21px; font-weight:700; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input:focus{ background:none; border:0; }
+  /* valori scritti: gli stessi colori dell'app (SpO₂ blu, PA arancio, FC rosso, TC viola) */
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:54px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input::placeholder{ color:var(--m-faint); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v .unit, html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa .sep{ font-family:var(--m-sans); color:var(--m-faint); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v:not(:last-child)::after{ background:var(--m-line); }
   /* home: i due ingressi restano fermi, scorre solo l'elenco sotto */
   .m-main.m-main-home{ padding-bottom:0; }
   .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
@@ -22734,7 +22769,10 @@ document.title = 'EO Minimal';
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
 const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni',
-  dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup' };
+  dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup', vitali:'Parametri vitali' };
+// la vista dell'app di ciascuna pagina ("vitali" è vitali-settore-view)
+const vistaPagina = v => document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v + '-view');
+const titoloPagina = v => v === 'vitali' ? 'Parametri vitali · ' + String(settoreVitali || '').replace(/^.*?(Settore\s+)/, '$1') : (PAGINE[v] || '');
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 const ICON = {
@@ -22747,6 +22785,7 @@ const ICON = {
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   copia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>',
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  vitali:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6.5 4 13 2-6.5h6"/></svg>',
   consegne:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 3h6v3H9zM8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>',
   ricoveri:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6M3 16h18M3 19v2M21 19v2"/><circle cx="7.5" cy="7" r="1.8"/></svg>',
   impostazioni:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
@@ -22815,7 +22854,7 @@ function disegna(verso){
   document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
   $m('#m-main').classList.toggle('m-main-home', M.vista === 'home');
-  if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(PAGINE[M.pag] || ''); mostraVista(M.pag); window.scrollTo(0, 0); return; }
+  if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); mostraVista(M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
@@ -22923,6 +22962,7 @@ function vSettore(){
     <div class="m-letti" id="m-letti"></div>
     <div class="m-lbl">Appoggi</div>
     <div class="m-letti" id="m-appoggi"></div>
+    <button class="m-rigalink m-vitali" data-m="vitali">${ICON.vitali}<span>Parametri vitali<small>PA, SpO₂, FC e TC di tutto il settore</small></span>${ICON.chev}</button>
     <button class="m-legenda-apri" data-m="legenda">Legenda ${ICON.giu}</button>
     <div class="m-legenda-wrap" id="m-legenda-wrap"><div><div class="m-legenda">${LEGENDA.map(([c, pal, t]) => `<span class="m-letto ${c}">12${pal}</span><span>${t}</span>`).join('')}</div></div></div>`;
   disegnaLetti();
@@ -23300,6 +23340,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'sotto'){ el.classList.toggle('m-aperta'); el.nextElementSibling.classList.toggle('m-aperta'); }
   else if(a === 'app-azione'){ const orig = azioniApp[+el.dataset.a]; if(orig) orig.click(); }
   else if(a === 'pagina') vai('app', { pag:el.dataset.p });
+  else if(a === 'vitali'){ settoreVitali = M.settore; vai('app', { pag:'vitali' }); }
   else if(a === 'togli-appoggio'){ e.stopPropagation(); rimuoviAppoggio(M.settore, el.dataset.n); }
   else if(a === 'nuovo-appoggio') nuovoAppoggio(el);
   else if(a === 'fatto') fineVisita();
@@ -23423,12 +23464,23 @@ sc.addEventListener('paste', e => {
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
 window.addEventListener('resize', muoviPill);
+// onda al tocco (Material) sui letti
+document.getElementById('m-app').addEventListener('pointerdown', e => {
+  const t = e.target.closest('.m-letto:not(.m-nuovo-app)');
+  if(!t || e.target.closest('.m-togli') || t.closest('.m-legenda')) return;
+  const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2;
+  const o = document.createElement('span');
+  o.className = 'm-onda';
+  o.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+  t.appendChild(o);
+  setTimeout(() => o.remove(), 650);
+});
 // GESTO INDIETRO: dal bordo sinistro verso destra la pagina segue il dito e,
 // lasciata oltre un terzo dello schermo (o con uno scatto), si torna indietro
 (() => {
   let x0 = null, y0 = 0, dx = 0, t0 = 0, attivo = false, el = null;
   const pagina = () => M.vista === 'eo' ? document.getElementById('clinical-view')
-    : M.vista === 'app' ? document.getElementById(M.pag + '-view') : $m('#m-main');
+    : M.vista === 'app' ? vistaPagina(M.pag) : $m('#m-main');
   document.addEventListener('touchstart', e => {
     x0 = null;
     if(M.vista === 'home' || sc.classList.contains('m-su') || e.touches.length !== 1) return;
@@ -23553,7 +23605,7 @@ corpoScheda.addEventListener('scroll', () => { if(!posizionaMenuScheda.dentro) p
 if(window.visualViewport) visualViewport.addEventListener('resize', posizionaMenuScheda);
 
 /* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
-Object.keys(PAGINE).forEach(v => document.getElementById(v + '-view').classList.add('m-pagina'));
+Object.keys(PAGINE).forEach(v => vistaPagina(v).classList.add('m-pagina'));
 // in minimal il tema non si sceglie (è sempre chiara); l'account, che
 // nell'app sta in Reparto, va in Impostazioni
 ['impostazioni-tema-chiaro'].forEach(id => { const g = document.getElementById(id)?.closest('.group'); if(g) g.style.display = 'none'; });
@@ -23644,8 +23696,8 @@ mostraVista = function(v){
   if(M.vista === 'home' && PAGINE[v]){ vai('app', { pag:v }); return r; }
   if(M.vista === 'app' && PAGINE[v]){
     M.pag = v;
-    const t = $m('#m-bar-t'); if(t) t.textContent = PAGINE[v];
-    const el = document.getElementById(v + '-view');
+    const t = $m('#m-bar-t'); if(t) t.textContent = titoloPagina(v);
+    const el = vistaPagina(v);
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     window.scrollTo(0, 0);
   }
