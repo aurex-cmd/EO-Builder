@@ -22793,11 +22793,10 @@ function editorLettereSvuota(){
   .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 3px 10px -5px rgba(23,34,49,.2); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
   .m-lt-set:active{ transform:scale(.9); }
   .m-lt-set.m-scelto{ background:var(--m-teal); color:#fff; box-shadow:0 4px 12px -4px rgba(14,117,113,.55); }
-  .m-rep-tit{ font-size:24.6px; font-weight:800; letter-spacing:-.025em; line-height:1.1; margin:2px 0 0; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
   .m-rep-sx{ display:flex; flex-direction:column; align-items:flex-start; }
-  .m-rep-sx:not(#m-settori) .m-anello{ position:static; margin-top:18px; }
+  .m-rep-sx:not(#m-settori) .m-anello{ position:static; margin-top:10px; }
   @keyframes m-anello-entra{ from{ opacity:0; transform:scale(.7); } to{ opacity:1; transform:none; } }
   .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
   .m-anello svg{ display:block; width:104px; height:104px; transform:rotate(-90deg); }
@@ -23186,7 +23185,7 @@ function vSettore(){
     ${we ? `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo" data-v="we" aria-pressed="${bento}">Consegne WE</button><button data-m="modo" data-v="settori" aria-pressed="${!bento}">Per settore</button></div>` : ''}
     ${bento ? '<div id="m-bento"></div>' : diari ? `
     <div class="m-rep">
-      <div class="m-rep-sx"><p class="m-rep-tit">Pazienti visti</p>${anelloHtml()}
+      <div class="m-rep-sx"><p class="m-lt-top">Pazienti visti</p>${anelloHtml()}
         <button class="m-rep-link" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
       <div class="m-rep-dx" id="m-diari-letti"></div>
     </div>` : `
