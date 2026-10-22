@@ -22597,6 +22597,12 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ font-family:var(--m-sans); font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--m-muted); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-scheda); font-size:21px; font-weight:700; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input:focus{ background:none; border:0; }
+  /* valori scritti: gli stessi colori dell'app (SpO₂ blu, PA arancio, FC rosso, TC viola) */
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:54px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input::placeholder{ color:var(--m-faint); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v .unit, html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa .sep{ font-family:var(--m-sans); color:var(--m-faint); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v:not(:last-child)::after{ background:var(--m-line); }
