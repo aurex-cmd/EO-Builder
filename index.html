@@ -23833,6 +23833,45 @@ sc.addEventListener('paste', e => {
   const fine = () => { if(y0 === null) return; sc.classList.remove('m-trascina'); sc.style.transform = ''; if(dy > 120) chiudiScheda(); y0 = null; };
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
+// ...e anche dal centro, come le finestre di iOS: col contenuto già in cima,
+// un trascinamento verso il basso porta giù la scheda invece di scorrere.
+// Non mentre si scrive nella casella toccata (lì il dito seleziona il testo)
+(() => {
+  const corpo = $m('#m-s-corpo');
+  let y0 = null, x0 = 0, dy = 0, attivo = false, frame = 0, vy = 0, tPrec = 0, yPrec = 0;
+  const sposta = () => { frame = 0; sc.style.transform = `translateY(${dy}px)`; };
+  corpo.addEventListener('touchstart', e => {
+    y0 = null;
+    if(e.touches.length !== 1 || corpo.scrollTop > 0 || e.target === document.activeElement && e.target.matches('textarea, input')) return;
+    const t = e.touches[0];
+    y0 = yPrec = t.clientY; x0 = t.clientX; dy = 0; vy = 0; tPrec = performance.now(); attivo = false;
+  }, { passive:true });
+  corpo.addEventListener('touchmove', e => {
+    if(y0 === null) return;
+    const t = e.touches[0], ddy = t.clientY - y0, ddx = t.clientX - x0;
+    if(!attivo){
+      if(ddy < -4 || Math.abs(ddx) > Math.abs(ddy) + 4 || corpo.scrollTop > 0){ y0 = null; return; }
+      if(ddy < 8) return;
+      attivo = true; sc.classList.add('m-trascina');
+      if(document.activeElement && corpo.contains(document.activeElement)) document.activeElement.blur();
+    }
+    const ora = performance.now();
+    vy = (t.clientY - yPrec) / Math.max(1, ora - tPrec); yPrec = t.clientY; tPrec = ora;
+    dy = Math.max(0, ddy - 8);
+    if(!frame) frame = requestAnimationFrame(sposta);
+    if(e.cancelable) e.preventDefault();
+  }, { passive:false });
+  const fine = () => {
+    if(y0 === null) return;
+    y0 = null;
+    if(!attivo) return;
+    attivo = false;
+    if(frame){ cancelAnimationFrame(frame); frame = 0; }
+    sc.classList.remove('m-trascina'); sc.style.transform = '';
+    if(dy > 120 || (vy > .5 && dy > 40)) chiudiScheda();
+  };
+  corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
+})();
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
 // (stessa sezione, stesso testo) e si anima solo lui
