@@ -22402,6 +22402,8 @@ function editorLettereSvuota(){
   .m-vista{ display:flex; flex-direction:column; gap:14px; }
   .m-vista.m-avanti{ animation:m-avanti .32s var(--m-molla) both; }
   .m-vista.m-indietro-anim{ animation:m-indietro .32s var(--m-molla) both; }
+  #m-vista.m-quieta :is(.m-rigalink, .m-letto:not(.m-appena, .m-elimina, .m-armato, .m-scrivi)){ animation:none; }
+  html[data-ui="minimal"] .m-pagina.m-quieta, html[data-ui="minimal"] #vitali-settore-view.m-quieta .vitali-riga{ animation:none; }
   @keyframes m-avanti{ from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:none; } }
   @keyframes m-indietro{ from{ opacity:0; transform:translateX(-20px); } to{ opacity:1; transform:none; } }
   @keyframes m-compare{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
@@ -22654,8 +22656,8 @@ function editorLettereSvuota(){
   .m-sotto > div > :last-child, .m-sotto > div > .m-sotto:last-child{ border-bottom:0; }
   .m-sotto.m-aperta > div > .m-rigalink{ animation:m-compare .3s var(--m-molla) both; }
   /* gesto indietro: la pagina segue il dito */
-  .m-segue{ transition:none !important; animation:none !important; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
-  .m-rilascia{ transition:transform .24s var(--m-molla) !important; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
+  .m-segue{ transition:none !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
+  .m-rilascia{ transition:transform .22s cubic-bezier(.2,.7,.3,1) !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
   html[data-ui="minimal"] body{ overscroll-behavior-x:none; }
   /* la "i" dell'isolamento nella scheda si tocca */
   button.m-pal{ border:0; padding:0; font-family:inherit; cursor:pointer; position:relative; transition:transform .15s var(--m-molla); }
@@ -22888,12 +22890,19 @@ function htmlPallini(i){
 
 /* ---------- navigazione ---------- */
 function vai(vista, opz){ M.pila.push({ vista:M.vista, letto:M.letto, id:M.id, pag:M.pag }); Object.assign(M, { vista }, opz || {}); disegna('m-avanti'); }
-function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p); disegna('m-indietro-anim'); }
+function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p); disegna(gestoIndietro ? '' : 'm-indietro-anim'); }
+// le entrate a cascata (righe della home, letti, pagine dell'app) partono
+// solo andando avanti e alla prima apertura: tornando indietro la pagina
+// ricompare ferma, e dal gesto senza nemmeno lo scorrimento
+let animaIngresso = true, gestoIndietro = false, quietaTimer = 0;
 // indietro dal pulsante della barra o dal gesto (dal bordo sinistro verso destra)
-function tornaIndietro(){
-  if(M.vista === 'eo') fineVisita();
-  else if(M.vista === 'app' && M.pag === 'ricovero-singolo') apriRicoveri();
-  else indietro();
+function tornaIndietro(gesto){
+  animaIngresso = false; gestoIndietro = !!gesto;
+  try{
+    if(M.vista === 'eo') fineVisita();
+    else if(M.vista === 'app' && M.pag === 'ricovero-singolo') apriRicoveri();
+    else indietro();
+  } finally { animaIngresso = true; gestoIndietro = false; }
 }
 function disegna(verso){
   const v = $m('#m-vista');
@@ -22905,6 +22914,13 @@ function disegna(verso){
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
   if(verso) v.classList.add(verso);
+  // a cascata solo andando avanti (o alla prima apertura); finita l'entrata
+  // la vista resta "quieta", così i ridisegni dei letti non la ripetono
+  const cascata = verso === 'm-avanti' || !M.giaAperta;
+  M.giaAperta = true;
+  clearTimeout(quietaTimer);
+  v.classList.toggle('m-quieta', !cascata);
+  if(cascata) quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
   window.scrollTo(0, 0);
   M.vista === 'home' ? vHome() : vSettore();
 }
@@ -23671,47 +23687,60 @@ document.getElementById('m-app').addEventListener('pointerdown', e => {
   setTimeout(() => o.remove(), 650);
 });
 // GESTO INDIETRO: dal bordo sinistro verso destra la pagina segue il dito e,
-// lasciata oltre un terzo dello schermo (o con uno scatto), si torna indietro
+// lasciata oltre un terzo dello schermo (o con uno scatto), si torna indietro.
+// Il touchmove non passivo si aggancia solo quando il dito parte dal bordo
+// (altrove lo scorrimento resta libero) e lo spostamento si applica una volta
+// per frame; la pagina di ritorno compare ferma, senza entrate animate
 (() => {
-  let x0 = null, y0 = 0, dx = 0, t0 = 0, attivo = false, el = null;
+  let x0 = null, y0 = 0, dx = 0, vx = 0, tPrec = 0, xPrec = 0, attivo = false, el = null, frame = 0;
   const pagina = () => M.vista === 'eo' ? document.getElementById('clinical-view')
     : M.vista === 'app' ? vistaPagina(M.pag) : $m('#m-main');
+  const sposta = () => { frame = 0; if(el) el.style.transform = `translate3d(${dx}px,0,0)`; };
+  const muovi = e => {
+    if(x0 === null) return;
+    const t = e.touches[0], ddx = t.clientX - x0, ddy = t.clientY - y0;
+    if(!attivo){
+      if(Math.abs(ddy) > 10 && Math.abs(ddy) > Math.abs(ddx)){ stacca(); return; }
+      if(ddx < 10) return;
+      attivo = true; el = pagina(); if(!el){ stacca(); return; }
+      el.classList.add('m-segue');
+    }
+    const ora = performance.now();
+    vx = (t.clientX - xPrec) / Math.max(1, ora - tPrec); xPrec = t.clientX; tPrec = ora;
+    dx = Math.max(0, ddx);
+    if(!frame) frame = requestAnimationFrame(sposta);
+    if(e.cancelable) e.preventDefault();
+  };
+  const stacca = () => { x0 = null; document.removeEventListener('touchmove', muovi, { passive:false }); };
   document.addEventListener('touchstart', e => {
-    x0 = null;
+    stacca();
     if(M.vista === 'home' || sc.classList.contains('m-su') || e.touches.length !== 1) return;
     if(document.querySelector('[id$="-overlay"].show, #comandi-menu.show')) return;
     const t = e.touches[0];
     if(t.clientX > 28) return;
-    x0 = t.clientX; y0 = t.clientY; dx = 0; t0 = performance.now(); attivo = false;
+    x0 = xPrec = t.clientX; y0 = t.clientY; dx = 0; vx = 0; tPrec = performance.now(); attivo = false;
+    document.addEventListener('touchmove', muovi, { passive:false });
   }, { passive:true });
-  document.addEventListener('touchmove', e => {
-    if(x0 === null) return;
-    const t = e.touches[0], ddx = t.clientX - x0, ddy = t.clientY - y0;
-    if(!attivo){
-      if(Math.abs(ddy) > 10 && Math.abs(ddy) > Math.abs(ddx)){ x0 = null; return; }
-      if(ddx < 10) return;
-      attivo = true; el = pagina(); if(!el){ x0 = null; return; }
-      el.classList.add('m-segue');
-    }
-    dx = Math.max(0, ddx);
-    el.style.transform = `translateX(${dx}px)`;
-    if(e.cancelable) e.preventDefault();
-  }, { passive:false });
   const fine = () => {
     if(x0 === null) return;
-    x0 = null;
+    stacca();
     if(!attivo) return;
-    const veloce = dx / Math.max(1, performance.now() - t0) > .5 && dx > 40;
-    const va = veloce || dx > innerWidth / 3;
-    const e2 = el;
+    if(frame){ cancelAnimationFrame(frame); frame = 0; }
+    const va = (vx > .45 && dx > 40) || (dx > innerWidth / 3 && vx > -.2);
+    const e2 = el; el = null;
     e2.classList.remove('m-segue'); e2.classList.add('m-rilascia');
-    e2.style.transform = va ? `translateX(${innerWidth}px)` : '';
-    setTimeout(() => {
+    e2.style.transform = va ? `translate3d(${innerWidth}px,0,0)` : '';
+    let finito = false;
+    const chiudi = () => {
+      if(finito) return; finito = true;
+      e2.removeEventListener('transitionend', chiudi);
       e2.classList.remove('m-rilascia');
-      if(va){ e2.style.visibility = 'hidden'; tornaIndietro(); }
+      if(va){ e2.style.visibility = 'hidden'; tornaIndietro(true); }
       e2.style.transform = '';
-      requestAnimationFrame(() => { e2.style.visibility = ''; });
-    }, va ? 220 : 260);
+      if(va) requestAnimationFrame(() => { e2.style.visibility = ''; });
+    };
+    e2.addEventListener('transitionend', chiudi);
+    setTimeout(chiudi, 260);
   };
   document.addEventListener('touchend', fine);
   document.addEventListener('touchcancel', fine);
@@ -23893,6 +23922,7 @@ mostraVista = function(v){
     M.pag = v;
     const t = $m('#m-bar-t'); if(t) t.textContent = titoloPagina(v);
     const el = vistaPagina(v);
+    el.classList.toggle('m-quieta', !animaIngresso);
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     window.scrollTo(0, 0);
   }
