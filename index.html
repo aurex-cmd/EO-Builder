@@ -22411,7 +22411,7 @@ function editorLettereSvuota(){
   .m-vista{ display:flex; flex-direction:column; gap:14px; }
   .m-vista.m-avanti{ animation:m-avanti .32s var(--m-molla) both; }
   .m-vista.m-indietro-anim{ animation:m-indietro .32s var(--m-molla) both; }
-  #m-vista.m-quieta :is(.m-rigalink, .m-lr:not(.m-appena, .m-elimina, .m-armato, .m-scrivi), .m-bt:not(.m-appena, .m-elimina), #m-aggcons tr){ animation:none; }
+  #m-vista.m-quieta :is(.m-rigalink, .m-tl:not(.m-appena, .m-elimina, .m-armato, .m-scrivi, .m-esce), .m-bt:not(.m-appena, .m-elimina), #m-aggcons tr){ animation:none; }
   html[data-ui="minimal"] .m-pagina.m-quieta, html[data-ui="minimal"] #vitali-settore-view.m-quieta .vitali-riga{ animation:none; }
   @keyframes m-avanti{ from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:none; } }
   @keyframes m-indietro{ from{ opacity:0; transform:translateX(-20px); } to{ opacity:1; transform:none; } }
@@ -22746,39 +22746,69 @@ function editorLettereSvuota(){
   .m-anim .m-vis .ric-stat-estremo .badge{ animation:m-pop .6s var(--m-molla) 1.1s both; }
   @media (prefers-reduced-motion:reduce){ #m-app *, #m-app *::before, #m-app *::after, .m-pagina *, .m-pagina *::before, .m-pagina *::after{ animation:none !important; transition:none !important; } .m-anim *{ opacity:1 !important; transform:none !important; } }
 
-  /* ELENCO PARLANTE (feriali): un letto per riga, con scritto cosa manca */
-  .m-elenco{ display:flex; flex-direction:column; border-top:1px solid var(--m-line); }
-  .m-lr{ position:relative; display:grid; grid-template-columns:4px 50px 1fr auto; align-items:center; column-gap:12px; min-height:56px; width:100%; padding:9px 2px 9px 0; border:0; border-bottom:1px solid var(--m-line); background:none; text-align:left; font:inherit; color:var(--m-ink); cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; transition:background .2s; animation:m-compare .32s var(--m-molla) both; animation-delay:calc(var(--i) * 22ms); }
-  .m-lr:active{ background:var(--m-box); }
-  .m-lr-barra{ align-self:stretch; width:4px; border-radius:2px; background:var(--m-line); margin:3px 0; transition:background .3s; }
-  .m-lr.m-s-oggi .m-lr-barra{ background:var(--m-teal); }
-  .m-lr.m-s-recente .m-lr-barra{ background:#8f78d6; }
-  .m-lr.m-s-vecchio .m-lr-barra{ background:#c3cad4; }
-  .m-lr.m-s-consegnato .m-lr-barra, .m-lr.m-s-cons .m-lr-barra{ background:var(--m-blu); }
-  .m-lr.m-s-critico .m-lr-barra{ background:var(--m-critico); }
-  .m-lr-n{ font-size:1.12rem; font-weight:750; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .m-lr-t{ min-width:0; font-size:.9rem; font-weight:600; line-height:1.3; }
-  .m-lr-t small{ display:block; margin-top:2px; font-size:.8rem; font-weight:400; color:var(--m-muted); line-height:1.35; }
-  .m-lr.m-s-oggi .m-lr-t{ color:var(--m-teal); } .m-lr.m-s-oggi .m-lr-t small{ color:#4f7d7a; }
-  .m-lr.m-s-critico .m-lr-t small, .m-lr.m-s-consegnato .m-lr-t small, .m-lr.m-s-cons .m-lr-t small{ color:var(--m-ink); }
-  .m-lr.m-lr-vuoto:not(.m-s-cons) :is(.m-lr-n, .m-lr-t){ color:var(--m-faint); font-weight:500; }
-  .m-lr-dx{ display:flex; align-items:center; gap:3px; }
-  .m-lr-dx .m-pal{ width:17px; height:17px; font-size:9.5px; box-shadow:none; }
-  .m-lr-dx .m-pal:is(.v, .es, .s, .c){ color:#1b2433; }
   .m-lr-ok{ width:19px; height:19px; border-radius:50%; background:var(--m-teal); color:#fff; display:grid; place-items:center; flex:none; }
   .m-lr-ok svg{ width:11px; height:11px; }
-  .m-lr .m-togli{ position:static; width:26px; height:26px; }
-  .m-lr .m-togli svg{ width:11px; height:11px; }
-  .m-lr.m-armato .m-togli{ background:var(--m-p-e); color:#fff; transform:scale(1.1); }
-  .m-lr.m-armato{ animation:m-scelto .35s var(--m-molla); }
-  .m-lr.m-appena{ animation:m-lr-lampo 1.2s ease-out; }
-  @keyframes m-lr-lampo{ 0%, 30%{ background:var(--m-teal-box); } 100%{ background:transparent; } }
-  .m-lr-nuovo{ display:flex; grid-template-columns:none; gap:10px; padding-left:16px; color:var(--m-muted); font-size:.9rem; font-weight:600; min-height:50px; }
-  .m-lr-nuovo svg{ width:18px; height:18px; transition:transform .4s var(--m-molla); }
-  .m-lr-nuovo:active svg{ transform:rotate(90deg); }
-  .m-lr-nuovo.m-scrivi{ background:var(--m-teal-box); animation:none; }
-  .m-lr-nuovo input{ width:100%; border:0; background:none; outline:none; font:inherit; font-weight:700; font-size:1rem; color:var(--m-teal); text-transform:uppercase; }
-  .m-lr-nuovo input::placeholder{ color:var(--m-teal); opacity:.5; text-transform:none; font-weight:500; }
+
+  /* VISITA e DIARI: settori (o "Pazienti visti") e anello a sinistra, letti a destra */
+  .m-rep{ display:grid; grid-template-columns:142px 1fr; margin-top:6px; }
+  .m-rep-sx{ position:relative; padding-top:2px; }
+  .m-rep-set{ position:absolute; left:0; top:0; border:0; background:none; padding:4px 0; font:inherit; font-size:17px; font-weight:700; letter-spacing:-.015em; color:var(--m-faint); white-space:nowrap; cursor:pointer; transform-origin:0 50%; transition:transform .6s var(--m-molla), color .45s; will-change:transform; -webkit-tap-highlight-color:transparent; }
+  .m-rep-set.m-scelto{ color:var(--m-ink); }
+  .m-rep-set:not(.m-scelto):active{ color:var(--m-muted); }
+  .m-rep-tit{ font-size:24.6px; font-weight:800; letter-spacing:-.025em; line-height:1.1; margin:2px 0 0; }
+  .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
+  .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
+  .m-rep-sx:not(#m-settori){ display:flex; flex-direction:column; align-items:flex-start; }
+  .m-rep-sx:not(#m-settori) .m-anello{ position:static; margin-top:18px; }
+  @keyframes m-anello-entra{ from{ opacity:0; transform:scale(.7); } to{ opacity:1; transform:none; } }
+  .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
+  .m-anello svg{ display:block; width:104px; height:104px; transform:rotate(-90deg); }
+  .m-anello-f{ fill:none; stroke:var(--m-box); stroke-width:9; }
+  .m-anello-a{ fill:none; stroke:var(--m-teal); stroke-width:9; stroke-linecap:round; stroke-dashoffset:276.5; transition:stroke-dashoffset 1s var(--m-molla); }
+  .m-anello-in{ position:absolute; inset:0; display:grid; place-items:center; }
+  .m-anello-in b{ display:block; font-size:24px; font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+  .m-anello-in b small{ font-size:13px; font-weight:700; }
+  .m-anello-in span{ display:block; margin-top:3px; font-size:10.5px; color:var(--m-muted); }
+  .m-anello p{ margin:8px 0 0; font-size:12px; line-height:1.45; color:var(--m-muted); font-variant-numeric:tabular-nums; }
+  .m-anello p b{ color:var(--m-ink); font-weight:700; }
+  .m-rep-link{ display:inline-flex; align-items:center; gap:3px; margin-top:16px; border:0; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:11.5px; font-weight:600; white-space:nowrap; padding:6px 6px 6px 10px; border-radius:999px; cursor:pointer; }
+  .m-rep-link .m-chev{ width:13px; height:13px; opacity:.5; }
+  .m-rep-link:active{ transform:scale(.95); }
+  .m-rep-dx{ position:relative; min-width:0; padding:2px 0 8px 14px; }
+  .m-rep-dx::before{ content:""; position:absolute; left:0; top:4px; bottom:0; width:1px; background:var(--m-line); transform-origin:top; }
+  .m-rep.m-entra .m-rep-dx::before{ animation:m-linea .6s var(--m-molla) both; }
+  @keyframes m-linea{ from{ transform:scaleY(0); } }
+  .m-rep-lbl{ margin:0 0 8px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-griglia + .m-rep-lbl{ margin-top:20px; }
+  .m-rep-sett{ font-size:15px; font-weight:800; letter-spacing:-.01em; text-transform:none; color:var(--m-ink); }
+  .m-rep-vuoto{ font-size:13.5px; color:var(--m-muted); line-height:1.45; padding-top:6px; }
+  .m-rep-vitali{ margin-top:22px; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-teal); margin-right:2px; }
+  .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
+  /* letto material */
+  .m-tl{ position:relative; height:50px; border:0; border-radius:13px; background:#fff; color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:0 1px 2px rgba(23,34,49,.16), 0 2px 6px 1px rgba(23,34,49,.08); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
+  @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
+  .m-tl:active{ transform:scale(.94); box-shadow:0 1px 1px rgba(23,34,49,.14); }
+  .m-tl.m-oggi-l{ background:#cdebe7; color:#0a5652; box-shadow:0 1px 2px rgba(14,117,113,.28), 0 3px 8px 1px rgba(14,117,113,.16); }
+  .m-tl.m-recente{ background:#e2d9f7; color:#46318a; box-shadow:0 1px 2px rgba(91,69,160,.26), 0 3px 8px 1px rgba(91,69,160,.14); }
+  .m-tl.m-vecchio{ background:#e6e9ee; box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 5px rgba(23,34,49,.06); }
+  .m-tl.m-consegnato:not(.m-oggi-l){ background:#fff; box-shadow:inset 0 0 0 2px var(--m-blu), 0 2px 7px 1px rgba(47,128,201,.18); }
+  .m-tl.m-critico{ box-shadow:inset 0 0 0 2px var(--m-critico), 0 2px 8px 1px rgba(106,31,176,.2); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.12) 0 3px, transparent 3px 9px); }
+  .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
+  .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
+  .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
+  @keyframes m-tl-esce{ to{ opacity:0; transform:translateX(-8px) scale(.95); } }
+  .m-tl .m-pallini.m-basso{ right:-5px; bottom:-5px; }
+  .m-tl .m-pallini.m-alto{ left:-4px; top:-5px; }
+  .m-tl .m-spunta{ top:-5px; right:-5px; }
+  .m-tl .m-togli{ top:-6px; right:-6px; background:#fff; box-shadow:0 1px 3px rgba(23,34,49,.18); color:var(--m-muted); }
+  .m-tl.m-armato{ box-shadow:inset 0 0 0 2px var(--m-p-e); color:var(--m-p-e); }
+  .m-tl.m-armato .m-togli{ background:var(--m-p-e); color:#fff; }
+  .m-tl-nuovo{ display:grid; place-items:center; background:none; box-shadow:inset 0 0 0 1.5px var(--m-line); color:var(--m-faint); }
+  .m-tl-nuovo svg{ width:18px; height:18px; transition:transform .4s var(--m-molla); }
+  .m-tl-nuovo:active svg{ transform:rotate(90deg); }
+  .m-tl-nuovo.m-scrivi{ background:var(--m-teal-box); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
+  .m-tl-nuovo input{ width:86%; border:0; background:none; outline:none; text-align:center; font:inherit; font-weight:700; font-size:.9rem; color:var(--m-teal); text-transform:uppercase; }
+  .m-tl-nuovo input::placeholder{ color:var(--m-teal); opacity:.5; text-transform:none; font-weight:500; font-size:.72rem; }
 
   /* BENTO (weekend e festivi con le consegne): tutto il reparto per priorità */
   .m-settori.m-modo{ margin-bottom:2px; }
@@ -22821,16 +22851,18 @@ function editorLettereSvuota(){
   .m-bento-fatto svg{ width:18px; height:18px; flex:none; }
 
   /* pressione lunga su un letto (righe e riquadri): si riempie di rosso */
-  :is(.m-lr, .m-bt), .m-settori button{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
-  :is(.m-lr, .m-bt)::before{ content:""; position:absolute; inset:0; background:rgba(217,83,79,.32); transform:scaleX(0); transform-origin:left; pointer-events:none; }
-  :is(.m-lr, .m-bt).m-premuto::before{ transform:scaleX(1); transition:transform .55s linear .1s; }
-  :is(.m-lr, .m-bt).m-elimina{ background:#d9534f !important; color:#fff !important; animation:m-scelto .35s var(--m-molla); }
-  :is(.m-lr, .m-bt).m-elimina *{ color:#fff !important; }
-  :is(.m-lr, .m-bt).m-elimina::before, :is(.m-lr, .m-bt).m-elimina :is(.m-pal, .m-lr-ok, .m-togli, .m-bt-pp){ display:none; }
-  .m-lr.m-elimina .m-lr-barra{ visibility:hidden; }
+  :is(.m-tl, .m-bt), .m-settori button{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  :is(.m-tl, .m-bt)::before{ content:""; position:absolute; inset:0; background:rgba(217,83,79,.32); transform:scaleX(0); transform-origin:left; pointer-events:none; }
+  :is(.m-tl, .m-bt).m-premuto::before{ transform:scaleX(1); transition:transform .55s linear .1s; }
+  :is(.m-tl, .m-bt).m-elimina{ background:#d9534f !important; color:#fff !important; animation:m-scelto .35s var(--m-molla); }
+  :is(.m-tl, .m-bt).m-elimina *{ color:#fff !important; }
+  :is(.m-tl, .m-bt).m-elimina::before, :is(.m-tl, .m-bt).m-elimina :is(.m-pal, .m-lr-ok, .m-togli, .m-bt-pp){ display:none; }
+  .m-tl.m-elimina{ box-shadow:0 2px 10px rgba(217,83,79,.45); }
   .m-elimina-et{ position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:.8rem; font-weight:700; }
+  .m-tl::before{ border-radius:inherit; }
+  .m-tl .m-elimina-et{ left:0; right:0; top:auto; bottom:3px; transform:none; text-align:center; font-size:9.5px; }
   .m-bt .m-elimina-et{ top:auto; bottom:8px; transform:none; right:10px; }
-  :is(.m-lr, .m-bt).m-via{ transform:scale(.92) !important; opacity:0; transition:transform .25s var(--m-molla), opacity .2s; }
+  :is(.m-tl, .m-bt).m-via{ transform:scale(.92) !important; opacity:0; transition:transform .25s var(--m-molla), opacity .2s; }
 
   /* AGGIORNA CONSEGNE: la tabella di Diari, una scheda per letto */
   .m-aggcons-vuoto{ margin:8px 0 0; padding:16px; border-radius:16px; background:var(--m-box); color:var(--m-muted); font-size:.9rem; }
@@ -23078,27 +23110,72 @@ function rigaHome(pag, titolo, sotto, conta){
 // manca. Weekend e festivi con le consegne caricate: il Bento di tutto il
 // reparto, dove i letti da vedere sono grandi e dicono perché (si può
 // sempre tornare ai settori)
-function modoBento(){ return !M.perSettore && consegneWeekendAttive(); }
+// VISITA: a sinistra i settori; quello scelto sale in alto, più grande, con
+// sotto l'anello dei letti visti oggi, gli altri scendono in grigio; a
+// destra, oltre una linea sottile, i letti del settore (appoggi per primi).
+// Weekend e festivi con le consegne caricate: il Bento di tutto il reparto.
+// DIARI: a sinistra "Pazienti visti" con l'anello dei diari copiati; a
+// destra i letti visti oggi, divisi per settore
+function modoBento(){ return M.vista === 'visita' && !M.perSettore && consegneWeekendAttive(); }
+const nomeSettore = s => s.replace(/^.*?(Settore\s+)/, '$1');
+function anelloHtml(){
+  return `<div class="m-anello" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div><p id="m-anello-t"></p></div>`;
+}
+const ANELLO_C = 2 * Math.PI * 44;
+// l'arco scorre fino al nuovo valore e la percentuale conta insieme a lui
+function aggiornaAnello(p, sotto, testo){
+  const a = $m('#m-anello-a'), el = $m('#m-anello-p'); if(!a || !el) return;
+  a.style.strokeDasharray = ANELLO_C;
+  requestAnimationFrame(() => { a.style.strokeDashoffset = ANELLO_C * (1 - p / 100); });
+  const da = el.dataset.v ? +el.dataset.v : 0, t0 = performance.now();
+  el.dataset.v = p;
+  cancelAnimationFrame(el._f);
+  const passo = t => { const k = Math.min(1, (t - t0) / 800), e = 1 - Math.pow(1 - k, 3); el.innerHTML = Math.round(da + (p - da) * e) + '<small>%</small>'; if(k < 1) el._f = requestAnimationFrame(passo); };
+  el._f = requestAnimationFrame(passo);
+  $m('#m-anello-s').textContent = sotto;
+  $m('#m-anello-t').innerHTML = testo;
+}
 function vSettore(){
-  const diari = M.vista === 'diari', bento = modoBento(), we = consegneWeekendAttive();
+  const diari = M.vista === 'diari', bento = modoBento(), we = !diari && consegneWeekendAttive();
   barra('');
   const ss = settori();
   if(!ss.includes(M.settore)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   $m('#m-vista').innerHTML = `
     <h2 class="m-h2">${diari ? 'Diari' : 'Visita'}</h2>
     ${we ? `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo" data-v="we" aria-pressed="${bento}">Consegne WE</button><button data-m="modo" data-v="settori" aria-pressed="${!bento}">Per settore</button></div>` : ''}
-    ${bento ? '<div id="m-bento"></div>' : `
-    <div class="m-settori" id="m-settori"><span class="m-pill"></span>${ss.map(s => `<button data-m="settore" data-s="${esc(s)}" aria-pressed="${s === M.settore}">${esc(s.replace(/^.*?(Settore\s+)/, '$1'))}</button>`).join('')}</div>
-    <div class="m-elenco" id="m-letti"></div>
-    <div class="m-lbl">Appoggi</div>
-    <div class="m-elenco" id="m-appoggi"></div>`}
-    ${diari ? `<button class="m-rigalink m-vitali" data-m="aggcons">${ICON.consegne}<span>Aggiorna consegne<small>I diari di oggi, già abbreviati, da copiare</small></span>${ICON.chev}</button>` : ''}
-    ${bento ? '' : `<button class="m-rigalink m-vitali" data-m="vitali">${ICON.vitali}<span>Parametri vitali<small>PA, SpO₂, FC e TC di tutto il settore</small></span>${ICON.chev}</button>`}`;
+    ${bento ? '<div id="m-bento"></div>' : diari ? `
+    <div class="m-rep">
+      <div class="m-rep-sx"><p class="m-rep-tit">Pazienti visti</p>${anelloHtml()}
+        <button class="m-rep-link" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
+      <div class="m-rep-dx" id="m-diari-letti"></div>
+    </div>` : `
+    <div class="m-rep">
+      <div class="m-rep-sx" id="m-settori">${ss.map(s => `<button class="m-rep-set" data-m="settore" data-s="${esc(s)}">${esc(nomeSettore(s))}</button>`).join('')}${anelloHtml()}</div>
+      <div class="m-rep-dx"><p class="m-rep-lbl">Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl">Letti</p><div class="m-griglia" id="m-letti"></div>
+        <button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button></div>
+    </div>`}`;
+  posizionaSettori();
   disegnaLetti();
+  // l'anello e la linea entrano solo all'apertura, non a ogni cambio di settore
+  const rep = $m('.m-rep');
+  if(rep && $m('#m-vista').classList.contains('m-quieta') === false){ rep.classList.add('m-entra'); setTimeout(() => rep.classList.remove('m-entra'), 1000); }
   requestAnimationFrame(muoviPill);
 }
+// i settori sono posizionati a mano (transform), così ogni spostamento è
+// una transizione: il settore scelto in alto e più grande, l'anello sotto
+// di lui, gli altri più giù, piccoli e in grigio
+function posizionaSettori(){
+  const box = $m('#m-settori'); if(!box) return;
+  const altri = [...box.querySelectorAll('.m-rep-set')].filter(b => b.dataset.s !== M.settore);
+  box.querySelectorAll('.m-rep-set').forEach(b => {
+    const su = b.dataset.s === M.settore;
+    b.classList.toggle('m-scelto', su);
+    b.setAttribute('aria-pressed', su);
+    b.style.transform = su ? 'translateY(0) scale(1.45)' : `translateY(${222 + altri.indexOf(b) * 44}px)`;
+  });
+  box.style.minHeight = (222 + altri.length * 44 + 8) + 'px';
+}
 function muoviPill(){
-  const box = $m('#m-settori'); if(box) spostaPill(box, [...box.querySelectorAll('button')].find(b => b.dataset.s === M.settore));
   const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'));
   const rt = $m('#m-ric-tab'); if(rt) spostaPill(rt, rt.querySelector('[aria-pressed="true"]'));
 }
@@ -23130,25 +23207,45 @@ function parlaLetto(i){
   const dett = d.join(' · ');
   return { t, c, dett: dett && dett[0].toUpperCase() + dett.slice(1) };
 }
-function rigaLetto(nome, etichetta, k, appena, appoggio){
-  const i = infoLetto(nome), x = parlaLetto(i);
+// letto material: il numero nel font del minimal, i colori e i pallini di
+// sempre; gli appoggi senza scheda si tolgono con la × (due tocchi)
+function tileLetto(nome, etichetta, k, appena, appoggio){
+  const i = infoLetto(nome);
   const armato = appoggio && rimuoviAppoggioArmato === M.settore + '|' + nome;
-  const cons = (i.consegne || []).map(l => `<i class="m-pal ${classePalCons(l)}">${l}</i>`).join('');
-  const dx = cons + palliniBasso(i) + (i.copiato ? `<span class="m-lr-ok">${ICON.ok}</span>` : '')
-    + (appoggio && !i.occupato ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : '');
-  return `<button class="m-lr ${x.c}${i.occupato ? '' : ' m-lr-vuoto'}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 14)}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}"><span class="m-lr-barra"></span><b class="m-lr-n">${esc(etichetta)}</b><span class="m-lr-t">${x.t}${x.dett ? `<small>${esc(x.dett)}</small>` : ''}</span><span class="m-lr-dx">${dx}</span></button>`;
+  return `<button class="m-tl ${classiLetto(i)}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}" aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
 }
 function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
   if($m('#m-bento')){ disegnaBento(appena); return; }
+  if($m('#m-diari-letti')){ disegnaDiari(appena); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
-  const letti = getWardMap()[M.settore] || [];
-  el.innerHTML = letti.map((n, k) => rigaLetto(bedName(n), etichettaLetto(n), k, appena)).join('');
-  // appoggi: come i letti; quelli senza scheda si tolgono con la × (due tocchi, come in Reparto)
-  const ap = $m('#m-appoggi'); if(!ap) return;
-  ap.innerHTML = (loadAppoggi()[M.settore] || []).map((nome, k) => rigaLetto(nome, inizialiLetto(nome), letti.length + k, appena, true)).join('')
-    + `<div class="m-lr m-lr-nuovo" style="--i:${Math.min(letti.length + 1, 14)}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}<span>Aggiungi appoggio</span></div>`;
-  if(M.vista === 'diari') preparaAiuti();
+  const letti = getWardMap()[M.settore] || [], app = loadAppoggi()[M.settore] || [];
+  $m('#m-appoggi').innerHTML = app.map((nome, k) => tileLetto(nome, inizialiLetto(nome), k, appena, true)).join('')
+    + `<div class="m-tl m-tl-nuovo" style="--i:${app.length}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}</div>`;
+  el.innerHTML = letti.map((n, k) => tileLetto(bedName(n), etichettaLetto(n), app.length + 1 + k, appena)).join('');
+  // anello: i letti visti oggi tra quelli occupati (appoggi compresi)
+  const info = [...letti.map(bedName), ...app].map(infoLetto).filter(i => i.occupato);
+  const visti = info.filter(i => i.diOggi).length;
+  aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, 'visti oggi',
+    info.length ? `<b>${visti}</b> su <b>${info.length}</b> letti occupati` : 'Nessun letto occupato');
+}
+// Diari: i letti con l'esame di oggi, divisi per settore (prima quello in
+// uso), in ciascuno gli appoggi per primi e poi i letti in ordine
+function disegnaDiari(appena){
+  const box = $m('#m-diari-letti'); if(!box) return;
+  const wm = getWardMap(), apAll = loadAppoggi();
+  const ss = settori().slice().sort((a, b) => (b === M.settore) - (a === M.settore));
+  let k = 0, tot = 0, cop = 0;
+  const gruppi = ss.map(s => {
+    const voci = [...(apAll[s] || []).map(nome => [nome, inizialiLetto(nome)]), ...(wm[s] || []).map(n => [bedName(n), etichettaLetto(n)])]
+      .filter(([nome]) => infoLetto(nome).diOggi);
+    voci.forEach(([nome]) => { tot++; if(infoLetto(nome).copiato) cop++; });
+    return voci.length ? `<p class="m-rep-lbl m-rep-sett">${esc(nomeSettore(s))}</p><div class="m-griglia">${voci.map(([nome, et]) => tileLetto(nome, et, k++, appena)).join('')}</div>` : '';
+  }).join('');
+  box.innerHTML = gruppi || '<p class="m-rep-vuoto">Nessun diario di oggi: si parte da Visita.</p>';
+  aggiornaAnello(tot ? Math.round(cop / tot * 100) : 0, 'copiati',
+    tot ? `<b>${tot}</b> visti oggi<br><b>${tot - cop}</b> da copiare` : 'Ancora nessuno');
+  preparaAiuti();
 }
 // BENTO: tutti i letti del reparto (e gli appoggi), divisi per priorità.
 // Da vedere: consegnati o critici senza un esame di oggi (grandi, con la
@@ -23438,7 +23535,9 @@ function pianificaAiuti(primaVolta){
 let codaAiuti = [];
 function preparaAiuti(){
   const ps = loadPatients();
-  codaAiuti = (getWardMap()[M.settore] || []).map(bedName).concat(loadAppoggi()[M.settore] || [])
+  // in Diari i letti mostrati (quelli visti oggi, di tutti i settori)
+  const mostrati = [...document.querySelectorAll('#m-diari-letti [data-n]')].map(t => t.dataset.n);
+  codaAiuti = (mostrati.length ? mostrati : (getWardMap()[M.settore] || []).map(bedName).concat(loadAppoggi()[M.settore] || []))
     .map(n => Object.keys(ps).find(id => ps[id].name === n)).filter(id => id && schedaHaDati(ps[id].state));
   const passo = scadenza => {
     while(codaAiuti.length && M.vista === 'diari' && !$m('#m-scheda').classList.contains('m-su')){
@@ -23721,8 +23820,11 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'settore'){
     if(el.dataset.s === M.settore) return;
     M.settore = el.dataset.s;
-    document.querySelectorAll('#m-settori button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === M.settore));
-    muoviPill(); disegnaLetti();
+    posizionaSettori();
+    // i letti del settore di prima escono, quelli nuovi entrano a cascata
+    const v = $m('#m-vista');
+    document.querySelectorAll('#m-letti .m-tl, #m-appoggi .m-tl').forEach(t => t.classList.add('m-esce'));
+    setTimeout(() => { v.classList.remove('m-quieta'); disegnaLetti(); clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000); }, 170);
   }
   else if(a === 'modo'){
     const perSettore = el.dataset.v === 'settori';
@@ -23895,7 +23997,7 @@ document.addEventListener('click', e => {
 }, true);
 // onda al tocco (Material) sui letti, righe e riquadri
 document.getElementById('m-app').addEventListener('pointerdown', e => {
-  const t = e.target.closest('.m-bt, .m-lr:not(.m-lr-nuovo)');
+  const t = e.target.closest('.m-bt, .m-tl:not(.m-tl-nuovo)');
   if(!t || e.target.closest('.m-togli')) return;
   const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2;
   const o = document.createElement('span');
