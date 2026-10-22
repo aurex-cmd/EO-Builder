@@ -4318,6 +4318,18 @@ if(UI_MINIMAL){
   applicaTema('chiaro');
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
+  // icona e nome propri ("Aggiungi a Home" prende quelli della pagina aperta)
+  const testa = document.head;
+  testa.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]').forEach(l => l.remove());
+  [['apple-touch-icon', 'minimal/apple-touch-icon-180.png'], ['icon', 'minimal/favicon.svg'], ['icon', 'minimal/favicon-32.png'], ['manifest', 'minimal/manifest.webmanifest']].forEach(([rel, href]) => {
+    const l = document.createElement('link'); l.rel = rel; l.href = href;
+    if(href.endsWith('.svg')) l.type = 'image/svg+xml';
+    if(href.endsWith('-32.png')) l.sizes = '32x32';
+    testa.appendChild(l);
+  });
+  testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'EO Minimal';
+  testa.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = 'default';
+  testa.querySelector('meta[name="theme-color"]').content = '#ffffff';
 }
 </script>
 </head>
@@ -22760,11 +22772,11 @@ function editorLettereSvuota(){
   .m-settori button[aria-pressed="true"]{ color:var(--m-ink); }
 
   .m-letti{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  .m-letto{ position:relative; height:64px; padding:0 0 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-bg); color:var(--m-muted); font-family:inherit; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; cursor:pointer; transition:transform .14s var(--m-molla), background .3s, color .3s, border-color .3s; animation:m-compare .34s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms); }
+  .m-letto{ position:relative; height:64px; padding:0 0 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-bg); color:var(--m-ink); font-family:inherit; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; cursor:pointer; transition:transform .14s var(--m-molla), background .3s, color .3s, border-color .3s; animation:m-compare .34s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms); }
   .m-letto:active{ transform:scale(.93); }
   .m-letto.m-oggi-l{ background:var(--m-teal-box); border-color:transparent; color:var(--m-teal); font-weight:700; }
   .m-letto.m-recente{ background:var(--m-viola-box); border-color:transparent; color:var(--m-viola); font-weight:700; }
-  .m-letto.m-vecchio{ background:var(--m-box); border-color:transparent; color:var(--m-muted); }
+  .m-letto.m-vecchio{ background:var(--m-box); border-color:transparent; color:var(--m-ink); }
   .m-letto.m-consegnato:not(.m-oggi-l){ background:var(--m-bg); border:1.5px solid var(--m-blu); color:var(--m-ink); }
   .m-letto.m-critico{ border:1.5px solid var(--m-critico); color:var(--m-ink); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
   .m-letto.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
@@ -22848,6 +22860,9 @@ function editorLettereSvuota(){
   .m-blocco:focus-within::after, .m-riga:focus-within::after{ transform:scaleX(1); }
   .m-riga{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; column-gap:10px; padding:12px 2px; border-bottom:1px solid var(--m-line); cursor:text; transition:background .25s; animation:m-compare .3s var(--m-molla) both; }
   .m-riga-nome{ font-weight:600; font-size:.93rem; white-space:nowrap; cursor:pointer; }
+  input.m-nome-esame{ width:7.5em; border:0; background:none; padding:0; margin:0; font:inherit; font-weight:600; font-size:.93rem; color:var(--m-ink); outline:none; box-shadow:none; cursor:text; }
+  input.m-nome-esame::placeholder{ color:var(--m-faint); font-weight:500; }
+  .m-riga-altro{ animation:m-compare .3s var(--m-molla) both; }
   .m-riga textarea.m-testo{ font-size:.93rem; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
   .m-riga.m-vuota{ cursor:pointer; }
   .m-riga.m-vuota textarea.m-testo{ display:none; }
@@ -22892,6 +22907,49 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
+  /* home: i due ingressi restano fermi, scorre solo l'elenco sotto */
+  .m-main.m-main-home{ padding-bottom:0; }
+  .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
+  .m-home-su{ flex:none; display:flex; flex-direction:column; gap:14px; padding-bottom:4px; }
+  .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px calc(28px + env(safe-area-inset-bottom,0px)); box-shadow:inset 0 1px 0 transparent; transition:box-shadow .25s; -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 24px), transparent); mask-image:linear-gradient(to bottom, #000 calc(100% - 24px), transparent); }
+  .m-home-giu.m-scorso{ box-shadow:inset 0 1px 0 var(--m-line); }
+  .m-home-giu .m-lbl{ margin:20px 0 2px; }
+  .m-home-giu .m-lbl:first-child{ margin-top:10px; }
+  .m-home-giu .m-piede{ margin-top:22px; }
+  .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
+  .m-rigalink svg.m-ic-app .pieno{ fill:currentColor; stroke:none; opacity:.28; }
+  .m-rigalink.m-sub{ font-size:14.2px; font-weight:500; padding:9px 0; animation:none; }
+  .m-rigalink.m-sub svg.m-ic-app{ display:none; }
+  .m-apri-sotto .m-chev{ transition:transform .35s var(--m-molla); }
+  .m-apri-sotto.m-aperta .m-chev{ transform:rotate(90deg); }
+  .m-apri-sotto.m-aperta{ border-bottom-color:transparent; }
+  .m-sotto{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--m-molla); }
+  .m-sotto.m-aperta{ grid-template-rows:1fr; border-bottom:1px solid var(--m-line); }
+  .m-sotto > div{ overflow:hidden; padding-left:38px; }
+  .m-sotto .m-sotto > div{ padding-left:14px; }
+  .m-sotto .m-rigalink{ border-bottom:1px solid var(--m-line); }
+  .m-sotto > div > :last-child, .m-sotto > div > .m-sotto:last-child{ border-bottom:0; }
+  .m-sotto.m-aperta > div > .m-rigalink{ animation:m-compare .3s var(--m-molla) both; }
+  /* gesto indietro: la pagina segue il dito */
+  .m-segue{ transition:none !important; animation:none !important; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
+  .m-rilascia{ transition:transform .24s var(--m-molla) !important; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
+  html[data-ui="minimal"] body{ overscroll-behavior-x:none; }
+  /* la "i" dell'isolamento nella scheda si tocca */
+  button.m-pal{ border:0; padding:0; font-family:inherit; cursor:pointer; position:relative; transition:transform .15s var(--m-molla); }
+  button.m-pal::after{ content:""; position:absolute; inset:-9px; }
+  button.m-pal:active{ transform:scale(.85); }
+  .m-s-titolo .m-pal-tocca{ box-shadow:0 0 0 0 currentColor; animation:m-alone 1.6s ease-out .6s 1; }
+  @keyframes m-alone{ 0%{ box-shadow:0 0 0 0 rgba(224,160,58,.55); } 100%{ box-shadow:0 0 0 9px rgba(224,160,58,0); } }
+  /* riquadro dell'isolamento (germe e DPI) in stile minimal */
+  html[data-ui="minimal"] #isolamento-modal-overlay{ background:rgba(15,20,28,.32); backdrop-filter:none; -webkit-backdrop-filter:none; }
+  html[data-ui="minimal"] #isolamento-modal{ background:var(--m-bg); border:0; border-radius:22px; box-shadow:0 20px 50px rgba(15,20,28,.18); padding:20px 20px 22px; font-family:var(--m-scheda); animation:m-riquadro .36s var(--m-molla) both; }
+  @keyframes m-riquadro{ from{ opacity:0; transform:translateY(10px) scale(.96); } to{ opacity:1; transform:none; } }
+  html[data-ui="minimal"] .isolamento-modal-header{ align-items:center; margin-bottom:14px; }
+  html[data-ui="minimal"] .isolamento-modal-header h2{ font-family:var(--m-scheda); font-size:1.3rem; font-weight:800; letter-spacing:-.02em; color:var(--m-ink); }
+  html[data-ui="minimal"] #isolamento-chiudi-btn{ background:var(--m-box); border:0; box-shadow:none; color:var(--m-muted); width:30px; height:30px; font-size:13px; }
+  html[data-ui="minimal"] .isolamento-modal-riga, html[data-ui="minimal"] .isolamento-modal-dpi{ font-size:15px; line-height:1.55; color:var(--m-ink); }
+  html[data-ui="minimal"] .isolamento-modal-riga{ padding:8px 0; border-bottom:1px solid var(--m-line); margin:0; }
+  html[data-ui="minimal"] .isolamento-modal-nota{ color:var(--m-teal); font-size:13.5px; }
   /* home: le voci sotto i due ingressi, come l'elenco "Consulta" di Osteoclick */
   .m-righe{ display:flex; flex-direction:column; }
   .m-rigalink{ display:flex; align-items:center; gap:12px; width:100%; border:0; border-bottom:1px solid var(--m-line); background:none; padding:10px 0; text-align:left; font:inherit; font-size:15.2px; font-weight:600; color:var(--m-ink); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 45ms + 90ms); }
@@ -23011,7 +23069,8 @@ document.title = 'EO Minimal';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
-const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni' };
+const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni',
+  dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup' };
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 const ICON = {
@@ -23064,10 +23123,11 @@ function classiLetto(i){
   if(i.pall.dimOggi) c.push('m-dimesso');
   return c.join(' ');
 }
-function palliniBasso(i, cls){
+function palliniBasso(i, tocca){
   return [i.pall.esamiDomani && '<i class="m-pal e" title="Esami di controllo domani">E</i>',
     (i.pall.dimOggi || i.pall.dimDomani) && `<i class="m-pal d" title="Dimissione ${i.pall.dimOggi ? 'oggi' : 'domani'}">D</i>`,
-    i.iso && `<i class="m-pal ${i.iso}" title="Isolamento">i</i>`].filter(Boolean).join('');
+    // nella scheda la "i" si tocca: germe e DPI (lo stesso riquadro di Diari)
+    i.iso && (tocca ? `<button type="button" class="m-pal m-pal-tocca ${i.iso}" data-m="iso" aria-label="Isolamento: germe e DPI">i</button>` : `<i class="m-pal ${i.iso}" title="Isolamento">i</i>`)].filter(Boolean).join('');
 }
 function htmlPallini(i){
   const basso = palliniBasso(i);
@@ -23080,10 +23140,17 @@ function htmlPallini(i){
 /* ---------- navigazione ---------- */
 function vai(vista, opz){ M.pila.push({ vista:M.vista, letto:M.letto, id:M.id, pag:M.pag }); Object.assign(M, { vista }, opz || {}); disegna('m-avanti'); }
 function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p); disegna('m-indietro-anim'); }
+// indietro dal pulsante della barra o dal gesto (dal bordo sinistro verso destra)
+function tornaIndietro(){
+  if(M.vista === 'eo') fineVisita();
+  else if(M.vista === 'app' && M.pag === 'ricovero-singolo') apriRicoveri();
+  else indietro();
+}
 function disegna(verso){
   const v = $m('#m-vista');
   document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
+  $m('#m-main').classList.toggle('m-main-home', M.vista === 'home');
   if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(PAGINE[M.pag] || ''); mostraVista(M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
@@ -23107,19 +23174,60 @@ function vHome(){
   const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
   const ricOggi = ric.filter(r => isOggi(r.creatoIl)).length;
+  azioniApp = [];
   $m('#m-vista').innerHTML = `
-    <h1 class="m-h1">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
-    <div class="m-rule"></div>
-    <p class="m-sub">Il giro di oggi, letto per letto.</p>
-    <div class="m-ingressi">
-      <button class="m-ingresso m-i-visita" data-m="visita"><span class="m-ic">${ICON.steto}</span><span class="m-t"><b>Visita</b><small>Esame obiettivo al letto del paziente</small></span>${ICON.chev}</button>
-      <button class="m-ingresso m-i-diari" data-m="diari"><span class="m-ic">${ICON.diario}</span><span class="m-t"><b>Diari</b><small>Referti e provvedimenti di oggi</small></span>${ICON.chev}</button>
+    <div class="m-home-su">
+      <h1 class="m-h1">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
+      <div class="m-rule"></div>
+      <p class="m-sub">Il giro di oggi, letto per letto.</p>
+      <div class="m-ingressi">
+        <button class="m-ingresso m-i-visita" data-m="visita"><span class="m-ic">${ICON.steto}</span><span class="m-t"><b>Visita</b><small>Esame obiettivo al letto del paziente</small></span>${ICON.chev}</button>
+        <button class="m-ingresso m-i-diari" data-m="diari"><span class="m-ic">${ICON.diario}</span><span class="m-t"><b>Diari</b><small>Referti e provvedimenti di oggi</small></span>${ICON.chev}</button>
+      </div>
+      <p class="m-oggi"><b>${pz.length}</b> visitati oggi · <b>${pz.length - copiati}</b> da copiare · <b>${copiati}</b> copiati</p>
     </div>
-    <p class="m-oggi"><b>${pz.length}</b> visitati oggi · <b>${pz.length - copiati}</b> da copiare · <b>${copiati}</b> copiati</p>
-    <p class="m-lbl">Reparto</p>
-    <div class="m-righe">${rigaHome('consegne', 'Consegne', consegnati ? `${consegnati} lett${consegnati === 1 ? 'o' : 'i'} con qualcosa da fare` : 'Incolla le consegne del weekend', consegnati)}${rigaHome('ricoveri', 'Ricoveri', ricOggi ? `${ricOggi} oggi · ${ric.length} in tutto, con le statistiche` : `${ric.length} in tutto, con le statistiche`)}${rigaHome('impostazioni', 'Impostazioni', 'Account, testo, tag e reparto')}</div>
-    <p class="m-piede">Strumenti clinici e tutto il resto: <a href="./">app completa</a></p>`;
-  document.querySelectorAll('#m-vista .m-rigalink').forEach((el, k) => el.style.setProperty('--i', k));
+    <div class="m-home-giu" id="m-home-giu">
+      <p class="m-lbl">Reparto</p>
+      <div class="m-righe">${rigaHome('consegne', 'Consegne', consegnati ? `${consegnati} lett${consegnati === 1 ? 'o' : 'i'} con qualcosa da fare` : 'Incolla le consegne del weekend', consegnati)}${rigaHome('ricoveri', 'Ricoveri', ricOggi ? `${ricOggi} oggi · ${ric.length} in tutto, con le statistiche` : `${ric.length} in tutto, con le statistiche`)}${righeApp('Reparto', /consegne/)}</div>
+      <p class="m-lbl">Clinici</p>
+      <div class="m-righe">${righeApp('Clinici')}</div>
+      <p class="m-lbl">Sistema</p>
+      <div class="m-righe">${rigaHome('impostazioni', 'Impostazioni', 'Account, testo, tag e reparto')}${righeApp('Sistema', /impostazioni/)}</div>
+      <p class="m-piede">Tutto com'era: <a href="./">app completa</a></p>
+    </div>`;
+  document.querySelectorAll('#m-vista .m-righe > .m-rigalink').forEach((el, k) => el.style.setProperty('--i', Math.min(k, 8)));
+  const giu = $m('#m-home-giu');
+  giu.addEventListener('scroll', () => giu.classList.toggle('m-scorso', giu.scrollTop > 2), { passive:true });
+}
+
+// le voci di Strumenti dell'app (gruppi Reparto, Clinici, Sistema), lette
+// dalla sua pagina: toccarne una "tocca" la voce originale, così si apre lo
+// stesso strumento (le pagine finiscono sotto la barra minimal, vedi
+// mostraVista più sotto). Box farmaci e Score si aprono qui sotto
+let azioniApp = [];
+function righeApp(gruppo, escludi){
+  const g = [...document.querySelectorAll('#app-view .strumenti-gruppo')].find(x => x.textContent.trim() === gruppo);
+  const lista = g && g.parentElement.querySelector('.ric-lista-minimale');
+  return lista ? righeDa(lista, 0, escludi) : '';
+}
+function righeDa(contenitore, livello, escludi){
+  const figli = [...contenitore.children];
+  return figli.map((el, k) => {
+    if(!el.classList.contains('ric-lista-riga')) return '';
+    const oc = el.getAttribute('onclick') || '';
+    if(escludi && escludi.test(oc)) return '';
+    const nome = el.querySelector('.ric-lista-nome');
+    const svg = nome && nome.querySelector('svg');
+    const titolo = esc((nome ? nome.textContent : el.textContent).replace('•', '').trim());
+    const ic = svg ? svg.outerHTML.replace(/class="[^"]*"/, 'class="m-ic-app" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"') : '';
+    const conta = (el.querySelector('.pd-conteggio') || {}).textContent;
+    const cls = 'm-rigalink' + (livello ? ' m-sub' : '');
+    if(/^toggle/.test(oc) && figli[k + 1] && !figli[k + 1].classList.contains('ric-lista-riga')){
+      return `<button class="${cls} m-apri-sotto" data-m="sotto">${ic}<span>${titolo}</span>${ICON.chev}</button><div class="m-sotto"><div>${righeDa(figli[k + 1], livello + 1)}</div></div>`;
+    }
+    const n = azioniApp.push(el) - 1;
+    return `<button class="${cls}" data-m="app-azione" data-a="${n}">${ic}<span>${titolo}</span>${conta && conta.trim() ? `<span class="m-conta">${esc(conta.trim())}</span>` : ''}${livello ? '' : ICON.chev}</button>`;
+  }).join('');
 }
 
 function rigaHome(pag, titolo, sotto, conta){
@@ -23221,12 +23329,17 @@ function fineVisita(){
 // il diario è un testo solo: esame obiettivo, riga vuota, aggiunte. Le
 // aggiunte si dividono in "Agli EE", referti strumentali e il resto
 // (provvedimenti); riscrivendo si ricompone nello stesso ordine
-const STRUM_FISSI = ['Rx torace', 'TC cerebrale'];
-const STRUM_ALTRI = ['Rx addome', 'TC torace', 'TC addome', 'Ecografia addome', 'ECG', 'EGA'];
-const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+// in vista c'è solo "Agli EE"; i referti si aggiungono dai pulsanti sotto
+// (anche "Altro", con il nome dell'esame scritto a mano). I nomi vecchi
+// (Rx addome, TC torace...) si riconoscono ancora nei diari già scritti
+const STRUM_ALTRI = ['TC cerebrale', 'TC total body con mdc', 'Rx torace', 'Ecografia addome', 'ECG', 'EGA'];
+const STRUM_NOTI = [...STRUM_ALTRI, 'TC total body', 'Rx addome', 'TC torace', 'TC addome', 'TC encefalo'];
+const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|TC total body con mdc|TC total body|Ecografia addome|Eco addome|ECG|EGA)\s*:\s*(.*)$/i;
+// referto di un esame "Altro": Nome: "testo". (le virgolette lo distinguono dai provvedimenti)
+const RE_ALTRO = /^\s*([^\s\-"][^:"\n]{0,40}?)\s*:\s*(".+")\.?\s*$/;
 const RE_EE = /^\s*-?\s*agli\s+ee\s*:?\s*(.*)$/i;
 const SENZA_VIRGOLETTE = /^(ECG|EGA)$/i;
-function nomeStrum(n){ const all = [...STRUM_FISSI, ...STRUM_ALTRI, 'TC encefalo']; return all.find(x => x.toLowerCase() === n.toLowerCase()) || n; }
+function nomeStrum(n){ return STRUM_NOTI.find(x => x.toLowerCase() === n.toLowerCase()) || (n.toLowerCase() === 'eco addome' ? 'Ecografia addome' : n); }
 function leggiDiario(id){
   const p = loadPatients()[id]; if(!p) return null;
   const testo = getRefertoFor(statoScheda(id, p));
@@ -23237,7 +23350,7 @@ function leggiDiario(id){
   extra.split('\n').forEach(r => {
     let m;
     if(!d.ee && (m = r.match(RE_EE))){ d.ee = m[1].trim().replace(/[.;\s]+$/, ''); return; }
-    if((m = r.match(RE_STRUM))){
+    if((m = r.match(RE_STRUM)) || (m = r.match(RE_ALTRO))){
       const n = nomeStrum(m[1]); d.strum[n] = m[2].trim().replace(/\.$/, '').replace(/^"(.*)"\.?$/, '$1').replace(/^"|"$/g, ''); if(!d.ordine.includes(n)) d.ordine.push(n); return;
     }
     d.provv.push(r);
@@ -23248,7 +23361,7 @@ function leggiDiario(id){
 function componi(d){
   const righe = [];
   if(d.ee.trim()) righe.push(`Agli EE: ${d.ee.trim().replace(/[.,;\s]+$/, '')}.`);
-  [...STRUM_FISSI, ...d.ordine.filter(n => !STRUM_FISSI.includes(n))].forEach(n => {
+  d.ordine.forEach(n => {
     const t = formattaStrumentale(d.strum[n] || '').replace(/^"|"$/g, '');
     if(t) righe.push(`${n}: ${SENZA_VIRGOLETTE.test(n) ? t : '"' + t + '"'}.`.replace(/\.(["]?)\.$/, '.$1'));
   });
@@ -23303,6 +23416,14 @@ function riga(id, nome, val, ph, nota){
     <div class="m-nota" data-nota="${esc(nota)}"><span>${esc(nota)}</span></div>
   </div>`;
 }
+function rigaAltro(){
+  return `<div class="m-riga m-riga-altro" data-riga="altro" data-m="riga">
+    <input class="m-riga-nome m-nome-esame" data-campo="altro-nome" placeholder="Esame" aria-label="Nome dell'esame" autocapitalize="sentences">
+    <textarea class="m-testo" rows="1" data-campo="s:altro" placeholder="Referto" aria-label="Referto"></textarea>
+    ${ICON.piu}
+    <div class="m-nota" data-nota="Nome dell'esame, poi il referto."><span>Nome dell'esame, poi il referto.</span></div>
+  </div>`;
+}
 function rigaStrum(n){
   return riga('s:' + n, n, formattaStrumentale(D.strum[n] || ''), 'Incolla o scrivi il referto',
     SENZA_VIRGOLETTE.test(n) ? 'Si riporta così come lo scrivi.' : 'Un referto su più righe va su una riga sola.');
@@ -23312,7 +23433,7 @@ function disegnaScheda(){
   $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato oggi' : 'Da copiare'}</span></div>
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
-  const presenti = [...STRUM_FISSI, ...D.ordine.filter(n => !STRUM_FISSI.includes(n))];
+  const presenti = D.ordine;
   $m('#m-s-corpo').innerHTML = `
     <div class="m-aiuti" id="m-aiuti"></div>
     <div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
@@ -23320,7 +23441,7 @@ function disegnaScheda(){
     <div class="m-lbl">Esami</div>
     ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
     ${presenti.map(rigaStrum).join('')}
-    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>
+    <div class="m-aggiungi">${altri.map(n => `<button data-m="altro" data-x="${esc(n)}">+ ${esc(n)}</button>`).join('')}<button data-m="esame-altro" class="m-fisso">+ Altro</button></div>
     <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
@@ -23341,7 +23462,7 @@ function disegnaAiuti(primaVolta){
   const extra = (statoScheda(M.id, p).outputExtra || '');
   const i = infoLetto(M.letto);
   i.pall = pallinidataLetto(p, M.id, extra);
-  const pal = palliniBasso(i);
+  const pal = palliniBasso(i, true);
   const sp = $m('#m-s-pallini');
   if(sp && sp.innerHTML !== pal){ sp.innerHTML = pal; if(!primaVolta) sp.querySelectorAll('.m-pal').forEach(x => x.classList.add('m-nuovo')); }
   const box = $m('#m-aiuti'); if(!box) return;
@@ -23379,6 +23500,23 @@ function apriRiga(r){
 function chiudiRiga(r){
   const t = r.querySelector('textarea'), id = r.dataset.riga;
   const nota = r.querySelector('.m-nota'), ns = nota.firstElementChild;
+  if(id === 'altro'){
+    // esame "Altro": col nome scritto diventa una riga come le altre
+    const nomeScritto = r.querySelector('input').value.replace(/[:"]/g, '').trim();
+    const testo = formattaStrumentale(t.value).replace(/^"|"$/g, '');
+    if(!testo.trim()){ if(!nomeScritto) r.remove(); return; }
+    const n = nomeStrum(nomeScritto || 'Altro');
+    D.strum[n] = D.strum[n] && D.strum[n].trim() ? D.strum[n] + ' ' + testo : testo;
+    if(!D.ordine.includes(n)) D.ordine.push(n);
+    const tmp = document.createElement('div'); tmp.innerHTML = rigaStrum(n);
+    const nuova = tmp.firstElementChild;
+    const gia = [...document.querySelectorAll('#m-s-corpo .m-riga')].find(x => x.dataset.riga === 's:' + n);
+    if(gia){ gia.replaceWith(nuova); r.remove(); } else r.replaceWith(nuova);
+    const bottone = [...document.querySelectorAll('.m-aggiungi [data-x]')].find(b => b.dataset.x === n); if(bottone) bottone.remove();
+    alza(nuova.querySelector('textarea'));
+    salvaOra(); disegnaAiuti();
+    return;
+  }
   let v = t.value;
   if(id === 'ee'){
     const f = formattaEsamiEmatochimici(v.replace(/\n+/g, ', '));
@@ -23427,11 +23565,13 @@ salvaDiarioDaBox = function(el, patientId, testo){
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
   const a = el.dataset.m;
-  if(a === 'indietro'){
-    if(M.vista === 'eo') fineVisita();
-    else if(M.vista === 'app' && M.pag === 'ricovero-singolo') apriRicoveri();
-    else indietro();
+  if(a === 'indietro') tornaIndietro();
+  else if(a === 'iso'){
+    const p = loadPatients()[M.id];
+    apriIsolamentoModal(isolamentoPerLetto(M.letto, p ? statoScheda(M.id, p).isolamento : null));
   }
+  else if(a === 'sotto'){ el.classList.toggle('m-aperta'); el.nextElementSibling.classList.toggle('m-aperta'); }
+  else if(a === 'app-azione'){ const orig = azioniApp[+el.dataset.a]; if(orig) orig.click(); }
   else if(a === 'pagina') vai('app', { pag:el.dataset.p });
   else if(a === 'togli-appoggio'){ e.stopPropagation(); rimuoviAppoggio(M.settore, el.dataset.n); }
   else if(a === 'nuovo-appoggio') nuovoAppoggio(el);
@@ -23465,6 +23605,13 @@ document.getElementById('m-app').addEventListener('click', e => {
     setTimeout(() => el.remove(), 220);
     apriRiga(r);
   }
+  else if(a === 'esame-altro'){
+    const tmp = document.createElement('div'); tmp.innerHTML = rigaAltro();
+    const r = tmp.firstElementChild;
+    $m('.m-aggiungi').before(r);
+    r.querySelector('input').focus({ preventScroll:true });
+    setTimeout(() => r.scrollIntoView({ block:'nearest', behavior:'smooth' }), 80);
+  }
   else if(a === 'chiudi-ric'){
     const box = $m('#m-aiuti'), r = (box._ric || [])[+el.dataset.r], c = el.closest('.m-aiuto');
     if(!r) return;
@@ -23496,7 +23643,7 @@ sc.addEventListener('input', e => {
 });
 sc.addEventListener('focusout', e => {
   const t = e.target;
-  if(t.matches('textarea[data-campo]')){
+  if(t.matches('[data-campo]')){
     const r = t.closest('.m-riga');
     setTimeout(() => { if(r.isConnected && !r.contains(document.activeElement)) chiudiRiga(r); }, 120);
   }
@@ -23512,6 +23659,7 @@ sc.addEventListener('focusout', e => {
 sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.value.trim()) e.target.value = '- '; });
 sc.addEventListener('keydown', e => {
   const t = e.target;
+  if(t.matches('.m-nome-esame') && e.key === 'Enter'){ e.preventDefault(); t.closest('.m-riga').querySelector('textarea').focus(); return; }
   // a capo dopo una riga col trattino: la nuova riga parte già col trattino
   // (Invio che ha già scelto una voce del menu "/" non va a capo)
   if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey && !e.defaultPrevented){
@@ -23548,6 +23696,52 @@ sc.addEventListener('paste', e => {
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
 window.addEventListener('resize', muoviPill);
+// GESTO INDIETRO: dal bordo sinistro verso destra la pagina segue il dito e,
+// lasciata oltre un terzo dello schermo (o con uno scatto), si torna indietro
+(() => {
+  let x0 = null, y0 = 0, dx = 0, t0 = 0, attivo = false, el = null;
+  const pagina = () => M.vista === 'eo' ? document.getElementById('clinical-view')
+    : M.vista === 'app' ? document.getElementById(M.pag + '-view') : $m('#m-main');
+  document.addEventListener('touchstart', e => {
+    x0 = null;
+    if(M.vista === 'home' || sc.classList.contains('m-su') || e.touches.length !== 1) return;
+    if(document.querySelector('[id$="-overlay"].show, #comandi-menu.show')) return;
+    const t = e.touches[0];
+    if(t.clientX > 28) return;
+    x0 = t.clientX; y0 = t.clientY; dx = 0; t0 = performance.now(); attivo = false;
+  }, { passive:true });
+  document.addEventListener('touchmove', e => {
+    if(x0 === null) return;
+    const t = e.touches[0], ddx = t.clientX - x0, ddy = t.clientY - y0;
+    if(!attivo){
+      if(Math.abs(ddy) > 10 && Math.abs(ddy) > Math.abs(ddx)){ x0 = null; return; }
+      if(ddx < 10) return;
+      attivo = true; el = pagina(); if(!el){ x0 = null; return; }
+      el.classList.add('m-segue');
+    }
+    dx = Math.max(0, ddx);
+    el.style.transform = `translateX(${dx}px)`;
+    if(e.cancelable) e.preventDefault();
+  }, { passive:false });
+  const fine = () => {
+    if(x0 === null) return;
+    x0 = null;
+    if(!attivo) return;
+    const veloce = dx / Math.max(1, performance.now() - t0) > .5 && dx > 40;
+    const va = veloce || dx > innerWidth / 3;
+    const e2 = el;
+    e2.classList.remove('m-segue'); e2.classList.add('m-rilascia');
+    e2.style.transform = va ? `translateX(${innerWidth}px)` : '';
+    setTimeout(() => {
+      e2.classList.remove('m-rilascia');
+      if(va){ e2.style.visibility = 'hidden'; tornaIndietro(); }
+      e2.style.transform = '';
+      requestAnimationFrame(() => { e2.style.visibility = ''; });
+    }, va ? 220 : 260);
+  };
+  document.addEventListener('touchend', fine);
+  document.addEventListener('touchcancel', fine);
+})();
 
 // dati arrivati dalla sincronizzazione (o salvati altrove): l'app ridisegna
 // Reparto; qui si ridisegnano i letti visibili
@@ -23720,6 +23914,7 @@ mostraVista = function(v){
   try{ ultima = localStorage.getItem(LAST_VIEW_KEY); } catch(e){}
   const r = mostraVistaApp.apply(this, arguments);
   try{ if(ultima === null) localStorage.removeItem(LAST_VIEW_KEY); else localStorage.setItem(LAST_VIEW_KEY, ultima); } catch(e){}
+  if(M.vista === 'home' && PAGINE[v]){ vai('app', { pag:v }); return r; }
   if(M.vista === 'app' && PAGINE[v]){
     M.pag = v;
     const t = $m('#m-bar-t'); if(t) t.textContent = PAGINE[v];
