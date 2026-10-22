@@ -24147,6 +24147,14 @@ comandiDisegna = function(){
 };
 corpoScheda.addEventListener('scroll', () => { if(!posizionaMenuScheda.dentro) posizionaMenuScheda(); }, { passive:true });
 if(window.visualViewport) visualViewport.addEventListener('resize', posizionaMenuScheda);
+// l'app chiude il menu quando la pagina scorre; la scheda però è fissa, e su
+// iPhone la pagina "scorre" da sola quando si apre la tastiera su una riga
+// bassa (diari lunghi): il menu si chiudeva appena aperto. Con il menu
+// della scheda, lo scorrimento della pagina lo riposiziona soltanto
+window.addEventListener('scroll', e => {
+  if(comandiStato && comandiStato.el.closest('#m-scheda')){ e.stopImmediatePropagation(); posizionaMenuScheda(); }
+}, { capture:true, passive:true });
+if(window.visualViewport) visualViewport.addEventListener('scroll', posizionaMenuScheda);
 
 /* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
 Object.keys(PAGINE).forEach(v => vistaPagina(v).classList.add('m-pagina'));
