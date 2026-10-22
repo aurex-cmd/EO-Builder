@@ -22829,6 +22829,8 @@ function editorLettereSvuota(){
   .m-tl.m-recente{ background:rgba(91,69,160,.23); color:#3a2878; box-shadow:inset 0 0 0 1px rgba(91,69,160,.3), 0 4px 14px -6px rgba(91,69,160,.3); }
   .m-tl.m-vecchio{ background:rgba(27,36,51,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
   .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px rgba(47,128,201,.85), 0 4px 14px -6px rgba(47,128,201,.4); }
+  /* diario copiato: bordo teal (il critico resta viola) */
+  .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal), 0 6px 16px -6px rgba(14,117,113,.4); }
   .m-tl.m-critico{ background-color:rgba(106,31,176,.18); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
   .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); }
   .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
@@ -23267,7 +23269,7 @@ function tileLetto(nome, etichetta, k, appena, appoggio){
   const i = infoLetto(nome);
   const armato = appoggio && rimuoviAppoggioArmato === M.settore + '|' + nome;
   const vuoto = !appoggio && !i.occupato && lettiVuoti()[nome];
-  return `<button class="m-tl ${classiLetto(i)}${vuoto ? ' m-vuoto' : ''}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}"${appoggio ? ' data-ap="1"' : ''} aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
+  return `<button class="m-tl ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}"${appoggio ? ' data-ap="1"' : ''} aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
 }
 function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
