@@ -4002,7 +4002,8 @@ applicaTema(temaAttuale());
 // EO MINIMAL: la stessa app con un'altra interfaccia (home con Visita e
 // Diari, scheda del letto a tutto schermo), aperta da .../minimal/ (che
 // rimanda qui con ?ui=minimal). Stessi dati e stessa sincronizzazione; solo
-// tema chiaro, con la sua grafica (html[data-ui="minimal"]). Aperta
+// tema chiaro, con la sua grafica (html[data-ui="minimal"]); la schermata
+// dei tag resta quella dell'app, col suo tema (vedi temaVisita). Aperta
 // normalmente, l'app non cambia in niente — vedi il blocco "EO MINIMAL" in
 // fondo alla pagina
 const UI_MINIMAL = new URLSearchParams(location.search).get('ui') === 'minimal';
@@ -22370,7 +22371,11 @@ function editorLettereSvuota(){
     --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --m-scheda:'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --m-molla:cubic-bezier(.2,.9,.25,1);
-    /* l'app sotto (tag, finestre degli strumenti) con gli stessi toni, senza rilievi */
+  }
+  /* l'app sotto (finestre degli strumenti, pagine) con gli stessi toni, senza
+     rilievi; non durante la visita (data-m-orig): lì la schermata dei tag è
+     quella dell'app normale, col suo tema, i suoi colori e il suo font */
+  html[data-ui="minimal"]:not([data-m-orig]){
     --page:#ffffff; --signal:#0e7571; --signal-dim:#e3f4f3; --signal-soft:rgba(14,117,113,.12); --on-signal:#ffffff;
     --clay-border:#e1e5eb; --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none; --glow-signal:none;
     --font-body:var(--m-sans); --font-display:var(--m-sans); --font-mono:var(--m-sans);
@@ -22378,7 +22383,7 @@ function editorLettereSvuota(){
     --st-bar:#d3dae2; --st-bar-hi:#9eabb8; --st-f:#e0896b; --st-m:#6b97c6;
     --st-eta-1:#cbe9e2; --st-eta-2:#93d3c3; --st-eta-3:#52b59d; --st-eta-4:#1f927a; --st-eta-5:#0e7571;
   }
-  html[data-ui="minimal"] body{ background:var(--m-bg); color:var(--m-ink); font-family:var(--m-sans); font-variant-numeric:tabular-nums; padding-bottom:0; }
+  html[data-ui="minimal"]:not([data-m-orig]) body{ background:var(--m-bg); color:var(--m-ink); font-family:var(--m-sans); font-variant-numeric:tabular-nums; padding-bottom:0; }
   html[data-ui="minimal"] body > header{ display:none !important; }
   #m-app{ display:none; }
   html[data-ui="minimal"] #m-app{ display:block; }
@@ -22394,6 +22399,10 @@ function editorLettereSvuota(){
   /* durante la visita la barra resta fissa sopra la schermata dei tag */
   html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; box-shadow:0 1px 0 var(--m-line); }
   html[data-m-eo] #clinical-view{ padding-top:calc(64px + env(safe-area-inset-top,0px)); }
+  html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
+  html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
+  html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
+  html[data-m-orig] :is(.m-segue, .m-rilascia){ background:var(--page) !important; }
   .m-marchio{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; letter-spacing:-.01em; }
   .m-marchio i{ width:32px; height:32px; border-radius:9px; background:var(--m-ink); color:var(--m-bg); display:grid; place-items:center; font-style:normal; font-size:13px; font-weight:800; }
   .m-data{ font-size:.8rem; color:var(--m-muted); }
@@ -22448,20 +22457,9 @@ function editorLettereSvuota(){
   .m-spunta svg{ width:9px; height:9px; }
 
   /* esame obiettivo: la schermata dei tag dell'app, piatta e chiara */
-  html[data-ui="minimal"] #clinical-view{ max-width:560px; margin:0 auto; padding-bottom:40px; }
-  html[data-ui="minimal"] #clinical-view .card{ background:transparent !important; border:0; border-bottom:1px solid var(--m-line); border-radius:0; box-shadow:none; margin:0 16px; padding:14px 0 16px; }
-  html[data-ui="minimal"] #clinical-view .card h2{ font-family:var(--m-sans); font-size:.98rem; font-weight:700; letter-spacing:0; color:var(--m-ink); margin-bottom:10px; }
-  html[data-ui="minimal"] #clinical-view .card h2 .hicon{ stroke:var(--m-muted); width:17px; height:17px; }
-  html[data-ui="minimal"] #clinical-view .card h2 .hicon .pieno{ fill:var(--m-muted); }
-  html[data-ui="minimal"] #clinical-view .group-label{ font-size:.75rem; color:var(--m-muted); }
-  html[data-ui="minimal"] #clinical-view .chip{ border:1px solid var(--m-line); background:transparent; border-radius:7px; padding:6px 10px; font-family:var(--m-sans); font-size:.84rem; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s ease, color .28s ease, border-color .28s ease, transform .18s var(--m-molla); }
-  html[data-ui="minimal"] #clinical-view .chip.active{ background:var(--m-teal-box); border-color:var(--m-teal); color:var(--m-teal); font-weight:600; box-shadow:none; }
   /* si anima solo il tag appena toccato (l'app ridisegna i tag anche mentre si scrive) */
   html[data-ui="minimal"] :is(#clinical-view, .m-pagina) .chip.active.m-tocco{ animation:m-scelto .4s var(--m-molla); }
-  html[data-ui="minimal"] #clinical-view .chip:active{ transform:scale(.94); }
-  html[data-ui="minimal"] #clinical-view #output-card{ border-bottom:0; }
-  html[data-ui="minimal"] #clinical-view textarea, html[data-ui="minimal"] #clinical-view input[type=text], html[data-ui="minimal"] #clinical-view input[type=number]{ box-shadow:none; border:1px solid var(--m-line); border-radius:9px; background:var(--m-bg); }
-  html[data-ui="minimal"] #toast{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.18); font-family:var(--m-sans); }
+  html[data-ui="minimal"]:not([data-m-orig]) #toast{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.18); font-family:var(--m-sans); }
 
   /* scheda del letto */
   .m-velo{ position:fixed; inset:0; z-index:60; background:rgba(15,20,28,.32); opacity:0; pointer-events:none; transition:opacity .3s; }
@@ -22554,7 +22552,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
-  html[data-ui="minimal"]{ scrollbar-gutter:stable; }
+  html[data-ui="minimal"]:not([data-m-orig]){ scrollbar-gutter:stable; }
   /* pressione lunga: su un letto scritto lo fa diventare rosso (un altro
      tocco elimina la scheda), su un settore chiede se svuotarlo */
   .m-settori button.m-premuto{ color:#d9534f; transition:color .55s linear .1s; }
@@ -22969,9 +22967,20 @@ function tornaIndietro(gesto){
     else indietro();
   } finally { animaIngresso = true; gestoIndietro = false; }
 }
+// la schermata dei tag è quella dell'app normale, identica: col tema scelto
+// lì (scuro, se non si è scelto altro), i suoi colori e il suo font; il
+// minimal resta chiaro e ci aggiunge solo le animazioni dei tag toccati
+function temaVisita(si){
+  const html = document.documentElement;
+  if(si === html.hasAttribute('data-m-orig')) return;
+  html.toggleAttribute('data-m-orig', si);
+  applicaTema(si ? temaAttuale() : 'chiaro');
+  if(!si) document.querySelector('meta[name="theme-color"]').content = '#ffffff';
+}
 function disegna(verso){
   const v = $m('#m-vista');
   document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
+  temaVisita(M.vista === 'eo');
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
   $m('#m-main').classList.toggle('m-main-home', M.vista === 'home');
   if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); mostraVista(M.pag); window.scrollTo(0, 0); return; }
