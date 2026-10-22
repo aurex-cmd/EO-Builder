@@ -22751,14 +22751,34 @@ function editorLettereSvuota(){
 
   /* VISITA e DIARI: settori (o "Pazienti visti") e anello a sinistra, letti a destra */
   .m-rep{ display:grid; grid-template-columns:142px 1fr; margin-top:6px; }
+  /* letti "Vetro": fondo sfumato teal-viola sotto le pagine dei letti */
+  #m-app:has(.m-rep)::before{ content:""; position:fixed; inset:0; z-index:-1; background:linear-gradient(160deg, #e6f4f2 0%, #f1edfb 55%, #eef3fa 100%); pointer-events:none; }
+  #m-app:has(.m-rep) .m-bar{ background:rgba(255,255,255,.55); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
+  .m-rep .m-anello-f{ stroke:rgba(255,255,255,.85); }
+  .m-rep .m-rep-link{ background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9); }
+  .m-rep .m-tl-nuovo{ box-shadow:inset 0 0 0 1.5px rgba(27,36,51,.12); }
   .m-rep-sx{ position:relative; padding-top:2px; }
-  .m-rep-set{ position:absolute; left:0; top:0; border:0; background:none; padding:4px 0; font:inherit; font-size:17px; font-weight:700; letter-spacing:-.015em; color:var(--m-faint); white-space:nowrap; cursor:pointer; transform-origin:0 50%; transition:transform .6s var(--m-molla), color .45s; will-change:transform; -webkit-tap-highlight-color:transparent; }
-  .m-rep-set.m-scelto{ color:var(--m-ink); }
-  .m-rep-set:not(.m-scelto):active{ color:var(--m-muted); }
+  /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
+  .m-lt-top{ margin:2px 0 0; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  #m-settori .m-anello{ position:static; width:112px; margin-top:6px; text-align:left; }
+  #m-settori .m-anello-o{ width:112px; height:112px; margin:0; }
+  #m-settori .m-anello svg{ width:112px; height:112px; }
+  #m-settori .m-anello-f, #m-settori .m-anello-a{ stroke-width:6; }
+  .m-lt-l{ position:absolute; inset:0; display:grid; place-items:center; font-size:56px; font-weight:800; letter-spacing:-.05em; line-height:1; color:var(--m-ink); }
+  .m-lt-l.m-lungo{ font-size:26px; letter-spacing:-.03em; }
+  .m-lt-l.m-cambia{ animation:m-lt-cambia .45s var(--m-molla); }
+  @keyframes m-lt-cambia{ from{ opacity:0; transform:translateY(14px) scale(.8); } }
+  #m-settori .m-anello-in{ display:none; }
+  #m-settori .m-anello p{ margin-top:10px; font-size:12px; }
+  #m-settori .m-anello p > b:first-child{ color:var(--m-teal); font-weight:800; }
+  .m-lt-altri{ display:flex; flex-wrap:wrap; gap:7px; margin-top:22px; padding-right:12px; }
+  .m-lt-set{ min-width:36px; height:36px; padding:0 9px; border:0; border-radius:11px; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 3px 10px -5px rgba(23,34,49,.2); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
+  .m-lt-set:active{ transform:scale(.9); }
+  .m-lt-set.m-scelto{ background:var(--m-ink); color:#fff; box-shadow:0 4px 12px -4px rgba(23,34,49,.45); }
   .m-rep-tit{ font-size:24.6px; font-weight:800; letter-spacing:-.025em; line-height:1.1; margin:2px 0 0; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
-  .m-rep-sx:not(#m-settori){ display:flex; flex-direction:column; align-items:flex-start; }
+  .m-rep-sx{ display:flex; flex-direction:column; align-items:flex-start; }
   .m-rep-sx:not(#m-settori) .m-anello{ position:static; margin-top:18px; }
   @keyframes m-anello-entra{ from{ opacity:0; transform:scale(.7); } to{ opacity:1; transform:none; } }
   .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
@@ -22775,7 +22795,7 @@ function editorLettereSvuota(){
   .m-rep-link .m-chev{ width:13px; height:13px; opacity:.5; }
   .m-rep-link:active{ transform:scale(.95); }
   .m-rep-dx{ position:relative; min-width:0; padding:2px 0 8px 14px; }
-  .m-rep-dx::before{ content:""; position:absolute; left:0; top:4px; bottom:0; width:1px; background:var(--m-line); transform-origin:top; }
+  .m-rep-dx::before{ content:""; position:absolute; left:0; top:4px; bottom:0; width:1px; background:rgba(27,36,51,.09); transform-origin:top; }
   .m-rep.m-entra .m-rep-dx::before{ animation:m-linea .6s var(--m-molla) both; }
   @keyframes m-linea{ from{ transform:scaleY(0); } }
   .m-rep-lbl{ margin:0 0 8px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
@@ -22785,14 +22805,14 @@ function editorLettereSvuota(){
   .m-rep-vitali{ margin-top:22px; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-teal); margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:13px; background:#fff; color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:0 1px 2px rgba(23,34,49,.16), 0 2px 6px 1px rgba(23,34,49,.08); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:rgba(255,255,255,.55); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 4px 14px -6px rgba(23,34,49,.2); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
-  .m-tl:active{ transform:scale(.94); box-shadow:0 1px 1px rgba(23,34,49,.14); }
-  .m-tl.m-oggi-l{ background:#cdebe7; color:#0a5652; box-shadow:0 1px 2px rgba(14,117,113,.28), 0 3px 8px 1px rgba(14,117,113,.16); }
-  .m-tl.m-recente{ background:#e2d9f7; color:#46318a; box-shadow:0 1px 2px rgba(91,69,160,.26), 0 3px 8px 1px rgba(91,69,160,.14); }
-  .m-tl.m-vecchio{ background:#e6e9ee; box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 5px rgba(23,34,49,.06); }
-  .m-tl.m-consegnato:not(.m-oggi-l){ background:#fff; box-shadow:inset 0 0 0 2px var(--m-blu), 0 2px 7px 1px rgba(47,128,201,.18); }
-  .m-tl.m-critico{ box-shadow:inset 0 0 0 2px var(--m-critico), 0 2px 8px 1px rgba(106,31,176,.2); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.12) 0 3px, transparent 3px 9px); }
+  .m-tl:active{ transform:scale(.94); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 2px 6px -3px rgba(23,34,49,.2); }
+  .m-tl.m-oggi-l{ background:rgba(14,117,113,.18); color:#0a5652; box-shadow:inset 0 0 0 1px rgba(14,117,113,.25), 0 6px 16px -6px rgba(14,117,113,.4); }
+  .m-tl.m-recente{ background:rgba(91,69,160,.15); color:#46318a; box-shadow:inset 0 0 0 1px rgba(91,69,160,.22), 0 4px 14px -6px rgba(91,69,160,.3); }
+  .m-tl.m-vecchio{ background:rgba(27,36,51,.07); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
+  .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px rgba(47,128,201,.7), 0 4px 14px -6px rgba(47,128,201,.4); }
+  .m-tl.m-critico{ background-color:rgba(106,31,176,.12); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.1) 0 3px, transparent 3px 9px); }
   .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.2) 0 3px, transparent 3px 9px); }
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
   .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
@@ -23118,6 +23138,7 @@ function rigaHome(pag, titolo, sotto, conta){
 // destra i letti visti oggi, divisi per settore
 function modoBento(){ return M.vista === 'visita' && !M.perSettore && consegneWeekendAttive(); }
 const nomeSettore = s => s.replace(/^.*?(Settore\s+)/, '$1');
+const letteraSettore = s => nomeSettore(s).replace(/^Settore\s+/i, '');
 function anelloHtml(){
   return `<div class="m-anello" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div><p id="m-anello-t"></p></div>`;
 }
@@ -23150,7 +23171,8 @@ function vSettore(){
       <div class="m-rep-dx" id="m-diari-letti"></div>
     </div>` : `
     <div class="m-rep">
-      <div class="m-rep-sx" id="m-settori">${ss.map(s => `<button class="m-rep-set" data-m="settore" data-s="${esc(s)}">${esc(nomeSettore(s))}</button>`).join('')}${anelloHtml()}</div>
+      <div class="m-rep-sx" id="m-settori"><p class="m-lt-top">Settore</p>${anelloHtml().replace('</svg>', '</svg><b class="m-lt-l" id="m-lt-l"></b>')}
+        <div class="m-lt-altri">${ss.map(s => `<button class="m-lt-set" data-m="settore" data-s="${esc(s)}" aria-label="${esc(nomeSettore(s))}">${esc(letteraSettore(s))}</button>`).join('')}</div></div>
       <div class="m-rep-dx"><p class="m-rep-lbl">Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl">Letti</p><div class="m-griglia" id="m-letti"></div>
         <button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button></div>
     </div>`}`;
@@ -23161,19 +23183,21 @@ function vSettore(){
   if(rep && $m('#m-vista').classList.contains('m-quieta') === false){ rep.classList.add('m-entra'); setTimeout(() => rep.classList.remove('m-entra'), 1000); }
   requestAnimationFrame(muoviPill);
 }
-// i settori sono posizionati a mano (transform), così ogni spostamento è
-// una transizione: il settore scelto in alto e più grande, l'anello sotto
-// di lui, gli altri più giù, piccoli e in grigio
+// settori: la lettera di quello scelto entra nell'anello, il suo quadratino
+// diventa scuro
 function posizionaSettori(){
   const box = $m('#m-settori'); if(!box) return;
-  const altri = [...box.querySelectorAll('.m-rep-set')].filter(b => b.dataset.s !== M.settore);
-  box.querySelectorAll('.m-rep-set').forEach(b => {
+  box.querySelectorAll('.m-lt-set').forEach(b => {
     const su = b.dataset.s === M.settore;
     b.classList.toggle('m-scelto', su);
     b.setAttribute('aria-pressed', su);
-    b.style.transform = su ? 'translateY(0) scale(1.45)' : `translateY(${222 + altri.indexOf(b) * 44}px)`;
   });
-  box.style.minHeight = (222 + altri.length * 44 + 8) + 'px';
+  const l = $m('#m-lt-l'), t = letteraSettore(M.settore || '');
+  if(l.textContent === t) return;
+  l.textContent = t;
+  l.classList.toggle('m-lungo', t.length > 2);
+  if(!$m('#m-vista').classList.contains('m-quieta')) return;
+  l.classList.remove('m-cambia'); void l.offsetWidth; l.classList.add('m-cambia');
 }
 function muoviPill(){
   const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'));
@@ -23226,8 +23250,8 @@ function disegnaLetti(appena){
   // anello: i letti visti oggi tra quelli occupati (appoggi compresi)
   const info = [...letti.map(bedName), ...app].map(infoLetto).filter(i => i.occupato);
   const visti = info.filter(i => i.diOggi).length;
-  aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, 'visti oggi',
-    info.length ? `<b>${visti}</b> su <b>${info.length}</b> letti occupati` : 'Nessun letto occupato');
+  aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, '',
+    info.length ? `<b>${Math.round(visti / info.length * 100)}%</b> visti · ${visti} su ${info.length}` : 'Nessun letto occupato');
 }
 // Diari: i letti con l'esame di oggi, divisi per settore (prima quello in
 // uso), in ciascuno gli appoggi per primi e poi i letti in ordine
