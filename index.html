@@ -23558,7 +23558,7 @@ function disegnaScheda(){
     ${presenti.map(rigaStrum).join('')}
     <div class="m-aggiungi m-chiuso">${htmlAggiungi(altri)}</div>
     <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
-    <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
+    <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="Un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
   const provv = $m('#m-provv');
   provv.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, provv.value).length);
@@ -24005,22 +24005,9 @@ sc.addEventListener('pointerdown', e => {
   const a = document.activeElement;
   if(a && a.matches('#m-s-corpo .m-riga textarea') && !a.value.trim() && !a.closest('.m-riga').contains(e.target)) a.blur();
 });
-sc.addEventListener('focusin', e => { if(e.target.id === 'm-provv' && !e.target.value.trim()) e.target.value = '- '; });
 sc.addEventListener('keydown', e => {
   const t = e.target;
   if(t.matches('.m-nome-esame') && e.key === 'Enter'){ e.preventDefault(); t.closest('.m-riga').querySelector('textarea').focus(); return; }
-  // a capo dopo una riga col trattino: la nuova riga parte già col trattino
-  // (Invio che ha già scelto una voce del menu "/" non va a capo)
-  if(t.id === 'm-provv' && e.key === 'Enter' && !e.shiftKey && !e.defaultPrevented){
-    const i = t.selectionStart, v = t.value;
-    const rigaCorrente = v.slice(v.lastIndexOf('\n', i - 1) + 1, i);
-    if(/^\s*-\s/.test(rigaCorrente)){
-      e.preventDefault();
-      t.value = v.slice(0, i) + '\n- ' + v.slice(t.selectionEnd);
-      t.selectionStart = t.selectionEnd = i + 3;
-      t.dispatchEvent(new Event('input', { bubbles:true }));
-    }
-  }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
 sc.addEventListener('paste', e => {
@@ -24178,15 +24165,18 @@ renderWardMap = function(){
 
 
 /* ---------- menu "/" degli strumenti dentro la scheda ---------- */
-// "Strumenti" accanto a PROVVEDIMENTI: si va a capo con "- /" (o si usa la
-// riga vuota in fondo) e si apre lo stesso menu che compare scrivendo "/"
+// "Strumenti" accanto a PROVVEDIMENTI: si va a capo con "/" (o lo si mette
+// sulla riga vuota in fondo, anche dopo un trattino scritto a mano) e si
+// apre lo stesso menu che compare scrivendo "/"
 function apriStrumenti(){
   const t = $m('#m-provv'); if(!t) return;
   t.focus({ preventScroll:true });
   let v = t.value.replace(/\s+$/, m => m.includes('\n') ? '\n' : '');
   const ultima = v.slice(v.lastIndexOf('\n') + 1);
-  if(/^\s*-?\s*$/.test(ultima)) v = v.slice(0, v.length - ultima.length) + '- /';
-  else v += '\n- /';
+  // i trattini li mette chi scrive: qui solo la "/"
+  if(!ultima.trim()) v += '/';
+  else if(/^\s*-\s*$/.test(ultima)) v = v.slice(0, v.length - ultima.length) + ultima.trim() + ' /';
+  else v += '\n/';
   t.value = v;
   t.setSelectionRange(v.length, v.length);
   alza(t);
