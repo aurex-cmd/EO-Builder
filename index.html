@@ -22606,15 +22606,43 @@ function editorLettereSvuota(){
   .m-tiles{ --q:calc((100cqw - 30px) / 4); flex:none; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
     grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
   .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
-  .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
+  .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .25s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
   #m-vista.m-quieta .m-tile{ animation:none; }
-  .m-tile:active{ transform:scale(.97); }
+  @media (hover:hover){ .m-tile:hover{ transform:scale(1.03); } }
+  .m-tile:active{ transform:scale(.97); transition-duration:.12s; }
+  .m-tile-grande{ justify-content:flex-end; }
+  .m-tile-giu, .m-tile > b, .m-tile > small{ position:relative; }
+  .m-art{ position:absolute; pointer-events:none; overflow:visible; }
+  .m-art *{ transform-box:view-box; }
+  .m-tile-grande .m-art{ width:132px; height:132px; top:-12px; right:-14px; }
+  .m-t-ric .m-art{ width:104px; height:104px; top:-14px; right:-14px; }
+  .m-festivo .m-t-cons .m-art{ width:74px; height:74px; top:6px; right:6px; }
+  .m-festivo .m-t-cons b{ font-size:16px; }
+  .m-tile-riga .m-art{ width:52px; height:52px; top:6px; right:6px; }
+  .m-tile-pic .m-art{ width:52px; height:52px; top:6px; left:50%; margin-left:-26px; }
+  .m-festivo .m-t-rub .m-art{ width:34px; height:34px; top:7px; margin-left:-17px; }
+  .m-tile-barra .m-art{ position:static; width:34px; height:34px; flex:none; }
+  .m-tile-barra small{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* i movimenti delle illustrazioni */
+  @keyframes a-steto{ 0%,100%{ transform:none; } 30%{ transform:rotate(-9deg); } 60%{ transform:rotate(6deg); } 85%{ transform:rotate(-2deg); } }
+  @keyframes a-matita{ 0%,100%{ transform:none; } 25%,75%{ transform:translate(-7px, 3px); } 50%{ transform:translate(3px, -1px); } }
+  @keyframes a-cuscino{ 0%,100%{ transform:none; } 40%{ transform:scale(1.12, .6); } 70%{ transform:scale(.96, 1.08); } }
+  @keyframes a-spunta{ from{ stroke-dashoffset:50; } to{ stroke-dashoffset:0; } }
+  @keyframes a-cartella{ 0%,100%{ transform:none; } 35%{ transform:rotate(-8deg); } 70%{ transform:rotate(4deg); } }
+  @keyframes a-sole{ from{ transform:none; } to{ transform:rotate(90deg); } }
+  @keyframes a-cornetta{ 0%,100%{ transform:none; } 15%,45%,75%{ transform:rotate(-12deg); } 30%,60%{ transform:rotate(12deg); } }
+  @keyframes a-quadri{ from{ transform:none; } to{ transform:rotate(90deg); } }
+  .a-steto{ transform-origin:64px 14px; } .a-matita{ transform-origin:96px 72px; } .a-cuscino{ transform-origin:39px 57px; }
+  .a-spunta{ stroke-dasharray:50; } .a-cartella{ transform-origin:60px 104px; } .a-sole{ transform-origin:94px 86px; }
+  .a-cornetta{ transform-origin:60px 60px; } .a-quadri{ transform-origin:60px 60px; }
+  .m-anima .a-steto{ animation:a-steto .8s var(--m-molla); } .m-anima .a-matita{ animation:a-matita .6s ease-in-out; }
+  .m-anima .a-cuscino{ animation:a-cuscino .6s var(--m-molla); } .m-anima .a-spunta{ animation:a-spunta .45s ease-out; }
+  .m-anima .a-cartella{ animation:a-cartella .6s var(--m-molla); } .m-anima .a-sole{ animation:a-sole .8s var(--m-molla); }
+  .m-anima .a-cornetta{ animation:a-cornetta .55s ease-in-out; } .m-anima .a-quadri{ animation:a-quadri .6s var(--m-molla); }
+  @media (prefers-reduced-motion:reduce){ .m-anima .m-art *{ animation:none !important; } .m-tile:hover{ transform:none; } }
   .m-tile b{ display:block; font-size:15.5px; font-weight:700; letter-spacing:-.01em; line-height:1.2; }
   .m-tile small{ display:block; font-size:12.3px; color:var(--m-home-sub); line-height:1.3; margin-top:2px; }
-  .m-tile-su{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .m-tile-giu{ display:block; min-width:0; }
-  .m-hic{ display:grid; place-items:center; width:22px; height:22px; flex:0 0 auto; color:var(--m-home-sub); opacity:.7; }
-  .m-hic svg{ width:100%; height:100%; }
   .m-hnum{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 5px; font-size:38px; font-weight:800; letter-spacing:-.035em; line-height:1; color:var(--m-ink); }
   .m-hnum small{ white-space:nowrap; font-size:14px; font-weight:600; letter-spacing:0; margin:0; color:var(--m-home-sub); }
   .m-tile-giu .m-hnum{ margin-bottom:8px; }
@@ -22625,9 +22653,9 @@ function editorLettereSvuota(){
   .m-t-str{ grid-area:s; --hb:var(--m-home-f); } .m-t-rub{ grid-area:t; --hb:var(--m-home-g); }
   .m-tile-riga{ justify-content:space-between; padding:12px 14px; }
   .m-tile-barra{ flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; padding:10px 14px; }
-  .m-tile-barra .m-tile-giu{ flex:1; }
+  .m-tile-barra .m-tile-giu{ flex:1; min-width:0; }
   .m-tile-barra .m-chev{ width:16px; height:16px; color:var(--m-home-sub); opacity:.5; flex:none; }
-  .m-tile-pic{ align-items:center; justify-content:center; gap:4px; padding:8px; text-align:center; }
+  .m-tile-pic{ align-items:center; justify-content:flex-end; gap:4px; padding:8px; text-align:center; }
   .m-tile-pic b{ font-size:13.5px; font-weight:600; }
   .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
   .m-rigalink svg.m-ic-app .pieno{ fill:currentColor; stroke:none; opacity:.28; }
@@ -22978,8 +23006,6 @@ const ICON = {
   indietro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
   chev:'<svg class="m-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
   giu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-  steto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0010 0V3"/><path d="M11 14v2a5 5 0 0010 0v-2"/><circle cx="21" cy="11" r="2"/></svg>',
-  diario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
   piu:'<svg class="m-piu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   copia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>',
@@ -22987,10 +23013,7 @@ const ICON = {
   vitali:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6.5 4 13 2-6.5h6"/></svg>',
   consegne:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 3h6v3H9zM8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>',
   ricoveri:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19v-6.5A2.5 2.5 0 015.5 10H18a3 3 0 013 3v6M3 16h18M3 19v2M21 19v2"/><circle cx="7.5" cy="7" r="1.8"/></svg>',
-  impostazioni:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
-  calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M13 15l2 2 3.5-3.5"/></svg>',
-  rubrica:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 005.5 5.5l1.5-2 4 1.5V18a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/></svg>',
-  strumenti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></svg>'
+  impostazioni:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
 };
 // le viste dell'app (le stesse di mostraVista): in minimal si vede solo la
 // schermata dei tag, e solo durante la visita di un letto
@@ -23115,6 +23138,24 @@ function contiHome(){
   });
   return { letti, visti, copiati };
 }
+// illustrazioni dei riquadri della home, piatte, nei toni di ciascun
+// riquadro; le parti con una classe a-* si muovono quando il riquadro si
+// anima (mouse sopra, dito appoggiato, apertura della home)
+const ARTE = (() => {
+  const S = (c, cls) => `<svg class="m-art${cls ? ' ' + cls : ''}" viewBox="0 0 120 120" aria-hidden="true">${c}</svg>`;
+  return {
+    visita: S(`<circle cx="70" cy="50" r="46" fill="#a9c5e3"/><g class="a-steto"><path d="M44 20v26a20 20 0 0040 0V20" fill="none" stroke="#4f7fb3" stroke-width="7" stroke-linecap="round"/><circle cx="44" cy="18" r="5.5" fill="#1b2433"/><circle cx="84" cy="18" r="5.5" fill="#1b2433"/><path d="M64 66v12a20 20 0 0040 0v-6" fill="none" stroke="#4f7fb3" stroke-width="7" stroke-linecap="round"/><circle cx="104" cy="62" r="13" fill="#fff"/><circle cx="104" cy="62" r="13" fill="none" stroke="#4f7fb3" stroke-width="5"/><circle cx="104" cy="62" r="5" fill="#8fb2d6"/></g>`),
+    diari: S(`<circle cx="70" cy="48" r="46" fill="#efb293"/><rect x="38" y="16" width="56" height="72" rx="7" fill="#e08f68" transform="rotate(-8 66 52)"/><rect x="44" y="12" width="56" height="72" rx="7" fill="#fff" transform="rotate(5 72 48)"/><g transform="rotate(5 72 48)" stroke="#f0b597" stroke-width="4" stroke-linecap="round"><path d="M54 30h30M54 42h36M54 54h36M54 66h22"/></g><g class="a-matita"><g transform="rotate(38 96 72)"><rect x="90" y="40" width="11" height="50" rx="3" fill="#c96b44"/><path d="M90 90h11l-5.5 11z" fill="#1b2433"/><rect x="90" y="40" width="11" height="9" rx="3" fill="#1b2433"/></g></g>`),
+    ricoveri: S(`<circle cx="66" cy="52" r="46" fill="#a9d4c6"/><rect x="14" y="40" width="9" height="56" rx="4.5" fill="#4f9580"/><rect x="104" y="56" width="9" height="40" rx="4.5" fill="#4f9580"/><rect x="18" y="66" width="92" height="12" rx="6" fill="#4f9580"/><rect x="22" y="54" width="86" height="14" rx="7" fill="#fff"/><rect class="a-cuscino" x="26" y="42" width="26" height="15" rx="7.5" fill="#fff" stroke="#e3f1ec" stroke-width="2"/><path d="M52 54h52a6 6 0 016 6v2H52z" fill="#7dbca8"/><circle cx="30" cy="100" r="5" fill="#1b2433"/><circle cx="100" cy="100" r="5" fill="#1b2433"/>`),
+    dimissioni: S(`<rect x="24" y="22" width="72" height="70" rx="10" fill="#fff"/><path d="M24 32a10 10 0 0110-10h52a10 10 0 0110 10v10H24z" fill="#9a84d0"/><rect x="40" y="14" width="7" height="18" rx="3.5" fill="#1b2433"/><rect x="73" y="14" width="7" height="18" rx="3.5" fill="#1b2433"/><path class="a-spunta" d="M44 66l10 10 22-22" fill="none" stroke="#9a84d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`),
+    consegne: S(`<g class="a-cartella"><rect x="28" y="20" width="64" height="84" rx="9" fill="#d9b04c"/><rect x="36" y="28" width="48" height="68" rx="5" fill="#fff"/><rect x="46" y="14" width="28" height="14" rx="5" fill="#1b2433"/><path d="M44 46h32M44 58h32M44 70h20" stroke="#ecd38d" stroke-width="5" stroke-linecap="round"/></g>`),
+    consegneWE: S(`<circle cx="70" cy="50" r="46" fill="#ead17f"/><rect x="34" y="18" width="66" height="86" rx="8" fill="#c99a2e"/><rect x="40" y="18" width="60" height="86" rx="8" fill="#fff"/><g fill="#1b2433">${[28, 42, 56, 70, 84].map(y => `<rect x="30" y="${y}" width="16" height="6" rx="3"/>`).join('')}</g><path d="M54 36h34M54 48h34M54 60h26" stroke="#efdb9e" stroke-width="5" stroke-linecap="round"/><g class="a-sole"><circle cx="94" cy="86" r="16" fill="#f6c343"/><g stroke="#f6c343" stroke-width="4" stroke-linecap="round"><path d="M94 62v-6M118 86h6M111 69l4-4M111 103l4 4M77 69l-4-4"/></g></g>`),
+    rubrica: S(`<circle cx="60" cy="60" r="40" fill="#e9a9bb"/><path class="a-cornetta" d="M42 34h11l5 14-7 5a36 36 0 0018 18l5-7 14 5v11a7 7 0 01-7 7A50 50 0 0135 41a7 7 0 017-7z" fill="#fff"/>`),
+    strumenti: S(`<g class="a-quadri"><rect x="14" y="14" width="40" height="40" rx="11" fill="#bcd2e8"/><rect x="66" y="14" width="40" height="40" rx="11" fill="#f5cab0"/><rect x="14" y="66" width="40" height="40" rx="11" fill="#cfe6df"/><rect x="66" y="66" width="40" height="40" rx="11" fill="#e2d9f3"/></g>`)
+  };
+})();
+// un riquadro fa il movimento della sua illustrazione (di nuovo da capo)
+function animaTile(el){ el.classList.remove('m-anima'); void el.offsetWidth; el.classList.add('m-anima'); }
 function vHome(){
   barra();
   const { letti, visti, copiati } = contiHome();
@@ -23134,21 +23175,20 @@ function vHome(){
   const daVedere = letti - visti, daCopiare = visti - copiati;
   let ultimo = 0; ric.forEach(r => { if((r.creatoIl || 0) > ultimo) ultimo = r.creatoIl; });
   const giorniUltimo = ultimo ? Math.round((new Date().setHours(0, 0, 0, 0) - new Date(ultimo).setHours(0, 0, 0, 0)) / 864e5) : -1;
-  const icoP = ic => `<span class="m-hic">${ic}</span>`;
   // riquadro grande: l'icona in alto, in basso il numero (solo da 1 in su), il nome e una riga
-  const grande = (cls, attr, ic, num, nome, riga) => `<button class="m-tile ${cls}" ${attr}>${icoP(ic)}<span class="m-tile-giu">${num ? `<span class="m-hnum">${num}</span>` : ''}<b>${nome}</b><small>${riga}</small></span></button>`;
-  const visita = grande('m-t-visita', 'data-m="visita"', ICON.steto, daVedere && letti ? `${daVedere}<small>da vedere</small>` : '', 'Visita',
+  const grande = (cls, attr, art, num, nome, riga) => `<button class="m-tile m-tile-grande ${cls}" ${attr}>${art}<span class="m-tile-giu">${num ? `<span class="m-hnum">${num}</span>` : ''}<b>${nome}</b><small>${riga}</small></span></button>`;
+  const visita = grande('m-t-visita', 'data-m="visita"', ARTE.visita, daVedere && letti ? `${daVedere}<small>da vedere</small>` : '', 'Visita',
     !letti ? 'Nessun letto' : visti ? (daVedere ? `${visti} di ${letti} visti` : `Tutti visti, ${letti} su ${letti}`) : `${letti} letti`);
-  const diari = grande('m-t-diari', 'data-m="diari"', ICON.diario, daCopiare ? `${daCopiare}<small>da copiare</small>` : '', 'Diari',
+  const diari = grande('m-t-diari', 'data-m="diari"', ARTE.diari, daCopiare ? `${daCopiare}<small>da copiare</small>` : '', 'Diari',
     visti ? (daCopiare ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : `Tutti copiati, ${visti} su ${visti}`) : 'Ancora nessuno');
-  const ricoveri = grande('m-t-ric', 'data-m="pagina" data-p="ricoveri"', ICON.ricoveri, ricOggi ? `${ricOggi}<small>oggi</small>` : '', 'Ricoveri',
+  const ricoveri = grande('m-t-ric', 'data-m="pagina" data-p="ricoveri"', ARTE.ricoveri, ricOggi ? `${ricOggi}<small>oggi</small>` : '', 'Ricoveri',
     (!ricOggi && giorniUltimo > 0 ? `Ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}<br>` : '') + `${ric.length} in tutto`);
-  const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni"><span class="m-tile-su"><b>Dimissioni</b>${icoP(ICON.calendario)}</span><small>${dimTesto}</small></button>`;
+  const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni">${ARTE.dimissioni}<b>Dimissioni</b><small>${dimTesto}</small></button>`;
   const consegne = festivo
-    ? grande('m-t-cons', 'data-m="pagina" data-p="consegne"', ICON.consegne, consegnati ? `${consegnati}<small>pazient${consegnati === 1 ? 'e consegnato' : 'i consegnati'}</small>` : '', 'Consegne Weekend', consegnati ? 'Le consegne di oggi' : 'Incolla le consegne')
-    : `<button class="m-tile m-t-cons m-tile-pic" data-m="aggcons">${icoP(ICON.consegne)}<b>Consegne</b></button>`;
-  const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${icoP(ICON.strumenti)}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
-  const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${icoP(ICON.rubrica)}<b>Rubrica</b></button>`;
+    ? grande('m-t-cons', 'data-m="pagina" data-p="consegne"', ARTE.consegneWE, consegnati ? `${consegnati}<small>pazient${consegnati === 1 ? 'e consegnato' : 'i consegnati'}</small>` : '', 'Consegne Weekend', consegnati ? 'Le consegne di oggi' : 'Incolla le consegne')
+    : `<button class="m-tile m-t-cons m-tile-pic" data-m="aggcons">${ARTE.consegne}<b>Consegne</b></button>`;
+  const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${ARTE.strumenti}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
+  const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${ARTE.rubrica}<b>Rubrica</b></button>`;
   // sotto il titolo il punto del giro di oggi
   const dato = [visti && `${visti} di ${letti} visti`, daCopiare && `${daCopiare} diar${daCopiare === 1 ? 'io' : 'i'} da copiare`, festivo && consegnati && `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}`].filter(Boolean).join(' · ') || 'Il giro di oggi, letto per letto.';
   $m('#m-vista').innerHTML = `
@@ -23159,7 +23199,10 @@ function vHome(){
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${ricoveri}${festivo ? '' : dimissioni}${consegne}${rubrica}${strumenti}</div>
     </div>`;
-  document.querySelectorAll('#m-vista .m-tile').forEach((el, k) => el.style.setProperty('--i', k));
+  const tiles = document.querySelectorAll('#m-vista .m-tile');
+  tiles.forEach((el, k) => el.style.setProperty('--i', k));
+  // all'apertura (non tornando indietro) le illustrazioni si muovono una volta, a cascata
+  if(!$m('#m-vista').classList.contains('m-quieta')) tiles.forEach((el, k) => setTimeout(() => { if(el.isConnected) animaTile(el); }, 380 + k * 70));
 }
 
 /* ---------- strumenti ---------- */
@@ -23955,6 +23998,16 @@ function apriIsolamento(iso){
 }
 
 /* ---------- tocchi ---------- */
+// riquadri della home: mouse sopra o dito appoggiato, l'illustrazione si muove
+document.getElementById('m-app').addEventListener('pointerover', e => {
+  if(e.pointerType !== 'mouse') return;
+  const t = e.target.closest('.m-tile');
+  if(t && !(e.relatedTarget && t.contains(e.relatedTarget))) animaTile(t);
+});
+document.getElementById('m-app').addEventListener('pointerdown', e => {
+  if(e.pointerType === 'mouse') return;
+  const t = e.target.closest('.m-tile'); if(t) animaTile(t);
+});
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
   const a = el.dataset.m;
