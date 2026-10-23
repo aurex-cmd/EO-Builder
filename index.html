@@ -22378,7 +22378,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"]{
     --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
-    --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-n:#eceae6; --m-home-sub:#3a4452;
+    --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
     --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -22606,7 +22606,7 @@ function editorLettereSvuota(){
   .m-tiles{ --q:calc((100cqw - 30px) / 4); flex:none; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
     grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
   .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
-  .m-tile{ --hb:var(--m-home-n); position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
+  .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
   #m-vista.m-quieta .m-tile{ animation:none; }
   .m-tile:active{ transform:scale(.97); }
   .m-tile b{ display:block; font-size:15.5px; font-weight:700; letter-spacing:-.01em; line-height:1.2; }
@@ -22615,13 +22615,14 @@ function editorLettereSvuota(){
   .m-tile-giu{ display:block; min-width:0; }
   .m-hic{ display:grid; place-items:center; width:22px; height:22px; flex:0 0 auto; color:var(--m-home-sub); opacity:.7; }
   .m-hic svg{ width:100%; height:100%; }
-  .m-hnum{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 5px; font-size:38px; font-weight:800; letter-spacing:-.035em; line-height:1; color:var(--m-teal); }
-  .m-hnum small{ white-space:nowrap; font-size:14px; font-weight:600; letter-spacing:0; margin:0; color:var(--m-teal); }
+  .m-hnum{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 5px; font-size:38px; font-weight:800; letter-spacing:-.035em; line-height:1; color:var(--m-ink); }
+  .m-hnum small{ white-space:nowrap; font-size:14px; font-weight:600; letter-spacing:0; margin:0; color:var(--m-home-sub); }
   .m-tile-giu .m-hnum{ margin-bottom:8px; }
   .m-t-visita{ grid-area:v; --hb:var(--m-home-a); } .m-t-diari{ grid-area:d; --hb:var(--m-home-b); }
   .m-t-visita b, .m-t-diari b{ font-size:19px; }
   .m-h1.m-h1-home{ text-transform:none; margin-top:14px; }
-  .m-t-ric{ grid-area:r; } .m-t-dim{ grid-area:m; } .m-t-cons{ grid-area:c; } .m-t-str{ grid-area:s; } .m-t-rub{ grid-area:t; }
+  .m-t-ric{ grid-area:r; --hb:var(--m-home-c); } .m-t-dim{ grid-area:m; --hb:var(--m-home-d); } .m-t-cons{ grid-area:c; --hb:var(--m-home-e); }
+  .m-t-str{ grid-area:s; --hb:var(--m-home-f); } .m-t-rub{ grid-area:t; --hb:var(--m-home-g); }
   .m-tile-riga{ justify-content:space-between; padding:12px 14px; }
   .m-tile-barra{ flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; padding:10px 14px; }
   .m-tile-barra .m-tile-giu{ flex:1; }
