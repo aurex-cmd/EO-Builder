@@ -22378,7 +22378,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"]{
     --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
-    --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
+    --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-n:#eceae6; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
     --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -22606,35 +22606,28 @@ function editorLettereSvuota(){
   .m-tiles{ --q:calc((100cqw - 30px) / 4); flex:none; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
     grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
   .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
-  .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
+  .m-tile{ --hb:var(--m-home-n); position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
   #m-vista.m-quieta .m-tile{ animation:none; }
   .m-tile:active{ transform:scale(.97); }
   .m-tile b{ display:block; font-size:15.5px; font-weight:700; letter-spacing:-.01em; line-height:1.2; }
   .m-tile small{ display:block; font-size:12.3px; color:var(--m-home-sub); line-height:1.3; margin-top:2px; }
   .m-tile-su{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .m-tile-giu{ display:block; min-width:0; }
-  .m-hic{ display:grid; place-items:center; width:26px; height:26px; flex:0 0 auto; }
+  .m-hic{ display:grid; place-items:center; width:22px; height:22px; flex:0 0 auto; color:var(--m-home-sub); opacity:.7; }
   .m-hic svg{ width:100%; height:100%; }
-  .m-hic-w{ width:44px; height:44px; border-radius:13px; background:#fff; }
-  .m-hic-w svg{ width:24px; height:24px; }
-  .m-hnum{ display:flex; align-items:baseline; gap:4px; font-size:32px; font-weight:800; letter-spacing:-.03em; line-height:1; }
-  .m-hnum small{ font-size:13.5px; font-weight:600; letter-spacing:0; margin:0; }
-  .m-tile-giu .m-hnum{ margin-bottom:6px; }
-  .m-hring{ width:48px; height:48px; transform:rotate(-90deg); }
-  .m-hring circle{ fill:none; stroke-width:6; stroke:rgba(255,255,255,.65); }
-  .m-hring circle + circle{ stroke:var(--m-teal); stroke-linecap:round; }
+  .m-hnum{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 5px; font-size:38px; font-weight:800; letter-spacing:-.035em; line-height:1; color:var(--m-teal); }
+  .m-hnum small{ white-space:nowrap; font-size:14px; font-weight:600; letter-spacing:0; margin:0; color:var(--m-teal); }
+  .m-tile-giu .m-hnum{ margin-bottom:8px; }
   .m-t-visita{ grid-area:v; --hb:var(--m-home-a); } .m-t-diari{ grid-area:d; --hb:var(--m-home-b); }
   .m-t-visita b, .m-t-diari b{ font-size:19px; }
-  .m-t-ric{ grid-area:r; --hb:var(--m-home-c); } .m-t-dim{ grid-area:m; --hb:var(--m-home-d); } .m-t-cons{ grid-area:c; --hb:var(--m-home-e); }
-  .m-t-str{ grid-area:s; --hb:var(--m-home-f); } .m-t-rub{ grid-area:t; --hb:var(--m-home-g); }
+  .m-h1.m-h1-home{ text-transform:none; margin-top:14px; }
+  .m-t-ric{ grid-area:r; } .m-t-dim{ grid-area:m; } .m-t-cons{ grid-area:c; } .m-t-str{ grid-area:s; } .m-t-rub{ grid-area:t; }
   .m-tile-riga{ justify-content:space-between; padding:12px 14px; }
-  .m-tile-riga .m-hic{ width:22px; height:22px; }
   .m-tile-barra{ flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; padding:10px 14px; }
   .m-tile-barra .m-tile-giu{ flex:1; }
   .m-tile-barra .m-chev{ width:16px; height:16px; color:var(--m-home-sub); opacity:.5; flex:none; }
   .m-tile-pic{ align-items:center; justify-content:center; gap:4px; padding:8px; text-align:center; }
-  .m-tile-pic b{ font-size:12px; font-weight:600; }
-  .m-tile-pic .m-hic{ width:22px; height:22px; }
+  .m-tile-pic b{ font-size:13.5px; font-weight:600; }
   .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
   .m-rigalink svg.m-ic-app .pieno{ fill:currentColor; stroke:none; opacity:.28; }
   .m-rigalink.m-sub{ font-size:14.2px; font-weight:500; padding:9px 0; animation:none; }
@@ -23121,10 +23114,6 @@ function contiHome(){
   });
   return { letti, visti, copiati };
 }
-function anelloMini(v){
-  const r = 20, L = 2 * Math.PI * r;
-  return `<svg class="m-hring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="${r}"/><circle cx="25" cy="25" r="${r}" style="stroke-dasharray:${(L * v).toFixed(1)} ${L.toFixed(1)}"/></svg>`;
-}
 function vHome(){
   barra();
   const { letti, visti, copiati } = contiHome();
@@ -23141,22 +23130,30 @@ function vHome(){
   const dimTesto = dimOggi || dimDomani || dimSett
     ? [dimOggi && `${dimOggi} oggi`, dimDomani && `${dimDomani} domani`, (dimSett > dimOggi + dimDomani) && `${dimSett} in settimana`].filter(Boolean).join(' · ')
     : 'Nessuna in programma';
-  const daVedere = letti - visti;
-  const icoP = (ic, cls) => `<span class="m-hic${cls ? ' ' + cls : ''}">${ic}</span>`;
-  const visita = `<button class="m-tile m-t-visita" data-m="visita"><span class="m-tile-su">${icoP(ICON.steto, 'm-hic-w')}${letti ? anelloMini(visti / letti) : ''}</span><span class="m-tile-giu"><b>Visita</b><small>${!letti ? 'Nessun letto' : daVedere ? `${daVedere} lett${daVedere === 1 ? 'o' : 'i'} da vedere` : 'Tutti visti'}</small></span></button>`;
-  const diari = `<button class="m-tile m-t-diari" data-m="diari"><span class="m-tile-su">${icoP(ICON.diario, 'm-hic-w')}${visti > copiati ? `<span class="m-hnum">${visti - copiati}<small>da copiare</small></span>` : ''}</span><span class="m-tile-giu"><b>Diari</b><small>${visti ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : 'Ancora nessuno'}</small></span></button>`;
-  const ricoveri = `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu">${ricOggi ? `<span class="m-hnum">${ricOggi}<small>oggi</small></span>` : ''}<b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
+  const daVedere = letti - visti, daCopiare = visti - copiati;
+  let ultimo = 0; ric.forEach(r => { if((r.creatoIl || 0) > ultimo) ultimo = r.creatoIl; });
+  const giorniUltimo = ultimo ? Math.round((new Date().setHours(0, 0, 0, 0) - new Date(ultimo).setHours(0, 0, 0, 0)) / 864e5) : -1;
+  const icoP = ic => `<span class="m-hic">${ic}</span>`;
+  // riquadro grande: l'icona in alto, in basso il numero (solo da 1 in su), il nome e una riga
+  const grande = (cls, attr, ic, num, nome, riga) => `<button class="m-tile ${cls}" ${attr}>${icoP(ic)}<span class="m-tile-giu">${num ? `<span class="m-hnum">${num}</span>` : ''}<b>${nome}</b><small>${riga}</small></span></button>`;
+  const visita = grande('m-t-visita', 'data-m="visita"', ICON.steto, daVedere && letti ? `${daVedere}<small>da vedere</small>` : '', 'Visita',
+    !letti ? 'Nessun letto' : visti ? (daVedere ? `${visti} di ${letti} visti` : `Tutti visti, ${letti} su ${letti}`) : `${letti} letti`);
+  const diari = grande('m-t-diari', 'data-m="diari"', ICON.diario, daCopiare ? `${daCopiare}<small>da copiare</small>` : '', 'Diari',
+    visti ? (daCopiare ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : `Tutti copiati, ${visti} su ${visti}`) : 'Ancora nessuno');
+  const ricoveri = grande('m-t-ric', 'data-m="pagina" data-p="ricoveri"', ICON.ricoveri, ricOggi ? `${ricOggi}<small>oggi</small>` : '', 'Ricoveri',
+    (!ricOggi && giorniUltimo > 0 ? `Ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}<br>` : '') + `${ric.length} in tutto`);
   const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni"><span class="m-tile-su"><b>Dimissioni</b>${icoP(ICON.calendario)}</span><small>${dimTesto}</small></button>`;
   const consegne = festivo
-    ? `<button class="m-tile m-t-cons" data-m="pagina" data-p="consegne">${icoP(ICON.consegne)}<span class="m-tile-giu">${consegnati ? `<span class="m-hnum">${consegnati}<small>pazient${consegnati === 1 ? 'e consegnato' : 'i consegnati'}</small></span>` : ''}<b>Consegne Weekend</b><small>${consegnati ? 'Le consegne di oggi' : 'Incolla le consegne'}</small></span></button>`
+    ? grande('m-t-cons', 'data-m="pagina" data-p="consegne"', ICON.consegne, consegnati ? `${consegnati}<small>pazient${consegnati === 1 ? 'e consegnato' : 'i consegnati'}</small>` : '', 'Consegne Weekend', consegnati ? 'Le consegne di oggi' : 'Incolla le consegne')
     : `<button class="m-tile m-t-cons m-tile-pic" data-m="aggcons">${icoP(ICON.consegne)}<b>Consegne</b></button>`;
   const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${icoP(ICON.strumenti)}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
   const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${icoP(ICON.rubrica)}<b>Rubrica</b></button>`;
+  // sotto il titolo il punto del giro di oggi
+  const dato = [visti && `${visti} di ${letti} visti`, daCopiare && `${daCopiare} diar${daCopiare === 1 ? 'io' : 'i'} da copiare`, festivo && consegnati && `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}`].filter(Boolean).join(' · ') || 'Il giro di oggi, letto per letto.';
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
-      <h1 class="m-h1">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
-      <div class="m-rule"></div>
-      <p class="m-sub">Il giro di oggi, letto per letto.</p>
+      <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
+      <p class="m-sub">${esc(dato)}</p>
     </div>
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${ricoveri}${festivo ? '' : dimissioni}${consegne}${rubrica}${strumenti}</div>
