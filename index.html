@@ -23148,7 +23148,7 @@ function vHome(){
   const ricoveri = `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu">${ricOggi ? `<span class="m-hnum">${ricOggi}<small>oggi</small></span>` : ''}<b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
   const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni"><span class="m-tile-su"><b>Dimissioni</b>${icoP(ICON.calendario)}</span><small>${dimTesto}</small></button>`;
   const consegne = festivo
-    ? `<button class="m-tile m-t-cons" data-m="pagina" data-p="consegne">${icoP(ICON.consegne)}<span class="m-tile-giu">${consegnati ? `<span class="m-hnum">${consegnati}<small>lett${consegnati === 1 ? 'o' : 'i'} da fare</small></span>` : ''}<b>Consegne Weekend</b><small>${consegnati ? 'Le consegne di oggi' : 'Incolla le consegne'}</small></span></button>`
+    ? `<button class="m-tile m-t-cons" data-m="pagina" data-p="consegne">${icoP(ICON.consegne)}<span class="m-tile-giu">${consegnati ? `<span class="m-hnum">${consegnati}<small>pazient${consegnati === 1 ? 'e consegnato' : 'i consegnati'}</small></span>` : ''}<b>Consegne Weekend</b><small>${consegnati ? 'Le consegne di oggi' : 'Incolla le consegne'}</small></span></button>`
     : `<button class="m-tile m-t-cons m-tile-pic" data-m="aggcons">${icoP(ICON.consegne)}<b>Consegne</b></button>`;
   const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${icoP(ICON.strumenti)}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
   const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${icoP(ICON.rubrica)}<b>Rubrica</b></button>`;
