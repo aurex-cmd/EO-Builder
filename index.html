@@ -22598,9 +22598,12 @@ function editorLettereSvuota(){
   .m-main.m-main-home{ padding-bottom:0; }
   .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
   .m-home-su{ flex:none; display:flex; flex-direction:column; gap:14px; }
-  /* i riquadri a metà dello spazio sotto il titolo; scorrono solo se non ci stanno */
-  .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:16px 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
-  .m-tiles{ --q:calc((100cqw - 30px) / 4); margin:auto 0; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
+  /* i riquadri nello spazio sotto il titolo, con sopra un terzo dello spazio
+     che resta sotto; scorrono solo se non ci stanno */
+  .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:0 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
+  .m-home-giu::before{ content:""; flex:1 1 0; }
+  .m-home-giu::after{ content:""; flex:3 1 0; }
+  .m-tiles{ --q:calc((100cqw - 30px) / 4); flex:none; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
     grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
   .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
   .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
@@ -23104,7 +23107,7 @@ function barra(titolo, azione){
 // Calendario dimissioni, Consegne (Aggiorna consegne dai diari) e Rubrica;
 // in fondo Strumenti. Weekend e festivi: al posto di quei tre Consegne
 // Weekend, grande, e Rubrica scende accanto a Strumenti.
-// La griglia sta a metà dello spazio libero sotto il titolo
+// La griglia sta più in alto: lo spazio sopra è un terzo di quello sotto
 function contiHome(){
   const wm = getWardMap(), ap = loadAppoggi(), vu = lettiVuoti();
   let letti = 0, visti = 0, copiati = 0;
@@ -23141,8 +23144,8 @@ function vHome(){
   const daVedere = letti - visti;
   const icoP = (ic, cls) => `<span class="m-hic${cls ? ' ' + cls : ''}">${ic}</span>`;
   const visita = `<button class="m-tile m-t-visita" data-m="visita"><span class="m-tile-su">${icoP(ICON.steto, 'm-hic-w')}${letti ? anelloMini(visti / letti) : ''}</span><span class="m-tile-giu"><b>Visita</b><small>${!letti ? 'Nessun letto' : daVedere ? `${daVedere} lett${daVedere === 1 ? 'o' : 'i'} da vedere` : 'Tutti visti'}</small></span></button>`;
-  const diari = `<button class="m-tile m-t-diari" data-m="diari"><span class="m-tile-su">${icoP(ICON.diario, 'm-hic-w')}${visti ? `<span class="m-hnum">${visti - copiati}<small>da copiare</small></span>` : ''}</span><span class="m-tile-giu"><b>Diari</b><small>${visti ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : 'Ancora nessuno'}</small></span></button>`;
-  const ricoveri = `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu"><span class="m-hnum">${ricOggi}<small>oggi</small></span><b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
+  const diari = `<button class="m-tile m-t-diari" data-m="diari"><span class="m-tile-su">${icoP(ICON.diario, 'm-hic-w')}${visti > copiati ? `<span class="m-hnum">${visti - copiati}<small>da copiare</small></span>` : ''}</span><span class="m-tile-giu"><b>Diari</b><small>${visti ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : 'Ancora nessuno'}</small></span></button>`;
+  const ricoveri = `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu">${ricOggi ? `<span class="m-hnum">${ricOggi}<small>oggi</small></span>` : ''}<b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
   const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni"><span class="m-tile-su"><b>Dimissioni</b>${icoP(ICON.calendario)}</span><small>${dimTesto}</small></button>`;
   const consegne = festivo
     ? `<button class="m-tile m-t-cons" data-m="pagina" data-p="consegne">${icoP(ICON.consegne)}<span class="m-tile-giu">${consegnati ? `<span class="m-hnum">${consegnati}<small>lett${consegnati === 1 ? 'o' : 'i'} da fare</small></span>` : ''}<b>Consegne Weekend</b><small>${consegnati ? 'Le consegne di oggi' : 'Incolla le consegne'}</small></span></button>`
