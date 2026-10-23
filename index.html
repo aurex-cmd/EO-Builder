@@ -23125,18 +23125,19 @@ function barra(titolo, azione){
 // in fondo Strumenti. Weekend e festivi: al posto di quei tre Consegne
 // Weekend, grande, e Rubrica scende accanto a Strumenti.
 // La griglia sta più in alto: lo spazio sopra è un terzo di quello sotto
+// i pazienti visti oggi in tutto il reparto (letti e appoggi) e quanti
+// diari sono già copiati: quanti letti toccano a ciascuno non si sa prima,
+// ognuno vede il suo settore
 function contiHome(){
-  const wm = getWardMap(), ap = loadAppoggi(), vu = lettiVuoti();
-  let letti = 0, visti = 0, copiati = 0;
+  const wm = getWardMap(), ap = loadAppoggi();
+  let visti = 0, copiati = 0;
   settori().forEach(s => {
-    [...(wm[s] || []).map(n => [bedName(n), false]), ...(ap[s] || []).map(n => [n, true])].forEach(([n, a]) => {
+    [...(wm[s] || []).map(bedName), ...(ap[s] || [])].forEach(n => {
       const i = infoLetto(n);
-      if(!a && !i.occupato && vu[n]) return;
-      letti++;
       if(i.diOggi){ visti++; if(i.copiato) copiati++; }
     });
   });
-  return { letti, visti, copiati };
+  return { visti, copiati };
 }
 // illustrazioni dei riquadri della home, piatte, nei toni di ciascun
 // riquadro; le parti con una classe a-* si muovono quando il riquadro si
@@ -23158,7 +23159,7 @@ const ARTE = (() => {
 function animaTile(el){ el.classList.remove('m-anima'); void el.offsetWidth; el.classList.add('m-anima'); }
 function vHome(){
   barra();
-  const { letti, visti, copiati } = contiHome();
+  const { visti, copiati } = contiHome();
   const festivo = eFestivo(new Date());
   const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
@@ -23172,13 +23173,13 @@ function vHome(){
   const dimTesto = dimOggi || dimDomani || dimSett
     ? [dimOggi && `${dimOggi} oggi`, dimDomani && `${dimDomani} domani`, (dimSett > dimOggi + dimDomani) && `${dimSett} in settimana`].filter(Boolean).join(' · ')
     : 'Nessuna in programma';
-  const daVedere = letti - visti, daCopiare = visti - copiati;
+  const daCopiare = visti - copiati;
   let ultimo = 0; ric.forEach(r => { if((r.creatoIl || 0) > ultimo) ultimo = r.creatoIl; });
   const giorniUltimo = ultimo ? Math.round((new Date().setHours(0, 0, 0, 0) - new Date(ultimo).setHours(0, 0, 0, 0)) / 864e5) : -1;
   // riquadro grande: l'icona in alto, in basso il numero (solo da 1 in su), il nome e una riga
   const grande = (cls, attr, art, num, nome, riga) => `<button class="m-tile m-tile-grande ${cls}" ${attr}>${art}<span class="m-tile-giu">${num ? `<span class="m-hnum">${num}</span>` : ''}<b>${nome}</b><small>${riga}</small></span></button>`;
-  const visita = grande('m-t-visita', 'data-m="visita"', ARTE.visita, daVedere && letti ? `${daVedere}<small>da vedere</small>` : '', 'Visita',
-    !letti ? 'Nessun letto' : visti ? (daVedere ? `${visti} di ${letti} visti` : `Tutti visti, ${letti} su ${letti}`) : `${letti} letti`);
+  const visita = grande('m-t-visita', 'data-m="visita"', ARTE.visita, visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '', 'Visita',
+    'Esame obiettivo al letto');
   const diari = grande('m-t-diari', 'data-m="diari"', ARTE.diari, daCopiare ? `${daCopiare}<small>da copiare</small>` : '', 'Diari',
     visti ? (daCopiare ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : `Tutti copiati, ${visti} su ${visti}`) : 'Ancora nessuno');
   const ricoveri = grande('m-t-ric', 'data-m="pagina" data-p="ricoveri"', ARTE.ricoveri, ricOggi ? `${ricOggi}<small>oggi</small>` : '', 'Ricoveri',
@@ -23190,7 +23191,7 @@ function vHome(){
   const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${ARTE.strumenti}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
   const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${ARTE.rubrica}<b>Rubrica</b></button>`;
   // sotto il titolo il punto del giro di oggi
-  const dato = [visti && `${visti} di ${letti} visti`, daCopiare && `${daCopiare} diar${daCopiare === 1 ? 'io' : 'i'} da copiare`, festivo && consegnati && `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}`].filter(Boolean).join(' · ') || 'Il giro di oggi, letto per letto.';
+  const dato = [visti && `${visti} vist${visti === 1 ? 'o' : 'i'}`, daCopiare && `${daCopiare} diar${daCopiare === 1 ? 'io' : 'i'} da copiare`, festivo && consegnati && `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}`].filter(Boolean).join(' · ') || 'Il giro di oggi, letto per letto.';
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
       <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
