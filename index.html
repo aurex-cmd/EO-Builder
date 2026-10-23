@@ -22601,8 +22601,8 @@ function editorLettereSvuota(){
   /* i riquadri a metà dello spazio sotto il titolo; scorrono solo se non ci stanno */
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:16px 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
   .m-tiles{ --q:calc((100cqw - 30px) / 4); margin:auto 0; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
-    grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c c" "s s s t"; }
-  .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "c c r r" "c c m m" "s s s t"; }
+    grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
+  .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
   .m-tile{ position:relative; display:flex; flex-direction:column; justify-content:space-between; gap:6px; min-width:0; padding:13px 14px; border:0; border-radius:22px; background:var(--hb); color:var(--m-ink); font-family:inherit; text-align:left; cursor:pointer; overflow:hidden; transition:transform .12s var(--m-molla); animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 60ms); }
   #m-vista.m-quieta .m-tile{ animation:none; }
   .m-tile:active{ transform:scale(.97); }
@@ -23100,9 +23100,10 @@ function barra(titolo, azione){
 }
 
 /* ---------- home ---------- */
-// riquadri: Visita e Diari grandi in alto; sotto Ricoveri, Calendario
-// dimissioni e Consegne (feriali: Aggiorna consegne dai diari; weekend e
-// festivi: Consegne Weekend, più grande); in fondo Strumenti e Rubrica.
+// riquadri: Visita e Diari grandi in alto; sotto Ricoveri e, accanto,
+// Calendario dimissioni, Consegne (Aggiorna consegne dai diari) e Rubrica;
+// in fondo Strumenti. Weekend e festivi: al posto di quei tre Consegne
+// Weekend, grande, e Rubrica scende accanto a Strumenti.
 // La griglia sta a metà dello spazio libero sotto il titolo
 function contiHome(){
   const wm = getWardMap(), ap = loadAppoggi(), vu = lettiVuoti();
@@ -23141,13 +23142,11 @@ function vHome(){
   const icoP = (ic, cls) => `<span class="m-hic${cls ? ' ' + cls : ''}">${ic}</span>`;
   const visita = `<button class="m-tile m-t-visita" data-m="visita"><span class="m-tile-su">${icoP(ICON.steto, 'm-hic-w')}${letti ? anelloMini(visti / letti) : ''}</span><span class="m-tile-giu"><b>Visita</b><small>${!letti ? 'Nessun letto' : daVedere ? `${daVedere} lett${daVedere === 1 ? 'o' : 'i'} da vedere` : 'Tutti visti'}</small></span></button>`;
   const diari = `<button class="m-tile m-t-diari" data-m="diari"><span class="m-tile-su">${icoP(ICON.diario, 'm-hic-w')}${visti ? `<span class="m-hnum">${visti - copiati}<small>da copiare</small></span>` : ''}</span><span class="m-tile-giu"><b>Diari</b><small>${visti ? `${copiati} di ${visti} copiat${visti === 1 ? 'o' : 'i'}` : 'Ancora nessuno'}</small></span></button>`;
-  const ricoveri = festivo
-    ? `<button class="m-tile m-t-ric m-tile-riga" data-m="pagina" data-p="ricoveri"><span class="m-tile-su"><b>Ricoveri</b>${icoP(ICON.ricoveri)}</span><small>${ricOggi ? `${ricOggi} oggi · ` : ''}${ric.length} in tutto</small></button>`
-    : `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu"><span class="m-hnum">${ricOggi}<small>oggi</small></span><b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
+  const ricoveri = `<button class="m-tile m-t-ric" data-m="pagina" data-p="ricoveri">${icoP(ICON.ricoveri)}<span class="m-tile-giu"><span class="m-hnum">${ricOggi}<small>oggi</small></span><b>Ricoveri</b><small>${ric.length} in tutto</small></span></button>`;
   const dimissioni = `<button class="m-tile m-t-dim m-tile-riga" data-m="pagina" data-p="dimissioni"><span class="m-tile-su"><b>Dimissioni</b>${icoP(ICON.calendario)}</span><small>${dimTesto}</small></button>`;
   const consegne = festivo
     ? `<button class="m-tile m-t-cons" data-m="pagina" data-p="consegne">${icoP(ICON.consegne)}<span class="m-tile-giu">${consegnati ? `<span class="m-hnum">${consegnati}<small>lett${consegnati === 1 ? 'o' : 'i'} da fare</small></span>` : ''}<b>Consegne Weekend</b><small>${consegnati ? 'Le consegne di oggi' : 'Incolla le consegne'}</small></span></button>`
-    : `<button class="m-tile m-t-cons m-tile-riga" data-m="aggcons"><span class="m-tile-su"><b>Consegne</b>${icoP(ICON.consegne)}</span><small>Aggiorna dai diari di oggi</small></button>`;
+    : `<button class="m-tile m-t-cons m-tile-pic" data-m="aggcons">${icoP(ICON.consegne)}<b>Consegne</b></button>`;
   const strumenti = `<button class="m-tile m-t-str m-tile-barra" data-m="strumenti-home">${icoP(ICON.strumenti)}<span class="m-tile-giu"><b>Strumenti</b><small>EGA, ECG, farmaci, score…</small></span>${ICON.chev}</button>`;
   const rubrica = `<button class="m-tile m-t-rub m-tile-pic" data-m="rubrica">${icoP(ICON.rubrica)}<b>Rubrica</b></button>`;
   $m('#m-vista').innerHTML = `
@@ -23157,7 +23156,7 @@ function vHome(){
       <p class="m-sub">Il giro di oggi, letto per letto.</p>
     </div>
     <div class="m-home-giu" id="m-home-giu">
-      <div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${festivo ? consegne + ricoveri : ricoveri + dimissioni}${festivo ? dimissioni : consegne}${strumenti}${rubrica}</div>
+      <div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${ricoveri}${festivo ? '' : dimissioni}${consegne}${rubrica}${strumenti}</div>
     </div>`;
   document.querySelectorAll('#m-vista .m-tile').forEach((el, k) => el.style.setProperty('--i', k));
 }
