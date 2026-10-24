@@ -22630,6 +22630,7 @@ function editorLettereSvuota(){
   .m-home-info{ flex:none; margin-top:auto; padding-top:18px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
   .m-home-info p{ margin:0; } .m-home-info b{ color:#4b5563; font-weight:700; }
   .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-faint); }
+  #m-vista.m-ferma .m-rigalink{ animation:none; }
   .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
   .m-rigalink svg.m-ic-app .pieno{ fill:currentColor; stroke:none; opacity:.28; }
   .m-rigalink.m-sub{ font-size:14.2px; font-weight:500; padding:9px 0; animation:none; }
@@ -22637,13 +22638,14 @@ function editorLettereSvuota(){
   .m-apri-sotto .m-chev{ transition:transform .35s var(--m-molla); }
   .m-apri-sotto.m-aperta .m-chev{ transform:rotate(90deg); }
   .m-apri-sotto.m-aperta{ border-bottom-color:transparent; }
-  .m-sotto{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--m-molla); }
-  .m-sotto.m-aperta{ grid-template-rows:1fr; border-bottom:1px solid var(--m-line); }
-  .m-sotto > div{ overflow:hidden; padding-left:38px; }
+  /* sottomenu (Box farmaci, Anticoagulanti, ...): l'altezza scorre da 0 a quella vera (vedi apriSotto) e le voci compaiono in dissolvenza */
+  .m-sotto{ height:0; overflow:hidden; border-bottom:1px solid transparent; transition:height .3s cubic-bezier(.4,0,.2,1), border-color .3s; }
+  .m-sotto.m-aperta{ border-bottom-color:var(--m-line); }
+  .m-sotto > div{ padding-left:38px; opacity:0; transition:opacity .22s ease; }
+  .m-sotto.m-aperta > div{ opacity:1; transition-delay:.06s; }
   .m-sotto .m-sotto > div{ padding-left:14px; }
   .m-sotto .m-rigalink{ border-bottom:1px solid var(--m-line); }
   .m-sotto > div > :last-child, .m-sotto > div > .m-sotto:last-child{ border-bottom:0; }
-  .m-sotto.m-aperta > div > .m-rigalink{ animation:m-compare .3s var(--m-molla) both; }
   /* gesto indietro: la pagina segue il dito */
   .m-segue{ transition:none !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
   .m-rilascia{ transition:transform .22s cubic-bezier(.2,.7,.3,1) !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
@@ -22803,6 +22805,10 @@ function editorLettereSvuota(){
   #m-settori .m-anello-f{ stroke:var(--m-home-f); } #m-settori .m-anello-a{ stroke:#4f7fb3; }
   .m-rep-sx:not(#m-settori) .m-anello-f{ stroke:#fbe5d8; } .m-rep-sx:not(#m-settori) .m-anello-a{ stroke:#c96b44; }
   .m-rep .m-rep-link{ background:var(--m-home-f); }
+  /* Diari: Aggiorna consegne al centro della colonna, ambrato come le consegne */
+  .m-rep .m-rep-link.m-rep-cons{ background:#f6e5bb; color:#6b4a0f; font-size:11px; padding:6px 5px 6px 10px; }
+  .m-rep-sx:not(#m-settori){ align-items:center; padding-right:12px; }
+  .m-rep-sx:not(#m-settori) .m-lt-top{ align-self:flex-start; }
   .m-lbl-letto{ width:20px; height:15px; margin:0 6px -2px 0; vertical-align:baseline; }
   .m-rep-sx{ position:relative; padding-top:2px; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
@@ -23100,8 +23106,10 @@ function disegna(verso){
   nascondiViste();
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
-  // la home compare ferma, senza scorrimento né cascata
-  if(verso && M.vista !== 'home') v.classList.add(verso);
+  // la home e Strumenti compaiono fermi, senza scorrimento né cascata
+  if(verso && M.vista !== 'home' && M.vista !== 'strumenti') v.classList.add(verso);
+  // anche Strumenti compare fermo, senza le voci a cascata
+  v.classList.toggle('m-ferma', M.vista === 'strumenti');
   // a cascata solo andando avanti (o alla prima apertura); finita l'entrata
   // la vista resta "quieta", così i ridisegni dei letti non la ripetono
   const cascata = verso === 'm-avanti' || !M.giaAperta;
@@ -23299,7 +23307,7 @@ function vSettore(){
     ${bento ? '<div id="m-bento"></div>' : diari ? `
     <div class="m-rep">
       <div class="m-rep-sx"><p class="m-lt-top">Pazienti visti</p>${anelloHtml()}
-        <button class="m-rep-link" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
+        <button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
       <div class="m-rep-dx" id="m-diari-letti"></div>
     </div>` : `
     <div class="m-rep">
@@ -24016,6 +24024,19 @@ function apriIsolamento(iso){
   document.getElementById('isolamento-modal-overlay').classList.add('show');
 }
 
+// apre o chiude un sottomenu di Strumenti: l'altezza passa da 0 a quella del
+// contenuto (o viceversa) e, finita l'apertura, torna "auto", così un
+// sottomenu aperto dentro un altro può crescere
+function apriSotto(btn){
+  const box = btn.nextElementSibling, apri = !box.classList.contains('m-aperta');
+  btn.classList.toggle('m-aperta', apri);
+  box.style.height = (apri ? 0 : box.scrollHeight) + 'px';
+  void box.offsetHeight;
+  box.classList.toggle('m-aperta', apri);
+  box.style.height = (apri ? box.scrollHeight : 0) + 'px';
+  clearTimeout(box._fine);
+  box._fine = setTimeout(() => { if(box.classList.contains('m-aperta')) box.style.height = 'auto'; }, 320);
+}
 /* ---------- tocchi ---------- */
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
@@ -24025,7 +24046,7 @@ document.getElementById('m-app').addEventListener('click', e => {
     const p = loadPatients()[M.id];
     apriIsolamento(isolamentoPerLetto(M.letto, p ? statoScheda(M.id, p).isolamento : null));
   }
-  else if(a === 'sotto'){ el.classList.toggle('m-aperta'); el.nextElementSibling.classList.toggle('m-aperta'); }
+  else if(a === 'sotto') apriSotto(el);
   else if(a === 'app-azione'){ const orig = azioniApp[+el.dataset.a]; if(orig) orig.click(); }
   else if(a === 'pagina') vai('app', { pag:el.dataset.p });
   else if(a === 'vitali'){ settoreVitali = M.settore; vai('app', { pag:'vitali' }); }
