@@ -22413,6 +22413,19 @@ function editorLettereSvuota(){
   /* durante la visita la barra resta fissa sopra la schermata dei tag */
   html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; box-shadow:0 1px 0 var(--m-line); }
   html[data-m-eo] #clinical-view{ padding-top:calc(64px + env(safe-area-inset-top,0px)); }
+  /* esame obiettivo "notte": schede scure in blu notte, piatte, coi caratteri
+     della minimal; i tag restano quelli dell'app (selezionati in teal) */
+  html[data-m-eo] .m-bar .m-azione[data-m="fatto"]{ background:var(--m-notte); color:#fff; padding:7px 16px; border-radius:999px; font-size:.85rem; }
+  html[data-m-eo] .m-bar .m-bar-t{ font-family:var(--m-scheda); font-weight:800; }
+  html[data-ui="minimal"] #clinical-view .card{ background:#132235; border-color:#1c3048; border-radius:16px; box-shadow:0 1px 2px rgba(15,25,40,.10), 0 6px 18px rgba(15,25,40,.10); margin:12px 14px 0; }
+  html[data-ui="minimal"] #clinical-view .card h2{ font-family:var(--m-scheda); font-weight:800; letter-spacing:-.01em; font-size:17px; }
+  html[data-ui="minimal"] #clinical-view .card h2 .hicon{ stroke:#9cc3ea; color:#9cc3ea; }
+  html[data-ui="minimal"] #clinical-view .group-label{ font-family:var(--m-scheda); text-transform:uppercase; letter-spacing:.08em; font-size:10.5px; font-weight:700; color:#8fa7c2; }
+  html[data-ui="minimal"] #clinical-view .chip{ box-shadow:none; }
+  html[data-ui="minimal"] #clinical-view .chip:not(.active){ background:#1b2f47; border-color:#24405e; color:#e6edf5; }
+  html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
+  html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
+  html[data-ui="minimal"] #clinical-view #reset-btn{ background:#1b2f47; border-color:#24405e; color:#e6edf5; box-shadow:none; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
