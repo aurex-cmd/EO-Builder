@@ -22378,6 +22378,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"]{
     --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
+    --m-notte:#1f4e79;
     --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
@@ -22417,7 +22418,7 @@ function editorLettereSvuota(){
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
   html[data-m-orig] :is(.m-segue, .m-rilascia){ background:var(--page) !important; }
   .m-marchio{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; letter-spacing:-.01em; }
-  .m-marchio i{ width:32px; height:32px; border-radius:9px; background:#1f4e79; color:var(--m-bg); display:grid; place-items:center; font-style:normal; font-size:13px; font-weight:800; }
+  .m-marchio i{ width:32px; height:32px; border-radius:9px; background:var(--m-notte); color:var(--m-bg); display:grid; place-items:center; font-style:normal; font-size:13px; font-weight:800; }
   .m-data{ font-size:.8rem; color:var(--m-muted); }
 
   .m-main{ max-width:560px; margin:0 auto; padding:4px 16px 120px; }
@@ -22612,7 +22613,7 @@ function editorLettereSvuota(){
   .m-ingr .m-sn small{ font-size:13px; font-weight:500; letter-spacing:0; color:var(--m-muted); }
   .m-ingr .m-ss{ margin-top:2px; font-size:12.5px; color:var(--m-muted); }
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
-  .m-ingr.m-pri{ background:#1f4e79; border-color:#1f4e79; color:#fff; }
+  .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   .m-ingr.m-pri :is(.m-sh, .m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
   .m-elenco{ flex:none; margin-top:16px; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   .m-voce{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:14.5px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 35ms + 40ms); }
@@ -22710,7 +22711,8 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .chip:active{ transform:scale(.94); }
   html[data-ui="minimal"] .m-pagina .btn{ border:1px solid var(--m-line); background:var(--m-bg); color:var(--m-ink); border-radius:12px; box-shadow:none; font-family:var(--m-sans); font-weight:600; font-size:.9rem; padding:11px 16px; transition:transform .14s var(--m-molla), background .2s; }
   html[data-ui="minimal"] .m-pagina .btn:active{ transform:scale(.97); }
-  html[data-ui="minimal"] .m-pagina .btn.primary{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; }
+  /* i pulsanti principali delle pagine nel blu notte della scheda Visita della home */
+  html[data-ui="minimal"] .m-pagina .btn.primary, html[data-ui="minimal"]:not([data-m-orig]) .admit-copy-btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   html[data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:#fff !important; }
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:12px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-teal); outline:none; }
@@ -22735,6 +22737,13 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #ricoveri-view .admit-block-title{ font-family:var(--m-sans); font-size:.95rem; font-weight:700; color:var(--m-ink); letter-spacing:0; }
   html[data-ui="minimal"] #ricoveri-view .ric-stat-link{ color:var(--m-muted); font-weight:500; }
   html[data-ui="minimal"] #ricoveri-view .ric-cal-grid{ background:none; }
+  /* calendario dei ricoveri nello stesso blu notte dei pulsanti */
+  html[data-ui="minimal"] #ricoveri-view :is(.ric-cal-day, .ric-cal-weekday).weekend{ color:#5b7a99; }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-day.oggi{ color:var(--m-notte); }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-day.attivo, html[data-ui="minimal"] #ricoveri-view .ric-cal-day.attivo *{ color:#fff; }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-day.attivo{ background:var(--m-notte); box-shadow:none; }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-dot{ background:var(--m-notte); }
+  html[data-ui="minimal"] #ricoveri-view .ric-cal-day.attivo .ric-cal-dot{ background:#fff; }
   html[data-ui="minimal"] #ricoveri-view .admit-block > div:not(.admit-block-head){ background:none; }
   .m-ric-tab{ margin:0 0 16px; }
 
