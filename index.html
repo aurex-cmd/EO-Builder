@@ -22465,7 +22465,9 @@ function editorLettereSvuota(){
   html[data-ui="minimal"]:not([data-m-orig]) #toast{ background:var(--m-ink); border-color:var(--m-ink); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.18); font-family:var(--m-sans); }
 
   /* scheda del letto */
-  .m-velo{ position:fixed; inset:0; z-index:60; background:rgba(15,20,28,.22); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .3s; }
+  .m-velo{ position:fixed; left:0; right:0; top:0; height:calc(env(safe-area-inset-top,0px) + 150px); z-index:60; background:rgba(15,20,28,.22); box-shadow:0 0 0 100vh rgba(15,20,28,.22); clip-path:inset(0 0 -100vh 0); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .3s; will-change:opacity; }
+  /* sfocata solo la striscia visibile sopra la scheda (sotto basta l'ombra
+     scura): sfocare tutto lo schermo a fine salita faceva scattare il telefono */
   .m-velo.m-su{ opacity:1; pointer-events:auto; }
   .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:22px 22px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:16.2px; color:var(--m-ink); }
   .m-scheda.m-su{ transform:none; }
