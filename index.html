@@ -22601,10 +22601,10 @@ function editorLettereSvuota(){
   /* i riquadri nello spazio sotto il titolo, con sopra un terzo dello spazio
      che resta sotto; scorrono solo se non ci stanno */
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:0 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
-  .m-home-sopra{ flex:none; min-height:100%; display:flex; flex-direction:column; }
+  .m-home-sopra{ flex:1 0 auto; display:flex; flex-direction:column; }
   .m-home-sopra::before{ content:""; flex:1 1 0; }
   .m-home-sopra::after{ content:""; flex:3 1 0; }
-  /* la nota sull'app, in fondo alla home: sotto lo spazio dei riquadri, si raggiunge scorrendo */
+  /* la nota sull'app, sempre in fondo alla home, sotto lo spazio dei riquadri */
   .m-home-info{ flex:none; padding-top:8px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
   .m-home-info p{ margin:0; } .m-home-info b{ color:var(--m-sub, var(--m-home-sub)); font-weight:700; }
   .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-faint); }
