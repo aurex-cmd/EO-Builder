@@ -22426,6 +22426,18 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
   html[data-ui="minimal"] #clinical-view #reset-btn{ background:#1b2f47; border-color:#24405e; color:#e6edf5; box-shadow:none; }
+  /* una riga per sistema: chiusa mostra il pezzo di referto e il pallino */
+  html[data-ui="minimal"] #clinical-view .card.m-chiusa > :not(h2):not(.m-ri){ display:none; }
+  html[data-ui="minimal"] #clinical-view .card:has(> .m-ri){ padding-top:13px; padding-bottom:13px; margin-top:8px; }
+  html[data-ui="minimal"] #clinical-view .card > h2[role="button"]{ display:flex; align-items:center; gap:10px; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  html[data-ui="minimal"] #clinical-view .card > h2[role="button"]::before{ content:''; order:9; margin-left:auto; flex:0 0 auto; width:7px; height:7px; border-radius:50%; background:#35d0ae; box-shadow:0 0 0 3px rgba(53,208,174,.15); }
+  html[data-ui="minimal"] #clinical-view .card.m-alt > h2[role="button"]::before{ background:#f2b84b; box-shadow:0 0 0 3px rgba(242,184,75,.16); }
+  html[data-ui="minimal"] #clinical-view .card > h2[role="button"]::after{ content:''; order:10; flex:0 0 auto; width:7px; height:7px; border-right:2px solid #6f89a6; border-bottom:2px solid #6f89a6; transform:rotate(-135deg); margin:4px 4px 0 2px; transition:transform .25s var(--m-molla); }
+  html[data-ui="minimal"] #clinical-view .card.m-chiusa > h2[role="button"]::after{ transform:rotate(45deg); margin-top:-3px; }
+  html[data-ui="minimal"] #clinical-view .m-ri{ margin:6px 0 0; font-family:var(--m-scheda); font-size:13.5px; line-height:1.45; color:#b9c8d8; cursor:pointer; }
+  html[data-ui="minimal"] #clinical-view .card.m-alt .m-ri{ color:#f5cf86; }
+  html[data-ui="minimal"] #clinical-view .m-ri.m-vuoto{ color:#5f7792; }
+  html[data-ui="minimal"] #clinical-view .card:not(.m-chiusa) > .m-ri{ margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #1d3149; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
@@ -23561,6 +23573,7 @@ function apriVisita(nome, daScheda){
   vai('eo', { letto:nome, daScheda:!!daScheda });
   apriLetto(nome);
   mostraVista('clinical');
+  righeSistemi(true);
   window.scrollTo(0, 0);
 }
 function fineVisita(){
@@ -23570,6 +23583,81 @@ function fineVisita(){
   if(torna){ const e = voce(nome); if(e) setTimeout(() => apriScheda(nome), 120); }
   else disegnaLetti();
 }
+
+/* ---------- visita: una riga per sistema ---------- */
+// ogni sistema dell'esame obiettivo è una riga chiusa col suo pezzo di
+// referto (dalle stesse funzioni del referto) e un pallino: teal se è come
+// in una scheda nuova, ambra se si discosta. Toccando il titolo si apre (e
+// le altre si chiudono): dentro ci sono i tag dell'app, invariati
+const SISTEMI = [
+  ['card-sesso', null],
+  ['card-coscienza', () => composeCoscienza()],
+  ['card-respiro', () => composeRespiroConNota()],
+  ['card-diuresi', () => composeDiuresi()],
+  ['card-cuore', () => conNotaLibera(composeCuore(), state.cuore.nota)],
+  ['card-torace', () => conNotaLibera(composeToraceClean(), state.torace.nota)],
+  ['card-addome', () => composeAddome()],
+  ['card-cute', () => [composeCuteSenzaDiscromie(), composeDiscromieVenosa()].filter(Boolean).join(' ')],
+  ['card-edemi', () => composeEdemi()],
+  ['card-lingua', () => conNotaLibera(composeLingua(), state.lingua.nota)],
+  ['card-neuro', () => conNotaLibera(composeNeuro(), state.neuro.nota)]
+];
+function riassuntoSistema(id, f){
+  if(!f){
+    const card = document.getElementById(id);
+    return card ? [...card.querySelectorAll('.chip.active')].map(c => c.textContent.trim()).filter(t => t.length > 1).join(', ') : '';
+  }
+  try{ return f() || ''; } catch(e){ return ''; }
+}
+// le frasi di una scheda nuova, calcolate una volta sola su uno stato vuoto
+let sistemiNorma = null;
+function normaSistemi(){
+  if(sistemiNorma) return sistemiNorma;
+  const backup = serializeState(), frasi = {};
+  try{
+    applyStateObject({});
+    SISTEMI.forEach(([id, f]) => { frasi[id] = riassuntoSistema(id, f); });
+  } finally { applyStateObject(backup); renderAll(); }  // i tag si ricollegano allo stato vero
+  return sistemiNorma = frasi;
+}
+function righeSistemi(chiudiTutte){
+  const norma = normaSistemi();
+  SISTEMI.forEach(([id, f]) => {
+    const card = document.getElementById(id); if(!card) return;
+    if(chiudiTutte) card.classList.add('m-chiusa');
+    let ri = card.querySelector(':scope > .m-ri');
+    if(!ri){
+      ri = document.createElement('p'); ri.className = 'm-ri';
+      const h = card.querySelector(':scope > h2');
+      h.setAttribute('role', 'button');
+      h.after(ri);
+    }
+    const testo = riassuntoSistema(id, f);
+    ri.textContent = testo || (f ? 'Non riportato' : 'Sesso non indicato');
+    ri.classList.toggle('m-vuoto', !testo);
+    card.classList.toggle('m-alt', f ? testo !== norma[id] : !!testo && !/^(Maschio|Femmina)$/.test(testo));
+  });
+}
+function apriSistema(card){
+  const apri = card.classList.contains('m-chiusa');
+  SISTEMI.forEach(([id]) => { const c = document.getElementById(id); if(c) c.classList.add('m-chiusa'); });
+  if(!apri) return;
+  card.classList.remove('m-chiusa');
+  // il titolo in alto, sotto la barra
+  const bar = $m('#m-bar'), y = card.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0) - 10;
+  window.scrollTo({ top:Math.max(0, y), behavior:'smooth' });
+}
+document.addEventListener('click', e => {
+  if(M.vista !== 'eo' || !e.target.closest) return;
+  const h = e.target.closest('#clinical-view .card > h2, #clinical-view .card.m-chiusa > .m-ri');
+  if(h && SISTEMI.some(([id]) => id === h.parentElement.id)){ apriSistema(h.parentElement); return; }
+  // un tag toccato: l'app lo ridisegna (il tag si stacca dalla pagina), quindi
+  // si guarda in cattura, prima, e il riassunto si aggiorna dopo
+  if(e.target.closest('#clinical-view .card')) requestAnimationFrame(() => righeSistemi(false));
+}, true);
+['input', 'change'].forEach(ev => document.addEventListener(ev, e => {
+  if(M.vista === 'eo' && e.target.closest && e.target.closest('#clinical-view .card')) requestAnimationFrame(() => righeSistemi(false));
+}));
 
 /* ---------- scheda del diario ---------- */
 // il diario è un testo solo: esame obiettivo, riga vuota, aggiunte. Le
