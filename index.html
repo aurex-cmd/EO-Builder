@@ -22426,6 +22426,38 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
   html[data-ui="minimal"] #clinical-view #reset-btn{ background:#1b2f47; border-color:#24405e; color:#e6edf5; box-shadow:none; }
+  /* frase viva: il referto per sistema; i riquadri dei tag si aprono al centro */
+  html[data-ui="minimal"] #clinical-view .card:not(#output-card):not(.m-aperta){ display:none; }
+  #m-frase{ margin:14px 14px 0; font-family:var(--m-scheda); }
+  .m-fr-testa{ display:flex; justify-content:space-between; align-items:center; margin:0 4px 8px; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#6b7785; }
+  .m-fr-testa span{ display:flex; align-items:center; gap:4px; text-transform:none; letter-spacing:0; font-weight:600; font-size:11px; }
+  .m-fr-testa i, .m-fr-sis h3 i{ display:inline-block; width:7px; height:7px; border-radius:50%; background:#35d0ae; }
+  .m-fr-testa i.m-alt{ margin-left:8px; }
+  .m-fr-testa i.m-alt, .m-fr-sis h3 i.m-alt{ background:#f2b84b; }
+  .m-fr-righe{ background:#132235; border:1px solid #1c3048; border-radius:16px; padding:2px 16px; box-shadow:0 1px 2px rgba(15,25,40,.10), 0 6px 18px rgba(15,25,40,.10); }
+  .m-fr-sis{ display:grid; grid-template-columns:76px 1fr; gap:8px; padding:12px 0; border-bottom:1px solid #1d3149; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .m-fr-sis:last-child{ border-bottom:0; }
+  .m-fr-sis h3{ display:flex; align-items:center; gap:6px; margin:0; padding-top:4px; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:800; color:#8fa7c2; }
+  .m-fr-sis h3 i{ flex:0 0 auto; width:6px; height:6px; }
+  .m-fr-sis p{ margin:0; color:#e6edf5; font-size:15.5px; line-height:1.85; font-weight:500; }
+  .m-fr-t{ border:0; background:none; font:inherit; color:#fff; font-weight:650; padding:0; border-bottom:2px dotted rgba(53,208,174,.6); border-radius:0; cursor:pointer; line-height:1.3; }
+  .m-fr-t.m-alt{ color:#f2b84b; border-bottom-color:rgba(242,184,75,.75); }
+  .m-fr-t:active{ background:rgba(53,208,174,.16); }
+  .m-fr-vuoto{ color:#5f7792; font-weight:500; }
+  .m-fr-piu{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#1b2f47; border:1px solid #24405e; color:#8fa7c2; font-size:14px; line-height:1; vertical-align:1px; margin-left:2px; }
+  #m-fr-velo{ position:fixed; inset:0; z-index:71; background:rgba(10,18,30,.30); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:opacity .2s; }
+  #m-fr-velo.m-su{ opacity:1; pointer-events:auto; }
+  html[data-ui="minimal"] #clinical-view .card.m-aperta{ position:fixed; left:14px; right:14px; top:50%; transform:translateY(-50%); margin:0 auto; max-width:560px; max-height:calc(100dvh - 110px); overflow:auto; overscroll-behavior:contain; z-index:72; border-color:#26405f; box-shadow:0 20px 50px rgba(10,20,35,.45); animation:m-fr-apri .24s var(--m-molla); padding-bottom:0; }
+  @keyframes m-fr-apri{ from{ opacity:0; transform:translateY(-50%) scale(.96); } }
+  html[data-ui="minimal"] #clinical-view .card.m-solo > :not(h2):not(.m-qui):not(.m-fr-piede){ display:none; }
+  .m-fr-piede{ position:sticky; bottom:0; margin:14px -17px 0; padding:10px 17px 14px; background:#132235; border-top:1px solid #1d3149; font-family:var(--m-scheda); }
+  .m-fr-ante{ margin:0 0 10px; padding:9px 11px; border-radius:10px; background:#0e1a29; color:#b9c8d8; font-size:13px; line-height:1.5; }
+  .m-fr-ante .m-fr-t{ border:0; color:#35d0ae; pointer-events:none; }
+  .m-fr-ante .m-fr-t.m-alt{ color:#f2b84b; }
+  .m-fr-az{ display:flex; justify-content:flex-end; gap:8px; }
+  .m-fr-az button{ border:0; border-radius:999px; padding:8px 16px; font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; }
+  .m-fr-tutto{ background:#1b2f47; color:#cfe0f2; margin-right:auto; }
+  .m-fr-ok{ background:var(--m-notte); color:#fff; box-shadow:0 0 0 1px #2d5d8c; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
@@ -23561,15 +23593,162 @@ function apriVisita(nome, daScheda){
   vai('eo', { letto:nome, daScheda:!!daScheda });
   apriLetto(nome);
   mostraVista('clinical');
+  disegnaFrase();
   window.scrollTo(0, 0);
 }
 function fineVisita(){
+  chiudiSistema();
   const nome = M.letto, torna = M.daScheda;
   if(typeof eseguiTuttiSalvataggiDiario === 'function') eseguiTuttiSalvataggiDiario();
   indietro();
   if(torna){ const e = voce(nome); if(e) setTimeout(() => apriScheda(nome), 120); }
   else disegnaLetti();
 }
+
+/* ---------- visita: la frase viva ---------- */
+// l'esame obiettivo si legge come il referto, un sistema per riga: le parole
+// che vengono dai tag scelti si toccano e aprono al centro il riquadro dei
+// tag di quel sistema (solo il gruppo della parola; toccando la riga, tutto
+// il sistema). I riquadri sono quelli dell'app, al loro posto nella pagina:
+// cambia solo come si mostrano, quindi tag, note, parametri e referto
+// funzionano come sempre. In ambra quello che si discosta dalla norma (i tag
+// e le frasi di una scheda nuova)
+const FRASE_SIS = [
+  ['card-sesso', 'Paziente', null],
+  ['card-coscienza', 'Coscienza', () => composeCoscienza()],
+  ['card-respiro', 'Respiro', () => composeRespiroConNota()],
+  ['card-cuore', 'Cuore', () => conNotaLibera(composeCuore(), state.cuore.nota)],
+  ['card-torace', 'Torace', () => conNotaLibera(composeToraceClean(), state.torace.nota)],
+  ['card-addome', 'Addome', () => composeAddome()],
+  ['card-cute', 'Cute', () => [composeCuteSenzaDiscromie(), composeDiscromieVenosa()].filter(Boolean).join(' ')],
+  ['card-edemi', 'Edemi', () => composeEdemi()],
+  ['card-lingua', 'Lingua', () => conNotaLibera(composeLingua(), state.lingua.nota)],
+  ['card-diuresi', 'Diuresi', () => composeDiuresi()],
+  ['card-neuro', 'Neuro', () => conNotaLibera(composeNeuro(), state.neuro.nota)]
+];
+const testoChip = c => c.textContent.trim();
+function chiaveChip(c){
+  const card = c.closest('.card'), g = c.closest('.group'), box = c.closest('.chips');
+  const lab = g && g.querySelector('.group-label');
+  return [card ? card.id : '', box ? box.id : '', lab ? lab.textContent.trim() : '', testoChip(c)].join('|');
+}
+// la norma si calcola una volta sola, su uno stato vuoto, poi si rimette tutto
+let fraseNorma = null;
+function normaFrase(){
+  if(fraseNorma) return fraseNorma;
+  const backup = serializeState();
+  const frasi = {};
+  let chips = new Set();
+  try{
+    applyStateObject({}); renderAll();
+    chips = new Set([...document.querySelectorAll('#clinical-view .card .chip.active')].map(chiaveChip));
+    FRASE_SIS.forEach(([id, , f]) => { if(f) try{ frasi[id] = f(); } catch(e){ frasi[id] = ''; } });
+  } finally { applyStateObject(backup); renderAll(); }
+  return fraseNorma = { chips, frasi };
+}
+// le parole dei tag scelti dentro la frase (a parola intera, senza
+// sovrapposizioni); i tag che non compaiono tali e quali restano nel testo
+function paroleFrase(frase, card){
+  const basso = frase.toLowerCase(), presi = [];
+  const lettera = ch => !!ch && /[a-zà-ü0-9]/i.test(ch);
+  card.querySelectorAll('.chip.active').forEach(c => {
+    const t = testoChip(c); if(t.length < 2) return;
+    const cerca = t.toLowerCase();
+    let da = 0, i;
+    while((i = basso.indexOf(cerca, da)) !== -1){
+      const fine = i + cerca.length;
+      if(!lettera(basso[i - 1]) && !lettera(basso[fine]) && !presi.some(p => i < p.fine && fine > p.i)){ presi.push({ i, fine, c }); break; }
+      da = i + 1;
+    }
+  });
+  presi.sort((a, b) => a.i - b.i);
+  const norma = normaFrase().chips;
+  let html = '', pos = 0;
+  presi.forEach(p => {
+    const k = chiaveChip(p.c);
+    html += esc(frase.slice(pos, p.i)) + `<button class="m-fr-t${norma.has(k) ? '' : ' m-alt'}" data-fr-k="${esc(k)}">${esc(frase.slice(p.i, p.fine))}</button>`;
+    pos = p.fine;
+  });
+  return html + esc(frase.slice(pos));
+}
+function fraseSistema(id, f, card){
+  if(!f) return [...card.querySelectorAll('.chip.active')].map(testoChip).filter(t => t.length > 1).join(', ');
+  try{ return f() || ''; } catch(e){ return ''; }
+}
+function disegnaFrase(){
+  const vista = document.getElementById('clinical-view'); if(!vista) return;
+  let box = document.getElementById('m-frase');
+  if(!box){
+    box = document.createElement('div'); box.id = 'm-frase';
+    vista.prepend(box);
+    const velo = document.createElement('div'); velo.id = 'm-fr-velo';
+    vista.prepend(velo);
+  }
+  const norma = normaFrase();
+  box.innerHTML = `<div class="m-fr-testa">Esame obiettivo<span><i></i>norma<i class="m-alt"></i>alterato</span></div><div class="m-fr-righe">` +
+    FRASE_SIS.map(([id, nome, f]) => {
+      const card = document.getElementById(id); if(!card) return '';
+      const frase = fraseSistema(id, f, card);
+      const alt = f ? frase !== (norma.frasi[id] || '') : !!frase;
+      const corpo = !frase ? `<span class="m-fr-vuoto">${f ? 'Non riportato' : 'Sesso non indicato'}</span>`
+        : f ? paroleFrase(frase, card) : `<button class="m-fr-t" data-fr-k="">${esc(frase)}</button>`;
+      return `<div class="m-fr-sis" data-fr-sis="${id}"><h3><i${alt ? ' class="m-alt"' : ''}></i>${nome}</h3><p>${corpo} <span class="m-fr-piu" aria-hidden="true">+</span></p></div>`;
+    }).join('') + '</div>';
+  aggiornaAnteprima();
+}
+function sistemaAperto(){ return document.querySelector('#clinical-view .card.m-aperta'); }
+function aggiornaAnteprima(){
+  const card = sistemaAperto(); if(!card) return;
+  const voce = FRASE_SIS.find(v => v[0] === card.id), p = card.querySelector('.m-fr-ante');
+  if(!voce || !p) return;
+  const frase = fraseSistema(voce[0], voce[2], card);
+  p.innerHTML = frase ? (voce[2] ? paroleFrase(frase, card) : esc(frase)) : '<span class="m-fr-vuoto">Non riportato</span>';
+}
+function apriSistema(id, chiave){
+  chiudiSistema();
+  const card = document.getElementById(id); if(!card) return;
+  const voce = FRASE_SIS.find(v => v[0] === id);
+  const chip = chiave ? [...card.querySelectorAll('.chip')].find(c => chiaveChip(c) === chiave) : null;
+  let qui = chip && chip.closest('.group');
+  while(qui && qui.parentElement !== card) qui = qui.parentElement.closest('.group');
+  if(qui){ card.classList.add('m-solo'); qui.classList.add('m-qui'); }
+  const piede = document.createElement('div'); piede.className = 'm-fr-piede';
+  piede.innerHTML = `<p class="m-fr-ante"></p><div class="m-fr-az">${qui ? `<button class="m-fr-tutto" data-fr="tutto">Tutto ${esc(voce ? voce[1].toLowerCase() : '')}</button>` : ''}<button class="m-fr-ok" data-fr="ok">Fatto</button></div>`;
+  card.appendChild(piede);
+  card.classList.add('m-aperta');
+  card.scrollTop = 0;
+  document.getElementById('m-fr-velo').classList.add('m-su');
+  document.body.style.overflow = 'hidden';
+  aggiornaAnteprima();
+}
+function chiudiSistema(){
+  const card = sistemaAperto();
+  if(card){
+    card.classList.remove('m-aperta', 'm-solo');
+    card.querySelectorAll('.m-qui').forEach(g => g.classList.remove('m-qui'));
+    card.querySelectorAll('.m-fr-piede').forEach(x => x.remove());
+  }
+  const velo = document.getElementById('m-fr-velo'); if(velo) velo.classList.remove('m-su');
+  document.body.style.overflow = '';
+  if(card) disegnaFrase();
+}
+document.addEventListener('click', e => {
+  if(M.vista !== 'eo') return;
+  const t = e.target;
+  if(t.closest('#m-fr-velo') || t.closest('[data-fr="ok"]')){ chiudiSistema(); return; }
+  if(t.closest('[data-fr="tutto"]')){ const c = sistemaAperto(); if(c) apriSistema(c.id); return; }
+  const riga = t.closest('.m-fr-sis');
+  if(riga){ const w = t.closest('.m-fr-t'); apriSistema(riga.dataset.frSis, w ? w.dataset.frK : ''); return; }
+});
+// un tag toccato nel riquadro: l'app lo ridisegna (e il tag toccato si stacca
+// dalla pagina), quindi si guarda in cattura, prima, e si aggiorna dopo
+document.addEventListener('click', e => {
+  if(M.vista === 'eo' && e.target.closest && e.target.closest('#clinical-view .card')) requestAnimationFrame(disegnaFrase);
+}, true);
+['input', 'change'].forEach(ev => document.addEventListener(ev, e => {
+  if(M.vista === 'eo' && e.target.closest && e.target.closest('#clinical-view .card')) requestAnimationFrame(disegnaFrase);
+}));
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && sistemaAperto()) chiudiSistema(); });
 
 /* ---------- scheda del diario ---------- */
 // il diario è un testo solo: esame obiettivo, riga vuota, aggiunte. Le
@@ -24283,7 +24462,7 @@ document.getElementById('m-app').addEventListener('pointerdown', e => {
 // per frame; la pagina di ritorno compare ferma, senza entrate animate
 (() => {
   let x0 = null, y0 = 0, dx = 0, vx = 0, tPrec = 0, xPrec = 0, attivo = false, el = null, frame = 0;
-  const pagina = () => M.vista === 'eo' ? document.getElementById('clinical-view')
+  const pagina = () => M.vista === 'eo' ? (sistemaAperto() ? null : document.getElementById('clinical-view'))
     : M.vista === 'app' ? vistaPagina(M.pag) : $m('#m-main');
   const sposta = () => { frame = 0; if(el) el.style.transform = `translate3d(${dx}px,0,0)`; };
   const muovi = e => {
