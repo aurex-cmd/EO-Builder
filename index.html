@@ -22470,7 +22470,7 @@ function editorLettereSvuota(){
      scura): sfocare tutto lo schermo a fine salita faceva scattare il telefono */
   .m-velo.m-su{ opacity:1; pointer-events:auto; }
   .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:22px 22px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:16.2px; color:var(--m-ink); }
-  .m-scheda.m-su{ transform:none; }
+  .m-scheda.m-su{ transform:translate3d(0,0,0); }
   .m-scheda.m-trascina{ transition:none; }
   .m-s-testa{ position:relative; padding:24px 18px 8px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; touch-action:none; cursor:grab; }
   .m-s-testa::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
@@ -23642,7 +23642,9 @@ function apriScheda(nome){
     $m('#m-velo').classList.add('m-su');
     sh.classList.add('m-su');
   }));
-  clearTimeout(sh._t); sh._t = setTimeout(() => pianificaAiuti(true), 480);
+  // già in memoria: niente da ricalcolare; altrimenti a scheda ben ferma,
+  // non proprio a fine salita (lì il lavoro si vedeva come uno scatto)
+  clearTimeout(sh._t); if(!M.aiutiPronti) sh._t = setTimeout(() => pianificaAiuti(true), 750);
   document.body.style.overflow = 'hidden';
 }
 function chiudiScheda(){
@@ -23704,7 +23706,7 @@ function disegnaScheda(){
   provv.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, provv.value).length);
   if(typeof attivaMenuComandi === 'function') attivaMenuComandi(provv);
   aggiornaCopia(i.copiato);
-  disegnaAiuti(true, true);
+  M.aiutiPronti = disegnaAiuti(true, true);
   $m('#m-s-corpo').scrollTop = 0;
   // altezze delle caselle subito (prima tutte le letture, poi le scritture)
   const aree = [...document.querySelectorAll('#m-s-corpo textarea')];
@@ -23768,7 +23770,7 @@ function disegnaAiuti(primaVolta, soloMemoria){
   if(sp && sp.innerHTML !== pal){ sp.innerHTML = pal; if(!primaVolta) sp.querySelectorAll('.m-pal').forEach(x => x.classList.add('m-nuovo')); }
   const box = $m('#m-aiuti'); if(!box) return;
   const calc = calcolaAiuti(p, M.id, soloMemoria);
-  if(!calc){ if(primaVolta){ box.innerHTML = ''; box.dataset.ora = ''; box.hidden = true; } return; }
+  if(!calc){ if(primaVolta){ box.innerHTML = ''; box.dataset.ora = ''; box.hidden = true; } return false; }
   const { atb, ric } = calc;
   const voci = [
     ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
@@ -23776,7 +23778,7 @@ function disegnaAiuti(primaVolta, soloMemoria){
   ];
   box._ric = ric;
   const ora = voci.map(v => v.k).join('|');
-  if(box.dataset.ora === ora) return;
+  if(box.dataset.ora === ora) return true;
   const prima = new Set([...box.children].map(x => x.dataset.k));
   const eraVuoto = box.hidden || !box.children.length;
   box.dataset.ora = ora;
@@ -23785,6 +23787,7 @@ function disegnaAiuti(primaVolta, soloMemoria){
   // comparsi a scheda già aperta: la riga si apre piano invece di spingere giù il testo di colpo
   if(eraVuoto && voci.length && !soloMemoria){ box.classList.remove('m-apre'); void box.offsetWidth; box.classList.add('m-apre'); }
   else if(!primaVolta) [...box.children].forEach(x => { if(!prima.has(x.dataset.k)) x.classList.add('m-nuovo'); });
+  return true;
 }
 function aggiornaCopia(copiato){
   const c = $m('#m-copia');
