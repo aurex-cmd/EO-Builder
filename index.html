@@ -22803,6 +22803,10 @@ function editorLettereSvuota(){
   #m-settori .m-anello-f{ stroke:var(--m-home-f); } #m-settori .m-anello-a{ stroke:#4f7fb3; }
   .m-rep-sx:not(#m-settori) .m-anello-f{ stroke:#fbe5d8; } .m-rep-sx:not(#m-settori) .m-anello-a{ stroke:#c96b44; }
   .m-rep .m-rep-link{ background:var(--m-home-f); }
+  /* Diari: Aggiorna consegne al centro della colonna, ambrato come le consegne */
+  .m-rep .m-rep-link.m-rep-cons{ background:#f6e5bb; color:#6b4a0f; font-size:11px; padding:6px 5px 6px 10px; }
+  .m-rep-sx:not(#m-settori){ align-items:center; padding-right:12px; }
+  .m-rep-sx:not(#m-settori) .m-lt-top{ align-self:flex-start; }
   .m-lbl-letto{ width:20px; height:15px; margin:0 6px -2px 0; vertical-align:baseline; }
   .m-rep-sx{ position:relative; padding-top:2px; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
@@ -23299,7 +23303,7 @@ function vSettore(){
     ${bento ? '<div id="m-bento"></div>' : diari ? `
     <div class="m-rep">
       <div class="m-rep-sx"><p class="m-lt-top">Pazienti visti</p>${anelloHtml()}
-        <button class="m-rep-link" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
+        <button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button></div>
       <div class="m-rep-dx" id="m-diari-letti"></div>
     </div>` : `
     <div class="m-rep">
