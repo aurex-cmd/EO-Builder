@@ -22601,8 +22601,13 @@ function editorLettereSvuota(){
   /* i riquadri nello spazio sotto il titolo, con sopra un terzo dello spazio
      che resta sotto; scorrono solo se non ci stanno */
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:0 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
-  .m-home-giu::before{ content:""; flex:1 1 0; }
-  .m-home-giu::after{ content:""; flex:3 1 0; }
+  .m-home-sopra{ flex:none; min-height:100%; display:flex; flex-direction:column; }
+  .m-home-sopra::before{ content:""; flex:1 1 0; }
+  .m-home-sopra::after{ content:""; flex:3 1 0; }
+  /* la nota sull'app, in fondo alla home: sotto lo spazio dei riquadri, si raggiunge scorrendo */
+  .m-home-info{ flex:none; padding-top:8px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
+  .m-home-info p{ margin:0; } .m-home-info b{ color:var(--m-sub, var(--m-home-sub)); font-weight:700; }
+  .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-faint); }
   .m-tiles{ --q:calc((100cqw - 30px) / 4); flex:none; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, min(var(--q), 120px)) 64px; gap:10px;
     grid-template-areas:"v v d d" "v v d d" "r r m m" "r r c t" "s s s s"; }
   .m-tiles.m-festivo{ grid-template-areas:"v v d d" "v v d d" "r r c c" "r r c c" "s s s t"; }
@@ -22811,15 +22816,19 @@ function editorLettereSvuota(){
 
   /* VISITA e DIARI: settori (o "Pazienti visti") e anello a sinistra, letti a destra */
   .m-rep{ display:grid; grid-template-columns:142px 1fr; margin-top:6px; }
-  /* letti "Vetro": fondo sfumato teal-viola sotto le pagine dei letti */
-  #m-app:has(.m-rep)::before{ content:""; position:fixed; inset:0; z-index:-1; background:linear-gradient(160deg, #e6f4f2 0%, #f1edfb 55%, #eef3fa 100%); pointer-events:none; }
-  #m-app:has(.m-rep) .m-bar{ background:rgba(255,255,255,.55); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
-  .m-rep .m-anello-f{ stroke:rgba(255,255,255,.85); }
-  .m-rep .m-rep-link{ background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9); }
-  .m-rep .m-tl-nuovo{ box-shadow:inset 0 0 0 1.5px rgba(27,36,51,.12); }
+  /* pagine dei letti, stile piatto come la home: fondo bianco e, in basso,
+     una scena tenue (Visita: un letto e lo stetoscopio; Diari: i fogli, la
+     matita e una busta) su due onde */
+  #m-app:has(.m-rep)::before{ content:""; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
+  #m-app:has(#m-settori)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28212 92%29%22%3E%3Crect x=%220%22 y=%2220%22 width=%229%22 height=%2262%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%22128%22 y=%2240%22 width=%229%22 height=%2242%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%224%22 y=%2250%22 width=%22128%22 height=%2212%22 rx=%226%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%228%22 y=%2238%22 width=%22122%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3Crect x=%2212%22 y=%2226%22 width=%2230%22 height=%2215%22 rx=%227.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 38h80a6 6 0 016 6v2H44z%22 fill=%22%23c9d9ea%22/%3E%3Ccircle cx=%2218%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3Ccircle cx=%22122%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3C/g%3E%3Cg transform=%22translate%2840 120%29 scale%28.75%29%22%3E%3Cpath d=%22M44 20v26a20 20 0 0040 0V20%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M64 66v12a20 20 0 0040 0v-6%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22104%22 cy=%2262%22 r=%2213%22 fill=%22%23fff%22 stroke=%22%23a9c0d8%22 stroke-width=%225%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef3f8%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e3ecf5%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
+  #m-app:has(#m-diari-letti)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28214 70%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3Cg transform=%22translate%2846 140%29%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%2240%22 rx=%228%22 fill=%22%23f2cdb8%22/%3E%3Cpath d=%22M0 8l29 18 29-18%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23fdf3ec%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23fae8dc%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
+  #m-settori .m-anello-f{ stroke:var(--m-home-f); } #m-settori .m-anello-a{ stroke:#4f7fb3; }
+  .m-rep-sx:not(#m-settori) .m-anello-f{ stroke:#fbe5d8; } .m-rep-sx:not(#m-settori) .m-anello-a{ stroke:#c96b44; }
+  .m-rep .m-rep-link{ background:var(--m-home-f); }
+  .m-lbl-letto{ width:20px; height:15px; margin:0 6px -2px 0; vertical-align:baseline; }
   .m-rep-sx{ position:relative; padding-top:2px; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
-  .m-lt-top{ margin:2px 0 0; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .m-lt-top{ margin:2px 0 0; font-size:13px; font-weight:600; color:var(--m-muted); }
   #m-settori .m-anello{ position:static; width:112px; margin-top:6px; text-align:left; }
   #m-settori .m-anello-o{ width:112px; height:112px; margin:0; }
   #m-settori .m-anello svg{ width:112px; height:112px; }
@@ -22830,11 +22839,11 @@ function editorLettereSvuota(){
   @keyframes m-lt-cambia{ from{ opacity:0; transform:translateY(14px) scale(.8); } }
   #m-settori .m-anello-in{ display:none; }
   #m-settori .m-anello p{ margin-top:10px; font-size:12px; }
-  #m-settori .m-anello p > b:first-child{ color:var(--m-teal); font-weight:800; }
+  #m-settori .m-anello p > b:first-child{ color:var(--m-ink); font-weight:800; }
   .m-lt-altri{ display:flex; gap:5px; width:100%; margin-top:22px; padding-right:10px; }
-  .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 3px 10px -5px rgba(23,34,49,.2); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
+  .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:var(--m-home-f); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
   .m-lt-set:active{ transform:scale(.9); }
-  .m-lt-set.m-scelto{ background:var(--m-teal); color:#fff; box-shadow:0 4px 12px -4px rgba(14,117,113,.55); }
+  .m-lt-set.m-scelto{ background:#4f7fb3; color:#fff; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
   .m-rep-sx{ display:flex; flex-direction:column; align-items:flex-start; }
@@ -22857,27 +22866,30 @@ function editorLettereSvuota(){
   .m-rep-dx::before{ content:""; position:absolute; left:0; top:4px; bottom:0; width:1px; background:rgba(27,36,51,.09); transform-origin:top; }
   .m-rep.m-entra .m-rep-dx::before{ animation:m-linea .6s var(--m-molla) both; }
   @keyframes m-linea{ from{ transform:scaleY(0); } }
-  .m-rep-lbl{ margin:0 0 8px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-rep-lbl{ margin:0 0 8px; font-size:13px; font-weight:600; color:var(--m-muted); }
   .m-griglia + .m-rep-lbl{ margin-top:20px; }
   .m-rep-sett{ font-size:15px; font-weight:800; letter-spacing:-.01em; text-transform:none; color:var(--m-ink); }
   .m-rep-vuoto{ font-size:13.5px; color:var(--m-muted); line-height:1.45; padding-top:6px; }
-  .m-rep-vitali{ margin-top:22px; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-teal); margin-right:2px; }
+  .m-rep-vitali{ margin-top:22px; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:#4f7fb3; margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:rgba(255,255,255,.62); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 4px 14px -6px rgba(23,34,49,.2); transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:#eef1f5; color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
-  .m-tl:active{ transform:scale(.94); box-shadow:inset 0 0 0 1px rgba(255,255,255,.9), 0 2px 6px -3px rgba(23,34,49,.2); }
-  .m-tl.m-oggi-l{ background:rgba(14,117,113,.27); color:#064844; box-shadow:inset 0 0 0 1px rgba(14,117,113,.32), 0 6px 16px -6px rgba(14,117,113,.4); }
-  .m-tl.m-recente{ background:rgba(91,69,160,.23); color:#3a2878; box-shadow:inset 0 0 0 1px rgba(91,69,160,.3), 0 4px 14px -6px rgba(91,69,160,.3); }
-  .m-tl.m-vecchio{ background:rgba(27,36,51,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px -6px rgba(23,34,49,.18); }
-  .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px rgba(47,128,201,.85), 0 4px 14px -6px rgba(47,128,201,.4); }
+  .m-tl:active{ transform:scale(.94); }
+  .m-tl.m-oggi-l{ background:var(--m-home-a); }
+  .m-tl.m-recente{ background:var(--m-home-d); }
+  .m-tl.m-vecchio{ background:#dfe4ea; }
+  .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #2f80c9; }
+  /* in Diari: pesca da copiare, verde copiato */
+  #m-diari-letti .m-tl.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
+  #m-diari-letti .m-tl.m-copiato:not(.m-critico){ background:var(--m-home-c); }
   /* diario copiato: bordo teal (il critico resta viola) */
-  .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal), 0 6px 16px -6px rgba(14,117,113,.4); }
-  .m-tl.m-critico{ background-color:rgba(106,31,176,.18); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); background-image:repeating-linear-gradient(135deg, rgba(106,31,176,.14) 0 3px, transparent 3px 9px); }
-  .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico), 0 4px 14px -6px rgba(106,31,176,.35); }
+  .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal); }
+  .m-tl.m-critico{ background-color:var(--m-home-d); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico); }
+  .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico); }
   .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
   /* letto segnato vuoto: non conta nell'anello */
-  .m-tl.m-vuoto{ background:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:inset 0 0 0 2px rgba(27,36,51,.12); color:var(--m-faint); }
+  .m-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); color:var(--m-faint); }
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
   .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
   @keyframes m-tl-esce{ to{ opacity:0; transform:translateX(-8px) scale(.95); } }
@@ -22887,7 +22899,7 @@ function editorLettereSvuota(){
   .m-tl .m-togli{ top:-6px; right:-6px; background:#fff; box-shadow:0 1px 3px rgba(23,34,49,.18); color:var(--m-muted); }
   .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
   .m-tl.m-armato .m-togli{ background:var(--m-p-e); color:#fff; }
-  .m-tl-nuovo{ display:grid; place-items:center; background:none; box-shadow:inset 0 0 0 1.5px var(--m-line); color:var(--m-faint); }
+  .m-tl-nuovo{ display:grid; place-items:center; background:#fff; box-shadow:none; border:1.5px dashed #c8cfd9; color:#9aa4b2; }
   .m-tl-nuovo svg{ width:18px; height:18px; transition:transform .4s var(--m-molla); }
   .m-tl-nuovo:active svg{ transform:rotate(90deg); }
   .m-tl-nuovo.m-scrivi{ background:var(--m-teal-box); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
@@ -23198,7 +23210,8 @@ function vHome(){
       <p class="m-sub">${esc(dato)}</p>
     </div>
     <div class="m-home-giu" id="m-home-giu">
-      <div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${ricoveri}${festivo ? '' : dimissioni}${consegne}${rubrica}${strumenti}</div>
+      <div class="m-home-sopra"><div class="m-tiles${festivo ? ' m-festivo' : ''}">${visita}${diari}${ricoveri}${festivo ? '' : dimissioni}${consegne}${rubrica}${strumenti}</div></div>
+      <div class="m-home-info"><p><b>E.O. Builder</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
   const tiles = document.querySelectorAll('#m-vista .m-tile');
   tiles.forEach((el, k) => el.style.setProperty('--i', k));
@@ -23272,6 +23285,8 @@ function rigaHome(pag, titolo, sotto, conta){
 function modoBento(){ return M.vista === 'visita' && !M.perSettore && consegneWeekendAttive(); }
 const nomeSettore = s => s.replace(/^.*?(Settore\s+)/, '$1');
 const letteraSettore = s => nomeSettore(s).replace(/^Settore\s+/i, '');
+// il lettino disegnato accanto ad Appoggi e Letti (telaio, coperta)
+const lettino = (telaio, coperta) => `<svg class="m-lbl-letto" viewBox="0 0 34 26" aria-hidden="true"><rect x="1" y="4" width="3.5" height="19" rx="1.75" fill="${telaio}"/><rect x="29.5" y="10" width="3.5" height="13" rx="1.75" fill="${telaio}"/><rect x="2" y="15" width="30" height="4" rx="2" fill="${telaio}"/><rect x="3" y="11" width="28" height="5" rx="2.5" fill="#fff" stroke="${coperta}" stroke-width=".8"/><rect x="5" y="7" width="8" height="5" rx="2.5" fill="#fff" stroke="${coperta}" stroke-width=".8"/><path d="M13 11h16a2 2 0 012 2v1H13z" fill="${coperta}"/></svg>`;
 function anelloHtml(){
   return `<div class="m-anello" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div><p id="m-anello-t"></p></div>`;
 }
@@ -23306,7 +23321,7 @@ function vSettore(){
     <div class="m-rep">
       <div class="m-rep-sx" id="m-settori"><p class="m-lt-top">Settore</p>${anelloHtml().replace('</svg>', '</svg><b class="m-lt-l" id="m-lt-l"></b>')}
         <div class="m-lt-altri">${ss.map(s => `<button class="m-lt-set" data-m="settore" data-s="${esc(s)}" aria-label="${esc(nomeSettore(s))}">${esc(letteraSettore(s))}</button>`).join('')}</div></div>
-      <div class="m-rep-dx"><p class="m-rep-lbl">Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl">Letti</p><div class="m-griglia" id="m-letti"></div>
+      <div class="m-rep-dx"><p class="m-rep-lbl">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl">${lettino('#4f7fb3', '#8fb2d6')}Letti</p><div class="m-griglia" id="m-letti"></div>
         <button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button></div>
     </div>`}`;
   posizionaSettori();
