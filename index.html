@@ -22527,7 +22527,7 @@ function editorLettereSvuota(){
   .m-aggiungi.m-apre button:not(.m-fisso){ animation:m-compare .32s var(--m-molla) both; animation-delay:calc(var(--k) * 35ms); }
   .m-riga.m-via{ opacity:0; transition:opacity .2s; }
   .m-s-piede{ position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--m-bg) 72%, transparent); }
-  .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:12px; height:52px; background:var(--m-ink); color:#fff; font:inherit; font-weight:600; font-size:.95rem; cursor:pointer; transition:transform .16s var(--m-molla); }
+  .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:12px; height:52px; background:var(--m-notte); color:#fff; font:inherit; font-weight:600; font-size:.95rem; cursor:pointer; transition:transform .16s var(--m-molla); }
   .m-copia:active{ transform:scale(.97); }
   .m-copia::before{ content:""; position:absolute; inset:0; background:var(--m-teal); transform:scaleX(0); transform-origin:left; transition:transform .55s var(--m-molla); }
   .m-copia.m-fatto::before{ transform:scaleX(1); }
@@ -22606,7 +22606,7 @@ function editorLettereSvuota(){
   .m-h1.m-h1-home{ text-transform:none; font-size:26px; font-weight:700; letter-spacing:-.015em; margin-top:14px; }
   .m-home-su .m-sub{ margin-top:-10px; font-size:14px; }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
-  .m-ingr{ display:flex; flex-direction:column; min-height:128px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 35ms + 40ms); }
+  .m-ingr{ display:flex; flex-direction:column; min-height:128px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; }
   .m-ingr .m-sh{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:#4b5563; }
   .m-ingr svg{ width:18px; height:18px; flex:none; color:var(--m-muted); }
   .m-ingr .m-sn{ display:flex; align-items:baseline; gap:5px; margin-top:auto; padding-top:14px; font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
@@ -22616,16 +22616,15 @@ function editorLettereSvuota(){
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   .m-ingr.m-pri :is(.m-sh, .m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
   .m-elenco{ flex:none; margin-top:16px; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
-  .m-voce{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:14.5px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 35ms + 40ms); }
+  .m-voce{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:14.5px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s, transform .15s var(--m-molla); }
   .m-voce:first-child{ border-top:0; }
   .m-voce > svg:first-child{ width:18px; height:18px; flex:none; color:var(--m-muted); }
   .m-voce .m-vn{ flex:none; }
   .m-voce .m-vv{ flex:1; min-width:0; text-align:right; font-size:13px; color:var(--m-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .m-voce .m-vc{ margin-left:auto; font-size:11.5px; font-weight:600; color:#1f4e79; background:#e8eef5; border-radius:999px; padding:1px 8px; }
   .m-voce .m-chev{ width:14px; height:14px; flex:none; color:var(--m-faint); }
-  .m-ingr:active{ transform:scale(.98); } .m-voce:active{ background:#f7f8fa; }
+  .m-ingr:active{ transform:scale(.98); } .m-voce:active{ background:#f7f8fa; transform:scale(.99); }
   @media (hover:hover){ .m-ingr:hover{ transform:scale(1.02); } .m-voce:hover{ background:#f7f8fa; } }
-  #m-vista.m-quieta :is(.m-ingr, .m-voce){ animation:none; }
   /* la nota sull'app, sempre in fondo alla home */
   .m-home-info{ flex:none; margin-top:auto; padding-top:18px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
   .m-home-info p{ margin:0; } .m-home-info b{ color:#4b5563; font-weight:700; }
@@ -23094,7 +23093,8 @@ function disegna(verso){
   nascondiViste();
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
-  if(verso) v.classList.add(verso);
+  // la home compare ferma, senza scorrimento né cascata
+  if(verso && M.vista !== 'home') v.classList.add(verso);
   // a cascata solo andando avanti (o alla prima apertura); finita l'entrata
   // la vista resta "quieta", così i ridisegni dei letti non la ripetono
   const cascata = verso === 'm-avanti' || !M.giaAperta;
@@ -23177,7 +23177,6 @@ function vHome(){
       <div class="m-elenco">${elenco}</div>
       <div class="m-home-info"><p><b>E.O. Builder</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
-  document.querySelectorAll('#m-vista :is(.m-ingr, .m-voce)').forEach((el, k) => el.style.setProperty('--i', k));
 }
 
 /* ---------- strumenti ---------- */
