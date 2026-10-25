@@ -22815,16 +22815,56 @@ function editorLettereSvuota(){
   .m-lr-ok svg{ width:11px; height:11px; }
 
   /* VISITA e DIARI: settori (o "Pazienti visti") e anello a sinistra, letti a destra */
-  .m-rep{ display:grid; grid-template-columns:142px 1fr; margin-top:6px; }
   /* pagine dei letti, stile piatto come la home: fondo bianco e, in basso,
      una scena tenue (Visita: un letto e lo stetoscopio; Diari: i fogli, la
      matita e una busta) su due onde */
-  #m-app:has(.m-rep)::before{ content:""; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
-  #m-app:has(#m-settori)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28212 92%29%22%3E%3Crect x=%220%22 y=%2220%22 width=%229%22 height=%2262%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%22128%22 y=%2240%22 width=%229%22 height=%2242%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%224%22 y=%2250%22 width=%22128%22 height=%2212%22 rx=%226%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%228%22 y=%2238%22 width=%22122%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3Crect x=%2212%22 y=%2226%22 width=%2230%22 height=%2215%22 rx=%227.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 38h80a6 6 0 016 6v2H44z%22 fill=%22%23c9d9ea%22/%3E%3Ccircle cx=%2218%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3Ccircle cx=%22122%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3C/g%3E%3Cg transform=%22translate%2840 120%29 scale%28.75%29%22%3E%3Cpath d=%22M44 20v26a20 20 0 0040 0V20%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M64 66v12a20 20 0 0040 0v-6%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22104%22 cy=%2262%22 r=%2213%22 fill=%22%23fff%22 stroke=%22%23a9c0d8%22 stroke-width=%225%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef3f8%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e3ecf5%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
-  #m-app:has(.m-rep.m-diari #m-settori)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28214 70%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3Cg transform=%22translate%2846 140%29%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%2240%22 rx=%228%22 fill=%22%23f2cdb8%22/%3E%3Cpath d=%22M0 8l29 18 29-18%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23fdf3ec%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23fae8dc%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
-  #m-settori .m-anello-f{ stroke:var(--m-home-f); } #m-settori .m-anello-a{ stroke:#4f7fb3; }
-  .m-diari #m-settori .m-anello-f{ stroke:#fbe5d8; } .m-diari #m-settori .m-anello-a{ stroke:#c96b44; }
-  .m-diari .m-lt-set.m-scelto{ background:#c96b44; }
+  #m-app:has(.m-set)::before{ content:""; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
+  #m-app:has(.m-set:not(.m-diari))::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28212 92%29%22%3E%3Crect x=%220%22 y=%2220%22 width=%229%22 height=%2262%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%22128%22 y=%2240%22 width=%229%22 height=%2242%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%224%22 y=%2250%22 width=%22128%22 height=%2212%22 rx=%226%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%228%22 y=%2238%22 width=%22122%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3Crect x=%2212%22 y=%2226%22 width=%2230%22 height=%2215%22 rx=%227.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 38h80a6 6 0 016 6v2H44z%22 fill=%22%23c9d9ea%22/%3E%3Ccircle cx=%2218%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3Ccircle cx=%22122%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3C/g%3E%3Cg transform=%22translate%2840 120%29 scale%28.75%29%22%3E%3Cpath d=%22M44 20v26a20 20 0 0040 0V20%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M64 66v12a20 20 0 0040 0v-6%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22104%22 cy=%2262%22 r=%2213%22 fill=%22%23fff%22 stroke=%22%23a9c0d8%22 stroke-width=%225%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef3f8%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e3ecf5%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
+  #m-app:has(.m-set.m-diari)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28214 70%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3Cg transform=%22translate%2846 140%29%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%2240%22 rx=%228%22 fill=%22%23f2cdb8%22/%3E%3Cpath d=%22M0 8l29 18 29-18%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23fdf3ec%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23fae8dc%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
+  /* il SETTORE aperto: in alto "Tutti i settori" e, a destra, nome, dati e
+     il tondo; sotto una scheda sola coi letti grandi */
+  .m-set-su{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0 12px; }
+  .m-set-indietro{ position:relative; display:inline-flex; align-items:center; gap:2px; height:36px; padding:0 13px 0 7px; border:0; border-radius:999px; background:var(--m-home-f); color:var(--m-ink); font:inherit; font-size:13px; font-weight:700; cursor:pointer; flex:0 0 auto; }
+  .m-set-indietro svg{ width:18px; height:18px; }
+  .m-set-indietro::after{ content:""; position:absolute; inset:-4px; }
+  .m-set-indietro:active{ transform:scale(.95); }
+  .m-set-info{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .m-set-txt{ display:flex; flex-direction:column; align-items:flex-end; text-align:right; min-width:0; }
+  .m-set-txt > b{ font-family:var(--m-scheda); font-size:15px; font-weight:800; letter-spacing:-.01em; white-space:nowrap; }
+  .m-set-txt > span{ font-size:12px; color:var(--m-muted); line-height:1.35; font-variant-numeric:tabular-nums; }
+  .m-set-txt > span b{ color:var(--m-ink); font-weight:800; }
+  .m-anello.m-anello-mini{ position:static; width:54px; flex:0 0 auto; pointer-events:none; }
+  .m-anello-mini .m-anello-o{ width:54px; height:54px; margin:0; }
+  .m-anello.m-anello-mini svg{ display:block; width:54px; height:54px; }
+  .m-anello-mini .m-anello-a, .m-anello-mini .m-anello-f{ stroke-width:10; }
+  .m-anello-mini .m-anello-in b{ font-size:13.5px; } .m-anello-mini .m-anello-in b small{ font-size:9px; }
+  .m-anello-mini .m-anello-in span{ display:none; }
+  .m-set .m-anello-f{ stroke:var(--m-home-f); } .m-set .m-anello-a{ stroke:#4f7fb3; }
+  .m-set.m-diari .m-anello-f{ stroke:#fbe5d8; } .m-set.m-diari .m-anello-a{ stroke:#c96b44; }
+  .m-set-carta{ position:relative; padding:16px 14px 18px; border:1px solid var(--m-line); border-radius:22px; background:#fff; box-shadow:0 10px 30px rgba(23,34,49,.07); will-change:transform; }
+  .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:9px; }
+  .m-set-entra .m-set-carta{ animation:m-compare .35s var(--m-molla) both; }
+  .m-altri-lbl{ margin:18px 2px 8px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-altri{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .m-altri .m-zona{ gap:6px; padding:8px 7px 9px; border-radius:13px; animation:none; }
+  .m-altri .m-zona-t b{ font-size:16px; } .m-altri .m-zona-t small{ font-size:9.5px; }
+  .m-altri .m-mini-g{ gap:3px; } .m-altri .m-mini{ height:16px; border-radius:5px; font-size:7.5px; }
+  .m-altri .m-mini-cons{ display:none; }
+  .m-altri.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
+  .m-altri.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-home-c); }
+  .m-altri.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
+  .m-altri.m-grigia .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
+  .m-altri.m-grigia .m-zona-t b{ color:#8d98a5; }
+  /* home: la scheda Reparto col settore scelto e il suo tondo */
+  .m-rep-home{ position:relative; }
+  .m-rh-tondo{ position:absolute; top:14px; right:14px; width:58px; height:58px; display:grid; place-items:center; }
+  .m-rh-tondo svg{ position:absolute; inset:0; width:58px; height:58px; transform:rotate(-90deg); }
+  .m-td-f{ fill:none; stroke:rgba(255,255,255,.18); stroke-width:9; }
+  .m-td-a{ fill:none; stroke:#fff; stroke-width:9; stroke-linecap:round; }
+  .m-rh-tondo b{ position:relative; font-size:14px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:700; }
+  .m-set-carta .m-rep-link{ background:var(--m-home-f); }
+  .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; background:#f6e5bb; color:#6b4a0f; font-size:11.5px; padding:6px 6px 6px 10px; }
+  .m-set-entra .m-set-su{ animation:m-compare .35s var(--m-molla) .15s both; }
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
   .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
@@ -22833,6 +22873,8 @@ function editorLettereSvuota(){
     transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 50ms + 80ms); }
   #m-vista.m-quieta .m-zona{ animation:none; }
   .m-zona:active{ transform:scale(.97); }
+  .m-zona{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .m-zona.m-premuto{ border-color:#d9534f; box-shadow:inset 0 0 0 1.5px #d9534f; transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
   .m-zona-t{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
   .m-zona-t b{ font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1; }
   .m-zona-t small{ font-size:11px; font-weight:600; color:var(--m-muted); white-space:nowrap; }
@@ -22857,38 +22899,15 @@ function editorLettereSvuota(){
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
   .m-zona.m-scelto{ z-index:2; border-color:transparent; box-shadow:0 18px 40px rgba(23,34,49,.16); }
   .m-mappa.m-zoom ~ *, .m-mappa.m-zoom{ pointer-events:none; }
-  #m-vista.m-ricolora .m-rep-dx, #m-vista.m-ricolora .m-mappa{ animation:m-ricolora .4s ease-out; }
+  #m-vista.m-ricolora .m-set-carta, #m-vista.m-ricolora .m-mappa{ animation:m-ricolora .4s ease-out; }
   @keyframes m-ricolora{ from{ opacity:.55; } }
-  .m-rep .m-rep-link{ background:var(--m-home-f); }
   /* Diari: Aggiorna consegne al centro della colonna, ambrato come le consegne */
-  .m-rep .m-rep-link.m-rep-cons{ background:#f6e5bb; color:#6b4a0f; font-size:11px; padding:6px 5px 6px 10px; }
-  .m-rep-sx:not(#m-settori){ align-items:center; padding-right:12px; }
-  .m-rep-sx:not(#m-settori) .m-lt-top{ align-self:flex-start; }
   .m-lbl-letto{ width:20px; height:15px; margin:0 6px -2px 0; vertical-align:baseline; }
-  .m-rep-sx{ position:relative; padding-top:2px; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
-  .m-lt-top{ margin:2px 0 0; font-size:13px; font-weight:600; color:var(--m-muted); }
-  #m-settori .m-anello{ position:static; width:112px; margin-top:6px; text-align:left; }
-  #m-settori .m-anello-o{ width:112px; height:112px; margin:0; }
-  #m-settori .m-anello svg{ width:112px; height:112px; }
-  #m-settori .m-anello-f, #m-settori .m-anello-a{ stroke-width:6; }
-  .m-lt-l{ position:absolute; inset:0; display:grid; place-items:center; font-size:56px; font-weight:800; letter-spacing:-.05em; line-height:1; color:var(--m-ink); }
-  .m-lt-l.m-lungo{ font-size:26px; letter-spacing:-.03em; }
-  .m-lt-l.m-cambia{ animation:m-lt-cambia .45s var(--m-molla); }
-  @keyframes m-lt-cambia{ from{ opacity:0; transform:translateY(14px) scale(.8); } }
-  #m-settori .m-anello-in{ display:none; }
   /* due righe fisse sotto l'anello: i quadratini dei settori non scendono quando il testo va a capo */
-  #m-settori .m-anello p{ margin-top:10px; font-size:12px; min-height:2.9em; }
-  .m-lt-set.m-lt-ric{ display:block; flex:none; height:34px; width:calc(100% - 10px); max-width:none; margin-top:6px; font-size:13px; letter-spacing:-.01em; }
-  .m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
-  .m-rep-dx.m-ric #m-lbl-letti{ margin-top:0; }
-  #m-settori .m-anello p > b:first-child{ color:var(--m-ink); font-weight:800; }
-  .m-lt-altri{ display:flex; gap:5px; width:100%; margin-top:22px; padding-right:10px; }
-  .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:var(--m-home-f); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
-  .m-lt-set:active{ transform:scale(.9); }
+  #m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
+  #m-rep-dx.m-ric #m-lbl-letti{ margin-top:0; }
   /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
-  .m-lt-set:not(.m-lt-ric){ position:relative; overflow:visible; }
-  .m-lt-set:not(.m-lt-ric)::after{ content:""; position:absolute; inset:-5px -2px; }
   .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
   .m-togli::after{ content:""; position:absolute; inset:-10px; }
   .m-modifica, .m-aggiungi button{ position:relative; } :is(.m-modifica, .m-aggiungi button)::after{ content:""; position:absolute; inset:-10px -7px; }
@@ -22907,12 +22926,7 @@ function editorLettereSvuota(){
   .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
   .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
   .m-leg-cons{ display:flex; gap:2px; } .m-leg-cons .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
-  .m-lt-set.m-scelto{ background:#4f7fb3; color:#fff; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
-  .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
-  .m-rep-sx{ display:flex; flex-direction:column; align-items:flex-start; }
-  .m-rep-sx:not(#m-settori) .m-anello{ position:static; margin-top:10px; }
-  @keyframes m-anello-entra{ from{ opacity:0; transform:scale(.7); } to{ opacity:1; transform:none; } }
   .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
   .m-anello svg{ display:block; width:104px; height:104px; transform:rotate(-90deg); }
   .m-anello-f{ fill:none; stroke:var(--m-box); stroke-width:9; }
@@ -22926,14 +22940,8 @@ function editorLettereSvuota(){
   .m-rep-link{ display:inline-flex; align-items:center; gap:3px; margin-top:16px; border:0; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:11.5px; font-weight:600; white-space:nowrap; padding:6px 6px 6px 10px; border-radius:999px; cursor:pointer; }
   .m-rep-link .m-chev{ width:13px; height:13px; opacity:.5; }
   .m-rep-link:active{ transform:scale(.95); }
-  .m-rep-dx{ position:relative; min-width:0; padding:2px 0 8px 14px; }
-  .m-rep-dx::before{ content:""; position:absolute; left:0; top:4px; bottom:0; width:1px; background:rgba(27,36,51,.09); transform-origin:top; }
-  .m-rep.m-entra .m-rep-dx::before{ animation:m-linea .6s var(--m-molla) both; }
-  @keyframes m-linea{ from{ transform:scaleY(0); } }
   .m-rep-lbl{ margin:0 0 8px; font-size:13px; font-weight:600; color:var(--m-muted); }
   .m-griglia + .m-rep-lbl{ margin-top:20px; }
-  .m-rep-sett{ font-size:15px; font-weight:800; letter-spacing:-.01em; text-transform:none; color:var(--m-ink); }
-  .m-rep-vuoto{ font-size:13.5px; color:var(--m-muted); line-height:1.45; padding-top:6px; }
   .m-rep-vitali{ display:flex; width:fit-content; margin:22px auto 0; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:#4f7fb3; margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
   /* letto material */
@@ -23221,8 +23229,13 @@ function vHome(){
   // scheda: icona e nome in alto, in basso il numero (solo da 1 in su) e una riga
   const scheda = (cls, attr, ic, nome, num, riga) => `<button class="m-ingr${cls}" ${attr}><span class="m-sh">${ic}${nome}</span>${num ? `<span class="m-sn">${num}</span>` : ''}<span class="m-ss">${riga}</span></button>`;
   // una scheda sola, il Reparto: dentro Visita e Diari sono gli stessi letti
-  const reparto = scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
-    visti ? (daCopiare ? `${daCopiare} da copiare · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
+  const sett = settoreScelto(), st = sett && statoSettore(sett);
+  const reparto = st
+    ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0)}</span>
+        <span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
+        <span class="m-ss">${st.n - st.visti} da vedere · ${st.visti - st.cop ? `${st.visti - st.cop} diar${st.visti - st.cop === 1 ? 'io' : 'i'} da copiare` : (st.visti ? 'diari tutti copiati' : 'nessun diario')}</span></button>`
+    : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
+      visti ? (daCopiare ? `${daCopiare} da copiare · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
@@ -23351,20 +23364,43 @@ function vSettore(){
     <h2 class="m-h2 m-h2-grande">Reparto</h2>
     ${modo}
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
-    <div class="m-rep${diari ? ' m-diari' : ''}">
-      <div class="m-rep-sx" id="m-settori"><p class="m-lt-top">Settore</p>${anelloHtml().replace('</svg>', '</svg><b class="m-lt-l" id="m-lt-l"></b>')}
-        <div class="m-lt-altri">${ss.map(s => `<button class="m-lt-set" data-m="settore" data-s="${esc(s)}" aria-label="${esc(nomeSettore(s))}">${esc(letteraSettore(s))}</button>`).join('')}</div>
-        ${ricov.length ? `<button class="m-lt-set m-lt-ric" data-m="settore" data-s="${RIC}">Ricoveri</button>` : ''}</div>
-      <div class="m-rep-dx" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
+    <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
+      <div class="m-set-su">
+        <button class="m-set-indietro" data-m="mappa">${ICON.indietro}Tutti i settori</button>
+        <div class="m-set-info"><div class="m-set-txt"><b>${esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore))}</b><span id="m-anello-t"></span></div>
+          <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
+      </div>
+      <div class="m-set-carta" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
+      <p class="m-altri-lbl">Altri settori</p><div class="m-altri" id="m-altri"></div>
     </div>`}`;
-  if(M.zoom) posizionaSettori();
   disegnaLetti();
-  // l'anello e la linea entrano solo all'apertura, non a ogni cambio di settore
-  const rep = $m('.m-rep');
-  if(rep && $m('#m-vista').classList.contains('m-quieta') === false){ rep.classList.add('m-entra'); setTimeout(() => rep.classList.remove('m-entra'), 1000); }
   requestAnimationFrame(muoviPill);
 }
+/* ---------- il settore scelto ---------- */
+// l'ultimo settore aperto dal Reparto si ricorda (anche chiudendo l'app):
+// la scheda Reparto della home ne mostra i dati e il tondo
+const SETT_KEY = 'eo_minimal_settore_v1';
+function settoreScelto(){
+  let s = null; try{ s = localStorage.getItem(SETT_KEY); } catch(e){}
+  if(!s) return null;
+  if(s === RIC) return ricoveratiEO().length ? s : null;
+  return settori().includes(s) ? s : null;
+}
+function ricordaSettore(s){ try{ localStorage.setItem(SETT_KEY, s); } catch(e){} }
+// letti che contano (appoggi compresi, tolti i segnati vuoti), visti oggi,
+// diari di oggi e copiati
+function statoSettore(s){
+  const vu = lettiVuoti();
+  const nomi = s === RIC ? ricoveratiEO().map(n => [n, false])
+    : [...(getWardMap()[s] || []).map(n => [bedName(n), false]), ...(loadAppoggi()[s] || []).map(n => [n, true])];
+  const info = nomi.map(([n, ap]) => [ap, infoLetto(n), n]).filter(([ap, i, n]) => ap || i.occupato || !vu[n]).map(x => x[1]);
+  const oggi = info.filter(i => i.diOggi);
+  return { nome:s === RIC ? 'Ricoveri' : nomeSettore(s), n:info.length, visti:oggi.length, cop:oggi.filter(i => i.copiato).length };
+}
+// tondo fermo (per la home): p da 0 a 100
+const tondo = p => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - p / 100)}"/></svg><b>${Math.round(p)}<small>%</small></b>`;
+
 /* ---------- la mappa del reparto ---------- */
 // tutti i settori insieme, ciascuno con i suoi letti in piccolo (appoggi in
 // coda). Visita, nei feriali: grigi e trasparenti finché non si sceglie il
@@ -23380,30 +23416,39 @@ function settoriMappa(){
   if(ric.length) out.push({ s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
   return out;
 }
+function htmlZona(g, k, azione){
+  const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date()), vu = lettiVuoti();
+  let n = 0, f = 0;
+  const mini = g.letti.map(([nome, et, ap]) => {
+    const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
+    if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
+    else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
+    const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
+    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}">${esc(et)}${cons}</span>`;
+  }).join('');
+  const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
+  return { n, f, html:`<button class="m-zona${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
+      <span class="m-zona-t"><b>${esc(g.lettera)}</b><small>${conto}</small></span><span class="m-mini-g">${mini}</span></button>` };
+}
 function disegnaMappa(){
   const box = $m('#m-mappa'); if(!box) return;
   const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date());
-  const vu = lettiVuoti();
   let tot = 0, fatti = 0;
   box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
-  box.innerHTML = settoriMappa().map((g, k) => {
-    let n = 0, f = 0;
-    const mini = g.letti.map(([nome, et, ap]) => {
-      const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
-      if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
-      else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
-      const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
-      return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}">${esc(et)}${cons}</span>`;
-    }).join('');
-    tot += n; fatti += f;
-    const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
-    return `<button class="m-zona${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="zoom" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
-      <span class="m-zona-t"><b>${esc(g.lettera)}</b><small>${conto}</small></span><span class="m-mini-g">${mini}</span></button>`;
-  }).join('');
+  box.innerHTML = settoriMappa().map((g, k) => { const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f; return z.html; }).join('');
   const sub = $m('#m-mappa-sub');
   if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
     : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
+}
+// sotto il settore aperto, il resto del reparto in piccolo: si tocca per
+// passare a un altro settore senza tornare alla mappa
+function disegnaAltri(){
+  const box = $m('#m-altri'); if(!box) return;
+  const diari = M.vista === 'diari';
+  box.classList.toggle('m-grigia', !(diari || eFestivo(new Date())));
+  box.classList.toggle('m-diari', diari);
+  box.innerHTML = settoriMappa().filter(g => g.s !== M.settore).map((g, k) => htmlZona(g, k, 'cambia-settore').html).join('');
 }
 // scelta del settore dalla mappa: gli altri svaniscono, lui si colora e
 // scivola al centro, poi si apre il settore
@@ -23414,10 +23459,18 @@ function zoomSettore(s, blocco){
   box.classList.add('m-zoom'); blocco.classList.add('m-scelto');
   blocco.style.transform = `translate(${dx}px, ${dy}px) scale(1.18)`;
   setTimeout(() => {
-    M.settore = s; M.zoom = true;
-    const v = $m('#m-vista'); v.classList.remove('m-quieta');
+    M.settore = s; M.zoom = true; ricordaSettore(s);
+    const v = $m('#m-vista'); v.classList.add('m-quieta');
     vSettore();
-    clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
+    // la scheda nasce dal riquadro, al centro, e cresce fino al suo posto
+    const c = $m('.m-set-carta'); if(!c) return;
+    const k = c.getBoundingClientRect(), w = r.width * 1.18, h = r.height * 1.18;
+    c.style.transition = 'none'; c.style.transformOrigin = '50% 50%';
+    c.style.transform = `translate(${vw / 2 - (k.left + k.width / 2)}px, ${vh * .45 - (k.top + k.height / 2)}px) scale(${w / k.width}, ${h / k.height})`;
+    c.style.opacity = '.6';
+    void c.offsetWidth;
+    c.style.transition = 'transform .42s var(--m-molla), opacity .3s'; c.style.transform = ''; c.style.opacity = '';
+    $m('#m-set').classList.add('m-set-entra');
   }, 430);
 }
 // dal settore si torna alla mappa: il suo riquadro parte dal centro e
@@ -23436,22 +23489,6 @@ function tornaMappa(){
   void b.offsetWidth;
   b.style.transition = ''; b.style.transform = '';
   setTimeout(() => b.classList.remove('m-scelto'), 450);
-}
-// settori: la lettera di quello scelto entra nell'anello, il suo quadratino
-// diventa scuro
-function posizionaSettori(){
-  const box = $m('#m-settori'); if(!box) return;
-  box.querySelectorAll('.m-lt-set').forEach(b => {
-    const su = b.dataset.s === M.settore;
-    b.classList.toggle('m-scelto', su);
-    b.setAttribute('aria-pressed', su);
-  });
-  const l = $m('#m-lt-l'), t = M.settore === RIC ? 'Ric' : letteraSettore(M.settore || '');
-  if(l.textContent === t) return;
-  l.textContent = t;
-  l.classList.toggle('m-lungo', t.length > 2);
-  if(!$m('#m-vista').classList.contains('m-quieta')) return;
-  l.classList.remove('m-cambia'); void l.offsetWidth; l.classList.add('m-cambia');
 }
 function muoviPill(){
   const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'));
@@ -23487,6 +23524,7 @@ function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
   if($m('#m-mappa')){ disegnaMappa(); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
+  disegnaAltri();
   const diari = M.vista === 'diari';
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
   const ric = M.settore === RIC;
@@ -23499,7 +23537,7 @@ function disegnaLetti(appena){
     else {
       const vistiR = nomi.filter(n => infoLetto(n).diOggi).length;
       aggiornaAnello(nomi.length ? Math.round(vistiR / nomi.length * 100) : 0, '',
-        nomi.length ? `<b>${Math.round(vistiR / nomi.length * 100)}%</b> visti · ${vistiR} su ${nomi.length}` : 'Nessun ricoverato');
+        nomi.length ? `<b>${vistiR}</b> vist${vistiR === 1 ? 'o' : 'i'} su ${nomi.length}` : 'Nessun ricoverato');
     }
     return;
   }
@@ -23515,13 +23553,13 @@ function disegnaLetti(appena){
   if(diari){ anelloDiari(info); preparaAiuti(); return; }
   const visti = info.filter(i => i.diOggi).length;
   aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, '',
-    info.length ? `<b>${Math.round(visti / info.length * 100)}%</b> visti · ${visti} su ${info.length}` : 'Tutti i letti sono vuoti');
+    info.length ? `<b>${visti}</b> vist${visti === 1 ? 'o' : 'i'} su ${info.length} · ${info.length - visti} da vedere` : 'Tutti i letti sono vuoti');
 }
 // Diari: l'anello dei diari copiati tra quelli scritti oggi nel settore
 function anelloDiari(info){
   const oggi = info.filter(i => i.diOggi), cop = oggi.filter(i => i.copiato).length;
   aggiornaAnello(oggi.length ? Math.round(cop / oggi.length * 100) : 0, '',
-    oggi.length ? `<b>${oggi.length - cop}</b> da copiare<br>${cop} copiat${cop === 1 ? 'o' : 'i'} su ${oggi.length}` : 'Nessun diario di oggi');
+    oggi.length ? `<b>${oggi.length - cop}</b> da copiare · ${cop} su ${oggi.length}` : 'Nessun diario di oggi');
 }
 function nuovoAppoggio(tile){
   if(tile.classList.contains('m-scrivi')) return;
@@ -23767,7 +23805,7 @@ let codaAiuti = [];
 function preparaAiuti(){
   const ps = loadPatients();
   // in Diari i letti mostrati (quelli visti oggi, di tutti i settori)
-  const mostrati = [...document.querySelectorAll('.m-rep.m-diari [data-n]')].map(t => t.dataset.n);
+  const mostrati = [...document.querySelectorAll('.m-set.m-diari [data-n]')].map(t => t.dataset.n);
   codaAiuti = (mostrati.length ? mostrati : (getWardMap()[M.settore] || []).map(bedName).concat(loadAppoggi()[M.settore] || []))
     .map(n => Object.keys(ps).find(id => ps[id].name === n)).filter(id => id && schedaHaDati(ps[id].state));
   const passo = scadenza => {
@@ -23946,7 +23984,9 @@ function confermaElimina(){
   const annulla = () => { clearTimeout(timer); timer = null; if(el) el.classList.remove('m-premuto'); el = null; };
   app.addEventListener('pointerdown', e => {
     if(e.button > 0) return;
-    const t = e.target.closest('[data-m="letto"], #m-settori button');
+    // pressione lunga: su un letto lo elimina, sul riquadro di un settore
+    // della mappa apre "Svuota settore"
+    const t = e.target.closest('[data-m="letto"], .m-zona:not([data-s="${RIC}"])'.replace('${RIC}', RIC));
     if(!t || t.classList.contains('m-elimina') || e.target.closest('.m-togli')) return;
     // un appoggio senza scheda si toglie con la ×
     if(t.dataset.ap && !infoLetto(t.dataset.n).occupato) return;
@@ -23964,7 +24004,7 @@ function confermaElimina(){
     annulla();
     if(clickDaIgnorare) setTimeout(() => { clickDaIgnorare = false; }, 450);
   }));
-  app.addEventListener('contextmenu', e => { if(e.target.closest('[data-m="letto"], #m-settori button')) e.preventDefault(); });
+  app.addEventListener('contextmenu', e => { if(e.target.closest('[data-m="letto"], .m-zona')) e.preventDefault(); });
   // prima degli altri tocchi: dopo una pressione lunga il click non apre il
   // letto; con un letto rosso, toccarlo elimina e toccare altrove annulla
   app.addEventListener('click', e => {
@@ -24086,16 +24126,15 @@ document.getElementById('m-app').addEventListener('click', e => {
   }
   else if(a === 'fatto') fineVisita();
   else if(a === 'visita' || a === 'diari') vai(a);
-  else if(a === 'settore'){
-    if(el.dataset.s === M.settore) return;
-    M.settore = el.dataset.s;
-    posizionaSettori();
-    // i letti del settore di prima escono, quelli nuovi entrano a cascata
-    const v = $m('#m-vista');
-    document.querySelectorAll('#m-letti .m-tl, #m-appoggi .m-tl').forEach(t => t.classList.add('m-esce'));
-    setTimeout(() => { v.classList.remove('m-quieta'); disegnaLetti(); clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000); }, 170);
-  }
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
+  else if(a === 'mappa') tornaMappa();
+  else if(a === 'cambia-settore'){
+    M.settore = el.dataset.s; ricordaSettore(M.settore);
+    const v = $m('#m-vista'); v.classList.remove('m-quieta');
+    vSettore(); window.scrollTo({ top:0, behavior:'smooth' });
+    $m('#m-set').classList.add('m-set-entra');
+    clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
+  }
   else if(a === 'reparto') vai('visita', { zoom:false });
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
