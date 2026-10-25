@@ -23744,7 +23744,7 @@ function vSettore(){
   const ricov = ricoveratiEO();
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
-  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettoreTitolo(M.settore)) : 'Reparto'}</h2>`;
+  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettoreTitolo(M.settore)) : 'Settori'}</h2>`;
   const corpo = `
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
     <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
@@ -23842,8 +23842,9 @@ function disegnaMappa(){
     return titolo + z.html;
   }).join('') + (extra.length ? `<div class="m-mappa-togli">${extra.map(r => `<button data-m="togli-rep" data-r="${r}">Togli ${NOMI_REPARTO[r]}</button>`).join('')}</div>` : '');
   const sub = $m('#m-mappa-sub');
-  if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
-    : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
+  // il conto di ogni settore è già nel suo riquadro: qui solo i diari ancora da copiare
+  const daCopiare = diari ? tot - fatti : 0;
+  if(sub) sub.innerHTML = daCopiare ? `<b>${daCopiare}</b> diar${daCopiare === 1 ? 'io' : 'i'} da copiare · tocca un settore` : 'Tocca un settore';
 }
 // scelta del settore dalla mappa: gli altri settori svaniscono, poi ogni
 // letto piccolo vola e cresce fino al suo posto nel settore aperto, mentre
