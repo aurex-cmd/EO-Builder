@@ -1,7 +1,7 @@
 {
-  "name": "EO Minimal",
-  "short_name": "EO Minimal",
-  "description": "EO Builder in versione essenziale: visita, diari, consegne, ricoveri.",
+  "name": "EO Pocket",
+  "short_name": "EO Pocket",
+  "description": "EO Builder in tasca: visita, diari, consegne, ricoveri.",
   "start_url": "../?ui=minimal",
   "scope": "../",
   "display": "standalone",
