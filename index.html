@@ -22793,6 +22793,8 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
   html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  /* l'accesso sta nella sua pagina, Account: in Impostazioni non si ripete */
+  html[data-ui="minimal"] #impostazioni-view:not(.m-solo-account) > .sync-box{ display:none !important; }
   /* Account: in basso una scena come in Visita e Diari. Non connesso: grigia,
      lucchetto aperto, puntini fermi; connesso: verde acqua, il lucchetto si
      chiude, i puntini scorrono dal telefono al cloud e compare la spunta */
@@ -23048,7 +23050,6 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
   /* feriali, in Visita: grigi e trasparenti finché il settore non si sceglie */
   .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
-  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-zona-t b{ color:#8d98a5; }
   .m-zona.m-ultimo{ border-color:#c9d6e4; }
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
   .m-zona.m-scelto{ z-index:2; border-color:transparent; box-shadow:0 18px 40px rgba(23,34,49,.16); }
@@ -23303,7 +23304,6 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vuoto{ background-color:var(--m-carta); }
   html[data-m-tema="scuro"] .m-tl-nuovo{ border-color:#2e4a68; color:var(--m-faint); }
   html[data-m-tema="scuro"] .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#16253a !important; color:#43576e !important; opacity:1; }
-  html[data-m-tema="scuro"] .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-zona-t b{ color:#43576e; }
   html[data-m-tema="scuro"] .m-set .m-anello-a{ stroke:#5aa9f0; } html[data-m-tema="scuro"] .m-set .m-anello-f{ stroke:#1d3048; }
   html[data-m-tema="scuro"] .m-set.m-diari .m-anello-a{ stroke:#e08a5c; } html[data-m-tema="scuro"] .m-set.m-diari .m-anello-f{ stroke:#2e2a2c; }
   html[data-m-tema="scuro"] .m-rep-vitali > svg:first-child{ color:#5aa9f0; } html[data-m-tema="scuro"] .m-rep-cons > svg:first-child{ color:#e08a5c; }
