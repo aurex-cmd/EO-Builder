@@ -22668,6 +22668,26 @@ function editorLettereSvuota(){
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   .m-ingr.m-pri :is(.m-sh, .m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
   .m-elenco{ flex:none; margin-top:16px; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
+  /* da fare oggi: righe come l'elenco, a destra un cerchio che diventa il baffo teal */
+  .m-fare-t{ display:flex; align-items:center; gap:6px; margin:20px 0 8px; }
+  .m-fare-t svg{ width:14px; height:14px; color:var(--m-teal); }
+  .m-fare-t.m-tutto{ color:var(--m-teal); }
+  .m-fare{ flex:none; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
+  .m-elenco.m-dopo-fare{ margin-top:0; }
+  .m-fare-r{ display:flex; align-items:center; background:#fff; border-top:1px solid var(--m-line); }
+  .m-fare-r:first-child{ border-top:0; }
+  .m-fare-r .m-voce{ flex:1; min-width:0; border-top:0; padding-right:8px; }
+  .m-fare-r .m-voce .m-chev{ display:none; }
+  .m-fare-ok{ flex:none; display:grid; place-items:center; width:24px; height:24px; margin:0 14px 0 4px; padding:0; border:1.5px solid #c8cfd9; border-radius:50%; background:none; color:transparent; box-sizing:border-box; transition:background .2s, border-color .2s, color .2s; }
+  button.m-fare-ok{ position:relative; cursor:pointer; }
+  button.m-fare-ok::after{ content:""; position:absolute; inset:-10px; }
+  .m-fare-ok svg{ width:14px; height:14px; }
+  .m-fare-r.m-fatta .m-fare-ok{ background:var(--m-teal); border-color:var(--m-teal); color:#fff; }
+  .m-fare-r.m-fatta.m-appena .m-fare-ok{ animation:m-pop .5s var(--m-molla); }
+  .m-fare-r.m-fatta .m-voce .m-vn{ color:var(--m-teal); }
+  .m-fare-r.m-fatta .m-voce > svg:first-child{ color:var(--m-teal); }
+  .m-fare-r.m-fatta .m-voce .m-vv{ color:var(--m-teal); opacity:.8; }
+  html[data-m-tema="scuro"] .m-fare-ok{ border-color:#3a4f6a; }
   .m-voce{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s, transform .15s var(--m-molla); }
   .m-voce:first-child{ border-top:0; }
   .m-voce > svg:first-child{ width:18px; height:18px; flex:none; color:var(--m-muted); }
@@ -23144,7 +23164,7 @@ function editorLettereSvuota(){
     --page:#0c1622; --signal:#5aa9f0; --signal-dim:#1d3048; --signal-soft:rgba(90,169,240,.14); --on-signal:#04121f; --clay-border:#1e3047;
     --st-bar:#24384f; --st-bar-hi:#4d6a8a;
   }
-  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
+  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-fare-r, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
   html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga, html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-scheda{ --m-bg:var(--m-carta); }
   html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, #1d4a78, #163a5f); border-color:#1d4a78; }
@@ -23400,6 +23420,77 @@ function statoAccount(){
   const dentro = document.getElementById('sync-logged-in');
   return dentro && dentro.style.display !== 'none' ? 'Connesso' : 'Non connesso';
 }
+/* ---------- da fare oggi: post-degenze, consegne, lettere di dimissione ---------- */
+// cosa è già stato fatto oggi resta qui (solo su questo dispositivo): le
+// consegne e le lettere di dimissione segnate a mano, e se oggi c'erano
+// post-degenze da controllare (per mostrarle "fatte" quando non ne restano)
+const FARE_KEY = 'eo_minimal_dafare_v1';
+function leggiFare(){ try{ return JSON.parse(localStorage.getItem(FARE_KEY)) || {}; } catch(e){ return {}; } }
+function scriviFare(f){ try{ localStorage.setItem(FARE_KEY, JSON.stringify(f)); } catch(e){} }
+let fattiPrima = null;
+function bloccoFare(copiati){
+  const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
+  let cambiato = false;
+  const righe = [];
+  // post-degenze dal 10° giorno: fatte quando oggi ce n'erano e ora non più
+  const pdScadute = Object.values(caricaPostDegenze()).filter(p => avvisoPostDegenza(p) <= Date.now()).length;
+  if(pdScadute && f.pdGiorno !== oggi){ f.pdGiorno = oggi; cambiato = true; }
+  if(pdScadute || f.pdGiorno === oggi){
+    righe.push({ k:'pd', fatta:!pdScadute, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:'Post-degenze',
+      dato:pdScadute ? '' : 'controllate', conta:pdScadute ? `${pdScadute} da controllare` : '' });
+  }
+  // consegne (nei feriali): da fare dopo il primo diario copiato; come le
+  // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
+  const lettere = f.lettere || {};
+  const kCons = `cons|${oggi}`;
+  if(!eFestivo(new Date()) && (copiati || lettere[kCons])){
+    righe.push({ k:kCons, segna:true, fatta:!!lettere[kCons], attr:'data-m="aggcons"', ic:ICON.consegne, nome:'Aggiorna consegne',
+      dato:lettere[kCons] ? 'aggiornate' : 'dai diari di oggi', etich:'Consegne aggiornate' });
+  }
+  // lettere di dimissione per oggi e domani: si segnano a mano
+  let dim = []; try{ dim = calcolaCalendarioDimissioni(); } catch(e){}
+  dim.forEach(r => {
+    const g = chiaveGiorno(r.data.getTime());
+    if(g !== oggi && g !== domani) return;
+    const k = `${r.id}|${g}`;
+    righe.push({ k, segna:true, etich:'Lettera scritta', fatta:!!lettere[k], attr:'data-m="pagina" data-p="dimissioni"', ic:ICON.calendario,
+      nome:`Lettera · ${esc(String(r.nome || '').replace(/^Letto\s+/i, 'letto '))}`, dato:g === oggi ? 'oggi' : 'domani' });
+  });
+  if(cambiato) scriviFare(f);
+  if(!righe.length){ fattiPrima = new Set(); return { html:'', chiavi:new Set() }; }
+  // prima quello che manca, poi il fatto; il baffo "salta" solo se è appena comparso
+  righe.sort((a, b) => a.fatta - b.fatta);
+  const fattiOra = new Set(righe.filter(r => r.fatta).map(r => r.k));
+  const appena = k => fattiPrima && !fattiPrima.has(k) && fattiOra.has(k);
+  fattiPrima = fattiOra;
+  const tutte = righe.every(r => r.fatta);
+  const html = `<p class="m-lbl m-fare-t${tutte ? ' m-tutto' : ''}">${tutte ? `${ICON.ok}Tutto fatto per oggi` : 'Da fare oggi'}</p><div class="m-fare">${righe.map(r => {
+    const segno = r.segna
+      ? `<button class="m-fare-ok" data-m="segna" data-k="${esc(r.k)}" data-e="${r.etich}" aria-pressed="${r.fatta}" aria-label="${r.etich}${r.fatta ? ': tocca per togliere' : '?'}">${ICON.ok}</button>`
+      : `<span class="m-fare-ok" aria-hidden="true">${ICON.ok}</span>`;
+    const destra = r.conta ? `<span class="m-vc">${r.conta}</span>` : `<span class="m-vv">${r.dato || ''}</span>`;
+    return `<div class="m-fare-r${r.fatta ? ' m-fatta' : ''}${appena(r.k) ? ' m-appena' : ''}" data-k="${esc(r.k)}"><button class="m-voce" ${r.attr}>${r.ic}<span class="m-vn">${r.nome}</span>${destra}</button>${segno}</div>`;
+  }).join('')}</div>`;
+  return { html, chiavi:new Set(righe.map(r => r.k.startsWith('cons|') ? 'cons' : r.k)) };
+}
+function segnaFatto(btn){
+  const f = leggiFare(), k = btn.dataset.k;
+  f.lettere = f.lettere || {};
+  // i segni più vecchi di una settimana non servono più
+  const limite = chiaveGiorno(Date.now() - 7 * 864e5);
+  Object.keys(f.lettere).forEach(x => { if(x.split('|').pop() < limite) delete f.lettere[x]; });
+  if(f.lettere[k]) delete f.lettere[k]; else f.lettere[k] = true;
+  scriviFare(f);
+  const riga = btn.closest('.m-fare-r'), fatta = !!f.lettere[k];
+  riga.classList.toggle('m-fatta', fatta);
+  riga.classList.toggle('m-appena', fatta);
+  btn.setAttribute('aria-pressed', fatta);
+  btn.setAttribute('aria-label', btn.dataset.e + (fatta ? ': tocca per togliere' : '?'));
+  if(k.startsWith('cons|')){ const v = riga.querySelector('.m-vv'); if(v) v.textContent = fatta ? 'aggiornate' : 'dai diari di oggi'; }
+  if(fattiPrima) fatta ? fattiPrima.add(k) : fattiPrima.delete(k);
+  const t = $m('.m-fare-t'), tutte = ![...document.querySelectorAll('.m-fare-r')].some(r => !r.classList.contains('m-fatta'));
+  if(t){ t.classList.toggle('m-tutto', tutte); t.innerHTML = tutte ? `${ICON.ok}Tutto fatto per oggi` : 'Da fare oggi'; }
+}
 function vHome(){
   barra();
   const { visti, copiati } = contiHome();
@@ -23438,11 +23529,12 @@ function vHome(){
   const consegne = festivo
     ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne Weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
     : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'dai diari di oggi');
+  const fare = bloccoFare(copiati);
   const elenco = (festivo ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Calendario dimissioni', dimTesto)
-    + (festivo ? '' : consegne)
-    + voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : '')
+    + (festivo || fare.chiavi.has('cons') ? '' : consegne)
+    + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
     + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount());
@@ -23453,7 +23545,9 @@ function vHome(){
     </div>
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-schede m-schede-una">${reparto}</div>
-      <div class="m-elenco">${elenco}</div>
+      ${fare.html}
+      ${fare.html ? '<p class="m-lbl m-fare-t">Sempre a portata</p>' : ''}
+      <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
       <div class="m-home-info"><p><b>E.O. Builder</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
 }
@@ -24335,6 +24429,7 @@ document.getElementById('m-app').addEventListener('click', e => {
     box.hidden = !box.hidden; el.setAttribute('aria-expanded', String(!box.hidden));
   }
   else if(a === 'fatto') fineVisita();
+  else if(a === 'segna') segnaFatto(el);
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'mappa') tornaMappa();
