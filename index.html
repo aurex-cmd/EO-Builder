@@ -22845,6 +22845,8 @@ function editorLettereSvuota(){
   .m-we-ch.m-fatta .m-we-l{ background:var(--m-teal); color:#fff; }
   .m-we-ch.m-appena .m-we-l{ animation:m-pop .5s var(--m-molla); }
   .m-we-crit{ display:inline-flex; align-items:center; min-height:36px; padding:0 10px; border-radius:999px; background:var(--m-viola-box); color:var(--m-critico); font-size:12px; font-weight:700; }
+  .m-we-rep{ margin:8px 0 0 2px; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .m-we-rep:first-child{ margin-top:0; }
   .m-we-niente{ font-size:13px; color:var(--m-faint); }
   .m-we-testo{ grid-area:testo; margin:6px 8px 0 6px; padding:10px 12px; border-radius:10px; background:var(--m-box); font-size:13px; line-height:1.5; white-space:pre-wrap; color:var(--m-ink); }
   .m-we-ins{ border:1px solid var(--m-line); border-radius:16px; background:#fff; padding:14px; display:flex; flex-direction:column; gap:12px; }
@@ -22862,12 +22864,15 @@ function editorLettereSvuota(){
   .m-we-btn svg{ width:16px; height:16px; color:var(--m-muted); }
   .m-we-btn.m-we-pri{ background:var(--m-notte); color:#fff; }
   .m-we-btn.m-we-pri svg{ color:#fff; }
+  .m-we-ins:has(.m-we-analizza.m-pronto) .m-we-btn.m-we-pri{ background:var(--m-box); color:var(--m-ink); }
+  .m-we-ins:has(.m-we-analizza.m-pronto) .m-we-btn.m-we-pri svg{ color:var(--m-muted); }
   .m-we-sel{ grid-column:1 / -1; min-width:0; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--m-muted); }
   .m-we-sel select{ flex:1; }
   html[data-ui="minimal"] #consegne-view .m-we-sel select{ width:100%; min-width:0 !important; height:40px; border:0; border-radius:10px; background-color:var(--m-box); font-size:13px; padding:0 30px 0 10px; }
   .m-we-stato .group-label{ min-height:0 !important; margin:0; font-size:12px; color:var(--m-muted); opacity:1 !important; }
   .m-we-stato .group-label:empty{ display:none; }
   html[data-ui="minimal"] #consegne-view .m-we-casella textarea{ min-height:0 !important; height:auto; border:0; border-radius:10px; background:var(--m-box); font-size:14px; line-height:1.45; box-sizing:border-box; }
+  .m-we-analizza.m-pronto{ background:var(--m-notte); color:#fff; }
   .m-we-analizza{ height:46px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
   .m-we-come{ border:1px solid var(--m-line); border-radius:16px; background:#fff; padding:0 14px; }
   .m-we-come summary{ padding:13px 0; font-size:14px; font-weight:600; color:var(--m-ink); cursor:pointer; list-style:none; display:flex; justify-content:space-between; }
@@ -23002,6 +23007,11 @@ function editorLettereSvuota(){
   .m-schede-una{ grid-template-columns:1fr; }
   .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
   .m-mappa{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .m-mappa-rep{ grid-column:1 / -1; display:flex; align-items:baseline; gap:8px; margin:14px 2px 0; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .m-mappa-rep small{ font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--m-faint); }
+  .m-mappa-togli{ grid-column:1 / -1; display:flex; justify-content:center; gap:16px; margin-top:4px; }
+  .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .m-mappa.m-zoom :is(.m-mappa-rep, .m-mappa-togli){ opacity:0; transition:opacity .2s; }
   .m-zona{ position:relative; display:flex; flex-direction:column; gap:9px; padding:11px 10px 12px; border:1px solid var(--m-line); border-radius:16px; background:#fff; font:inherit; color:var(--m-ink); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
     transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 50ms + 80ms); }
   #m-vista.m-quieta .m-zona{ animation:none; }
@@ -23338,7 +23348,11 @@ const VISTE_APP = ['clinical-view','wardmap-view','riepilogo-view','app-view','b
 function nascondiViste(){ VISTE_APP.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; }); }
 
 /* ---------- dati (le stesse funzioni di Reparto e Diari) ---------- */
-function settori(){ const wm = getWardMap(); return Object.keys(wm).filter(s => repartoDelSettore(s) === getReparto() && s !== SETTORE_EXTRA); }
+// i settori del reparto di tutti i giorni e, solo per oggi, quelli dei
+// reparti aggiunti per la guardia (come col "+" dell'app)
+function settori(){ const wm = getWardMap(), extra = getRepartiExtraOggi(); return Object.keys(wm).filter(s => (repartoDelSettore(s) === getReparto() || extra.includes(repartoDelSettore(s))) && s !== SETTORE_EXTRA); }
+// nome completo per i settori dei reparti aggiunti ("C2 · Settore C")
+const nomeSettoreTitolo = s => repartoDelSettore(s) !== getReparto() && s !== RIC ? s.replace(/^(C[12]) · .*?(Settore\s+)/, '$1 · $2') : nomeSettore(s);
 function voce(nome){ return Object.entries(loadPatients()).find(([, p]) => p.name === nome) || null; }
 function statoScheda(id, p){ return (id === currentPatientId && typeof state !== 'undefined') ? state : p.state; }
 function infoLetto(nome){
@@ -23719,7 +23733,7 @@ function vSettore(){
   const ricov = ricoveratiEO();
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
-  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore)) : 'Reparto'}</h2>`;
+  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettoreTitolo(M.settore)) : 'Reparto'}</h2>`;
   const corpo = `
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
     <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
@@ -23780,7 +23794,9 @@ function settoriMappa(){
   const out = settori().map(s => ({ s, nome:nomeSettore(s), lettera:letteraSettore(s),
     letti:[...(wm[s] || []).map(n => [bedName(n), etichettaLetto(n), false]), ...(ap[s] || []).map(n => [n, inizialiLetto(n), true])] }));
   const ric = ricoveratiEO();
-  if(ric.length) out.push({ s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
+  // i Ricoveri dopo i settori del proprio reparto, prima di quelli aggiunti per oggi
+  const primoExtra = out.findIndex(g => repartoDelSettore(g.s) !== getReparto());
+  if(ric.length) out.splice(primoExtra < 0 ? out.length : primoExtra, 0, { s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
   return out;
 }
 function htmlZona(g, k, azione){
@@ -23803,7 +23819,16 @@ function disegnaMappa(){
   let tot = 0, fatti = 0;
   box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
-  box.innerHTML = settoriMappa().map((g, k) => { const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f; return z.html; }).join('');
+  // i reparti aggiunti per oggi hanno il loro titolo sopra i settori e, in fondo, "Togli"
+  let repPrima = getReparto();
+  const extra = getRepartiExtraOggi();
+  box.innerHTML = settoriMappa().map((g, k) => {
+    const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f;
+    const r = g.s === RIC ? repPrima : repartoDelSettore(g.s);
+    const titolo = r !== repPrima ? `<p class="m-mappa-rep">${NOMI_REPARTO[r]}<small>solo oggi</small></p>` : '';
+    repPrima = r;
+    return titolo + z.html;
+  }).join('') + (extra.length ? `<div class="m-mappa-togli">${extra.map(r => `<button data-m="togli-rep" data-r="${r}">Togli ${NOMI_REPARTO[r]}</button>`).join('')}</div>` : '');
   const sub = $m('#m-mappa-sub');
   if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
     : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
@@ -24501,6 +24526,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'segna') segnaFatto(el);
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
+  else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
   else if(a === 'mappa') tornaMappa();
   else if(a === 'reparto') vai('visita', { zoom:false });
   else if(a === 'modo-rep'){
@@ -24886,7 +24912,7 @@ if(weVista){
   we.innerHTML = `<div class="m-we-conta" id="m-we-conta"></div>
     <div class="m-we-lista-box"></div>
     <div class="m-we-ins" id="m-we-ins">
-      <div class="m-we-ins-su"><span class="m-we-ins-t" id="m-we-ins-t"></span><button type="button" class="m-we-sost" id="m-we-sost">Carica di nuovo</button></div>
+      <div class="m-we-ins-su"><span class="m-we-ins-t" id="m-we-ins-t"></span><button type="button" class="m-we-sost" id="m-we-sost">Allega altre</button></div>
       <div class="m-we-ins-corpo">
         <div class="m-we-azioni"><label class="m-we-sel" for="consegne-reparto"><span>Reparto</span></label><label class="m-we-btn m-we-pri" for="consegne-file-input">${ICON.diario}Allega file</label><button type="button" class="m-we-btn" id="m-we-incolla">${ICON.copia}Incolla testo</button></div>
         <div class="m-we-stato"></div>
@@ -24904,20 +24930,26 @@ if(weVista){
   we.querySelector('.m-we-casella').appendChild(testo);
   we.querySelector('.m-we-azioni').appendChild(file);
   testo.rows = 5;
-  // allegato il file, l'analisi parte da sola
+  // con del testo nella casella, Analizza diventa il pulsante principale
+  const pronto = () => $m('#m-we-analizza').classList.toggle('m-pronto', !!testo.value.trim());
+  testo.addEventListener('input', pronto);
   file.removeAttribute('onchange');
-  file.addEventListener('change', async () => {
-    const f = file.files[0]; if(!f) return;
-    await caricaFileConsegne(f);
-    file.value = '';
-    if(testo.value.trim()){ analizzaConsegne(); weAperto = false; renderConsegneLista(); }
-  });
+  file.addEventListener('change', async () => { const f = file.files[0]; if(!f) return; await caricaFileConsegne(f); file.value = ''; pronto(); });
   [g1, g2].forEach(g => g && g.classList.add('m-we-orig'));
   $m('#m-we-sost').addEventListener('click', () => { weAperto = !weAperto; renderConsegneLista(); if(weAperto) testo.focus(); });
-  $m('#m-we-analizza').addEventListener('click', () => { const prima = JSON.stringify(loadConsegne()); analizzaConsegne(); if(JSON.stringify(loadConsegne()) !== prima || testo.value.trim()){ weAperto = false; renderConsegneLista(); } });
+  // analizzate, la casella si svuota: le prossime consegne (un altro reparto) partono pulite
+  $m('#m-we-analizza').addEventListener('click', () => {
+    if(!testo.value.trim()){ analizzaConsegne(); return; }
+    analizzaConsegne();
+    // consegne di un altro reparto: lo si aggiunge per oggi alla vista Reparto
+    const r = sel.value, extra = getRepartiExtraOggi();
+    if(r !== getReparto() && !extra.includes(r) && Object.keys(loadConsegne()).some(n => repartoDelSettore(n) === r)) impostaRepartiExtraOggi([...extra, r]);
+    testo.value = ''; stato.textContent = ''; delete sel.dataset.toccato; pronto();
+    weAperto = false; renderConsegneLista();
+  });
   // incolla dagli appunti; se il telefono non lo permette, si incolla a mano
   $m('#m-we-incolla').addEventListener('click', async () => {
-    try{ const t = await navigator.clipboard.readText(); if(!t) throw 0; testo.value = t; stato.textContent = 'Testo incollato: controllalo e premi Analizza consegne.'; }
+    try{ const t = await navigator.clipboard.readText(); if(!t) throw 0; testo.value = t; pronto(); stato.textContent = 'Testo incollato: controllalo e premi Analizza consegne.'; }
     catch(e){ testo.focus(); stato.textContent = 'Tieni premuto nella casella e scegli Incolla.'; }
   });
   // cancellare tutto chiede un secondo tocco
@@ -24936,16 +24968,26 @@ if(weVista){
     nomi.forEach(n => WE_LETTERE.forEach(([l]) => { if(consegne[n][l]) consegne[n]['fatto' + l] ? fatte++ : daFare++; }));
     const aperto = weAperto || !nomi.length;
     $m('#m-we-ins').classList.toggle('m-chiuso', !aperto);
+    // un gruppo per reparto (le consegne di ogni reparto si caricano a parte)
+    const repDi = n => ((/^(C[12]) · /.exec(n) || [, 'geriatria'])[1].toLowerCase());
+    const gruppi = {};
+    nomi.forEach(n => (gruppi[repDi(n)] = gruppi[repDi(n)] || []).push(n));
+    const reps = Object.keys(NOMI_REPARTO).filter(r => gruppi[r]);
+    const titoli = reps.length > 1 || (reps[0] && reps[0] !== getReparto());
+    const lett = k => `${k} lett${k === 1 ? 'o' : 'i'}`;
     $m('#m-we-ins-t').textContent = !nomi.length ? 'Allega le consegne di oggi'
-      : `Consegne di ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric' })} · ${nomi.length} lett${nomi.length === 1 ? 'o' : 'i'}`;
+      : reps.length > 1 ? reps.map(r => `${NOMI_REPARTO[r]} · ${lett(gruppi[r].length)}`).join(', ')
+      : `${titoli ? NOMI_REPARTO[reps[0]] : 'Consegne di ' + new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric' })} · ${lett(nomi.length)}`;
+    // aprendo "Allega altre", il reparto proposto è il primo non ancora caricato
+    if(weAperto && !sel.dataset.toccato){ const libero = Object.keys(NOMI_REPARTO).find(r => !gruppi[r]); if(libero && gruppi[sel.value]) sel.value = libero; }
     $m('#m-we-sost').hidden = !nomi.length;
-    $m('#m-we-sost').textContent = weAperto ? 'Chiudi' : 'Carica di nuovo';
+    $m('#m-we-sost').textContent = weAperto ? 'Chiudi' : 'Allega altre';
     $m('#m-we-conta').innerHTML = !nomi.length ? ''
       : !daFare ? `<span class="m-we-tutto">${ICON.ok}Tutto fatto</span><span>${fatte} consegn${fatte === 1 ? 'a' : 'e'}</span>`
       : `<span><b>${daFare}</b> da fare</span>${fatte ? `<span>${fatte} fatt${fatte === 1 ? 'a' : 'e'}</span>` : ''}`;
-    lista.innerHTML = nomi.map(n => {
+    const riquadro = n => {
       const v = consegne[n], vedi = consegneTestoVisibile === n;
-      const nome = n.replace(/Letto\s+/i, '');
+      const nome = n.replace(/^C[12] · /, '').replace(/Letto\s+/i, '');
       const lettere = WE_LETTERE.filter(([l]) => v[l]).map(([l, parola]) => {
         const fatta = !!v['fatto' + l];
         return `<button type="button" class="m-we-ch${fatta ? ' m-fatta' : ''}${weAppena === n + l && fatta ? ' m-appena' : ''}" data-n="${esc(n)}" data-l="${l}" aria-pressed="${fatta}"><b class="m-we-l m-we-${l.toLowerCase()}">${fatta ? ICON.ok : l}</b>${parola}</button>`;
@@ -24954,7 +24996,8 @@ if(weVista){
         <button type="button" class="m-we-apri" data-n="${esc(n)}" aria-expanded="${vedi}" aria-label="${vedi ? 'Nascondi' : 'Leggi'} la consegna di ${esc(n)}">${ICON.giu}</button>
         <div class="m-we-chs">${critici[n] ? '<span class="m-we-crit">critico</span>' : ''}${lettere || '<span class="m-we-niente">nessuna lettera</span>'}</div>
         ${vedi ? `<p class="m-we-testo">${esc(v.testo || '')}</p>` : ''}</div>`;
-    }).join('');
+    };
+    lista.innerHTML = reps.map(r => (titoli ? `<p class="m-we-rep">${NOMI_REPARTO[r]}</p>` : '') + gruppi[r].map(riquadro).join('')).join('');
     weAppena = null;
   };
   lista.addEventListener('click', e => {
