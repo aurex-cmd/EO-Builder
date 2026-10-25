@@ -22953,7 +22953,6 @@ function editorLettereSvuota(){
   #m-vista.m-ricolora .m-set-carta, #m-vista.m-ricolora .m-mappa{ animation:m-ricolora .4s ease-out; }
   @keyframes m-ricolora{ from{ opacity:.55; } }
   /* Diari: Aggiorna consegne al centro della colonna, ambrato come le consegne */
-  .m-lbl-letto{ width:20px; height:15px; margin:0 6px -2px 0; vertical-align:baseline; }
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
   /* due righe fisse sotto l'anello: i quadratini dei settori non scendono quando il testo va a capo */
   #m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
@@ -23517,8 +23516,6 @@ function rigaHome(pag, titolo, sotto, conta){
 // i colori, l'anello (visti o copiati) e il tocco (esame obiettivo o diario)
 const nomeSettore = s => s.replace(/^.*?(Settore\s+)/, '$1');
 const letteraSettore = s => nomeSettore(s).replace(/^Settore\s+/i, '');
-// il lettino disegnato accanto ad Appoggi e Letti (telaio, coperta)
-const lettino = (telaio, coperta) => `<svg class="m-lbl-letto" viewBox="0 0 34 26" aria-hidden="true"><rect x="1" y="4" width="3.5" height="19" rx="1.75" fill="${telaio}"/><rect x="29.5" y="10" width="3.5" height="13" rx="1.75" fill="${telaio}"/><rect x="2" y="15" width="30" height="4" rx="2" fill="${telaio}"/><rect x="3" y="11" width="28" height="5" rx="2.5" fill="#fff" stroke="${coperta}" stroke-width=".8"/><rect x="5" y="7" width="8" height="5" rx="2.5" fill="#fff" stroke="${coperta}" stroke-width=".8"/><path d="M13 11h16a2 2 0 012 2v1H13z" fill="${coperta}"/></svg>`;
 function anelloHtml(){
   return `<div class="m-anello" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div><p id="m-anello-t"></p></div>`;
 }
@@ -23567,7 +23564,7 @@ function vSettore(){
         <div class="m-set-info"><div class="m-set-txt"><span id="m-anello-t"></span></div>
           <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
-      <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
+      <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti"><span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
     </div>`}`;
   // il selettore Visita/Diari, se c'è già, resta lo stesso: ridisegnarlo
