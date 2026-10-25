@@ -22747,6 +22747,10 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
   html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  /* Account: in basso una scena tenue come in Visita e Diari (il telefono e il
+     cloud col lucchetto: i dati sincronizzati, cifrati, tra i dispositivi) */
+  body:has(#impostazioni-view.m-solo-account:not([style*="none"]))::after{ content:""; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate(62 84)%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%22100%22 rx=%2211%22 fill=%22%23a8d5ca%22/%3E%3Crect x=%225%22 y=%2210%22 width=%2248%22 height=%2276%22 rx=%226%22 fill=%22%23fff%22/%3E%3Crect x=%2211%22 y=%2220%22 width=%2234%22 height=%227%22 rx=%223.5%22 fill=%22%23d4ebe5%22/%3E%3Crect x=%2211%22 y=%2233%22 width=%2226%22 height=%227%22 rx=%223.5%22 fill=%22%23d4ebe5%22/%3E%3Crect x=%2211%22 y=%2246%22 width=%2230%22 height=%227%22 rx=%223.5%22 fill=%22%23d4ebe5%22/%3E%3Crect x=%2221%22 y=%2291%22 width=%2216%22 height=%224%22 rx=%222%22 fill=%22%23fff%22/%3E%3C/g%3E%3Cpath d=%22M132 118 C 160 84 190 78 212 92%22 fill=%22none%22 stroke=%22%238cc7b9%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-dasharray=%221 9%22/%3E%3Cg transform=%22translate(212 48)%22%3E%3Cpath d=%22M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z%22 fill=%22%23a8d5ca%22/%3E%3Cpath d=%22M71 60 v-7 a10 10 0 0 1 20 0 v7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3Crect x=%2264%22 y=%2258%22 width=%2234%22 height=%2227%22 rx=%226%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2281%22 cy=%2270%22 r=%223.6%22 fill=%22%23a8d5ca%22/%3E%3Crect x=%2279.4%22 y=%2270%22 width=%223.2%22 height=%227%22 rx=%221.6%22 fill=%22%23a8d5ca%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef7f4%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e1f1ec%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:#fff; border:1px solid var(--m-line); border-radius:16px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:600; color:var(--m-ink); }
   html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; max-width:none !important; padding:11px 12px; }
@@ -23112,6 +23116,7 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set)::before{ display:none; }
+  html[data-m-tema="scuro"] body:has(#impostazioni-view.m-solo-account)::after{ display:none; }
   html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
   html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
