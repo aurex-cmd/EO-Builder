@@ -22673,6 +22673,7 @@ function editorLettereSvuota(){
   .m-fare-t svg{ width:14px; height:14px; color:var(--m-teal); }
   .m-fare-t.m-tutto{ color:var(--m-teal); }
   .m-fare{ flex:none; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
+  .m-elenco.m-dopo-fare{ margin-top:0; }
   .m-fare-r{ display:flex; align-items:center; background:#fff; border-top:1px solid var(--m-line); }
   .m-fare-r:first-child{ border-top:0; }
   .m-fare-r .m-voce{ flex:1; min-width:0; border-top:0; padding-right:8px; }
@@ -23545,7 +23546,8 @@ function vHome(){
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-schede m-schede-una">${reparto}</div>
       ${fare.html}
-      <div class="m-elenco">${elenco}</div>
+      ${fare.html ? '<p class="m-lbl m-fare-t">Sempre a portata</p>' : ''}
+      <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
       <div class="m-home-info"><p><b>E.O. Builder</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
 }
