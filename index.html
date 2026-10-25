@@ -23008,6 +23008,7 @@ function editorLettereSvuota(){
   .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
   .m-mappa{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .m-mappa-rep{ grid-column:1 / -1; display:flex; align-items:baseline; gap:8px; margin:14px 2px 0; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .m-mappa-rep:first-child{ margin-top:0; }
   .m-mappa-rep small{ font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   .m-mappa-togli{ grid-column:1 / -1; display:flex; justify-content:center; gap:16px; margin-top:4px; }
   .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
@@ -23820,12 +23821,13 @@ function disegnaMappa(){
   box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
   // i reparti aggiunti per oggi hanno il loro titolo sopra i settori e, in fondo, "Togli"
-  let repPrima = getReparto();
+  // con un reparto aggiunto, anche quello di tutti i giorni ha il suo titolo
   const extra = getRepartiExtraOggi();
+  let repPrima = extra.length ? null : getReparto();
   box.innerHTML = settoriMappa().map((g, k) => {
     const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f;
     const r = g.s === RIC ? repPrima : repartoDelSettore(g.s);
-    const titolo = r !== repPrima ? `<p class="m-mappa-rep">${NOMI_REPARTO[r]}<small>solo oggi</small></p>` : '';
+    const titolo = r !== repPrima ? `<p class="m-mappa-rep">${NOMI_REPARTO[r]}${r !== getReparto() ? '<small>solo oggi</small>' : ''}</p>` : '';
     repPrima = r;
     return titolo + z.html;
   }).join('') + (extra.length ? `<div class="m-mappa-togli">${extra.map(r => `<button data-m="togli-rep" data-r="${r}">Togli ${NOMI_REPARTO[r]}</button>`).join('')}</div>` : '');
