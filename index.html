@@ -22408,7 +22408,7 @@ function editorLettereSvuota(){
   .m-bar .m-indietro{ border:0; background:none; width:44px; height:44px; display:grid; place-items:center; color:var(--m-muted); cursor:pointer; transition:transform .12s var(--m-molla), color .2s; }
   .m-bar .m-indietro svg{ width:22px; height:22px; }
   .m-bar .m-indietro:active{ transform:scale(.88); color:var(--m-ink); }
-  .m-bar .m-azione{ justify-self:end; border:0; background:none; padding:6px 0; color:var(--m-teal); font-weight:600; font-size:.9rem; cursor:pointer; font-family:inherit; }
+  .m-bar .m-azione{ justify-self:end; border:0; background:none; padding:6px 0; color:var(--m-notte); font-weight:600; font-size:.9rem; cursor:pointer; font-family:inherit; }
   .m-bar.m-home .m-bar-in{ grid-template-columns:1fr auto; }
   /* durante la visita la barra resta fissa sopra la schermata dei tag */
   html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; box-shadow:0 1px 0 var(--m-line); }
@@ -22425,7 +22425,11 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .chip:not(.active){ background:#1b2f47; border-color:#24405e; color:#e6edf5; }
   html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
-  html[data-ui="minimal"] #clinical-view #reset-btn{ background:#1b2f47; border-color:#24405e; color:#e6edf5; box-shadow:none; }
+  html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
+  html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
+  /* Azzera tutto: un link piccolo e staccato, lontano da Copia referto */
+  html[data-ui="minimal"] #clinical-view #reset-btn{ position:relative; margin-left:auto; padding:6px 2px; background:none; border:0; box-shadow:none; color:#8fa7c2; font-size:12.5px; font-weight:500; text-decoration:underline; text-underline-offset:3px; }
+  html[data-ui="minimal"] #clinical-view #reset-btn::after{ content:""; position:absolute; inset:-8px -6px; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
@@ -22453,7 +22457,7 @@ function editorLettereSvuota(){
   .m-lbl{ font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--m-muted); margin:16px 0 -6px; }
 
   .m-piede{ font-size:.8rem; color:var(--m-muted); text-align:center; margin-top:24px; }
-  .m-piede a{ color:var(--m-teal); font-weight:600; text-decoration:none; }
+  .m-piede a{ color:var(--m-notte); font-weight:600; text-decoration:none; }
 
   .m-settori{ position:relative; display:grid; grid-auto-columns:1fr; grid-auto-flow:column; background:var(--m-box); border-radius:9px; padding:3px; }
   .m-settori .m-pill{ position:absolute; top:3px; bottom:3px; left:3px; border-radius:7px; background:var(--m-bg); box-shadow:0 1px 2px rgba(0,0,0,.08); transition:transform .36s var(--m-molla), width .36s var(--m-molla); }
@@ -22463,14 +22467,14 @@ function editorLettereSvuota(){
   .m-pallini{ position:absolute; display:flex; }
   .m-pallini.m-basso{ right:5px; bottom:5px; }
   .m-pallini.m-alto{ left:5px; top:5px; gap:2px; }
-  .m-pal{ width:14px; height:14px; border-radius:50%; display:grid; place-items:center; font-size:8.5px; font-weight:800; color:#fff; font-style:normal; box-shadow:0 0 0 1.5px var(--m-bg); }
-  .m-pallini.m-basso .m-pal + .m-pal{ margin-left:-4px; }
-  .m-pallini.m-alto .m-pal{ width:12px; height:12px; font-size:7px; color:#1b2433; }
+  .m-pal{ width:18px; height:18px; border-radius:50%; display:grid; place-items:center; font-size:10.5px; font-weight:800; color:#fff; font-style:normal; box-shadow:0 0 0 2px var(--m-bg); }
+  .m-pallini.m-basso{ gap:2px; }
+  .m-pallini.m-alto .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
   .m-pal.e{ background:var(--m-p-e); } .m-pal.d{ background:var(--m-p-d); }
   .m-pal.arancione{ background:#e0a03a; } .m-pal.blu{ background:#4a90d9; } .m-pal.rosso{ background:#d9534f; } .m-pal.verde{ background:#3cb464; }
   .m-pal.v{ background:var(--m-p-v); } .m-pal.es{ background:var(--m-p-es); } .m-pal.s{ background:var(--m-p-s); } .m-pal.c{ background:var(--m-p-c); }
-  .m-spunta{ position:absolute; top:5px; right:5px; width:15px; height:15px; border-radius:50%; background:var(--m-teal); color:#fff; display:grid; place-items:center; box-shadow:0 0 0 1.5px var(--m-bg); }
-  .m-spunta svg{ width:9px; height:9px; }
+  .m-spunta{ position:absolute; top:5px; right:5px; width:18px; height:18px; border-radius:50%; background:var(--m-teal); color:#fff; display:grid; place-items:center; box-shadow:0 0 0 1.5px var(--m-bg); }
+  .m-spunta svg{ width:11px; height:11px; }
 
   /* esame obiettivo: la schermata dei tag dell'app, piatta e chiara */
   /* si anima solo il tag appena toccato (l'app ridisegna i tag anche mentre si scrive) */
@@ -22573,6 +22577,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
+  html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
   html[data-ui="minimal"]:not([data-m-orig]){ scrollbar-gutter:stable; }
@@ -22595,7 +22600,7 @@ function editorLettereSvuota(){
   /* parametri vitali del settore: una scheda per letto */
   html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:flex; flex-direction:column; gap:10px; }
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ background:#fff; border:0; border-radius:16px; padding:10px 12px 8px; margin:0; box-shadow:0 1px 2px rgba(23,34,49,.14), 0 2px 6px 1px rgba(23,34,49,.07); animation:m-compare .35s var(--m-molla) both; }
-  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ box-shadow:inset 0 0 0 2px var(--m-teal), 0 3px 10px 1px rgba(14,117,113,.16); }
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ box-shadow:inset 0 0 0 2px var(--m-notte), 0 3px 10px 1px rgba(31,78,121,.16); }
   html[data-ui="minimal"] #vitali-settore-view .riga-label{ font-family:var(--m-sans); font-size:14px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--m-ink); display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
   html[data-ui="minimal"] #vitali-settore-view .riga-label .riga-stato{ font-size:11.5px; font-weight:500; color:var(--m-muted); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ background:none; border:0; box-shadow:none; padding:0; margin:0; }
@@ -22732,7 +22737,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .btn.primary, html[data-ui="minimal"]:not([data-m-orig]) .admit-copy-btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   html[data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:#fff !important; }
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:12px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
-  html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-teal); outline:none; }
+  html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:var(--m-box); border:0; border-radius:20px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:700; color:var(--m-ink); }
@@ -22846,6 +22851,27 @@ function editorLettereSvuota(){
   .m-lt-altri{ display:flex; gap:5px; width:100%; margin-top:22px; padding-right:10px; }
   .m-lt-set{ flex:1 1 0; min-width:0; max-width:36px; height:34px; padding:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:0; border-radius:11px; background:var(--m-home-f); font:inherit; font-size:15px; font-weight:800; color:var(--m-muted); cursor:pointer; transition:transform .18s var(--m-molla), background .3s, color .3s; -webkit-tap-highlight-color:transparent; }
   .m-lt-set:active{ transform:scale(.9); }
+  /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
+  .m-lt-set:not(.m-lt-ric){ position:relative; overflow:visible; }
+  .m-lt-set:not(.m-lt-ric)::after{ content:""; position:absolute; inset:-5px -2px; }
+  .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
+  .m-togli::after{ content:""; position:absolute; inset:-10px; }
+  .m-modifica, .m-aggiungi button{ position:relative; } :is(.m-modifica, .m-aggiungi button)::after{ content:""; position:absolute; inset:-10px -7px; }
+  .m-chiudi{ position:relative; } .m-chiudi::after{ content:""; position:absolute; inset:-7px; }
+  .m-leg-btn{ position:relative; display:inline-grid; place-items:center; width:18px; height:18px; margin-left:6px; border:0; border-radius:50%; background:var(--m-home-f); color:var(--m-muted); font:inherit; font-size:11px; font-weight:800; cursor:pointer; vertical-align:1px; }
+  .m-leg-btn::after{ content:""; position:absolute; inset:-13px; }
+  .m-leg-btn[aria-expanded="true"]{ background:var(--m-notte); color:#fff; }
+  .m-legenda{ margin:-2px 0 12px; padding:10px 12px; border:1px solid var(--m-line); border-radius:12px; background:#fff; animation:m-compare .25s var(--m-molla) both; }
+  .m-legenda ul{ list-style:none; margin:0; padding:0; display:grid; gap:7px; }
+  .m-legenda li{ display:flex; align-items:center; gap:9px; font-size:12px; line-height:1.3; color:var(--m-ink); }
+  .m-legenda .m-pal, .m-legenda .m-spunta{ position:static; flex:0 0 auto; box-shadow:none; }
+  .m-leg-tl{ flex:0 0 auto; width:22px; height:16px; border-radius:5px; background:#eef1f5; box-shadow:inset 0 0 0 1px #dde3ea; }
+  .m-leg-tl.m-oggi-l{ background:var(--m-home-a); } .m-leg-tl.m-recente{ background:var(--m-home-d); } .m-leg-tl.m-vecchio{ background:#dfe4ea; }
+  .m-leg-tl.m-copiato{ background:var(--m-home-a); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
+  .m-leg-tl.m-critico{ background:var(--m-home-d); box-shadow:inset 0 0 0 2px var(--m-critico); }
+  .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
+  .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
+  .m-leg-cons{ display:flex; gap:2px; } .m-leg-cons .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
   .m-lt-set.m-scelto{ background:#4f7fb3; color:#fff; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-rep.m-entra .m-anello{ animation:m-anello-entra .6s var(--m-molla) .1s both; }
@@ -22896,9 +22922,10 @@ function editorLettereSvuota(){
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
   .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
   @keyframes m-tl-esce{ to{ opacity:0; transform:translateX(-8px) scale(.95); } }
-  .m-tl .m-pallini.m-basso{ right:-5px; bottom:-5px; }
-  .m-tl .m-pallini.m-alto{ left:-4px; top:-5px; }
-  .m-tl .m-spunta{ top:-5px; right:-5px; }
+  .m-tl .m-pallini.m-basso{ right:-6px; bottom:-7px; }
+  .m-tl .m-pallini.m-alto{ left:3px; top:3px; gap:1px; }
+  .m-tl .m-pallini.m-alto .m-pal{ width:14px; height:14px; font-size:8px; box-shadow:none; }
+  .m-tl .m-spunta{ top:-7px; right:-6px; }
   .m-tl .m-togli{ top:-6px; right:-6px; background:#fff; box-shadow:0 1px 3px rgba(23,34,49,.18); color:var(--m-muted); }
   .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
   .m-tl.m-armato .m-togli{ background:var(--m-p-e); color:#fff; }
@@ -23076,6 +23103,14 @@ function palliniBasso(i, tocca){
     (i.pall.dimOggi || i.pall.dimDomani) && `<i class="m-pal d" title="Dimissione ${i.pall.dimOggi ? 'oggi' : 'domani'}">D</i>`,
     // nella scheda la "i" si tocca: germe e DPI (lo stesso riquadro di Diari)
     i.iso && (tocca ? `<button type="button" class="m-pal m-pal-tocca ${i.iso}" data-m="iso" aria-label="Isolamento: germe e DPI">i</button>` : `<i class="m-pal ${i.iso}" title="Isolamento">i</i>`)].filter(Boolean).join('');
+}
+// la legenda dei letti, sotto "Letti" col tasto ?
+function htmlLegenda(){
+  const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
+  const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
+  return `<ul>${v('m-oggi-l', 'Visto oggi')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
+    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
+    <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
   const basso = palliniBasso(i);
@@ -23329,7 +23364,7 @@ function vSettore(){
       <div class="m-rep-sx" id="m-settori"><p class="m-lt-top">Settore</p>${anelloHtml().replace('</svg>', '</svg><b class="m-lt-l" id="m-lt-l"></b>')}
         <div class="m-lt-altri">${ss.map(s => `<button class="m-lt-set" data-m="settore" data-s="${esc(s)}" aria-label="${esc(nomeSettore(s))}">${esc(letteraSettore(s))}</button>`).join('')}</div>
         ${ricov.length ? `<button class="m-lt-set m-lt-ric" data-m="settore" data-s="${RIC}">Ricoveri</button>` : ''}</div>
-      <div class="m-rep-dx" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}Letti</p><div class="m-griglia" id="m-letti"></div>
+      <div class="m-rep-dx" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
         <button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button></div>
     </div>`}`;
   posizionaSettori();
@@ -23413,7 +23448,7 @@ function disegnaLetti(appena){
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
   const ric = M.settore === RIC;
   $m('#m-rep-dx').classList.toggle('m-ric', ric);
-  $m('#m-lbl-letti').lastChild.textContent = ric ? 'Ricoverati' : 'Letti';
+  $m('#m-lbl-letti .m-lbl-t').textContent = ric ? 'Ricoverati' : 'Letti';
   if(ric){
     const nomi = ricoveratiEO();
     el.innerHTML = nomi.map((n, k) => tileLetto(n, inizialiLetto(n), k, appena)).join('');
@@ -24070,6 +24105,10 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'vitali'){ settoreVitali = M.settore; vai('app', { pag:'vitali' }); }
   else if(a === 'togli-appoggio'){ e.stopPropagation(); rimuoviAppoggio(M.settore, el.dataset.n); }
   else if(a === 'nuovo-appoggio') nuovoAppoggio(el);
+  else if(a === 'legenda'){
+    const box = $m('#m-legenda'); if(!box) return;
+    box.hidden = !box.hidden; el.setAttribute('aria-expanded', String(!box.hidden));
+  }
   else if(a === 'fatto') fineVisita();
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'settore'){
