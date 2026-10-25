@@ -4007,8 +4007,15 @@ applicaTema(temaAttuale());
 // normalmente, l'app non cambia in niente — vedi il blocco "EO MINIMAL" in
 // fondo alla pagina
 const UI_MINIMAL = new URLSearchParams(location.search).get('ui') === 'minimal';
+// tema di EO Minimal (Impostazioni → Tema), separato da quello dell'app:
+// chiaro di base, oppure "notte"
+const MTEMA_KEY = 'eo_minimal_tema_v1';
+function temaMinimal(){
+  try{ return localStorage.getItem(MTEMA_KEY) === 'scuro' ? 'scuro' : 'chiaro'; } catch(e){ return 'chiaro'; }
+}
 if(UI_MINIMAL){
-  applicaTema('chiaro');
+  applicaTema(temaMinimal());
+  document.documentElement.dataset.mTema = temaMinimal();
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
   // icona e nome propri ("Aggiungi a Home" prende quelli della pagina aperta)
@@ -23051,6 +23058,64 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .sync-box .btn:not(.primary){ background:var(--m-sec); border-color:var(--m-sec); }
   html[data-ui="minimal"] .m-pagina :is(.sync-box, .group-label, .sync-desc){ letter-spacing:0; }
   .m-voce{ gap:10px; } .m-voce .m-vv{ font-size:12px; }
+
+  /* TEMA NOTTE (Impostazioni → Tema → Scuro): stessa grafica, in blu notte.
+     I letti tengono i loro significati: blu visto, rame da copiare, verde
+     copiato, viola critico */
+  html[data-ui="minimal"][data-m-tema="scuro"]{
+    --m-bg:#0c1622; --m-box:#1a2b40; --m-ink:#e9eff6; --m-muted:#8b9fb6; --m-faint:#4d6178; --m-line:#1e3047;
+    --m-teal:#14a39b; --m-teal-box:#123a3f; --m-critico:#c9a2ff; --m-notte:#2d6aa6; --m-notte-box:#1d3048; --m-sec:#1d3048; --m-home-f:#1d3048;
+    --m-home-a:#2d6aa6; --m-home-b:#b9643c; --m-home-c:#14504c; --m-home-d:#2c3a5c; --m-home-sub:#e9eff6;
+    --m-carta:#132133; --m-link:#6fb4f5;
+  }
+  html[data-ui="minimal"][data-m-tema="scuro"]:not([data-m-orig]){
+    --page:#0c1622; --signal:#5aa9f0; --signal-dim:#1d3048; --signal-soft:rgba(90,169,240,.14); --on-signal:#04121f; --clay-border:#1e3047;
+    --st-bar:#24384f; --st-bar-hi:#4d6a8a;
+  }
+  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
+  html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga, html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:var(--m-carta); }
+  html[data-m-tema="scuro"] .m-scheda{ --m-bg:var(--m-carta); }
+  html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, #1d4a78, #163a5f); border-color:#1d4a78; }
+  html[data-m-tema="scuro"] .m-copia{ background:var(--m-teal); }
+  html[data-m-tema="scuro"] :is(.m-modifica, .m-piede a, .m-bar .m-azione), html[data-m-tema="scuro"] .m-voce .m-vc, html[data-m-tema="scuro"] .m-rigalink .m-conta{ color:var(--m-link); }
+  html[data-m-tema="scuro"] :is(.m-ingr .m-sh, .m-home-info b){ color:var(--m-muted); }
+  html[data-m-tema="scuro"] .m-voce:active, html[data-m-tema="scuro"] .m-righe .m-rigalink:active{ background:var(--m-box); }
+  @media (hover:hover){ html[data-m-tema="scuro"] :is(.m-voce, .m-righe .m-rigalink):hover{ background:var(--m-box); } }
+  html[data-m-tema="scuro"] .m-settori .m-pill{ background:#22374f; box-shadow:none; }
+  html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
+  html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
+  html[data-m-tema="scuro"] #m-app:has(.m-set)::before{ display:none; }
+  html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
+  html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
+  html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
+  html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
+  html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
+  html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; }
+  html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
+  /* letti */
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl){ background-color:#1a2a3e; }
+  html[data-m-tema="scuro"] .m-leg-tl:not(.m-copiato, .m-consegnato, .m-critico, .m-vuoto){ box-shadow:inset 0 0 0 1px #24384f; }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vecchio{ background-color:#22344b; }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-recente{ background-color:var(--m-home-d); }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-oggi-l{ background-color:var(--m-home-a); color:#fff; }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-critico{ background-color:#33204f; }
+  html[data-m-tema="scuro"] .m-tl.m-critico, html[data-m-tema="scuro"] .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #a97bf0; }
+  html[data-m-tema="scuro"] .m-leg-tl.m-copiato{ background-color:var(--m-home-a); }
+  html[data-m-tema="scuro"] .m-diari :is(.m-tl, .m-mini, .m-leg-tl).m-oggi-l:not(.m-critico), html[data-m-tema="scuro"] .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background-color:var(--m-home-b); color:#fff; }
+  html[data-m-tema="scuro"] .m-diari :is(.m-tl, .m-mini, .m-leg-tl).m-copiato:not(.m-critico), html[data-m-tema="scuro"] .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background-color:var(--m-home-c); color:#d8fff5; }
+  html[data-m-tema="scuro"] .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px #35d0ae; }
+  html[data-m-tema="scuro"] .m-mini.m-copiato{ box-shadow:inset 0 0 0 1.5px #35d0ae; }
+  html[data-m-tema="scuro"] .m-tl.m-consegnato:not(.m-oggi-l):not(.m-critico){ box-shadow:inset 0 0 0 2.5px #5aa9f0; }
+  html[data-m-tema="scuro"] .m-mini.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px #5aa9f0; }
+  html[data-m-tema="scuro"] .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #5aa9f0; }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vuoto{ background-color:var(--m-carta); }
+  html[data-m-tema="scuro"] .m-tl-nuovo{ border-color:#2e4a68; color:var(--m-faint); }
+  html[data-m-tema="scuro"] .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#16253a !important; color:#43576e !important; opacity:1; }
+  html[data-m-tema="scuro"] .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-zona-t b{ color:#43576e; }
+  html[data-m-tema="scuro"] .m-set .m-anello-a{ stroke:#5aa9f0; } html[data-m-tema="scuro"] .m-set .m-anello-f{ stroke:#1d3048; }
+  html[data-m-tema="scuro"] .m-set.m-diari .m-anello-a{ stroke:#e08a5c; } html[data-m-tema="scuro"] .m-set.m-diari .m-anello-f{ stroke:#2e2a2c; }
+  html[data-m-tema="scuro"] .m-rep-vitali > svg:first-child{ color:#5aa9f0; } html[data-m-tema="scuro"] .m-rep-cons > svg:first-child{ color:#e08a5c; }
 </style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
@@ -23179,8 +23244,17 @@ function temaVisita(si){
   const html = document.documentElement;
   if(si === html.hasAttribute('data-m-orig')) return;
   html.toggleAttribute('data-m-orig', si);
-  applicaTema(si ? temaAttuale() : 'chiaro');
-  if(!si) document.querySelector('meta[name="theme-color"]').content = '#ffffff';
+  applicaTema(si ? temaAttuale() : temaMinimal());
+  if(!si) document.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#0c1622' : '#ffffff';
+}
+function impostaTemaMinimal(t){
+  try{ localStorage.setItem(MTEMA_KEY, t); } catch(e){}
+  document.documentElement.dataset.mTema = t;
+  if(!document.documentElement.hasAttribute('data-m-orig')){
+    applicaTema(t);
+    document.querySelector('meta[name="theme-color"]').content = t === 'scuro' ? '#0c1622' : '#ffffff';
+  }
+  renderImpostazioniTema();
 }
 function disegna(verso){
   const v = $m('#m-vista');
@@ -24519,9 +24593,14 @@ if(window.visualViewport) visualViewport.addEventListener('scroll', posizionaMen
 
 /* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
 Object.keys(PAGINE).forEach(v => vistaPagina(v).classList.add('m-pagina'));
-// in minimal il tema non si sceglie (è sempre chiara); l'account, che
-// nell'app sta in Reparto, va in Impostazioni
-['impostazioni-tema-chiaro'].forEach(id => { const g = document.getElementById(id)?.closest('.group'); if(g) g.style.display = 'none'; });
+// il tema di Impostazioni, in minimal, è quello di EO Minimal (chiaro o
+// notte), non quello dell'app
+const temaChiaro = document.getElementById('impostazioni-tema-chiaro'), temaScuro = document.getElementById('impostazioni-tema-scuro');
+if(temaChiaro && temaScuro){
+  [temaChiaro, temaScuro].forEach(c => { c.removeAttribute('onclick'); c.addEventListener('click', () => impostaTemaMinimal(c === temaScuro ? 'scuro' : 'chiaro')); });
+  renderImpostazioniTema = () => { const t = temaMinimal(); temaChiaro.classList.toggle('active', t === 'chiaro'); temaScuro.classList.toggle('active', t === 'scuro'); };
+  renderImpostazioniTema();
+}
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
 const syncDentro = document.getElementById('sync-logged-in');
