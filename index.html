@@ -23034,9 +23034,9 @@ function editorLettereSvuota(){
   #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:3px 10px; background:var(--m-box); color:var(--m-muted); font:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
   #m-aggcons table.agg-cons .agg-cons-azioni button:active{ transform:scale(.94); }
   #m-aggcons table.agg-cons .agg-cons-esami{ margin-top:10px; padding:10px 12px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-muted); font-size:13px; }
-  /* ogni consegna su blu notte, col letto (come in Reparto) a sinistra e
+  /* ogni consegna sul blu delle schede dell'esame obiettivo, col letto (come in Reparto) a sinistra e
      a destra etichette e testo; intorno resta il bianco della pagina */
-  #m-aggcons table.agg-cons tr{ display:grid; grid-template-columns:auto minmax(0, 1fr); column-gap:14px; align-items:start; background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  #m-aggcons table.agg-cons tr{ display:grid; grid-template-columns:auto minmax(0, 1fr); column-gap:14px; align-items:start; background:#132235; border-color:#1c3048; color:#fff; }
   #m-aggcons table.agg-cons td:first-child{ display:contents; }
   #m-aggcons table.agg-cons td:first-child > div:first-child{ display:none; }
   #m-aggcons table.agg-cons .agg-cons-tile{ display:block; grid-column:1; grid-row:1 / span 20; margin:2px 0 0; }
@@ -23114,7 +23114,7 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
   html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
   html[data-m-tema="scuro"] .m-bar{ border-bottom-color:var(--m-line); }
-  html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:#1d4a78; border-color:#1d4a78; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:#132235; border-color:#1c3048; }
   html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; }
   html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
