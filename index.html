@@ -22676,6 +22676,8 @@ function editorLettereSvuota(){
   /* gesto indietro: la pagina segue il dito */
   .m-segue{ transition:none !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
   .m-rilascia{ transition:transform .22s cubic-bezier(.2,.7,.3,1) !important; animation:none !important; will-change:transform; box-shadow:-10px 0 30px rgba(23,34,49,.10); background:var(--m-bg) !important; position:relative; z-index:1; }
+  /* le pagine che entrano scorrendo non devono allargare la schermata */
+  html[data-ui="minimal"], html[data-ui="minimal"] body{ overflow-x:clip; }
   html[data-ui="minimal"] body{ overscroll-behavior-x:none; }
   /* la "i" dell'isolamento nella scheda si tocca */
   button.m-pal{ border:0; padding:0; font-family:inherit; cursor:pointer; position:relative; transition:transform .15s var(--m-molla); }
@@ -22770,7 +22772,7 @@ function editorLettereSvuota(){
   @media (prefers-reduced-motion:reduce){ .m-acc-scena *{ animation:none !important; transition:none !important; } }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:#fff; border:1px solid var(--m-line); border-radius:16px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:600; color:var(--m-ink); }
-  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; max-width:none !important; padding:11px 12px; }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; box-sizing:border-box; max-width:none !important; padding:11px 12px; }
   html[data-ui="minimal"] .m-pagina .sync-box .inline-fields{ flex-direction:column; gap:8px; }
   html[data-ui="minimal"] #consegne-view textarea{ width:100%; padding:12px; }
   html[data-ui="minimal"] #consegne-view .group > .group-label:first-child{ font-size:13px; line-height:1.5; }
@@ -23133,7 +23135,18 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set)::before{ display:none; }
-  html[data-m-tema="scuro"] .m-acc-scena{ display:none !important; }
+  /* la scena di Account nel tema scuro: stessi disegni, toni notte */
+  html[data-m-tema="scuro"] .m-acc-onde{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23111e2e%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%2316263b%22/%3E%3C/svg%3E"); }
+  html[data-m-tema="scuro"] .m-acc-onde.m-verdi{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%2310292b%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23123634%22/%3E%3C/svg%3E"); }
+  html[data-m-tema="scuro"] .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#26364b; }
+  html[data-m-tema="scuro"] .m-acc-scena .a-riga{ fill:#33475f; }
+  html[data-m-tema="scuro"] .m-acc-scena .a-chiaro{ fill:#132133; }
+  html[data-m-tema="scuro"] .m-acc-scena .a-ansa{ stroke:#132133; }
+  html[data-m-tema="scuro"] .m-acc-scena .a-linea{ stroke:#3a4d66; }
+  html[data-m-tema="scuro"] .m-acc-scena .a-bollo{ fill:#14a39b; stroke:#0c1622; }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:#1f625d; }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-riga{ fill:#2c7b73; }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-linea{ stroke:#35d0ae; }
   html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
   html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
@@ -24671,7 +24684,7 @@ const syncBox = document.getElementById('sync-group');
 // chiuso, spunta) se connesso; passando dall'uno all'altro si anima
 const scenaAccount = document.createElement('div');
 scenaAccount.className = 'm-acc-scena'; scenaAccount.setAttribute('aria-hidden', 'true');
-scenaAccount.innerHTML = '<div class="m-acc-onde"></div><div class="m-acc-onde m-verdi"></div><svg viewBox="0 0 390 230"><g transform="translate(62 84)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" fill="#fff"/></g><path class="a-linea" d="M132 118 C 160 84 190 78 212 92"/><g transform="translate(212 48)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
+scenaAccount.innerHTML = '<div class="m-acc-onde"></div><div class="m-acc-onde m-verdi"></div><svg viewBox="0 0 390 230"><g transform="translate(62 84)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" class="a-chiaro" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" class="a-chiaro" fill="#fff"/></g><path class="a-linea" d="M132 118 C 160 84 190 78 212 92"/><g transform="translate(212 48)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect class="a-chiaro" x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" class="a-bollo" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
 document.body.appendChild(scenaAccount);
 const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
 aggiornaScenaAccount();
