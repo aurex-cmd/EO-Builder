@@ -1928,6 +1928,16 @@
 </style>
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+  #cute-reperti > .finding-row:is([data-reperto="cicatrice"], [data-reperto="ernia"]) .finding-drawer.open{ max-height:700px; }
+  /* ernie: un blocco per tipo; sotto, una riga di opzioni per ogni lato scelto */
+  .ernia-blocco{ flex-basis:100%; display:flex; flex-direction:column; gap:6px; }
+  .ernia-riga{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .ernia-riga .chip{ margin:0; }
+  .ernia-lato{ padding-left:10px; }
+  .ernia-lato-et{ min-width:20px; font-size:11px; font-weight:600; color:var(--ink-dim); }
+  /* cicatrici su due colonne a tutta larghezza: dx e sx della stessa sede affiancati */
+  .finding-drawer-inner.cicatrici-griglia{ display:grid; grid-template-columns:1fr 1fr; padding-right:2px; }
+  .cicatrici-griglia > .chip{ margin:0; text-align:center; justify-content:center; }
   /* EGA: cause possibili e avviso di valori incoerenti */
   #ega-modal .note-box.ega-cause{ font-family:var(--font-body); font-size:13px; line-height:1.45; text-align:left; }
   #ega-modal .note-box.ega-cause ul{ margin:3px 0 6px; padding-left:18px; }
@@ -5114,7 +5124,7 @@ const state = {
   addome: { forma:'', meteorico:false, consistenza:new Set(['trattabile']), dolorabilita:new Set(['non_dolente']), doloreLocPerTipo:{}, peristalsi:'presente', alvo:{attivo:false, data:'', clisma:false}, manovreAttive:new Set(), manovreEsito:{}, extra:'' },
   edemi: { base:'non_declivi', sede:new Set(), sedeLato:{}, sedeEstensione:{}, qualita:'', discrasici:false, grinza:false, scarico:false, eczemaStasi:false, succulenza:{sede:'', lato:''}, andamento:'', custom:'' },
   diuresi: { modalita:'sacca', volume:'', note:'', urine:'', oliguria:false, anuria:false },
-  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'', ecchimosiDettagli:{} },
+  cute: { cicatrici:new Set(), ernieTipi:new Set(), ernieLato:{}, ernieRiducibile:{}, erniePermagna:{}, ernieLaparocele:'', reperti:new Set(), sedePerTipo:{}, extraPerTipo:{}, note:'', ecchimosiDettagli:{} },
   lingua: { tag:new Set(), nota:'' },
   neuro: { generale:new Set(), linguaggio:new Set(), mingazzini:new Set(), mingazziniLato:'', motorio:new Set(), motorioDistribuzione:{}, motorioLato:{}, emisindrome:'', emineglect:'', occhiDeviati:'', deviazioneFacciale:'', pupille:new Set(), pupilleCoriaLato:'', pupilleCicliaLato:'', nota:'' }
 };
@@ -9112,12 +9122,14 @@ function applyStateObject(o){
         state.cute.ernieLato[k] = new Set(o.cute.ernieLato[k] || []);
       });
       state.cute.ernieRiducibile = JSON.parse(JSON.stringify(o.cute.ernieRiducibile || {}));
+      state.cute.erniePermagna = JSON.parse(JSON.stringify(o.cute.erniePermagna || {}));
       state.cute.ernieLaparocele = o.cute.ernieLaparocele || '';
     } else {
       // migrazione dal vecchio elenco piatto di ernie (12 voci fisse)
       state.cute.ernieTipi = new Set();
       state.cute.ernieLato = {};
       state.cute.ernieRiducibile = {};
+      state.cute.erniePermagna = {};
       state.cute.ernieLaparocele = '';
       const MIGRAZIONE_ERNIE = {
         ombelicale_riducibile: { tipo:'ombelicale', riducibile:'si' },
@@ -9164,6 +9176,7 @@ function applyStateObject(o){
     state.cute.ernieTipi = new Set();
     state.cute.ernieLato = {};
     state.cute.ernieRiducibile = {};
+    state.cute.erniePermagna = {};
     state.cute.ernieLaparocele = '';
     state.cute.reperti = new Set();
     state.cute.sedePerTipo = {};
@@ -15947,9 +15960,25 @@ function renderCute(){
           return b;
         }
 
-        // i tipi selezionati vengono prima, con le loro sotto-opzioni accanto
+        // i tipi selezionati vengono prima, ciascuno in un blocco suo: sulla
+        // prima riga il tipo coi lati (o le altre sotto-opzioni), poi, per le
+        // ernie con riducibilità per lato, una riga di opzioni per ogni lato scelto
+        const chipPiccolo = (testo, attivo, onClick) => {
+          const b = document.createElement('div');
+          b.className = 'chip' + (attivo ? ' active' : '');
+          b.style.cssText = 'font-size:12px; padding:5px 10px;';
+          b.textContent = testo;
+          b.onclick = (e) => { e.stopPropagation(); onClick(); };
+          return b;
+        };
         attivi.forEach(tipoOpt => {
-          inner.appendChild(creaChipTipo(tipoOpt, true));
+          const blocco = document.createElement('div');
+          blocco.className = 'ernia-blocco';
+          inner.appendChild(blocco);
+          const riga = document.createElement('div');
+          riga.className = 'ernia-riga';
+          blocco.appendChild(riga);
+          riga.appendChild(creaChipTipo(tipoOpt, true));
 
           if(tipoOpt.lato && tipoOpt.riducibile){
             // riducibilità PER LATO: ogni lato porta con sé la propria scelta,
@@ -15959,64 +15988,47 @@ function renderCute(){
               state.cute.ernieRiducibile[tipoOpt.value] = {};
             }
             const riducMap = state.cute.ernieRiducibile[tipoOpt.value];
+            const permMap = state.cute.erniePermagna[tipoOpt.value] || (state.cute.erniePermagna[tipoOpt.value] = {});
             OPT.cuteLato.forEach(latoOpt => {
               const lAttivo = latoSet.has(latoOpt.value);
-              const bLato = document.createElement('div');
-              bLato.className = 'chip' + (lAttivo ? ' active' : '');
-              bLato.style.cssText = 'font-size:12px; padding:5px 10px;';
-              bLato.textContent = latoOpt.label;
-              bLato.onclick = (e) => { e.stopPropagation(); lAttivo ? latoSet.delete(latoOpt.value) : latoSet.add(latoOpt.value); update(); };
-              inner.appendChild(bLato);
-
-              if(lAttivo){
-                [{v:'si', l:'Riducibile'}, {v:'no', l:'Non riducibile'}].forEach(r => {
-                  const b = document.createElement('div');
-                  const rAttivo = riducMap[latoOpt.value] === r.v;
-                  b.className = 'chip' + (rAttivo ? ' active' : '');
-                  b.style.cssText = 'font-size:12px; padding:5px 10px;';
-                  b.textContent = r.l;
-                  b.onclick = (e) => { e.stopPropagation(); riducMap[latoOpt.value] = rAttivo ? '' : r.v; update(); };
-                  inner.appendChild(b);
-                });
-                const spacerLato = document.createElement('div');
-                spacerLato.style.cssText = 'flex-basis:100%; height:0;';
-                inner.appendChild(spacerLato);
+              riga.appendChild(chipPiccolo(latoOpt.label, lAttivo, () => { lAttivo ? latoSet.delete(latoOpt.value) : latoSet.add(latoOpt.value); update(); }));
+            });
+            OPT.cuteLato.filter(l => latoSet.has(l.value)).forEach(latoOpt => {
+              const rigaLato = document.createElement('div');
+              rigaLato.className = 'ernia-riga ernia-lato';
+              const et = document.createElement('span');
+              et.className = 'ernia-lato-et';
+              et.textContent = latoOpt.label;
+              rigaLato.appendChild(et);
+              [{v:'si', l:'Riducibile'}, {v:'no', l:'Non riducibile'}].forEach(r => {
+                const rAttivo = riducMap[latoOpt.value] === r.v;
+                rigaLato.appendChild(chipPiccolo(r.l, rAttivo, () => { riducMap[latoOpt.value] = rAttivo ? '' : r.v; update(); }));
+              });
+              if(tipoOpt.permagna){
+                const pAttivo = !!permMap[latoOpt.value];
+                rigaLato.appendChild(chipPiccolo('Permagna', pAttivo, () => { permMap[latoOpt.value] = !pAttivo; update(); }));
               }
+              blocco.appendChild(rigaLato);
             });
           } else {
             if(tipoOpt.lato){
               const latoSet = getLocSet(state.cute.ernieLato, tipoOpt.value);
               OPT.cuteLato.forEach(latoOpt => {
-                const b = document.createElement('div');
                 const lAttivo = latoSet.has(latoOpt.value);
-                b.className = 'chip' + (lAttivo ? ' active' : '');
-                b.style.cssText = 'font-size:12px; padding:5px 10px;';
-                b.textContent = latoOpt.label;
-                b.onclick = (e) => { e.stopPropagation(); lAttivo ? latoSet.delete(latoOpt.value) : latoSet.add(latoOpt.value); update(); };
-                inner.appendChild(b);
+                riga.appendChild(chipPiccolo(latoOpt.label, lAttivo, () => { lAttivo ? latoSet.delete(latoOpt.value) : latoSet.add(latoOpt.value); update(); }));
               });
             }
             if(tipoOpt.riducibile){
               [{v:'si', l:'Riducibile'}, {v:'no', l:'Non riducibile'}].forEach(r => {
-                const b = document.createElement('div');
                 const rAttivo = state.cute.ernieRiducibile[tipoOpt.value] === r.v;
-                b.className = 'chip' + (rAttivo ? ' active' : '');
-                b.style.cssText = 'font-size:12px; padding:5px 10px;';
-                b.textContent = r.l;
-                b.onclick = (e) => { e.stopPropagation(); state.cute.ernieRiducibile[tipoOpt.value] = rAttivo ? '' : r.v; update(); };
-                inner.appendChild(b);
+                riga.appendChild(chipPiccolo(r.l, rAttivo, () => { state.cute.ernieRiducibile[tipoOpt.value] = rAttivo ? '' : r.v; update(); }));
               });
             }
           }
           if(tipoOpt.laparocele){
             [{v:'mediano', l:'Mediano'}, {v:'laterale_dx', l:'Laterale dx'}, {v:'laterale_sx', l:'Laterale sx'}].forEach(r => {
-              const b = document.createElement('div');
               const rAttivo = state.cute.ernieLaparocele === r.v;
-              b.className = 'chip' + (rAttivo ? ' active' : '');
-              b.style.cssText = 'font-size:12px; padding:5px 10px;';
-              b.textContent = r.l;
-              b.onclick = (e) => { e.stopPropagation(); state.cute.ernieLaparocele = rAttivo ? '' : r.v; update(); };
-              inner.appendChild(b);
+              riga.appendChild(chipPiccolo(r.l, rAttivo, () => { state.cute.ernieLaparocele = rAttivo ? '' : r.v; update(); }));
             });
           }
         });
@@ -16033,6 +16045,7 @@ function renderCute(){
       const optList = CUTE_TIPO_DRAWER[opt.tipoDrawer];
       const tipoSet = state.cute[opt.tipoDrawer];
       builder = (inner) => {
+        if(opt.tipoDrawer === 'cicatrici') inner.classList.add('cicatrici-griglia');
         renderGruppoChipInline(inner, null, optList,
           v => tipoSet.has(v),
           (v, vAttivo) => {
@@ -16519,22 +16532,34 @@ const OPT = {
     ]
   },
   cuteCicatrici: [
-    {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
-    {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
-    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca dx'},
+    // dalla testa ai piedi, a coppie: in tendina stanno su due colonne, con
+    // il dx a sinistra e il sx a destra sulla stessa riga
+    {value:'cervicotomia', label:'Cervicotomia', frag:'cicatrice da cervicotomia'},
+    {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
+    {value:'toracotomia_dx', label:'Toracotomia dx', frag:'cicatrice da toracotomia dx'},
+    {value:'toracotomia_sx', label:'Toracotomia sx', frag:'cicatrice da toracotomia sx'},
+    {value:'spalla_dx', label:'Spalla dx', frag:'cicatrice chirurgica alla spalla dx'},
+    {value:'spalla_sx', label:'Spalla sx', frag:'cicatrice chirurgica alla spalla sx'},
     {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale dx'},
     {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sx'},
+    {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
+    {value:'laparoscopica', label:'Laparoscopica', frag:'cicatrici laparoscopiche periombelicali'},
+    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca dx'},
+    {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
     {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia dx'},
     {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sx'},
-    {value:'laparoscopica', label:'Laparoscopica/ombelicale', frag:'cicatrici laparoscopiche periombelicali'},
-    {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
     {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale dx'},
-    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'}
+    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'},
+    {value:'trocanterica_dx', label:'Trocanterica dx', frag:'cicatrice in regione trocanterica dx'},
+    {value:'trocanterica_sx', label:'Trocanterica sx', frag:'cicatrice in regione trocanterica sx'},
+    {value:'ginocchio_dx', label:'Ginocchio dx', frag:'cicatrice chirurgica al ginocchio dx'},
+    {value:'ginocchio_sx', label:'Ginocchio sx', frag:'cicatrice chirurgica al ginocchio sx'}
   ],
   cuteErnieTipi: [
     {value:'ombelicale', label:'Ombelicale', riducibile:true, lato:false},
     {value:'epigastrica', label:'Epigastrica', riducibile:false, lato:false},
-    {value:'inguinale', label:'Inguinale', riducibile:true, lato:true},
+    {value:'inguinale', label:'Inguinale', riducibile:true, lato:true, permagna:true},
+    {value:'inguinoscrotale', label:'Inguino-scrotale', riducibile:true, lato:true, permagna:true},
     {value:'crurale', label:'Crurale', riducibile:false, lato:true},
     {value:'laparocele', label:'Laparocele', riducibile:false, lato:false, laparocele:true}
   ],
@@ -17435,23 +17460,22 @@ function fraseErniaTipo(tipoValue){
     return 'ernia ombelicale' + riducText;
   }
   if(tipoValue === 'epigastrica') return 'ernia epigastrica';
-  if(tipoValue === 'inguinale'){
-    // riducibilità per lato: se i due lati hanno lo stesso stato si unifica
-    // in "bilaterale", altrimenti una frase separata per ciascun lato
-    const riducMap = (state.cute.ernieRiducibile.inguinale && typeof state.cute.ernieRiducibile.inguinale === 'object')
-      ? state.cute.ernieRiducibile.inguinale : {};
+  if(tipoValue === 'inguinale' || tipoValue === 'inguinoscrotale'){
+    // riducibilità (e "permagna") per lato: se i due lati hanno lo stesso
+    // stato si unifica in "bilaterale", altrimenti una frase per ciascun lato
+    const nome = tipoValue === 'inguinale' ? 'ernia inguinale' : 'ernia inguino-scrotale';
+    const riducMap = (state.cute.ernieRiducibile[tipoValue] && typeof state.cute.ernieRiducibile[tipoValue] === 'object')
+      ? state.cute.ernieRiducibile[tipoValue] : {};
+    const permMap = (state.cute.erniePermagna && state.cute.erniePermagna[tipoValue]) || {};
+    const coda = (r, p) => (p ? ' permagna' : '') + (r === 'si' ? ' riducibile' : r === 'no' ? ' non riducibile' : '');
     const lati = [];
-    if(hasDx) lati.push({ nome:'dx', r:riducMap.dx || '' });
-    if(hasSx) lati.push({ nome:'sx', r:riducMap.sx || '' });
-    if(lati.length === 0) return 'ernia inguinale';
-    if(lati.length === 2 && lati[0].r === lati[1].r){
-      const riducText = lati[0].r === 'si' ? ' riducibile' : lati[0].r === 'no' ? ' non riducibile' : '';
-      return 'ernia inguinale bilaterale' + riducText;
+    if(hasDx) lati.push({ nome:'dx', r:riducMap.dx || '', p:!!permMap.dx });
+    if(hasSx) lati.push({ nome:'sx', r:riducMap.sx || '', p:!!permMap.sx });
+    if(lati.length === 0) return nome;
+    if(lati.length === 2 && lati[0].r === lati[1].r && lati[0].p === lati[1].p){
+      return `${nome} bilaterale${coda(lati[0].r, lati[0].p)}`;
     }
-    return lati.map(l => {
-      const riducText = l.r === 'si' ? ' riducibile' : l.r === 'no' ? ' non riducibile' : '';
-      return `ernia inguinale ${l.nome}${riducText}`;
-    }).join(', ');
+    return lati.map(l => `${nome} ${l.nome}${coda(l.r, l.p)}`).join(', ');
   }
   if(tipoValue === 'crurale') return 'ernia crurale' + latoText;
   if(tipoValue === 'laparocele'){
@@ -22435,9 +22459,9 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
   html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
   html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
-  /* Azzera tutto: un link piccolo e staccato, lontano da Copia referto */
-  html[data-ui="minimal"] #clinical-view #reset-btn{ position:relative; margin-left:auto; padding:6px 2px; background:none; border:0; box-shadow:none; color:#8fa7c2; font-size:12.5px; font-weight:500; text-decoration:underline; text-underline-offset:3px; }
-  html[data-ui="minimal"] #clinical-view #reset-btn::after{ content:""; position:absolute; inset:-8px -6px; }
+  /* niente Azzera tutto: al suo posto Fatto, come in alto, per tornare indietro */
+  html[data-ui="minimal"] #clinical-view #reset-btn{ display:none; }
+  html[data-ui="minimal"] #clinical-view #output-card .btn.m-eo-fatto{ margin-left:auto; padding-inline:20px; background:var(--m-notte); border-color:var(--m-notte); border-radius:999px; color:#fff; box-shadow:none; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
@@ -24374,6 +24398,14 @@ document.getElementById('m-app').addEventListener('click', e => {
 });
 $m('#m-velo').addEventListener('click', chiudiScheda);
 $m('#m-copia').addEventListener('click', copia);
+// in fondo all'esame obiettivo, Fatto (come in alto) al posto di Azzera tutto
+const resetEo = document.getElementById('reset-btn');
+if(resetEo){
+  const fattoEo = document.createElement('button');
+  fattoEo.className = 'btn m-eo-fatto'; fattoEo.type = 'button'; fattoEo.textContent = 'Fatto';
+  fattoEo.addEventListener('click', () => { if(M.vista === 'eo') fineVisita(); });
+  resetEo.after(fattoEo);
+}
 
 const sc = $m('#m-scheda');
 sc.addEventListener('input', e => {
