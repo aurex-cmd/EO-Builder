@@ -22830,7 +22830,6 @@ function editorLettereSvuota(){
   .m-set-indietro:active{ transform:scale(.95); }
   .m-set-info{ display:flex; align-items:center; gap:10px; min-width:0; }
   .m-set-txt{ display:flex; flex-direction:column; align-items:flex-end; text-align:right; min-width:0; }
-  .m-set-txt > b{ font-family:var(--m-scheda); font-size:15px; font-weight:800; letter-spacing:-.01em; white-space:nowrap; }
   .m-set-txt > span{ font-size:12px; color:var(--m-muted); line-height:1.35; font-variant-numeric:tabular-nums; }
   .m-set-txt > span b{ color:var(--m-ink); font-weight:800; }
   .m-anello.m-anello-mini{ position:static; width:54px; flex:0 0 auto; pointer-events:none; }
@@ -22841,20 +22840,13 @@ function editorLettereSvuota(){
   .m-anello-mini .m-anello-in span{ display:none; }
   .m-set .m-anello-f{ stroke:var(--m-home-f); } .m-set .m-anello-a{ stroke:#4f7fb3; }
   .m-set.m-diari .m-anello-f{ stroke:#fbe5d8; } .m-set.m-diari .m-anello-a{ stroke:#c96b44; }
-  .m-set-carta{ position:relative; padding:16px 14px 18px; border:1px solid var(--m-line); border-radius:22px; background:#fff; box-shadow:0 10px 30px rgba(23,34,49,.07); will-change:transform; }
+  .m-set-carta{ position:relative; isolation:isolate; padding:16px 14px 18px; }
+  .m-set-fondo{ position:absolute; inset:0; z-index:-1; border:1px solid var(--m-line); border-radius:22px; background:#fff; box-shadow:0 10px 30px rgba(23,34,49,.07); }
   .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:9px; }
-  .m-set-entra .m-set-carta{ animation:m-compare .35s var(--m-molla) both; }
-  .m-altri-lbl{ margin:18px 2px 8px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
-  .m-altri{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
-  .m-altri .m-zona{ gap:6px; padding:8px 7px 9px; border-radius:13px; animation:none; }
-  .m-altri .m-zona-t b{ font-size:16px; } .m-altri .m-zona-t small{ font-size:9.5px; }
-  .m-altri .m-mini-g{ gap:3px; } .m-altri .m-mini{ height:16px; border-radius:5px; font-size:7.5px; }
-  .m-altri .m-mini-cons{ display:none; }
-  .m-altri.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
-  .m-altri.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-home-c); }
-  .m-altri.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
-  .m-altri.m-grigia .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
-  .m-altri.m-grigia .m-zona-t b{ color:#8d98a5; }
+  /* mentre i letti volano, il resto della scheda compare piano */
+  .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-tl-nuovo){ animation:m-compare .35s ease-out .22s both; }
+  .m-mappa.m-ritorno .m-zona{ animation:m-compare .35s ease-out both; }
+  .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
   .m-rep-home{ position:relative; }
   .m-rh-tondo{ position:absolute; top:14px; right:14px; width:58px; height:58px; display:grid; place-items:center; }
@@ -22864,7 +22856,7 @@ function editorLettereSvuota(){
   .m-rh-tondo b{ position:relative; font-size:14px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:700; }
   .m-set-carta .m-rep-link{ background:var(--m-home-f); }
   .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; background:#f6e5bb; color:#6b4a0f; font-size:11.5px; padding:6px 6px 6px 10px; }
-  .m-set-entra .m-set-su{ animation:m-compare .35s var(--m-molla) .15s both; }
+
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
   .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
@@ -23361,18 +23353,17 @@ function vSettore(){
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
   $m('#m-vista').innerHTML = `
-    <h2 class="m-h2 m-h2-grande">Reparto</h2>
+    <h2 class="m-h2 m-h2-grande">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore)) : 'Reparto'}</h2>
     ${modo}
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
     <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
       <div class="m-set-su">
         <button class="m-set-indietro" data-m="mappa">${ICON.indietro}Tutti i settori</button>
-        <div class="m-set-info"><div class="m-set-txt"><b>${esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore))}</b><span id="m-anello-t"></span></div>
+        <div class="m-set-info"><div class="m-set-txt"><span id="m-anello-t"></span></div>
           <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
-      <div class="m-set-carta" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
+      <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
-      <p class="m-altri-lbl">Altri settori</p><div class="m-altri" id="m-altri"></div>
     </div>`}`;
   disegnaLetti();
   requestAnimationFrame(muoviPill);
@@ -23424,7 +23415,7 @@ function htmlZona(g, k, azione){
     if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
     else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
     const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
-    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}">${esc(et)}${cons}</span>`;
+    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" data-n="${esc(nome)}">${esc(et)}${cons}</span>`;
   }).join('');
   const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
   return { n, f, html:`<button class="m-zona${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
@@ -23441,54 +23432,52 @@ function disegnaMappa(){
   if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
     : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
 }
-// sotto il settore aperto, il resto del reparto in piccolo: si tocca per
-// passare a un altro settore senza tornare alla mappa
-function disegnaAltri(){
-  const box = $m('#m-altri'); if(!box) return;
-  const diari = M.vista === 'diari';
-  box.classList.toggle('m-grigia', !(diari || eFestivo(new Date())));
-  box.classList.toggle('m-diari', diari);
-  box.innerHTML = settoriMappa().filter(g => g.s !== M.settore).map((g, k) => htmlZona(g, k, 'cambia-settore').html).join('');
+// scelta del settore dalla mappa: gli altri settori svaniscono, poi ogni
+// letto piccolo vola e cresce fino al suo posto nel settore aperto, mentre
+// la scheda bianca nasce dal riquadro del settore (FLIP: si disegna la
+// vista finale e si parte dalle posizioni di prima)
+const VOLO = 'transform .5s cubic-bezier(.22,.8,.24,1), opacity .35s';
+function posizioni(sel){ const m = new Map(); document.querySelectorAll(sel).forEach(x => m.set(x.dataset.n, x.getBoundingClientRect())); return m; }
+function vola(el, da, a){
+  el.style.transition = 'none'; el.style.transformOrigin = '0 0';
+  el.style.transform = `translate(${da.left - a.left}px, ${da.top - a.top}px) scale(${da.width / a.width}, ${da.height / a.height})`;
+  return () => { el.style.transition = VOLO; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; el.style.transformOrigin = ''; }, 520); };
 }
-// scelta del settore dalla mappa: gli altri svaniscono, lui si colora e
-// scivola al centro, poi si apre il settore
 function zoomSettore(s, blocco){
   const box = $m('#m-mappa'); if(!box || box.classList.contains('m-zoom')) return;
-  const r = blocco.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
-  const dx = vw / 2 - (r.left + r.width / 2), dy = vh * .45 - (r.top + r.height / 2);
   box.classList.add('m-zoom'); blocco.classList.add('m-scelto');
-  blocco.style.transform = `translate(${dx}px, ${dy}px) scale(1.18)`;
   setTimeout(() => {
+    const da = posizioni(`#m-mappa .m-zona[data-s="${CSS.escape(s)}"] .m-mini`), rb = blocco.getBoundingClientRect();
     M.settore = s; M.zoom = true; ricordaSettore(s);
     const v = $m('#m-vista'); v.classList.add('m-quieta');
     vSettore();
-    // la scheda nasce dal riquadro, al centro, e cresce fino al suo posto
-    const c = $m('.m-set-carta'); if(!c) return;
-    const k = c.getBoundingClientRect(), w = r.width * 1.18, h = r.height * 1.18;
-    c.style.transition = 'none'; c.style.transformOrigin = '50% 50%';
-    c.style.transform = `translate(${vw / 2 - (k.left + k.width / 2)}px, ${vh * .45 - (k.top + k.height / 2)}px) scale(${w / k.width}, ${h / k.height})`;
-    c.style.opacity = '.6';
-    void c.offsetWidth;
-    c.style.transition = 'transform .42s var(--m-molla), opacity .3s'; c.style.transform = ''; c.style.opacity = '';
+    const avvia = [];
+    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect())); });
+    // il fondo della scheda: dal riquadro del settore alla sua misura
+    const c = $m('.m-set-carta');
+    if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
     $m('#m-set').classList.add('m-set-entra');
-  }, 430);
+    void document.body.offsetWidth;
+    requestAnimationFrame(() => avvia.forEach(f => f()));
+  }, 160);
 }
-// dal settore si torna alla mappa: il suo riquadro parte dal centro e
-// torna al suo posto
+// dal settore si torna alla mappa: i letti tornano piccoli al loro posto
+// nel riquadro del settore, gli altri settori ricompaiono
 function tornaMappa(){
   const s = M.settore;
+  const da = posizioni('.m-set-carta .m-tl[data-n]'), c = $m('.m-set-carta'), rc = c && c.getBoundingClientRect();
   M.zoom = false;
   const v = $m('#m-vista'); v.classList.add('m-quieta');
   vSettore();
   const b = [...document.querySelectorAll('#m-mappa .m-zona')].find(x => x.dataset.s === s);
   if(!b) return;
-  const r = b.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
-  b.style.transition = 'none';
-  b.style.transform = `translate(${vw / 2 - (r.left + r.width / 2)}px, ${vh * .45 - (r.top + r.height / 2)}px) scale(1.18)`;
-  b.classList.add('m-scelto');
-  void b.offsetWidth;
-  b.style.transition = ''; b.style.transform = '';
-  setTimeout(() => b.classList.remove('m-scelto'), 450);
+  const avvia = [];
+  b.querySelectorAll('.m-mini[data-n]').forEach(m => { const r0 = da.get(m.dataset.n); if(r0) avvia.push(vola(m, r0, m.getBoundingClientRect())); });
+  if(rc) avvia.push(vola(b, rc, b.getBoundingClientRect()));
+  $m('#m-mappa').classList.add('m-ritorno');
+  void document.body.offsetWidth;
+  requestAnimationFrame(() => avvia.forEach(f => f()));
+  setTimeout(() => { const m = $m('#m-mappa'); if(m) m.classList.remove('m-ritorno'); }, 600);
 }
 function muoviPill(){
   const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'));
@@ -23524,7 +23513,6 @@ function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
   if($m('#m-mappa')){ disegnaMappa(); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
-  disegnaAltri();
   const diari = M.vista === 'diari';
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
   const ric = M.settore === RIC;
@@ -24128,13 +24116,6 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'mappa') tornaMappa();
-  else if(a === 'cambia-settore'){
-    M.settore = el.dataset.s; ricordaSettore(M.settore);
-    const v = $m('#m-vista'); v.classList.remove('m-quieta');
-    vSettore(); window.scrollTo({ top:0, behavior:'smooth' });
-    $m('#m-set').classList.add('m-set-entra');
-    clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
-  }
   else if(a === 'reparto') vai('visita', { zoom:false });
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
