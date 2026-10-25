@@ -1928,6 +1928,7 @@
 </style>
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
+  #cute-reperti > .finding-row[data-reperto="cicatrice"] .finding-drawer.open{ max-height:700px; }
   /* EGA: cause possibili e avviso di valori incoerenti */
   #ega-modal .note-box.ega-cause{ font-family:var(--font-body); font-size:13px; line-height:1.45; text-align:left; }
   #ega-modal .note-box.ega-cause ul{ margin:3px 0 6px; padding-left:18px; }
@@ -16529,7 +16530,16 @@ const OPT = {
     {value:'laparoscopica', label:'Laparoscopica/ombelicale', frag:'cicatrici laparoscopiche periombelicali'},
     {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
     {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale dx'},
-    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'}
+    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'},
+    {value:'cervicotomia', label:'Cervicotomia', frag:'cicatrice da cervicotomia'},
+    {value:'toracotomia_dx', label:'Toracotomia dx', frag:'cicatrice da toracotomia dx'},
+    {value:'toracotomia_sx', label:'Toracotomia sx', frag:'cicatrice da toracotomia sx'},
+    {value:'spalla_dx', label:'Spalla dx', frag:'cicatrice chirurgica alla spalla dx'},
+    {value:'spalla_sx', label:'Spalla sx', frag:'cicatrice chirurgica alla spalla sx'},
+    {value:'trocanterica_dx', label:'Trocanterica dx', frag:'cicatrice in regione trocanterica dx'},
+    {value:'trocanterica_sx', label:'Trocanterica sx', frag:'cicatrice in regione trocanterica sx'},
+    {value:'ginocchio_dx', label:'Ginocchio dx', frag:'cicatrice chirurgica al ginocchio dx'},
+    {value:'ginocchio_sx', label:'Ginocchio sx', frag:'cicatrice chirurgica al ginocchio sx'}
   ],
   cuteErnieTipi: [
     {value:'ombelicale', label:'Ombelicale', riducibile:true, lato:false},
@@ -22435,9 +22445,9 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
   html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
   html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
-  /* Azzera tutto: un link piccolo e staccato, lontano da Copia referto */
-  html[data-ui="minimal"] #clinical-view #reset-btn{ position:relative; margin-left:auto; padding:6px 2px; background:none; border:0; box-shadow:none; color:#8fa7c2; font-size:12.5px; font-weight:500; text-decoration:underline; text-underline-offset:3px; }
-  html[data-ui="minimal"] #clinical-view #reset-btn::after{ content:""; position:absolute; inset:-8px -6px; }
+  /* niente Azzera tutto: al suo posto Fatto, come in alto, per tornare indietro */
+  html[data-ui="minimal"] #clinical-view #reset-btn{ display:none; }
+  html[data-ui="minimal"] #clinical-view #output-card .btn.m-eo-fatto{ margin-left:auto; padding-inline:20px; background:var(--m-notte); border-color:var(--m-notte); border-radius:999px; color:#fff; box-shadow:none; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
@@ -24374,6 +24384,14 @@ document.getElementById('m-app').addEventListener('click', e => {
 });
 $m('#m-velo').addEventListener('click', chiudiScheda);
 $m('#m-copia').addEventListener('click', copia);
+// in fondo all'esame obiettivo, Fatto (come in alto) al posto di Azzera tutto
+const resetEo = document.getElementById('reset-btn');
+if(resetEo){
+  const fattoEo = document.createElement('button');
+  fattoEo.className = 'btn m-eo-fatto'; fattoEo.type = 'button'; fattoEo.textContent = 'Fatto';
+  fattoEo.addEventListener('click', () => { if(M.vista === 'eo') fineVisita(); });
+  resetEo.after(fattoEo);
+}
 
 const sc = $m('#m-scheda');
 sc.addEventListener('input', e => {
