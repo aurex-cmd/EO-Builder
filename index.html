@@ -22739,6 +22739,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:12px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
+  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:var(--m-box); border:0; border-radius:20px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:700; color:var(--m-ink); }
   html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-bg); width:100%; max-width:none !important; padding:11px 12px; }
@@ -23038,10 +23039,11 @@ document.title = 'EO Minimal';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
-const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni',
+const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
   dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup', vitali:'Parametri vitali' };
 // la vista dell'app di ciascuna pagina ("vitali" è vitali-settore-view)
-const vistaPagina = v => document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v + '-view');
+// ("account" è Impostazioni col solo riquadro dell'accesso)
+const vistaPagina = v => document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v === 'account' ? 'impostazioni-view' : v + '-view');
 const titoloPagina = v => v === 'vitali' ? 'Parametri vitali · ' + String(settoreVitali || '').replace(/^.*?(Settore\s+)/, '$1') : (PAGINE[v] || '');
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
@@ -23060,6 +23062,7 @@ const ICON = {
   steto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0010 0V3"/><path d="M11 14v2a5 5 0 0010 0v-2"/><circle cx="21" cy="11" r="1.5"/></svg>',
   diario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
   calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  account:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>',
   rubrica:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 005.5 5.5l1.5-2 4 1.5V18a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/></svg>',
   strumenti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>'
 };
@@ -23154,7 +23157,7 @@ function disegna(verso){
   temaVisita(M.vista === 'eo');
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
   $m('#m-main').classList.toggle('m-main-home', M.vista === 'home');
-  if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); mostraVista(M.pag); window.scrollTo(0, 0); return; }
+  if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); document.getElementById('impostazioni-view').classList.toggle('m-solo-account', M.pag === 'account'); mostraVista(M.pag === 'account' ? 'impostazioni' : M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
   v.classList.remove('m-avanti', 'm-indietro-anim'); void v.offsetWidth;
@@ -23199,6 +23202,11 @@ function contiHome(){
   });
   return { visti, copiati };
 }
+// lo stato dell'accesso, letto dal riquadro della sincronizzazione dell'app
+function statoAccount(){
+  const dentro = document.getElementById('sync-logged-in');
+  return dentro && dentro.style.display !== 'none' ? 'Connesso' : 'Non connesso';
+}
 function vHome(){
   barra();
   const { visti, copiati } = contiHome();
@@ -23239,7 +23247,8 @@ function vHome(){
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Calendario dimissioni', dimTesto)
     + (festivo ? '' : consegne)
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
-    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
+    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
+    + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount());
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
       <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
@@ -24474,6 +24483,11 @@ Object.keys(PAGINE).forEach(v => vistaPagina(v).classList.add('m-pagina'));
 // nell'app sta in Reparto, va in Impostazioni
 ['impostazioni-tema-chiaro'].forEach(id => { const g = document.getElementById(id)?.closest('.group'); if(g) g.style.display = 'none'; });
 const syncBox = document.getElementById('sync-group');
+// la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
+const syncDentro = document.getElementById('sync-logged-in');
+if(syncDentro) new MutationObserver(() => {
+  const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount();
+}).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
 if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
 // Ricoveri: Calendario | Statistiche in cima, al posto del link "N ricoveri totali"
@@ -24559,8 +24573,9 @@ mostraVista = function(v){
   try{ if(ultima === null) localStorage.removeItem(LAST_VIEW_KEY); else localStorage.setItem(LAST_VIEW_KEY, ultima); } catch(e){}
   if((M.vista === 'home' || M.vista === 'strumenti') && PAGINE[v]){ vai('app', { pag:v }); return r; }
   if(M.vista === 'app' && PAGINE[v]){
-    M.pag = v;
-    const t = $m('#m-bar-t'); if(t) t.textContent = titoloPagina(v);
+    // Account è Impostazioni col solo accesso: resta Account
+    if(!(M.pag === 'account' && v === 'impostazioni')) M.pag = v;
+    const t = $m('#m-bar-t'); if(t) t.textContent = titoloPagina(M.pag);
     const el = vistaPagina(v);
     el.classList.toggle('m-quieta', !animaIngresso);
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
