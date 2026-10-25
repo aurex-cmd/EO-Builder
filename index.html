@@ -23007,6 +23007,11 @@ function editorLettereSvuota(){
   .m-schede-una{ grid-template-columns:1fr; }
   .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
   .m-mappa{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .m-mappa-rep{ grid-column:1 / -1; display:flex; align-items:baseline; gap:8px; margin:14px 2px 0; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .m-mappa-rep small{ font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--m-faint); }
+  .m-mappa-togli{ grid-column:1 / -1; display:flex; justify-content:center; gap:16px; margin-top:4px; }
+  .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .m-mappa.m-zoom :is(.m-mappa-rep, .m-mappa-togli){ opacity:0; transition:opacity .2s; }
   .m-zona{ position:relative; display:flex; flex-direction:column; gap:9px; padding:11px 10px 12px; border:1px solid var(--m-line); border-radius:16px; background:#fff; font:inherit; color:var(--m-ink); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
     transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 50ms + 80ms); }
   #m-vista.m-quieta .m-zona{ animation:none; }
@@ -23343,7 +23348,11 @@ const VISTE_APP = ['clinical-view','wardmap-view','riepilogo-view','app-view','b
 function nascondiViste(){ VISTE_APP.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; }); }
 
 /* ---------- dati (le stesse funzioni di Reparto e Diari) ---------- */
-function settori(){ const wm = getWardMap(); return Object.keys(wm).filter(s => repartoDelSettore(s) === getReparto() && s !== SETTORE_EXTRA); }
+// i settori del reparto di tutti i giorni e, solo per oggi, quelli dei
+// reparti aggiunti per la guardia (come col "+" dell'app)
+function settori(){ const wm = getWardMap(), extra = getRepartiExtraOggi(); return Object.keys(wm).filter(s => (repartoDelSettore(s) === getReparto() || extra.includes(repartoDelSettore(s))) && s !== SETTORE_EXTRA); }
+// nome completo per i settori dei reparti aggiunti ("C2 · Settore C")
+const nomeSettoreTitolo = s => repartoDelSettore(s) !== getReparto() && s !== RIC ? s.replace(/^(C[12]) · .*?(Settore\s+)/, '$1 · $2') : nomeSettore(s);
 function voce(nome){ return Object.entries(loadPatients()).find(([, p]) => p.name === nome) || null; }
 function statoScheda(id, p){ return (id === currentPatientId && typeof state !== 'undefined') ? state : p.state; }
 function infoLetto(nome){
@@ -23724,7 +23733,7 @@ function vSettore(){
   const ricov = ricoveratiEO();
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
-  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore)) : 'Reparto'}</h2>`;
+  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettoreTitolo(M.settore)) : 'Reparto'}</h2>`;
   const corpo = `
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
     <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
@@ -23785,7 +23794,9 @@ function settoriMappa(){
   const out = settori().map(s => ({ s, nome:nomeSettore(s), lettera:letteraSettore(s),
     letti:[...(wm[s] || []).map(n => [bedName(n), etichettaLetto(n), false]), ...(ap[s] || []).map(n => [n, inizialiLetto(n), true])] }));
   const ric = ricoveratiEO();
-  if(ric.length) out.push({ s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
+  // i Ricoveri dopo i settori del proprio reparto, prima di quelli aggiunti per oggi
+  const primoExtra = out.findIndex(g => repartoDelSettore(g.s) !== getReparto());
+  if(ric.length) out.splice(primoExtra < 0 ? out.length : primoExtra, 0, { s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
   return out;
 }
 function htmlZona(g, k, azione){
@@ -23808,7 +23819,16 @@ function disegnaMappa(){
   let tot = 0, fatti = 0;
   box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
-  box.innerHTML = settoriMappa().map((g, k) => { const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f; return z.html; }).join('');
+  // i reparti aggiunti per oggi hanno il loro titolo sopra i settori e, in fondo, "Togli"
+  let repPrima = getReparto();
+  const extra = getRepartiExtraOggi();
+  box.innerHTML = settoriMappa().map((g, k) => {
+    const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f;
+    const r = g.s === RIC ? repPrima : repartoDelSettore(g.s);
+    const titolo = r !== repPrima ? `<p class="m-mappa-rep">${NOMI_REPARTO[r]}<small>solo oggi</small></p>` : '';
+    repPrima = r;
+    return titolo + z.html;
+  }).join('') + (extra.length ? `<div class="m-mappa-togli">${extra.map(r => `<button data-m="togli-rep" data-r="${r}">Togli ${NOMI_REPARTO[r]}</button>`).join('')}</div>` : '');
   const sub = $m('#m-mappa-sub');
   if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
     : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
@@ -24506,6 +24526,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'segna') segnaFatto(el);
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
+  else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
   else if(a === 'mappa') tornaMappa();
   else if(a === 'reparto') vai('visita', { zoom:false });
   else if(a === 'modo-rep'){
@@ -24920,6 +24941,9 @@ if(weVista){
   $m('#m-we-analizza').addEventListener('click', () => {
     if(!testo.value.trim()){ analizzaConsegne(); return; }
     analizzaConsegne();
+    // consegne di un altro reparto: lo si aggiunge per oggi alla vista Reparto
+    const r = sel.value, extra = getRepartiExtraOggi();
+    if(r !== getReparto() && !extra.includes(r) && Object.keys(loadConsegne()).some(n => repartoDelSettore(n) === r)) impostaRepartiExtraOggi([...extra, r]);
     testo.value = ''; stato.textContent = ''; delete sel.dataset.toccato; pronto();
     weAperto = false; renderConsegneLista();
   });
