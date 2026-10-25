@@ -22386,6 +22386,7 @@ function editorLettereSvuota(){
     --m-bg:#ffffff; --m-box:#f2f4f7; --m-ink:#1b2433; --m-muted:#6a7483; --m-faint:#b5beca; --m-line:#e1e5eb;
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
     --m-notte:#1f4e79; --m-notte-box:#e8eef5; --m-sec:#e9edf2;
+    --m-visto:#c3e4df;
     --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
@@ -22880,7 +22881,7 @@ function editorLettereSvuota(){
   .m-zona-t small{ font-size:12px; font-weight:600; color:var(--m-muted); white-space:nowrap; }
   .m-mini-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
   .m-mini{ position:relative; height:26px; border-radius:6px; background:#eef1f5; display:grid; place-items:center; font-size:10.5px; font-weight:600; letter-spacing:-.02em; color:var(--m-ink); transition:background-color .35s, opacity .35s, box-shadow .35s, color .35s; }
-  .m-mini.m-oggi-l{ background:var(--m-home-a); } .m-mini.m-recente{ background:var(--m-home-d); } .m-mini.m-vecchio{ background:#dfe4ea; }
+  .m-mini.m-oggi-l{ background:var(--m-visto); } .m-mini.m-recente{ background:var(--m-home-d); } .m-mini.m-vecchio{ background:#dfe4ea; }
   .m-mini.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px #2f80c9; }
   .m-mini.m-copiato{ box-shadow:inset 0 0 0 1.5px var(--m-teal); }
   .m-mini.m-critico{ background-color:var(--m-home-d); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico); }
@@ -22919,8 +22920,8 @@ function editorLettereSvuota(){
   .m-legenda li{ display:flex; align-items:center; gap:9px; font-size:12px; line-height:1.3; color:var(--m-ink); }
   .m-legenda .m-pal, .m-legenda .m-spunta{ position:static; flex:0 0 auto; box-shadow:none; }
   .m-leg-tl{ flex:0 0 auto; width:22px; height:16px; border-radius:6px; background:#eef1f5; box-shadow:inset 0 0 0 1px #dde3ea; }
-  .m-leg-tl.m-oggi-l{ background:var(--m-home-a); } .m-leg-tl.m-recente{ background:var(--m-home-d); } .m-leg-tl.m-vecchio{ background:#dfe4ea; }
-  .m-leg-tl.m-copiato{ background:var(--m-home-a); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
+  .m-leg-tl.m-oggi-l{ background:var(--m-visto); } .m-leg-tl.m-recente{ background:var(--m-home-d); } .m-leg-tl.m-vecchio{ background:#dfe4ea; }
+  .m-leg-tl.m-copiato{ background:var(--m-visto); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
   .m-leg-tl.m-critico{ background:var(--m-home-d); box-shadow:inset 0 0 0 2px var(--m-critico); }
   .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
   .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
@@ -22950,7 +22951,7 @@ function editorLettereSvuota(){
   .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:#eef1f5; color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); }
-  .m-tl.m-oggi-l{ background:var(--m-home-a); }
+  .m-tl.m-oggi-l{ background:var(--m-visto); }
   .m-tl.m-recente{ background:var(--m-home-d); }
   .m-tl.m-vecchio{ background:#dfe4ea; }
   .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #2f80c9; }
@@ -23066,7 +23067,7 @@ function editorLettereSvuota(){
     --m-bg:#0c1622; --m-box:#1a2b40; --m-ink:#e9eff6; --m-muted:#8b9fb6; --m-faint:#4d6178; --m-line:#1e3047;
     --m-teal:#14a39b; --m-teal-box:#123a3f; --m-critico:#c9a2ff; --m-notte:#2d6aa6; --m-notte-box:#1d3048; --m-sec:#1d3048; --m-home-f:#1d3048;
     --m-home-a:#2d6aa6; --m-home-b:#b9643c; --m-home-c:#14504c; --m-home-d:#2c3a5c; --m-home-sub:#e9eff6;
-    --m-carta:#132133; --m-link:#6fb4f5;
+    --m-carta:#132133; --m-link:#6fb4f5; --m-visto:#1f625d;
   }
   html[data-ui="minimal"][data-m-tema="scuro"]:not([data-m-orig]){
     --page:#0c1622; --signal:#5aa9f0; --signal-dim:#1d3048; --signal-soft:rgba(90,169,240,.14); --on-signal:#04121f; --clay-border:#1e3047;
@@ -23099,10 +23100,10 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-leg-tl:not(.m-copiato, .m-consegnato, .m-critico, .m-vuoto){ box-shadow:inset 0 0 0 1px #24384f; }
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vecchio{ background-color:#22344b; }
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-recente{ background-color:var(--m-home-d); }
-  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-oggi-l{ background-color:var(--m-home-a); color:#fff; }
+  html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-oggi-l{ background-color:var(--m-visto); color:#fff; }
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-critico{ background-color:#33204f; }
   html[data-m-tema="scuro"] .m-tl.m-critico, html[data-m-tema="scuro"] .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #a97bf0; }
-  html[data-m-tema="scuro"] .m-leg-tl.m-copiato{ background-color:var(--m-home-a); }
+  html[data-m-tema="scuro"] .m-leg-tl.m-copiato{ background-color:var(--m-visto); }
   html[data-m-tema="scuro"] .m-diari :is(.m-tl, .m-mini, .m-leg-tl).m-oggi-l:not(.m-critico), html[data-m-tema="scuro"] .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background-color:var(--m-home-b); color:#fff; }
   html[data-m-tema="scuro"] .m-diari :is(.m-tl, .m-mini, .m-leg-tl).m-copiato:not(.m-critico), html[data-m-tema="scuro"] .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background-color:var(--m-home-c); color:#d8fff5; }
   html[data-m-tema="scuro"] .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px #35d0ae; }
