@@ -4037,7 +4037,7 @@ if(UI_MINIMAL){
     if(href.endsWith('-32.png')) l.sizes = '32x32';
     testa.appendChild(l);
   });
-  testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'EO Minimal';
+  testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'EO Pocket';
   testa.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = 'default';
   testa.querySelector('meta[name="theme-color"]').content = '#ffffff';
 }
@@ -22998,7 +22998,7 @@ function editorLettereSvuota(){
   .m-ingr.m-rep-home .m-sh{ font-size:19px; font-weight:700; padding-right:66px; }
   .m-ingr.m-rep-home .m-sh svg{ width:22px; height:22px; }
   /* e la scheda un po' più grande: è quella principale della home */
-  .m-ingr.m-rep-home{ min-height:166px; padding:16px; border-radius:16px; }
+  .m-ingr.m-rep-home{ min-height:166px; padding:16px; }
   .m-ingr.m-rep-home .m-sn{ font-size:38px; font-weight:700; gap:7px; }
   .m-ingr.m-rep-home .m-sn small{ font-size:14px; }
   .m-rep-home .m-rh-tondo{ top:16px; right:16px; width:64px; height:64px; }
@@ -23321,7 +23321,7 @@ function editorLettereSvuota(){
 <script>
 (function(){
 if(!UI_MINIMAL) return;
-document.title = 'EO Minimal';
+document.title = 'EO Pocket';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
@@ -23478,7 +23478,7 @@ function disegna(verso){
 function barra(titolo, azione){
   const bar = $m('#m-bar'); bar.classList.toggle('m-home', M.vista === 'home');
   $m('#m-bar-in').innerHTML = M.vista === 'home'
-    ? `<span class="m-marchio"><i>EO</i>EO Builder</span><span class="m-data">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</span>`
+    ? `<span class="m-marchio"><i>EO</i>EO Pocket</span><span class="m-data">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</span>`
     : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
 }
 
