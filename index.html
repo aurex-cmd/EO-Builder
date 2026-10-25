@@ -22425,6 +22425,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .chip:not(.active){ background:#1b2f47; border-color:#24405e; color:#e6edf5; }
   html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
+  html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
   html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
   /* Azzera tutto: un link piccolo e staccato, lontano da Copia referto */
   html[data-ui="minimal"] #clinical-view #reset-btn{ position:relative; margin-left:auto; padding:6px 2px; background:none; border:0; box-shadow:none; color:#8fa7c2; font-size:12.5px; font-weight:500; text-decoration:underline; text-underline-offset:3px; }
@@ -22502,7 +22503,7 @@ function editorLettereSvuota(){
   .m-s-corpo{ flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 18px 120px; display:flex; flex-direction:column; gap:6px; }
   .m-scheda .m-lbl{ margin-bottom:0; }
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-  .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:.8rem; font-weight:600; color:var(--m-notte); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
+  .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:.8rem; font-weight:600; color:var(--m-teal); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
   .m-modifica:active{ transform:scale(.94); opacity:.7; }
   .m-aiuti{ display:flex; flex-wrap:wrap; gap:5px; padding:4px 0 0; }
   .m-aiuto{ display:inline-flex; align-items:center; gap:5px; max-width:100%; background:none; border:1px solid var(--m-line); border-radius:6px; padding:0 7px 0 6px; font-size:11.5px; line-height:20px; font-weight:500; color:var(--m-muted); overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
@@ -22518,7 +22519,7 @@ function editorLettereSvuota(){
   textarea.m-testo:focus{ outline:none; }
   textarea.m-testo::placeholder{ color:var(--m-faint); }
   .m-blocco{ position:relative; padding:8px 0 12px; border-bottom:1px solid var(--m-line); }
-  .m-blocco::after, .m-riga::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:1.5px; background:var(--m-notte); transform:scaleX(0); transform-origin:left; transition:transform .38s var(--m-molla); }
+  .m-blocco::after, .m-riga::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:1.5px; background:var(--m-teal); transform:scaleX(0); transform-origin:left; transition:transform .38s var(--m-molla); }
   .m-blocco:focus-within::after, .m-riga:focus-within::after{ transform:scaleX(1); }
   .m-riga{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; column-gap:10px; padding:12px 2px; border-bottom:1px solid var(--m-line); cursor:text; transition:background .25s; animation:m-compare .3s var(--m-molla) both; }
   .m-riga-nome{ font-weight:600; font-size:.93rem; white-space:nowrap; cursor:pointer; }
@@ -22575,7 +22576,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-cmd{ font-family:var(--m-scheda); font-size:14px; font-weight:700; color:var(--m-ink); }
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:11px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
-  html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-notte); }
+  html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-teal); }
   html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
@@ -22822,7 +22823,7 @@ function editorLettereSvuota(){
   #m-app:has(#m-settori)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28212 92%29%22%3E%3Crect x=%220%22 y=%2220%22 width=%229%22 height=%2262%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%22128%22 y=%2240%22 width=%229%22 height=%2242%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%224%22 y=%2250%22 width=%22128%22 height=%2212%22 rx=%226%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%228%22 y=%2238%22 width=%22122%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3Crect x=%2212%22 y=%2226%22 width=%2230%22 height=%2215%22 rx=%227.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 38h80a6 6 0 016 6v2H44z%22 fill=%22%23c9d9ea%22/%3E%3Ccircle cx=%2218%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3Ccircle cx=%22122%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3C/g%3E%3Cg transform=%22translate%2840 120%29 scale%28.75%29%22%3E%3Cpath d=%22M44 20v26a20 20 0 0040 0V20%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M64 66v12a20 20 0 0040 0v-6%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22104%22 cy=%2262%22 r=%2213%22 fill=%22%23fff%22 stroke=%22%23a9c0d8%22 stroke-width=%225%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef3f8%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e3ecf5%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   #m-app:has(#m-diari-letti)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28214 70%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3Cg transform=%22translate%2846 140%29%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%2240%22 rx=%228%22 fill=%22%23f2cdb8%22/%3E%3Cpath d=%22M0 8l29 18 29-18%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23fdf3ec%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23fae8dc%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   #m-settori .m-anello-f{ stroke:var(--m-home-f); } #m-settori .m-anello-a{ stroke:#4f7fb3; }
-  .m-rep-sx:not(#m-settori) .m-anello-f{ stroke:var(--m-home-f); } .m-rep-sx:not(#m-settori) .m-anello-a{ stroke:#4f7fb3; }
+  .m-rep-sx:not(#m-settori) .m-anello-f{ stroke:#fbe5d8; } .m-rep-sx:not(#m-settori) .m-anello-a{ stroke:#c96b44; }
   .m-rep .m-rep-link{ background:var(--m-home-f); }
   /* Diari: Aggiorna consegne al centro della colonna, ambrato come le consegne */
   .m-rep .m-rep-link.m-rep-cons{ background:#f6e5bb; color:#6b4a0f; font-size:11px; padding:6px 5px 6px 10px; }
@@ -22865,7 +22866,10 @@ function editorLettereSvuota(){
   .m-legenda li{ display:flex; align-items:center; gap:9px; font-size:12px; line-height:1.3; color:var(--m-ink); }
   .m-legenda .m-pal, .m-legenda .m-spunta{ position:static; flex:0 0 auto; box-shadow:none; }
   .m-leg-tl{ flex:0 0 auto; width:22px; height:16px; border-radius:5px; background:#eef1f5; box-shadow:inset 0 0 0 1px #dde3ea; }
-  .m-leg-tl.m-oggi-l{ background:var(--m-home-a); } .m-leg-tl.m-critico{ box-shadow:inset 0 0 0 2px var(--m-critico); }
+  .m-leg-tl.m-oggi-l{ background:var(--m-home-a); } .m-leg-tl.m-recente{ background:var(--m-home-d); } .m-leg-tl.m-vecchio{ background:#dfe4ea; }
+  .m-leg-tl.m-copiato{ background:var(--m-home-a); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
+  .m-leg-tl.m-critico{ background:var(--m-home-d); box-shadow:inset 0 0 0 2px var(--m-critico); }
+  .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
   .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
   .m-leg-cons{ display:flex; gap:2px; } .m-leg-cons .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
   .m-lt-set.m-scelto{ background:#4f7fb3; color:#fff; }
@@ -22901,12 +22905,18 @@ function editorLettereSvuota(){
   .m-tl{ position:relative; height:50px; border:0; border-radius:14px; background:#eef1f5; color:var(--m-ink); font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); }
-  /* un solo codice, uguale in Visita e in Diari: il fondo dice se è visto
-     oggi (blu) o no (grigio); il resto lo dicono i bollini, che si leggono
-     (✓ copiato, E esami, D dimissione, i isolamento, V/E/S/C consegne); il
-     bordo viola resta solo al critico */
   .m-tl.m-oggi-l{ background:var(--m-home-a); }
-  .m-tl.m-critico{ color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico); }
+  .m-tl.m-recente{ background:var(--m-home-d); }
+  .m-tl.m-vecchio{ background:#dfe4ea; }
+  .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #2f80c9; }
+  /* in Diari: pesca da copiare, verde copiato */
+  #m-diari-letti .m-tl.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
+  #m-diari-letti .m-tl.m-copiato:not(.m-critico){ background:var(--m-home-c); }
+  /* diario copiato: bordo teal (il critico resta viola) */
+  .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal); }
+  .m-tl.m-critico{ background-color:var(--m-home-d); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico); }
+  .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico); }
+  .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
   /* letto segnato vuoto: non conta nell'anello */
   .m-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); color:var(--m-faint); }
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
@@ -23098,8 +23108,8 @@ function palliniBasso(i, tocca){
 function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
-  return `<ul>${v('m-oggi-l', 'Visto oggi')}${v('', 'Da vedere')}${v('m-critico', 'Critico')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}
-    <li><span class="m-spunta">${ICON.ok}</span>Diario copiato</li>${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
+  return `<ul>${v('m-oggi-l', 'Visto oggi')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
+    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
