@@ -22987,6 +22987,9 @@ function editorLettereSvuota(){
   /* selettore a pillola (Visita / Diari) */
   .m-settori.m-modo{ margin-bottom:2px; }
   .m-settori.m-modo button{ flex:1; }
+  /* quello acceso nel blu notte della scheda Reparto della home */
+  .m-settori.m-modo .m-pill{ background:var(--m-notte); box-shadow:none; }
+  .m-settori.m-modo button[aria-pressed="true"]{ color:#fff; }
 
   /* pressione lunga su un letto (righe e riquadri): si riempie di rosso */
   :is(.m-tl, .m-bt), .m-settori button{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
@@ -23084,6 +23087,7 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-voce:active, html[data-m-tema="scuro"] .m-righe .m-rigalink:active{ background:var(--m-box); }
   @media (hover:hover){ html[data-m-tema="scuro"] :is(.m-voce, .m-righe .m-rigalink):hover{ background:var(--m-box); } }
   html[data-m-tema="scuro"] .m-settori .m-pill{ background:#22374f; box-shadow:none; }
+  html[data-m-tema="scuro"] .m-settori.m-modo .m-pill{ background:#1d4a78; }
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set)::before{ display:none; }
