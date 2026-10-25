@@ -22842,8 +22842,26 @@ function editorLettereSvuota(){
   .m-set .m-anello-f{ stroke:var(--m-home-f); } .m-set .m-anello-a{ stroke:#4f7fb3; }
   .m-set.m-diari .m-anello-f{ stroke:#fbe5d8; } .m-set.m-diari .m-anello-a{ stroke:#c96b44; }
   .m-set-carta{ position:relative; padding:16px 14px 18px; border:1px solid var(--m-line); border-radius:22px; background:#fff; box-shadow:0 10px 30px rgba(23,34,49,.07); will-change:transform; }
-  .m-set-carta .m-griglia{ gap:12px; }
-  .m-set-carta .m-tl{ height:68px; border-radius:18px; font-size:19px; }
+  .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:9px; }
+  .m-set-entra .m-set-carta{ animation:m-compare .35s var(--m-molla) both; }
+  .m-altri-lbl{ margin:18px 2px 8px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-altri{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .m-altri .m-zona{ gap:6px; padding:8px 7px 9px; border-radius:13px; animation:none; }
+  .m-altri .m-zona-t b{ font-size:16px; } .m-altri .m-zona-t small{ font-size:9.5px; }
+  .m-altri .m-mini-g{ gap:3px; } .m-altri .m-mini{ height:16px; border-radius:5px; font-size:7.5px; }
+  .m-altri .m-mini-cons{ display:none; }
+  .m-altri.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
+  .m-altri.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-home-c); }
+  .m-altri.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
+  .m-altri.m-grigia .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
+  .m-altri.m-grigia .m-zona-t b{ color:#8d98a5; }
+  /* home: la scheda Reparto col settore scelto e il suo tondo */
+  .m-rep-home{ position:relative; }
+  .m-rh-tondo{ position:absolute; top:14px; right:14px; width:58px; height:58px; display:grid; place-items:center; }
+  .m-rh-tondo svg{ position:absolute; inset:0; width:58px; height:58px; transform:rotate(-90deg); }
+  .m-td-f{ fill:none; stroke:rgba(255,255,255,.18); stroke-width:9; }
+  .m-td-a{ fill:none; stroke:#fff; stroke-width:9; stroke-linecap:round; }
+  .m-rh-tondo b{ position:relative; font-size:14px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:700; }
   .m-set-carta .m-rep-link{ background:var(--m-home-f); }
   .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; background:#f6e5bb; color:#6b4a0f; font-size:11.5px; padding:6px 6px 6px 10px; }
   .m-set-entra .m-set-su{ animation:m-compare .35s var(--m-molla) .15s both; }
@@ -23211,8 +23229,13 @@ function vHome(){
   // scheda: icona e nome in alto, in basso il numero (solo da 1 in su) e una riga
   const scheda = (cls, attr, ic, nome, num, riga) => `<button class="m-ingr${cls}" ${attr}><span class="m-sh">${ic}${nome}</span>${num ? `<span class="m-sn">${num}</span>` : ''}<span class="m-ss">${riga}</span></button>`;
   // una scheda sola, il Reparto: dentro Visita e Diari sono gli stessi letti
-  const reparto = scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
-    visti ? (daCopiare ? `${daCopiare} da copiare · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
+  const sett = settoreScelto(), st = sett && statoSettore(sett);
+  const reparto = st
+    ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0)}</span>
+        <span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
+        <span class="m-ss">${st.n - st.visti} da vedere · ${st.visti - st.cop ? `${st.visti - st.cop} diar${st.visti - st.cop === 1 ? 'io' : 'i'} da copiare` : (st.visti ? 'diari tutti copiati' : 'nessun diario')}</span></button>`
+    : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
+      visti ? (daCopiare ? `${daCopiare} da copiare · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
@@ -23349,10 +23372,35 @@ function vSettore(){
       </div>
       <div class="m-set-carta" id="m-rep-dx"><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
+      <p class="m-altri-lbl">Altri settori</p><div class="m-altri" id="m-altri"></div>
     </div>`}`;
   disegnaLetti();
   requestAnimationFrame(muoviPill);
 }
+/* ---------- il settore scelto ---------- */
+// l'ultimo settore aperto dal Reparto si ricorda (anche chiudendo l'app):
+// la scheda Reparto della home ne mostra i dati e il tondo
+const SETT_KEY = 'eo_minimal_settore_v1';
+function settoreScelto(){
+  let s = null; try{ s = localStorage.getItem(SETT_KEY); } catch(e){}
+  if(!s) return null;
+  if(s === RIC) return ricoveratiEO().length ? s : null;
+  return settori().includes(s) ? s : null;
+}
+function ricordaSettore(s){ try{ localStorage.setItem(SETT_KEY, s); } catch(e){} }
+// letti che contano (appoggi compresi, tolti i segnati vuoti), visti oggi,
+// diari di oggi e copiati
+function statoSettore(s){
+  const vu = lettiVuoti();
+  const nomi = s === RIC ? ricoveratiEO().map(n => [n, false])
+    : [...(getWardMap()[s] || []).map(n => [bedName(n), false]), ...(loadAppoggi()[s] || []).map(n => [n, true])];
+  const info = nomi.map(([n, ap]) => [ap, infoLetto(n), n]).filter(([ap, i, n]) => ap || i.occupato || !vu[n]).map(x => x[1]);
+  const oggi = info.filter(i => i.diOggi);
+  return { nome:s === RIC ? 'Ricoveri' : nomeSettore(s), n:info.length, visti:oggi.length, cop:oggi.filter(i => i.copiato).length };
+}
+// tondo fermo (per la home): p da 0 a 100
+const tondo = p => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - p / 100)}"/></svg><b>${Math.round(p)}<small>%</small></b>`;
+
 /* ---------- la mappa del reparto ---------- */
 // tutti i settori insieme, ciascuno con i suoi letti in piccolo (appoggi in
 // coda). Visita, nei feriali: grigi e trasparenti finché non si sceglie il
@@ -23368,30 +23416,39 @@ function settoriMappa(){
   if(ric.length) out.push({ s:RIC, nome:'Ricoveri', lettera:'Ric', letti:ric.map(n => [n, inizialiLetto(n), false]) });
   return out;
 }
+function htmlZona(g, k, azione){
+  const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date()), vu = lettiVuoti();
+  let n = 0, f = 0;
+  const mini = g.letti.map(([nome, et, ap]) => {
+    const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
+    if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
+    else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
+    const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
+    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}">${esc(et)}${cons}</span>`;
+  }).join('');
+  const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
+  return { n, f, html:`<button class="m-zona${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
+      <span class="m-zona-t"><b>${esc(g.lettera)}</b><small>${conto}</small></span><span class="m-mini-g">${mini}</span></button>` };
+}
 function disegnaMappa(){
   const box = $m('#m-mappa'); if(!box) return;
   const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date());
-  const vu = lettiVuoti();
   let tot = 0, fatti = 0;
   box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
-  box.innerHTML = settoriMappa().map((g, k) => {
-    let n = 0, f = 0;
-    const mini = g.letti.map(([nome, et, ap]) => {
-      const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
-      if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
-      else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
-      const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
-      return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}">${esc(et)}${cons}</span>`;
-    }).join('');
-    tot += n; fatti += f;
-    const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
-    return `<button class="m-zona${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="zoom" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
-      <span class="m-zona-t"><b>${esc(g.lettera)}</b><small>${conto}</small></span><span class="m-mini-g">${mini}</span></button>`;
-  }).join('');
+  box.innerHTML = settoriMappa().map((g, k) => { const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f; return z.html; }).join('');
   const sub = $m('#m-mappa-sub');
   if(sub) sub.innerHTML = (diari ? (tot ? `<b>${tot - fatti}</b> da copiare · ${fatti} copiat${fatti === 1 ? 'o' : 'i'}` : 'Nessun diario di oggi')
     : `<b>${fatti}</b> vist${fatti === 1 ? 'o' : 'i'} oggi su ${tot}`) + ' · tocca un settore';
+}
+// sotto il settore aperto, il resto del reparto in piccolo: si tocca per
+// passare a un altro settore senza tornare alla mappa
+function disegnaAltri(){
+  const box = $m('#m-altri'); if(!box) return;
+  const diari = M.vista === 'diari';
+  box.classList.toggle('m-grigia', !(diari || eFestivo(new Date())));
+  box.classList.toggle('m-diari', diari);
+  box.innerHTML = settoriMappa().filter(g => g.s !== M.settore).map((g, k) => htmlZona(g, k, 'cambia-settore').html).join('');
 }
 // scelta del settore dalla mappa: gli altri svaniscono, lui si colora e
 // scivola al centro, poi si apre il settore
@@ -23402,7 +23459,7 @@ function zoomSettore(s, blocco){
   box.classList.add('m-zoom'); blocco.classList.add('m-scelto');
   blocco.style.transform = `translate(${dx}px, ${dy}px) scale(1.18)`;
   setTimeout(() => {
-    M.settore = s; M.zoom = true;
+    M.settore = s; M.zoom = true; ricordaSettore(s);
     const v = $m('#m-vista'); v.classList.add('m-quieta');
     vSettore();
     // la scheda nasce dal riquadro, al centro, e cresce fino al suo posto
@@ -23467,6 +23524,7 @@ function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
   if($m('#m-mappa')){ disegnaMappa(); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
+  disegnaAltri();
   const diari = M.vista === 'diari';
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
   const ric = M.settore === RIC;
@@ -24070,6 +24128,13 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'mappa') tornaMappa();
+  else if(a === 'cambia-settore'){
+    M.settore = el.dataset.s; ricordaSettore(M.settore);
+    const v = $m('#m-vista'); v.classList.remove('m-quieta');
+    vSettore(); window.scrollTo({ top:0, behavior:'smooth' });
+    $m('#m-set').classList.add('m-set-entra');
+    clearTimeout(quietaTimer); quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
+  }
   else if(a === 'reparto') vai('visita', { zoom:false });
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
