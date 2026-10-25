@@ -22900,7 +22900,7 @@ function editorLettereSvuota(){
   .m-set.m-diari .m-anello-f{ stroke:#fbe5d8; } .m-set.m-diari .m-anello-a{ stroke:#c96b44; }
   .m-set-carta{ position:relative; isolation:isolate; padding:16px 14px 18px; }
   .m-set-fondo{ position:absolute; inset:0; z-index:-1; border:1px solid var(--m-line); border-radius:16px; background:#fff; }
-  .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:9px; }
+  .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:11px 9px; }
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-tl-nuovo){ animation:m-compare .35s ease-out .22s both; }
   .m-mappa.m-ritorno .m-zona{ animation:m-compare .35s ease-out both; }
@@ -22995,7 +22995,7 @@ function editorLettereSvuota(){
   .m-rep-lbl{ margin:0 0 8px; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
   .m-griglia + .m-rep-lbl{ margin-top:20px; }
   .m-rep-vitali{ display:flex; width:fit-content; margin:22px auto 0; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:#4f7fb3; margin-right:2px; }
-  .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
+  .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:11px 9px; }
   /* letto material */
   .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:#eef1f5; color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
@@ -23019,10 +23019,11 @@ function editorLettereSvuota(){
   .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
   .m-tl.m-esce{ animation:m-tl-esce .17s ease-in both !important; }
   @keyframes m-tl-esce{ to{ opacity:0; transform:translateX(-8px) scale(.95); } }
-  .m-tl .m-pallini.m-basso{ right:-6px; bottom:-7px; }
+  /* bollini e spunta sporgono poco, così E/D di un letto non toccano la spunta di quello sotto */
+  .m-tl .m-pallini.m-basso{ right:-6px; bottom:-4px; }
   .m-tl .m-pallini.m-alto{ left:3px; top:3px; gap:1px; }
   .m-tl .m-pallini.m-alto .m-pal{ width:14px; height:14px; font-size:8px; box-shadow:none; }
-  .m-tl .m-spunta{ top:-7px; right:-6px; }
+  .m-tl .m-spunta{ top:-4px; right:-6px; }
   .m-tl .m-togli{ top:-6px; right:-6px; background:#fff; box-shadow:0 1px 3px rgba(23,34,49,.18); color:var(--m-muted); }
   .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
   .m-tl.m-armato .m-togli{ background:var(--m-p-e); color:#fff; }
