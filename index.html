@@ -22819,6 +22819,62 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; box-sizing:border-box; max-width:none !important; padding:11px 12px; }
   html[data-ui="minimal"] .m-pagina .sync-box .inline-fields{ flex-direction:column; gap:8px; }
   html[data-ui="minimal"] #consegne-view textarea{ width:100%; padding:12px; }
+  /* Consegne Weekend: riepilogo in cima, inserimento in un riquadro, legenda in "Come funziona" */
+  html[data-ui="minimal"] #consegne-view > .m-we-orig{ display:none; }
+  .m-we{ display:flex; flex-direction:column; gap:12px; }
+  .m-we-conta{ display:flex; gap:12px; align-items:center; font-size:13px; color:var(--m-muted); }
+  .m-we-conta:empty{ display:none; }
+  .m-we-conta b{ font-size:15px; color:var(--m-ink); }
+  .m-we-tutto{ display:flex; align-items:center; gap:5px; font-weight:700; color:var(--m-teal); }
+  .m-we-tutto svg{ width:15px; height:15px; }
+  #consegne-view #consegne-lista{ display:flex; flex-direction:column; gap:8px; }
+  .m-we-letto{ display:grid; grid-template-columns:62px 1fr; align-items:center; gap:4px 10px; padding:10px 12px 10px 6px; border:1px solid var(--m-line); border-radius:16px; background:#fff; }
+  .m-we-n{ align-self:stretch; border:0; background:none; padding:0; font:inherit; font-size:22px; font-weight:800; letter-spacing:-.02em; color:var(--m-ink); cursor:pointer; border-radius:10px; }
+  .m-we-letto.m-vedi .m-we-n{ color:var(--m-notte); }
+  .m-we-chs{ display:flex; flex-wrap:wrap; gap:6px; }
+  .m-we-ch{ display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:3px 12px 3px 4px; border:0; border-radius:999px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:background .2s, color .2s, transform .12s var(--m-molla); }
+  .m-we-ch:active{ transform:scale(.95); }
+  .m-we-l{ display:grid; place-items:center; width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:800; color:#1b2433; flex:none; }
+  .m-we-l svg{ width:14px; height:14px; }
+  .m-we-v{ background:var(--m-p-v); } .m-we-e{ background:var(--m-p-es); } .m-we-s{ background:var(--m-p-s); } .m-we-c{ background:var(--m-p-c); }
+  .m-we-ch.m-fatta{ background:var(--m-teal-box); color:var(--m-teal); }
+  .m-we-ch.m-fatta .m-we-l{ background:var(--m-teal); color:#fff; }
+  .m-we-ch.m-appena .m-we-l{ animation:m-pop .5s var(--m-molla); }
+  .m-we-crit{ display:inline-flex; align-items:center; min-height:36px; padding:0 10px; border-radius:999px; background:var(--m-viola-box); color:var(--m-critico); font-size:12px; font-weight:700; }
+  .m-we-niente{ font-size:13px; color:var(--m-faint); }
+  .m-we-testo{ grid-column:1 / -1; margin:6px 0 0 6px; padding:10px 12px; border-radius:10px; background:var(--m-box); font-size:13px; line-height:1.5; white-space:pre-wrap; color:var(--m-ink); }
+  .m-we-ins{ border:1px solid var(--m-line); border-radius:16px; background:#fff; padding:14px; display:flex; flex-direction:column; gap:12px; }
+  .m-we-ins-su{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .m-we-ins-t{ font-size:15px; font-weight:700; color:var(--m-ink); }
+  .m-we-ins.m-chiuso .m-we-ins-t{ font-weight:600; font-size:13px; color:var(--m-muted); }
+  .m-we-ins.m-chiuso .m-we-ins-t::first-letter{ text-transform:uppercase; }
+  .m-we-sost{ border:0; background:none; padding:10px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-notte); cursor:pointer; }
+  .m-we-ins.m-chiuso{ padding-block:4px; }
+  .m-we-ins.m-chiuso .m-we-ins-corpo{ display:none; }
+  .m-we-ins-corpo{ display:flex; flex-direction:column; gap:10px; }
+  .m-we-azioni{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .m-we-azioni input[type=file]{ display:none; }
+  .m-we-btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; height:40px; padding:0 14px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .m-we-btn svg{ width:16px; height:16px; color:var(--m-muted); }
+  .m-we-sel{ grid-column:1 / -1; min-width:0; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--m-muted); }
+  .m-we-sel select{ flex:1; }
+  html[data-ui="minimal"] #consegne-view .m-we-sel select{ width:100%; min-width:0 !important; height:40px; border:0; border-radius:10px; background-color:var(--m-box); font-size:13px; padding:0 30px 0 10px; }
+  .m-we-stato .group-label{ min-height:0 !important; margin:0; font-size:12px; color:var(--m-muted); opacity:1 !important; }
+  .m-we-stato .group-label:empty{ display:none; }
+  html[data-ui="minimal"] #consegne-view .m-we-casella textarea{ min-height:0 !important; height:auto; border:0; border-radius:10px; background:var(--m-box); font-size:14px; line-height:1.45; box-sizing:border-box; }
+  .m-we-analizza{ height:46px; border:0; border-radius:10px; background:var(--m-notte); color:#fff; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+  .m-we-come{ border:1px solid var(--m-line); border-radius:16px; background:#fff; padding:0 14px; }
+  .m-we-come summary{ padding:13px 0; font-size:14px; font-weight:600; color:var(--m-ink); cursor:pointer; list-style:none; display:flex; justify-content:space-between; }
+  .m-we-come summary::-webkit-details-marker{ display:none; }
+  .m-we-come summary::after{ content:"+"; color:var(--m-muted); font-weight:500; }
+  .m-we-come[open] summary::after{ content:"–"; }
+  .m-we-come p{ margin:0 0 10px; font-size:13px; line-height:1.5; color:var(--m-muted); }
+  .m-we-come ul{ list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .m-we-come li{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--m-muted); }
+  .m-we-come li > span b{ color:var(--m-ink); margin-right:4px; }
+  .m-we-canc{ align-self:center; margin-top:6px; border:0; background:none; padding:10px; font:inherit; font-size:13px; font-weight:500; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .m-we-canc.m-armato{ color:var(--m-p-e); font-weight:700; text-decoration:none; }
+  html[data-m-tema="scuro"] :is(.m-we-letto, .m-we-ins, .m-we-come){ background:var(--m-carta); }
   html[data-ui="minimal"] #consegne-view .group > .group-label:first-child{ font-size:13px; line-height:1.5; }
   html[data-ui="minimal"] #consegne-view input[type=file]{ font-family:var(--m-sans); font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] #consegne-view input[type=file]::file-selector-button{ border:1px solid var(--m-line); background:var(--m-bg); border-radius:10px; padding:8px 12px; margin-right:10px; font:inherit; font-weight:600; color:var(--m-ink); cursor:pointer; }
@@ -23242,7 +23298,7 @@ document.title = 'EO Minimal';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
-const PAGINE = { consegne:'Consegne', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
+const PAGINE = { consegne:'Consegne Weekend', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
   dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup', vitali:'Parametri vitali' };
 // la vista dell'app di ciascuna pagina ("vitali" è vitali-settore-view)
 // ("account" è Impostazioni col solo riquadro dell'accesso)
@@ -23443,7 +23499,14 @@ function bloccoFare(copiati){
   // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
   const lettere = f.lettere || {};
   const kCons = `cons|${oggi}`;
-  if(!eFestivo(new Date()) && (copiati || lettere[kCons])){
+  if(eFestivo(new Date())){
+    // nel weekend e nei festivi: le consegne del giorno, da incollare e poi da fare
+    const cw = loadConsegne(); let n = 0, tot = 0;
+    Object.values(cw).forEach(v => ['V','E','S','C'].forEach(l => { if(v && v[l]){ tot++; if(!v['fatto' + l]) n++; } }));
+    const vuote = !Object.keys(cw).length;
+    righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne Weekend',
+      dato:vuote ? 'da incollare' : !n ? (tot ? 'fatte' : 'nessuna da fare') : '', conta:n ? `${n} da fare` : '' });
+  } else if(copiati || lettere[kCons]){
     righe.push({ k:kCons, segna:true, fatta:!!lettere[kCons], attr:'data-m="aggcons"', ic:ICON.consegne, nome:'Aggiorna consegne',
       dato:lettere[kCons] ? 'aggiornate' : 'dai diari di oggi', etich:'Consegne aggiornate' });
   }
@@ -23530,7 +23593,7 @@ function vHome(){
     ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne Weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
     : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'dai diari di oggi');
   const fare = bloccoFare(copiati);
-  const elenco = (festivo ? consegne : '')
+  const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Calendario dimissioni', dimTesto)
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
@@ -24795,6 +24858,97 @@ if(window.visualViewport) visualViewport.addEventListener('scroll', posizionaMen
 
 /* ---------- consegne, ricoveri, impostazioni: le pagine dell'app ---------- */
 Object.keys(PAGINE).forEach(v => vistaPagina(v).classList.add('m-pagina'));
+
+/* ---------- Consegne Weekend: il riepilogo in cima, l'inserimento raccolto ---------- */
+// i campi dell'app (file, reparto, casella) si spostano in un riquadro solo;
+// le funzioni sono le stesse (analizzaConsegne, caricaFileConsegne...)
+const WE_LETTERE = [
+  ['V', 'Visitare', 'visitare'],
+  ['E', 'Esami', 'EE, EEC, EGA, PCR'],
+  ['S', 'Strumentali', 'RX, TC, ecografia, RMN'],
+  ['C', 'Colturali', 'emo, uro, colturali, antibiogramma, ATB']
+];
+const weVista = document.getElementById('consegne-view');
+let weAperto = false, weAppena = null, weArmato = null;
+if(weVista){
+  const [g1, g2] = weVista.querySelectorAll(':scope > .group');
+  const file = document.getElementById('consegne-file-input'), stato = document.getElementById('consegne-file-stato');
+  const sel = document.getElementById('consegne-reparto'), testo = document.getElementById('consegne-testo-incollato');
+  const lista = document.getElementById('consegne-lista');
+  const we = document.createElement('div');
+  we.className = 'm-we';
+  we.innerHTML = `<div class="m-we-conta" id="m-we-conta"></div>
+    <div class="m-we-lista-box"></div>
+    <div class="m-we-ins" id="m-we-ins">
+      <div class="m-we-ins-su"><span class="m-we-ins-t" id="m-we-ins-t"></span><button type="button" class="m-we-sost" id="m-we-sost">Sostituisci</button></div>
+      <div class="m-we-ins-corpo">
+        <div class="m-we-azioni"><button type="button" class="m-we-btn" id="m-we-incolla">${ICON.copia}Incolla</button><label class="m-we-btn" for="consegne-file-input">${ICON.diario}Allega file</label><label class="m-we-sel" for="consegne-reparto"><span>Reparto</span></label></div>
+        <div class="m-we-stato"></div>
+        <div class="m-we-casella"></div>
+        <button type="button" class="m-we-analizza" id="m-we-analizza">Analizza consegne</button>
+      </div>
+    </div>
+    <details class="m-we-come"><summary>Come funziona</summary><p>Nella riga «Consegne:» di ogni letto cerca queste parole. Se una parola è legata a un altro giorno («sab», «dom», 13/09) non compare. Non è infallibile: nel dubbio controlla il testo originale (tocca il numero del letto).</p>
+      <ul>${WE_LETTERE.map(([l, n, parole]) => `<li><b class="m-we-l m-we-${l.toLowerCase()}">${l}</b><span><b>${n}</b> ${parole}</span></li>`).join('')}</ul></details>
+    <button type="button" class="m-we-canc" id="m-we-canc">Cancella tutte le consegne</button>`;
+  weVista.appendChild(we);
+  we.querySelector('.m-we-lista-box').appendChild(lista);
+  we.querySelector('.m-we-sel').appendChild(sel);
+  we.querySelector('.m-we-stato').appendChild(stato);
+  we.querySelector('.m-we-casella').appendChild(testo);
+  we.querySelector('.m-we-azioni').appendChild(file);
+  testo.rows = 5;
+  [g1, g2].forEach(g => g && g.classList.add('m-we-orig'));
+  $m('#m-we-sost').addEventListener('click', () => { weAperto = !weAperto; renderConsegneLista(); if(weAperto) testo.focus(); });
+  $m('#m-we-analizza').addEventListener('click', () => { const prima = JSON.stringify(loadConsegne()); analizzaConsegne(); if(JSON.stringify(loadConsegne()) !== prima || testo.value.trim()){ weAperto = false; renderConsegneLista(); } });
+  // incolla dagli appunti; se il telefono non lo permette, si incolla a mano
+  $m('#m-we-incolla').addEventListener('click', async () => {
+    try{ const t = await navigator.clipboard.readText(); if(!t) throw 0; testo.value = t; stato.textContent = 'Testo incollato: controllalo e premi Analizza consegne.'; }
+    catch(e){ testo.focus(); stato.textContent = 'Tieni premuto nella casella e scegli Incolla.'; }
+  });
+  // cancellare tutto chiede un secondo tocco
+  $m('#m-we-canc').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if(weArmato){ clearTimeout(weArmato); weArmato = null; b.classList.remove('m-armato'); b.textContent = 'Cancella tutte le consegne'; cancellaTutteConsegne(); weAperto = true; renderConsegneLista(); return; }
+    b.classList.add('m-armato'); b.textContent = 'Tocca ancora per cancellare';
+    weArmato = setTimeout(() => { weArmato = null; b.classList.remove('m-armato'); b.textContent = 'Cancella tutte le consegne'; }, 3000);
+  });
+  // il riepilogo: un riquadro per letto, le lettere con la loro parola;
+  // toccata una lettera diventa teal col baffo (fatta)
+  renderConsegneLista = function(){
+    const consegne = loadConsegne(), critici = loadCritici();
+    const nomi = Object.keys(consegne).sort(confrontaNomiLetto);
+    let daFare = 0, fatte = 0;
+    nomi.forEach(n => WE_LETTERE.forEach(([l]) => { if(consegne[n][l]) consegne[n]['fatto' + l] ? fatte++ : daFare++; }));
+    const aperto = weAperto || !nomi.length;
+    $m('#m-we-ins').classList.toggle('m-chiuso', !aperto);
+    $m('#m-we-ins-t').textContent = !nomi.length ? 'Incolla le consegne di oggi'
+      : `Consegne di ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric' })} · ${nomi.length} lett${nomi.length === 1 ? 'o' : 'i'}`;
+    $m('#m-we-sost').hidden = !nomi.length;
+    $m('#m-we-sost').textContent = weAperto ? 'Chiudi' : 'Sostituisci';
+    $m('#m-we-conta').innerHTML = !nomi.length ? ''
+      : !daFare ? `<span class="m-we-tutto">${ICON.ok}Tutto fatto</span><span>${fatte} consegn${fatte === 1 ? 'a' : 'e'}</span>`
+      : `<span><b>${daFare}</b> da fare</span>${fatte ? `<span>${fatte} fatt${fatte === 1 ? 'a' : 'e'}</span>` : ''}`;
+    lista.innerHTML = nomi.map(n => {
+      const v = consegne[n], vedi = consegneTestoVisibile === n;
+      const nome = n.replace(/Letto\s+/i, '');
+      const lettere = WE_LETTERE.filter(([l]) => v[l]).map(([l, parola]) => {
+        const fatta = !!v['fatto' + l];
+        return `<button type="button" class="m-we-ch${fatta ? ' m-fatta' : ''}${weAppena === n + l && fatta ? ' m-appena' : ''}" data-n="${esc(n)}" data-l="${l}" aria-pressed="${fatta}"><b class="m-we-l m-we-${l.toLowerCase()}">${fatta ? ICON.ok : l}</b>${parola}</button>`;
+      }).join('');
+      return `<div class="m-we-letto${vedi ? ' m-vedi' : ''}"><button type="button" class="m-we-n" data-n="${esc(n)}" aria-expanded="${vedi}" aria-label="${esc(n)}: mostra il testo della consegna">${esc(nome)}</button>
+        <div class="m-we-chs">${critici[n] ? '<span class="m-we-crit">critico</span>' : ''}${lettere || '<span class="m-we-niente">nessuna lettera</span>'}</div>
+        ${vedi ? `<p class="m-we-testo">${esc(v.testo || '')}</p>` : ''}</div>`;
+    }).join('');
+    weAppena = null;
+  };
+  lista.addEventListener('click', e => {
+    const ch = e.target.closest('.m-we-ch');
+    if(ch){ weAppena = ch.dataset.n + ch.dataset.l; toggleConsegnaFatto(ch.dataset.n, ch.dataset.l); return; }
+    const n = e.target.closest('.m-we-n'); if(n) toggleTestoConsegnaVisibile(n.dataset.n);
+  });
+  renderConsegneLista();
+}
 // il tema di Impostazioni, in minimal, è quello di EO Minimal (chiaro o
 // notte), non quello dell'app
 const temaChiaro = document.getElementById('impostazioni-tema-chiaro'), temaScuro = document.getElementById('impostazioni-tema-scuro');
