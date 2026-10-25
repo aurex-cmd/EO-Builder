@@ -1929,6 +1929,9 @@
 <style>
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
   #cute-reperti > .finding-row[data-reperto="cicatrice"] .finding-drawer.open{ max-height:700px; }
+  /* cicatrici su due colonne a tutta larghezza: dx e sx della stessa sede affiancati */
+  .finding-drawer-inner.cicatrici-griglia{ display:grid; grid-template-columns:1fr 1fr; padding-right:2px; }
+  .cicatrici-griglia > .chip{ margin:0; text-align:center; justify-content:center; }
   /* EGA: cause possibili e avviso di valori incoerenti */
   #ega-modal .note-box.ega-cause{ font-family:var(--font-body); font-size:13px; line-height:1.45; text-align:left; }
   #ega-modal .note-box.ega-cause ul{ margin:3px 0 6px; padding-left:18px; }
@@ -16034,6 +16037,7 @@ function renderCute(){
       const optList = CUTE_TIPO_DRAWER[opt.tipoDrawer];
       const tipoSet = state.cute[opt.tipoDrawer];
       builder = (inner) => {
+        if(opt.tipoDrawer === 'cicatrici') inner.classList.add('cicatrici-griglia');
         renderGruppoChipInline(inner, null, optList,
           v => tipoSet.has(v),
           (v, vAttivo) => {
@@ -16520,22 +16524,24 @@ const OPT = {
     ]
   },
   cuteCicatrici: [
-    {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
-    {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
-    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca dx'},
-    {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale dx'},
-    {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sx'},
-    {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia dx'},
-    {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sx'},
-    {value:'laparoscopica', label:'Laparoscopica/ombelicale', frag:'cicatrici laparoscopiche periombelicali'},
-    {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
-    {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale dx'},
-    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'},
+    // dalla testa ai piedi, a coppie: in tendina stanno su due colonne, con
+    // il dx a sinistra e il sx a destra sulla stessa riga
     {value:'cervicotomia', label:'Cervicotomia', frag:'cicatrice da cervicotomia'},
+    {value:'sternotomica', label:'Sternotomica', frag:'cicatrice da sternotomia mediana'},
     {value:'toracotomia_dx', label:'Toracotomia dx', frag:'cicatrice da toracotomia dx'},
     {value:'toracotomia_sx', label:'Toracotomia sx', frag:'cicatrice da toracotomia sx'},
     {value:'spalla_dx', label:'Spalla dx', frag:'cicatrice chirurgica alla spalla dx'},
     {value:'spalla_sx', label:'Spalla sx', frag:'cicatrice chirurgica alla spalla sx'},
+    {value:'sottocostale_dx', label:'Sottocostale dx', frag:'cicatrice sottocostale dx'},
+    {value:'sottocostale_sx', label:'Sottocostale sx', frag:'cicatrice sottocostale sx'},
+    {value:'xifopubica', label:'Xifo-pubica', frag:'cicatrice xifo-pubica'},
+    {value:'laparoscopica', label:'Laparoscopica', frag:'cicatrici laparoscopiche periombelicali'},
+    {value:'mcburney', label:'McBurney dx', frag:'cicatrice di McBurney in fossa iliaca dx'},
+    {value:'pfannenstiel', label:'Pfannenstiel', frag:'cicatrice di Pfannenstiel'},
+    {value:'lombotomia_dx', label:'Lombotomia dx', frag:'cicatrice da lombotomia dx'},
+    {value:'lombotomia_sx', label:'Lombotomia sx', frag:'cicatrice da lombotomia sx'},
+    {value:'inguinale_dx', label:'Inguinale dx', frag:'cicatrice inguinale dx'},
+    {value:'inguinale_sx', label:'Inguinale sx', frag:'cicatrice inguinale sx'},
     {value:'trocanterica_dx', label:'Trocanterica dx', frag:'cicatrice in regione trocanterica dx'},
     {value:'trocanterica_sx', label:'Trocanterica sx', frag:'cicatrice in regione trocanterica sx'},
     {value:'ginocchio_dx', label:'Ginocchio dx', frag:'cicatrice chirurgica al ginocchio dx'},
