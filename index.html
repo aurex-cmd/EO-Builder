@@ -23089,6 +23089,7 @@ const ICON = {
   steto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0010 0V3"/><path d="M11 14v2a5 5 0 0010 0v-2"/><circle cx="21" cy="11" r="1.5"/></svg>',
   diario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
   calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  postdegenze:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>',
   account:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>',
   rubrica:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 005.5 5.5l1.5-2 4 1.5V18a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/></svg>',
   strumenti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>'
@@ -23212,7 +23213,7 @@ function barra(titolo, azione){
 /* ---------- home ---------- */
 // sobria: due schede in alto (Visita, piena, e Diari, col numero che
 // conta), sotto un elenco con un dato per voce (Ricoveri, Calendario
-// dimissioni, Consegne, Rubrica, Strumenti), in fondo la nota sull'app.
+// dimissioni, Consegne, Post-degenze, Rubrica, Strumenti), in fondo la nota sull'app.
 // Weekend e festivi: Consegne Weekend in cima all'elenco
 // i pazienti visti oggi in tutto il reparto (letti e appoggi) e quanti
 // diari sono già copiati: quanti letti toccano a ciascuno non si sa prima,
@@ -23251,6 +23252,9 @@ function vHome(){
     ? [dimOggi && `${dimOggi} oggi`, dimDomani && `${dimDomani} domani`, (dimSett > dimOggi + dimDomani) && `${dimSett} in settimana`].filter(Boolean).join(' · ')
     : 'Nessuna in programma';
   const daCopiare = visti - copiati;
+  // post-degenze in sospeso; quelle già da controllare (dal 10° giorno) in evidenza
+  const pd = Object.values(caricaPostDegenze());
+  const pdScadute = pd.filter(p => avvisoPostDegenza(p) <= Date.now()).length;
   let ultimo = 0; ric.forEach(r => { if((r.creatoIl || 0) > ultimo) ultimo = r.creatoIl; });
   const giorniUltimo = ultimo ? Math.round((new Date().setHours(0, 0, 0, 0) - new Date(ultimo).setHours(0, 0, 0, 0)) / 864e5) : -1;
   // scheda: icona e nome in alto, in basso il numero (solo da 1 in su) e una riga
@@ -23273,6 +23277,7 @@ function vHome(){
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Calendario dimissioni', dimTesto)
     + (festivo ? '' : consegne)
+    + voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : '')
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
     + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount());
@@ -23297,7 +23302,7 @@ function vStrumenti(){
   $m('#m-vista').innerHTML = `
     <h2 class="m-h2">Strumenti</h2>
     <p class="m-lbl">Reparto</p>
-    <div class="m-righe">${righeApp('Reparto', /consegne|dimissioni|apriRubrica/)}</div>
+    <div class="m-righe">${righeApp('Reparto', /consegne|dimissioni|apriRubrica|postdegenze/)}</div>
     <p class="m-lbl">Clinici</p>
     <div class="m-righe">${righeApp('Clinici')}</div>
     <p class="m-lbl">Sistema</p>
