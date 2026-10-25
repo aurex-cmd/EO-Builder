@@ -23496,9 +23496,8 @@ function vSettore(){
   const ricov = ricoveratiEO();
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
-  $m('#m-vista').innerHTML = `
-    <h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore)) : 'Reparto'}</h2>
-    ${modo}
+  const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettore(M.settore)) : 'Reparto'}</h2>`;
+  const corpo = `
     ${!M.zoom ? `<p class="m-mappa-sub" id="m-mappa-sub"></p><div class="m-mappa" id="m-mappa"></div>` : `
     <div class="m-set${diari ? ' m-diari' : ''}" id="m-set">
       <div class="m-set-su">
@@ -23509,8 +23508,18 @@ function vSettore(){
       <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
     </div>`}`;
+  // il selettore Visita/Diari, se c'è già, resta lo stesso: ridisegnarlo
+  // interromperebbe la pillola mentre scorre verso l'altro pulsante
+  const vista = $m('#m-vista'), vecchio = vista.querySelector(':scope > #m-modo');
+  if(vecchio){
+    [...vista.children].forEach(el => { if(el !== vecchio) el.remove(); });
+    vecchio.insertAdjacentHTML('beforebegin', titolo);
+    vecchio.insertAdjacentHTML('afterend', corpo);
+  } else {
+    vista.innerHTML = titolo + modo + corpo;
+    muoviPill(true);
+  }
   disegnaLetti();
-  requestAnimationFrame(muoviPill);
 }
 /* ---------- il settore scelto ---------- */
 // l'ultimo settore aperto dal Reparto si ricorda (anche chiudendo l'app):
@@ -23623,15 +23632,19 @@ function tornaMappa(){
   requestAnimationFrame(() => avvia.forEach(f => f()));
   setTimeout(() => { const m = $m('#m-mappa'); if(m) m.classList.remove('m-ritorno'); }, 600);
 }
-function muoviPill(){
-  const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'));
-  const rt = $m('#m-ric-tab'); if(rt) spostaPill(rt, rt.querySelector('[aria-pressed="true"]'));
+// subito: la pillola appare già al suo posto (un selettore appena
+// disegnato), senza scorrere da sinistra
+function muoviPill(subito){
+  const modo = $m('#m-modo'); if(modo) spostaPill(modo, modo.querySelector('[aria-pressed="true"]'), subito === true);
+  const rt = $m('#m-ric-tab'); if(rt) spostaPill(rt, rt.querySelector('[aria-pressed="true"]'), subito === true);
 }
-function spostaPill(box, btn){
+function spostaPill(box, btn, subito){
   if(!btn) return;
   const pill = box.querySelector('.m-pill');
+  if(subito) pill.style.transition = 'none';
   pill.style.width = btn.offsetWidth + 'px';
   pill.style.transform = `translateX(${btn.offsetLeft - 3}px)`;
+  if(subito){ void pill.offsetWidth; pill.style.transition = ''; }
 }
 let appoggioNuovo = null; // l'ultimo appoggio aggiunto, per farlo "lampeggiare"
 const classePalCons = l => l === 'E' ? 'es' : l.toLowerCase();
