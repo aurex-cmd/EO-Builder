@@ -22899,7 +22899,6 @@ function editorLettereSvuota(){
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
   /* due righe fisse sotto l'anello: i quadratini dei settori non scendono quando il testo va a capo */
   #m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
-  #m-rep-dx.m-ric #m-lbl-letti{ margin-top:0; }
   /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
   .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
   .m-togli::after{ content:""; position:absolute; inset:-10px; }
@@ -23407,7 +23406,7 @@ function vSettore(){
         <div class="m-set-info"><div class="m-set-txt"><span id="m-anello-t"></span></div>
           <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
-      <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
+      <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
         ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
     </div>`}`;
   disegnaLetti();
@@ -23643,6 +23642,11 @@ function apriVisita(nome, daScheda){
   apriLetto(nome);
   mostraVista('clinical');
   window.scrollTo(0, 0);
+  // letto in isolamento aperto dalla Visita: subito germe e DPI
+  if(!daScheda){
+    const iso = isolamentoPerLetto(nome, state.isolamento);
+    if(coloreIsolamento(iso)) setTimeout(() => { if(M.vista === 'eo' && M.letto === nome) apriIsolamento(iso); }, 350);
+  }
 }
 function fineVisita(){
   const nome = M.letto, torna = M.daScheda;
