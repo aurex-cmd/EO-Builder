@@ -4,7 +4,7 @@ App a pagina singola (nessuna dipendenza da server per il funzionamento di base)
 
 ## Cosa c'è dentro
 
-- **Esame obiettivo click-to-compose**, per apparato, con referto generato automaticamente (le cicatrici, non solo addominali ma anche cervicotomia, toracotomia, spalla, trocanterica e ginocchio, stanno su due colonne dalla testa ai piedi, col dx e il sx della stessa sede affiancati)
+- **Esame obiettivo click-to-compose**, per apparato, con referto generato automaticamente (le cicatrici, non solo addominali ma anche cervicotomia, toracotomia, spalla, trocanterica e ginocchio, stanno su due colonne dalla testa ai piedi, col dx e il sx della stessa sede affiancati; tra le ernie, l'inguinale e l'inguino-scrotale hanno per ciascun lato riducibile/non riducibile e permagna)
 - **Reparto**: mappa dei letti per settore, stato del diario di oggi (verde/viola), pagina dedicata "Parametri vitali" per aggiornare rapidamente SpO2/PA/FC/TC di tutto un settore
 - **Diari**: tutti i diari scritti oggi in un'unica vista, modificabili direttamente
 - **Ricoveri**: anamnesi e diario d'ingresso, generazione consegne in .docx
