@@ -23034,6 +23034,24 @@ function editorLettereSvuota(){
   #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:3px 10px; background:var(--m-box); color:var(--m-muted); font:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
   #m-aggcons table.agg-cons .agg-cons-azioni button:active{ transform:scale(.94); }
   #m-aggcons table.agg-cons .agg-cons-esami{ margin-top:10px; padding:10px 12px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-muted); font-size:13px; }
+  /* ogni consegna nel blu dell'esame obiettivo (un tono più chiaro: sul
+     bianco lo stesso blu sembra più scuro), col letto (come in Reparto) a sinistra e
+     a destra etichette e testo; intorno resta il bianco della pagina */
+  #m-aggcons table.agg-cons tr{ display:grid; grid-template-columns:auto minmax(0, 1fr); column-gap:14px; align-items:start; background:#1b2f47; border-color:#24405e; color:#fff; }
+  #m-aggcons table.agg-cons td:first-child{ display:contents; }
+  #m-aggcons table.agg-cons td:first-child > div:first-child{ display:none; }
+  #m-aggcons table.agg-cons .agg-cons-tile{ display:block; grid-column:1; grid-row:1 / span 20; margin:2px 0 0; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta{ grid-column:2; justify-self:start; margin:0 0 6px; background:rgba(255,255,255,.12); color:#fff; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta .ico-sotto{ color:rgba(255,255,255,.6); }
+  #m-aggcons table.agg-cons .agg-cons-etichetta :is(.ee, .dim){ color:#1b2433; }
+  #m-aggcons table.agg-cons td:last-child{ grid-column:2; color:#fff; }
+  #m-aggcons table.agg-cons .agg-cons-righe{ color:#fff; }
+  #m-aggcons table.agg-cons .agg-cons-righe .r{ color:var(--m-ink); }
+  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ color:rgba(255,255,255,.6); }
+  #m-aggcons table.agg-cons .agg-cons-vuoto{ color:rgba(255,255,255,.5); }
+  #m-aggcons table.agg-cons textarea.agg-cons-testo{ background:#fff; color:var(--m-ink); }
+  #m-aggcons table.agg-cons .agg-cons-azioni button{ background:rgba(255,255,255,.12); color:rgba(255,255,255,.8); }
+  #m-aggcons table.agg-cons .agg-cons-esami{ background:rgba(255,255,255,.08); color:rgba(255,255,255,.8); }
 
   /* UNO STILE SOLO. Titoli: freccia nella barra e titolo grande sotto (il
      titolo piccolo centrato resta solo all'esame obiettivo, accanto a Fatto).
@@ -23096,6 +23114,8 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
   html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
   html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
+  html[data-m-tema="scuro"] .m-bar{ border-bottom-color:var(--m-line); }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:#132235; border-color:#1c3048; }
   html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; }
   html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
