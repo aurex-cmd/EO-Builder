@@ -22781,6 +22781,9 @@ function editorLettereSvuota(){
 
   /* statistiche dei ricoveri: riquadri Osteo e tutto che entra in scena */
   html[data-ui="minimal"] .ric-stat{ gap:12px; padding-top:0; }
+  /* le statistiche tengono il loro teal (il blu notte delle azioni non le riguarda) */
+  html[data-ui="minimal"]:not([data-m-orig]) .ric-stat{ --signal:#0e7571; --signal-dim:#e3f4f3; --signal-soft:rgba(14,117,113,.12); --on-signal:#ffffff; }
+  html[data-ui="minimal"][data-m-tema="scuro"]:not([data-m-orig]) .ric-stat{ --signal:#14a39b; --signal-dim:#123a3f; --signal-soft:rgba(20,163,155,.16); --on-signal:#04201e; }
   html[data-ui="minimal"] .ric-stat-card{ background:var(--m-box); border:0; border-radius:16px; padding:16px; gap:14px; }
   html[data-ui="minimal"] .ric-stat-hero{ background:var(--m-home-a); position:relative; overflow:hidden; }
   html[data-ui="minimal"] .ric-stat-hero::after{ content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.28); transform:scale(0); transition:transform 1.1s var(--m-molla) .25s; }
