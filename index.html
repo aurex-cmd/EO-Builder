@@ -22856,6 +22856,7 @@ function editorLettereSvuota(){
   .m-rh-tondo b{ position:relative; font-size:15px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:600; }
   .m-set-carta .m-rep-link{ background:var(--m-sec); }
   .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; }
+  .m-rep-cons > svg:first-child{ width:15px; height:15px; color:#c96b44; margin-right:2px; }
 
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
@@ -22917,6 +22918,9 @@ function editorLettereSvuota(){
   .m-leg-tl.m-critico{ background:var(--m-home-d); box-shadow:inset 0 0 0 2px var(--m-critico); }
   .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
   .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
+  /* in Diari la legenda ha i colori di Diari: pesca da copiare, verde copiato */
+  .m-leg-d{ display:none; } .m-set.m-diari .m-leg-v{ display:none; } .m-set.m-diari .m-leg-d{ display:inline; }
+  .m-set.m-diari .m-leg-tl.m-oggi-l{ background:var(--m-home-b); } .m-set.m-diari .m-leg-tl.m-copiato{ background:var(--m-home-c); }
   .m-leg-cons{ display:flex; gap:2px; } .m-leg-cons .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
@@ -23140,7 +23144,7 @@ function palliniBasso(i, tocca){
 function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
-  return `<ul>${v('m-oggi-l', 'Visto oggi')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
+  return `<ul>${v('m-oggi-l', '<span class="m-leg-v">Visto oggi</span><span class="m-leg-d">Diario da copiare</span>')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
     ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
@@ -23404,7 +23408,7 @@ function vSettore(){
           <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
       <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl m-lbl-app">${lettino('#9aa6b6', '#c7d0dc')}Appoggi</p><div class="m-griglia" id="m-appoggi"></div><p class="m-rep-lbl" id="m-lbl-letti">${lettino('#4f7fb3', '#8fb2d6')}<span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div>
-        ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
+        ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
     </div>`}`;
   disegnaLetti();
   requestAnimationFrame(muoviPill);
