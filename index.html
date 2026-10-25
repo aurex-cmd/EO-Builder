@@ -22747,6 +22747,27 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
   html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  /* Account: in basso una scena come in Visita e Diari. Non connesso: grigia,
+     lucchetto aperto, puntini fermi; connesso: verde acqua, il lucchetto si
+     chiude, i puntini scorrono dal telefono al cloud e compare la spunta */
+  .m-acc-scena{ display:none; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
+  body:has(#impostazioni-view.m-solo-account:not([style*="none"])) .m-acc-scena{ display:block; }
+  .m-acc-onde{ position:absolute; left:0; right:0; bottom:0; height:120px; background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23f1f4f5%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e6ebed%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; transition:opacity .6s; }
+  .m-acc-onde.m-verdi{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef7f4%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e1f1ec%22/%3E%3C/svg%3E"); opacity:0; }
+  .m-acc-scena svg{ position:absolute; left:50%; bottom:8px; width:390px; height:230px; margin-left:-195px; }
+  .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#cfdcd9; transition:fill .6s; }
+  .m-acc-scena .a-riga{ fill:#e8efed; transition:fill .6s; }
+  .m-acc-scena .a-linea{ fill:none; stroke:#c6d4d1; stroke-width:4; stroke-linecap:round; stroke-dasharray:1 9; transition:stroke .4s; }
+  .m-acc-scena .a-ansa{ transform-box:fill-box; transform-origin:100% 100%; transform:translate(0, -6px) rotate(-30deg); transition:transform .45s var(--m-molla); }
+  .m-acc-scena .a-ok{ transform-box:fill-box; transform-origin:50% 50%; transform:scale(0); opacity:0; transition:transform .45s var(--m-molla), opacity .2s; }
+  .m-acc-scena.m-connesso .m-verdi{ opacity:1; }
+  .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:#a8d5ca; }
+  .m-acc-scena.m-connesso .a-riga{ fill:#d4ebe5; }
+  .m-acc-scena.m-connesso .a-linea{ stroke:#6fbfad; animation:m-flusso 1.1s linear infinite; }
+  .m-acc-scena.m-connesso .a-ansa{ transform:none; transition-delay:.3s; }
+  .m-acc-scena.m-connesso .a-ok{ transform:none; opacity:1; transition-delay:.65s; }
+  @keyframes m-flusso{ to{ stroke-dashoffset:-20; } }
+  @media (prefers-reduced-motion:reduce){ .m-acc-scena *{ animation:none !important; transition:none !important; } }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:#fff; border:1px solid var(--m-line); border-radius:16px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:600; color:var(--m-ink); }
   html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; max-width:none !important; padding:11px 12px; }
@@ -23112,6 +23133,7 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set)::before{ display:none; }
+  html[data-m-tema="scuro"] .m-acc-scena{ display:none !important; }
   html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
   html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
@@ -24645,9 +24667,18 @@ if(temaChiaro && temaScuro){
 }
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
+// Account: la scena in basso, grigia se non connesso e verde acqua (lucchetto
+// chiuso, spunta) se connesso; passando dall'uno all'altro si anima
+const scenaAccount = document.createElement('div');
+scenaAccount.className = 'm-acc-scena'; scenaAccount.setAttribute('aria-hidden', 'true');
+scenaAccount.innerHTML = '<div class="m-acc-onde"></div><div class="m-acc-onde m-verdi"></div><svg viewBox="0 0 390 230"><g transform="translate(62 84)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" fill="#fff"/></g><path class="a-linea" d="M132 118 C 160 84 190 78 212 92"/><g transform="translate(212 48)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
+document.body.appendChild(scenaAccount);
+const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
+aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
   const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount();
+  aggiornaScenaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
 if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
