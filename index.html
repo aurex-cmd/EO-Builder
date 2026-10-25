@@ -22793,6 +22793,8 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
   html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  /* l'accesso sta nella sua pagina, Account: in Impostazioni non si ripete */
+  html[data-ui="minimal"] #impostazioni-view:not(.m-solo-account) > .sync-box{ display:none !important; }
   /* Account: in basso una scena come in Visita e Diari. Non connesso: grigia,
      lucchetto aperto, puntini fermi; connesso: verde acqua, il lucchetto si
      chiude, i puntini scorrono dal telefono al cloud e compare la spunta */
