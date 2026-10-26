@@ -23073,9 +23073,9 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-l-dacop); }
   .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
-  /* feriali, in Visita: grigi, senza i colori, finché il settore non si sceglie */
-  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#edf0f4 !important; background-image:none !important; box-shadow:none !important; color:#5d6876 !important; }
-  /* i settori ben visibili: bordo più marcato, un'ombra leggera, lettera grande */
+  /* Visita: i letti coi loro colori; quelli senza niente da dire, tenui (come in Diari) */
+  .m-mappa:not(.m-diari) .m-mini:not(.m-oggi-l, .m-recente, .m-vecchio, .m-consegnato, .m-critico, .m-dimesso){ color:var(--m-muted); opacity:.55; }
+  /* i settori ben visibili, in Visita e in Diari: bordo più marcato, un'ombra leggera, lettera grande */
   .m-mappa .m-zona{ border:1.5px solid #c9d6e4; box-shadow:0 2px 8px rgba(22,36,58,.07); }
   .m-mappa .m-zona-t b{ font-size:26px; }
   .m-zona.m-ultimo{ border-color:#a9bdd3; }
@@ -23334,7 +23334,6 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #5aa9f0; }
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vuoto{ background-color:var(--m-carta); }
   html[data-m-tema="scuro"] .m-tl-nuovo{ border-color:#2e4a68; color:var(--m-faint); }
-  html[data-m-tema="scuro"] .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#16253a !important; color:#43576e !important; opacity:1; }
   html[data-m-tema="scuro"] .m-set .m-anello-a{ stroke:#5aa9f0; } html[data-m-tema="scuro"] .m-set .m-anello-f{ stroke:#1d3048; }
   html[data-m-tema="scuro"] .m-set.m-diari .m-anello-a{ stroke:#e08a5c; } html[data-m-tema="scuro"] .m-set.m-diari .m-anello-f{ stroke:#2e2a2c; }
   html[data-m-tema="scuro"] .m-rep-vitali > svg:first-child{ color:#5aa9f0; } html[data-m-tema="scuro"] .m-rep-cons > svg:first-child{ color:#e08a5c; }
@@ -23843,9 +23842,8 @@ const tondo = p => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52
 
 /* ---------- la mappa del reparto ---------- */
 // tutti i settori insieme, ciascuno con i suoi letti in piccolo (appoggi in
-// coda). Visita, nei feriali: grigi e trasparenti finché non si sceglie il
-// settore; nel weekend e nei festivi: già coi loro colori e coi bollini
-// delle consegne. Diari: i colori dei diari (pesca da copiare, verde
+// coda). Visita: coi colori dei letti (visto oggi, nei giorni scorsi...),
+// il bordo dei consegnati e i bollini delle consegne; gli altri tenui. Diari: i colori dei diari (pesca da copiare, verde
 // copiato; gli altri tenui). Toccando un settore si colora, scivola al
 // centro e si apre
 function settoriMappa(){
@@ -23859,13 +23857,13 @@ function settoriMappa(){
   return out;
 }
 function htmlZona(g, k, azione){
-  const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date()), vu = lettiVuoti();
+  const diari = M.vista === 'diari', vu = lettiVuoti();
   let n = 0, f = 0;
   const mini = g.letti.map(([nome, et, ap]) => {
     const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
     if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
     else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
-    const cons = pieno && !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
+    const cons = !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
     return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" data-n="${esc(nome)}">${esc(et)}${cons}</span>`;
   }).join('');
   const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
@@ -23874,9 +23872,8 @@ function htmlZona(g, k, azione){
 }
 function disegnaMappa(){
   const box = $m('#m-mappa'); if(!box) return;
-  const diari = M.vista === 'diari', pieno = diari || eFestivo(new Date());
+  const diari = M.vista === 'diari';
   let tot = 0, fatti = 0;
-  box.classList.toggle('m-grigia', !pieno);
   box.classList.toggle('m-diari', diari);
   // i reparti aggiunti per oggi hanno il loro titolo sopra i settori e, in fondo, "Togli"
   // con un reparto aggiunto, anche quello di tutti i giorni ha il suo titolo
