@@ -22411,6 +22411,9 @@ function editorLettereSvuota(){
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0; --m-blu:#2f80c9;
     --m-notte:#1f4e79; --m-notte-box:#e8eef5; --m-sec:#e9edf2;
     --m-visto:#c3e4df;
+    /* i letti: le stesse tinte, un po' più piene, perché visto e non visto
+       si distinguano bene anche in corsia */
+    --m-l-visto:#9fd6cc; --m-l-recente:#d4c6ef; --m-l-vecchio:#d3dbe5; --m-l-dacop:#f2b089; --m-l-cop:#a8d9cb;
     --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
     --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
@@ -23036,17 +23039,17 @@ function editorLettereSvuota(){
   .m-zona-t small{ font-size:12px; font-weight:600; color:var(--m-muted); white-space:nowrap; }
   .m-mini-g{ display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
   .m-mini{ position:relative; height:26px; border-radius:6px; background:#eef1f5; display:grid; place-items:center; font-size:10.5px; font-weight:600; letter-spacing:-.02em; color:var(--m-ink); transition:background-color .35s, opacity .35s, box-shadow .35s, color .35s; }
-  .m-mini.m-oggi-l{ background:var(--m-visto); } .m-mini.m-recente{ background:var(--m-home-d); } .m-mini.m-vecchio{ background:#dfe4ea; }
+  .m-mini.m-oggi-l{ background:var(--m-l-visto); } .m-mini.m-recente{ background:var(--m-l-recente); } .m-mini.m-vecchio{ background:var(--m-l-vecchio); }
   .m-mini.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px #2f80c9; }
   .m-mini.m-copiato{ box-shadow:inset 0 0 0 1.5px var(--m-teal); }
-  .m-mini.m-critico{ background-color:var(--m-home-d); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico); }
+  .m-mini.m-critico{ background-color:var(--m-l-recente); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico); }
   .m-mini.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 2px, transparent 2px 6px); }
   .m-mini.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1px var(--m-line); color:var(--m-faint); }
   .m-mini-ap{ font-size:9px; }
   .m-mini-cons{ position:absolute; left:2px; top:2px; display:flex; gap:1px; }
   .m-mini-cons .m-pal{ width:6px; height:6px; box-shadow:none; }
-  .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
-  .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-home-c); }
+  .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-l-dacop); }
+  .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
   /* feriali, in Visita: grigi e trasparenti finché il settore non si sceglie */
   .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
@@ -23073,14 +23076,14 @@ function editorLettereSvuota(){
   .m-legenda li{ display:flex; align-items:center; gap:9px; font-size:12px; line-height:1.3; color:var(--m-ink); }
   .m-legenda .m-pal, .m-legenda .m-spunta{ position:static; flex:0 0 auto; box-shadow:none; }
   .m-leg-tl{ flex:0 0 auto; width:22px; height:16px; border-radius:6px; background:#eef1f5; box-shadow:inset 0 0 0 1px #dde3ea; }
-  .m-leg-tl.m-oggi-l{ background:var(--m-visto); } .m-leg-tl.m-recente{ background:var(--m-home-d); } .m-leg-tl.m-vecchio{ background:#dfe4ea; }
-  .m-leg-tl.m-copiato{ background:var(--m-visto); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
-  .m-leg-tl.m-critico{ background:var(--m-home-d); box-shadow:inset 0 0 0 2px var(--m-critico); }
+  .m-leg-tl.m-oggi-l{ background:var(--m-l-visto); } .m-leg-tl.m-recente{ background:var(--m-l-recente); } .m-leg-tl.m-vecchio{ background:var(--m-l-vecchio); }
+  .m-leg-tl.m-copiato{ background:var(--m-l-visto); box-shadow:inset 0 0 0 2px var(--m-teal); } .m-leg-tl.m-consegnato{ box-shadow:inset 0 0 0 2px #2f80c9; }
+  .m-leg-tl.m-critico{ background:var(--m-l-recente); box-shadow:inset 0 0 0 2px var(--m-critico); }
   .m-leg-tl.m-dimesso{ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.4) 0 2px, transparent 2px 6px); }
   .m-leg-tl.m-vuoto{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--m-line); }
   /* in Diari la legenda ha i colori di Diari: pesca da copiare, verde copiato */
   .m-leg-d{ display:none; } .m-set.m-diari .m-leg-v{ display:none; } .m-set.m-diari .m-leg-d{ display:inline; }
-  .m-set.m-diari .m-leg-tl.m-oggi-l{ background:var(--m-home-b); } .m-set.m-diari .m-leg-tl.m-copiato{ background:var(--m-home-c); }
+  .m-set.m-diari .m-leg-tl.m-oggi-l{ background:var(--m-l-dacop); } .m-set.m-diari .m-leg-tl.m-copiato{ background:var(--m-l-cop); }
   .m-leg-cons{ display:flex; gap:2px; } .m-leg-cons .m-pal{ width:16px; height:16px; font-size:9px; color:#1b2433; }
   .m-anello{ position:absolute; left:2px; top:60px; width:108px; text-align:center; pointer-events:none; }
   .m-anello-o{ position:relative; width:104px; height:104px; margin:0 auto; }
@@ -23104,18 +23107,18 @@ function editorLettereSvuota(){
   .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:#eef1f5; color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); }
-  .m-tl.m-oggi-l{ background:var(--m-visto); }
-  .m-tl.m-recente{ background:var(--m-home-d); }
-  .m-tl.m-vecchio{ background:#dfe4ea; }
+  .m-tl.m-oggi-l{ background:var(--m-l-visto); }
+  .m-tl.m-recente{ background:var(--m-l-recente); }
+  .m-tl.m-vecchio{ background:var(--m-l-vecchio); }
   .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px #2f80c9; }
   /* in Diari: pesca da copiare, verde copiato */
-  .m-diari .m-tl.m-oggi-l:not(.m-critico){ background:var(--m-home-b); }
-  .m-diari .m-tl.m-copiato:not(.m-critico){ background:var(--m-home-c); }
+  .m-diari .m-tl.m-oggi-l:not(.m-critico){ background:var(--m-l-dacop); }
+  .m-diari .m-tl.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   /* in Diari gli stessi letti; quelli senza diario di oggi restano tenui */
   .m-diari .m-tl:not(.m-oggi-l){ opacity:.42; }
   /* diario copiato: bordo teal (il critico resta viola) */
   .m-tl.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal); }
-  .m-tl.m-critico{ background-color:var(--m-home-d); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico); }
+  .m-tl.m-critico{ background-color:var(--m-l-recente); color:var(--m-critico); box-shadow:inset 0 0 0 2.5px var(--m-critico); }
   .m-tl.m-critico.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2.5px var(--m-critico); }
   .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, rgba(74,144,217,.28) 0 3px, transparent 3px 9px); }
   /* letto segnato vuoto: non conta nell'anello */
@@ -23243,6 +23246,7 @@ function editorLettereSvuota(){
     --m-teal:#14a39b; --m-teal-box:#123a3f; --m-critico:#c9a2ff; --m-notte:#2d6aa6; --m-notte-box:#1d3048; --m-sec:#1d3048; --m-home-f:#1d3048;
     --m-home-a:#2d6aa6; --m-home-b:#b9643c; --m-home-c:#14504c; --m-home-d:#2c3a5c; --m-home-sub:#e9eff6;
     --m-carta:#132133; --m-link:#6fb4f5; --m-visto:#1f625d;
+    --m-l-visto:#1f625d; --m-l-recente:#2c3a5c; --m-l-vecchio:#22344b; --m-l-dacop:#b9643c; --m-l-cop:#14504c;
   }
   html[data-ui="minimal"][data-m-tema="scuro"]:not([data-m-orig]){
     --page:#0c1622; --signal:#5aa9f0; --signal-dim:#1d3048; --signal-soft:rgba(90,169,240,.14); --on-signal:#04121f; --clay-border:#1e3047;
