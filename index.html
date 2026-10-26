@@ -22692,7 +22692,8 @@ function editorLettereSvuota(){
   .m-ingr .m-ss{ margin-top:2px; font-size:13px; color:var(--m-muted); }
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
-  .m-ingr.m-pri :is(.m-sh, .m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
+  .m-ingr.m-pri :is(.m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
+  /* la scritta "Reparto · Settore" (e la sua icona) in bianco pieno */
   .m-ingr.m-pri .m-sh, .m-ingr.m-pri .m-sh svg{ color:#fff; }
   .m-elenco{ flex:none; margin-top:16px; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   /* da fare oggi: righe come l'elenco, a destra un cerchio che diventa il baffo teal */
@@ -23286,7 +23287,7 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-copia{ background:var(--m-teal); }
   html[data-m-tema="scuro"] .m-modifica{ color:#35d0ae; }
   html[data-m-tema="scuro"] :is(.m-piede a, .m-bar .m-azione), html[data-m-tema="scuro"] .m-voce .m-vc, html[data-m-tema="scuro"] .m-rigalink .m-conta{ color:var(--m-link); }
-  html[data-m-tema="scuro"] :is(.m-ingr .m-sh, .m-home-info b){ color:var(--m-muted); }
+  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri) .m-sh, .m-home-info b){ color:var(--m-muted); }
   html[data-m-tema="scuro"] .m-voce:active, html[data-m-tema="scuro"] .m-righe .m-rigalink:active{ background:var(--m-box); }
   @media (hover:hover){ html[data-m-tema="scuro"] :is(.m-voce, .m-righe .m-rigalink):hover{ background:var(--m-box); } }
   html[data-m-tema="scuro"] .m-settori .m-pill{ background:#22374f; box-shadow:none; }
