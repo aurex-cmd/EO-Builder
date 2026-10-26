@@ -23073,9 +23073,9 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-l-dacop); }
   .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
-  /* feriali, in Visita: grigi, senza i colori, finché il settore non si sceglie */
-  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#edf0f4 !important; background-image:none !important; box-shadow:none !important; color:#5d6876 !important; }
-  /* i settori ben visibili: bordo più marcato, un'ombra leggera, lettera grande */
+  /* feriali, in Visita: grigi e trasparenti finché il settore non si sceglie */
+  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
+  /* i settori ben visibili, in Visita e in Diari: bordo più marcato, un'ombra leggera, lettera grande */
   .m-mappa .m-zona{ border:1.5px solid #c9d6e4; box-shadow:0 2px 8px rgba(22,36,58,.07); }
   .m-mappa .m-zona-t b{ font-size:26px; }
   .m-zona.m-ultimo{ border-color:#a9bdd3; }
