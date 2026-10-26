@@ -7292,6 +7292,25 @@ function formattaGiornoEsteso(chiave){
   return d.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' });
 }
 
+// turni di guardia: giorno dalle 8 alle 20, notte dalle 20 alle 8 del giorno
+// dopo. k = "YYYY-MM-DD|G" o "YYYY-MM-DD|N", col giorno in cui il turno comincia
+function turnoGuardia(timestamp){
+  const d = new Date(timestamp);
+  if(isNaN(d)) return null;
+  const h = d.getHours();
+  const inizio = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (h < 8 ? 1 : 0));
+  return { k:chiaveGiorno(inizio.getTime()) + (h >= 8 && h < 20 ? '|G' : '|N'), inizio };
+}
+// "giorno 12 ottobre 2026" o "notte 24→25 ottobre 2026"
+function nomeTurnoGuardia(k){
+  const [g, t] = k.split('|');
+  if(t === 'G') return 'giorno ' + formattaGiornoEsteso(g);
+  const [anno, mese, giorno] = g.split('-').map(Number);
+  const dopo = new Date(anno, mese - 1, giorno + 1);
+  const primo = dopo.getMonth() === mese - 1 ? String(giorno) : new Date(anno, mese - 1, giorno).toLocaleDateString('it-IT', { day:'numeric', month:'long' });
+  return `notte ${primo}→${dopo.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' })}`;
+}
+
 const GIORNI_SETTIMANA = ['L','M','M','G','V','S','D'];
 
 // DIAGNOSI PER SINONIMI: ogni voce raccoglie sigle e modi diversi di
@@ -7354,11 +7373,13 @@ function renderStatisticheRicoveri(el, list){
   const inizio = new Date(primo.getFullYear(), primo.getMonth(), primo.getDate());
   const giorniTot = Math.max(1, Math.round((new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate()) - inizio) / giornoMs) + 1);
 
-  // per giorno: media, giorni con almeno un ricovero, giorno record
-  const perGiorno = {};
-  list.forEach(r => { const k = chiaveGiorno(r.creatoIl); perGiorno[k] = (perGiorno[k] || 0) + 1; });
-  const giorniConRic = Object.keys(perGiorno).length;
-  const record = Object.entries(perGiorno).sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0];
+  // per turno di guardia: giorno 8-20 e notte 20-8 (un turno solo, che
+  // conta sul giorno in cui comincia). Media, turni con ricoveri, record
+  const perTurno = {};
+  list.forEach(r => { const t = turnoGuardia(r.creatoIl); if(t) perTurno[t.k] = (perTurno[t.k] || 0) + 1; });
+  const turniConRic = Object.keys(perTurno).length;
+  const turniNotte = Object.keys(perTurno).filter(k => k.endsWith('|N')).length;
+  const record = Object.entries(perTurno).sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0];
 
   // per mese: gli ultimi 12 mesi (o meno, dal primo ricovero)
   const chiaveMese = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
@@ -7374,8 +7395,9 @@ function renderStatisticheRicoveri(el, list){
   const questoMese = perMese[chiaveMese(oggi)] || 0;
 
   // per giorno della settimana
+  // (sul giorno del turno: un ricovero alle 2 del sabato è della notte del venerdì)
   const perSett = [0,0,0,0,0,0,0];
-  date.forEach(d => { perSett[(d.getDay() + 6) % 7]++; });
+  date.forEach(d => { const t = turnoGuardia(d.getTime()); perSett[(t.inizio.getDay() + 6) % 7]++; });
 
   // sesso ed età
   const campi = r => r.campi || {};
@@ -7538,8 +7560,8 @@ function renderStatisticheRicoveri(el, list){
   unaMedia(fmt(questoMese, 0), 'a ' + oggi.toLocaleDateString('it-IT', { month:'long' }), 'ora');
   hero.appendChild(medie);
   tiles(el, [
-    [fmt(tot / giorniConRic), 'per giorno di ricovero', giorniConRic + ' giorn' + (giorniConRic === 1 ? 'o' : 'i') + ' con ricoveri'],
-    [record ? fmt(record[1], 0) : '–', 'record in un giorno', record ? formattaGiornoEsteso(record[0]) : '']
+    [turniConRic ? fmt(tot / turniConRic) : '–', 'per turno con ricoveri', turniConRic ? `${turniConRic} turn${turniConRic === 1 ? 'o' : 'i'}: ${turniConRic - turniNotte} di giorno, ${turniNotte} di notte` : ''],
+    [record ? fmt(record[1], 0) : '–', 'record in un turno', record ? nomeTurnoGuardia(record[0]) : '']
   ]);
 
   // mesi: teal il mese in corso, più chiaro il mese record
@@ -7555,6 +7577,7 @@ function renderStatisticheRicoveri(el, list){
   // giorni della settimana: il weekend più chiaro
   const cSett = card('Per giorno della settimana');
   colonne(cSett, perSett.map((n, i) => ({ etichetta: GIORNI[i], n, colore: i >= 5 ? 'var(--st-bar-hi)' : '' })), ['ricovero', 'ricoveri']);
+  cSett.appendChild(crea('div', 'ric-stat-nota', 'La notte (20–8) conta sul giorno in cui comincia.'));
 
   // pazienti: ciambella F/M con l'età media al centro
   const cPaz = card('Pazienti');
