@@ -23519,12 +23519,20 @@ function bloccoFare(copiati){
   const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
   let cambiato = false;
   const righe = [];
-  // post-degenze dal 10° giorno: fatte quando oggi ce n'erano e ora non più
-  const pdScadute = Object.values(caricaPostDegenze()).filter(p => avvisoPostDegenza(p) <= Date.now()).length;
-  if(pdScadute && f.pdGiorno !== oggi){ f.pdGiorno = oggi; cambiato = true; }
-  if(pdScadute || f.pdGiorno === oggi){
-    righe.push({ k:'pd', fatta:!pdScadute, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:'Post-degenze',
-      dato:pdScadute ? '' : 'controllate', conta:pdScadute ? `${pdScadute} da controllare` : '' });
+  // post-degenze dal 10° giorno: fatte quando oggi ce n'erano e ora non più.
+  // Si ricordano quelle viste oggi, per dire poi se sono state risolte (non
+  // ci sono più) o rimandate (l'avviso è passato a un altro giorno)
+  const voci = caricaPostDegenze();
+  const pdScadute = Object.keys(voci).filter(id => avvisoPostDegenza(voci[id]) <= Date.now());
+  if(pdScadute.length && f.pdGiorno !== oggi){ f.pdGiorno = oggi; f.pdIds = []; cambiato = true; }
+  if(f.pdGiorno === oggi){
+    const viste = f.pdIds || [];
+    const nuove = pdScadute.filter(id => !viste.includes(id));
+    if(nuove.length){ f.pdIds = viste.concat(nuove); cambiato = true; }
+  }
+  if(pdScadute.length || f.pdGiorno === oggi){
+    righe.push({ k:'pd', fatta:!pdScadute.length, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:'Post-degenze',
+      dato:pdScadute.length ? '' : esitoPostDegenze(f.pdIds || [], voci, domani), conta:pdScadute.length ? `${pdScadute.length} da controllare` : '' });
   }
   // consegne (nei feriali): da fare dopo il primo diario copiato; come le
   // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
@@ -23566,6 +23574,14 @@ function bloccoFare(copiati){
     return `<div class="m-fare-r${r.fatta ? ' m-fatta' : ''}${appena(r.k) ? ' m-appena' : ''}" data-k="${esc(r.k)}"><button class="m-voce" ${r.attr}>${r.ic}<span class="m-vn">${r.nome}</span>${destra}</button>${segno}</div>`;
   }).join('')}</div>`;
   return { html, chiavi:new Set(righe.map(r => r.k.startsWith('cons|') ? 'cons' : r.k)) };
+}
+// "controllate", "rimandate a domani" o "1 risolta · 1 rimandata"
+function esitoPostDegenze(ids, voci, domani){
+  const rim = ids.filter(id => voci[id]), ris = ids.length - rim.length;
+  const fin = n => n === 1 ? 'a' : 'e';
+  if(!rim.length) return `controllat${fin(ris || 2)}`;
+  if(!ris) return `rimandat${fin(rim.length)}${rim.every(id => chiaveGiorno(avvisoPostDegenza(voci[id])) === domani) ? ' a domani' : ''}`;
+  return `${ris} risolt${fin(ris)} · ${rim.length} rimandat${fin(rim.length)}`;
 }
 function segnaFatto(btn){
   const f = leggiFare(), k = btn.dataset.k;
