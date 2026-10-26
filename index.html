@@ -22820,16 +22820,17 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:10px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
-  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box, .m-acc-scena){ display:none !important; }
+  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
   /* l'accesso sta nella sua pagina, Account: in Impostazioni non si ripete */
   html[data-ui="minimal"] #impostazioni-view:not(.m-solo-account) > .sync-box{ display:none !important; }
-  /* Account: sotto il riquadro, sospesa a metà pagina, una scena ordinata
+  /* Account: sospesa a metà pagina, sotto il riquadro, una scena ordinata
      (telefono e cloud allineati, puntini in linea retta). Non connesso:
      grigia, lucchetto aperto, puntini fermi; connesso: verde acqua, il
      lucchetto si chiude, i puntini scorrono verso il cloud e compare la spunta */
-  .m-acc-scena{ display:none; pointer-events:none; }
-  #impostazioni-view.m-solo-account > .m-acc-scena{ display:block; }
-  .m-acc-scena svg{ display:block; width:300px; max-width:100%; height:auto; margin:72px auto 24px; }
+  /* ferma a metà schermo: non si sposta quando, connessi, il riquadro si accorcia */
+  .m-acc-scena{ display:none; position:fixed; left:0; right:0; top:max(440px, 56%); z-index:-1; pointer-events:none; }
+  body:has(#impostazioni-view.m-solo-account:not([style*="none"])) > .m-acc-scena{ display:block; }
+  .m-acc-scena svg{ display:block; width:300px; max-width:calc(100% - 32px); height:auto; margin:0 auto; }
   .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#cfdcd9; transition:fill .6s; }
   .m-acc-scena .a-riga{ fill:#e8efed; transition:fill .6s; }
   .m-acc-scena .a-linea{ fill:none; stroke:#c6d4d1; stroke-width:4; stroke-linecap:round; stroke-dasharray:1 9; transition:stroke .4s; }
@@ -23435,7 +23436,7 @@ function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
   return `<ul>${v('m-oggi-l', '<span class="m-leg-v">Visto oggi</span><span class="m-leg-d">Diario da copiare</span>')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
-    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
+    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
@@ -25076,11 +25077,13 @@ if(temaChiaro && temaScuro){
 }
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
-// Account: la scena sotto il riquadro, grigia se non connesso e verde acqua (lucchetto
+// Account: la scena a metà schermo, grigia se non connesso e verde acqua (lucchetto
 // chiuso, spunta) se connesso; passando dall'uno all'altro si anima
 const scenaAccount = document.createElement('div');
 scenaAccount.className = 'm-acc-scena'; scenaAccount.setAttribute('aria-hidden', 'true');
 scenaAccount.innerHTML = '<svg viewBox="0 0 320 130"><g transform="translate(28 15)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" class="a-chiaro" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" class="a-chiaro" fill="#fff"/></g><path class="a-linea" d="M102 70 H176"/><g transform="translate(156 3)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect class="a-chiaro" x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" class="a-bollo" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
+// fuori dalla pagina, così resta ferma anche quando il riquadro cambia altezza
+document.body.appendChild(scenaAccount);
 const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
 aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
@@ -25090,8 +25093,6 @@ if(syncDentro) new MutationObserver(() => {
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
 if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
-// la scena dell'Account subito sotto il riquadro
-(syncBox || impostazioniView.firstChild).after(scenaAccount);
 // Ricoveri: Calendario | Statistiche in cima, al posto del link "N ricoveri totali"
 const ricTab = document.createElement('div');
 ricTab.className = 'm-settori m-ric-tab'; ricTab.id = 'm-ric-tab';
