@@ -24117,8 +24117,9 @@ function componi(d){
     const t = formattaStrumentale(d.strum[n] || '').replace(/^"|"$/g, '');
     if(t) righe.push(`${n}: ${SENZA_VIRGOLETTE.test(n) ? t : '"' + t + '"'}.`.replace(/\.(["]?)\.$/, '.$1'));
   });
+  // i provvedimenti staccati da una riga vuota, dopo gli esami
   const provv = (d.provv || '').replace(/\n-\s*$/, '').replace(/^-\s*$/, '').trimEnd();
-  if(provv.trim()) righe.push(provv);
+  if(provv.trim()) righe.push((righe.length ? '\n' : '') + provv);
   const eo = (d.eo || '').trim();
   return righe.length ? eo + '\n\n' + righe.join('\n') : eo;
 }
