@@ -22475,13 +22475,16 @@ function editorLettereSvuota(){
      della minimal; i tag restano quelli dell'app (selezionati in teal) */
   html[data-m-eo] .m-bar .m-azione[data-m="fatto"]{ background:var(--m-notte); color:#fff; padding:7px 16px; border-radius:999px; font-size:13px; }
   html[data-m-eo] .m-bar .m-bar-t{ font-family:var(--m-scheda); font-weight:800; }
+  /* l'esame obiettivo è scuro anche quando si apre dentro un ricovero (lì
+     resta acceso il tema chiaro delle pagine): i colori del tema scuro */
+  html[data-ui="minimal"]:not([data-m-orig]) #clinical-view{ --consegna:#4a9fd9; --consegna-rgb:74,159,217; --panel:#12181f; --panel-2:#1a222b; --panel-3:#212b38; --line:#242f3a; --line-soft:#1c252e; --ink:#eef2f5; --ink-dim:#93a4b1; --ink-faint:#5c6c78; --signal:#35d0ae; --signal-dark:#0c8f74; --signal-dim:#0f3832; --signal-soft:rgba(53,208,174,.14); --on-signal:#06231d; --folder:#dba94a; --folder-dim:#3c2f14; --on-folder:#221a08; --panel-folder:#241d10; --panel-folder-2:#2f2716; --violet:#b18cf0; --violet-dim:#2c2140; --on-violet:#1a1330; --vs-spo2:#4a90e2; --vs-pa:#f0953f; --vs-fc:#e35a5f; --vs-tc:#b9b6ff; --glow-signal:0 0 10px rgba(53,208,174,.35); --acid:#e2867e; --acid-strong:#e35a5f; --acid-dim:#3a201d; --on-acid:#2a0f0c; --acid-border:#7a3b33; --glow-acid:0 0 10px rgba(227,90,95,.35); --glow-folder:0 0 10px rgba(219,169,74,.35); --glow-violet:0 0 10px rgba(177,140,240,.35); color:var(--ink); color-scheme:dark; }
   html[data-ui="minimal"] #clinical-view .card{ background:#132235; border-color:#1c3048; border-radius:16px; box-shadow:0 1px 2px rgba(15,25,40,.10), 0 6px 18px rgba(15,25,40,.10); margin:12px 14px 0; }
   html[data-ui="minimal"] #clinical-view .card h2{ font-family:var(--m-scheda); font-weight:800; letter-spacing:-.01em; font-size:17px; }
   html[data-ui="minimal"] #clinical-view .card h2 .hicon{ stroke:#9cc3ea; color:#9cc3ea; }
   html[data-ui="minimal"] #clinical-view .group-label{ font-family:var(--m-scheda); text-transform:uppercase; letter-spacing:.08em; font-size:10.5px; font-weight:700; color:#8fa7c2; }
   html[data-ui="minimal"] #clinical-view .chip{ box-shadow:none; }
   html[data-ui="minimal"] #clinical-view .chip:not(.active){ background:#1b2f47; border-color:#24405e; color:#e6edf5; }
-  html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; box-shadow:0 0 0 1px #35d0ae; font-weight:600; }
+  html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; border-color:#35d0ae; box-shadow:0 0 0 1px #35d0ae; color:#35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea){ background:#1b2f47; border-color:#24405e; box-shadow:none; }
   html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
   html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
