@@ -23051,9 +23051,12 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini.m-oggi-l:not(.m-critico){ background:var(--m-l-dacop); }
   .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
-  /* feriali, in Visita: grigi e trasparenti finché il settore non si sceglie */
-  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#e9ecf0 !important; background-image:none !important; box-shadow:none !important; color:#8d98a5 !important; opacity:.55; }
-  .m-zona.m-ultimo{ border-color:#c9d6e4; }
+  /* feriali, in Visita: grigi, senza i colori, finché il settore non si sceglie */
+  .m-mappa.m-grigia .m-zona:not(.m-scelto) .m-mini{ background:#edf0f4 !important; background-image:none !important; box-shadow:none !important; color:#5d6876 !important; }
+  /* i settori ben visibili: bordo più marcato, un'ombra leggera, lettera grande */
+  .m-mappa .m-zona{ border:1.5px solid #c9d6e4; box-shadow:0 2px 8px rgba(22,36,58,.07); }
+  .m-mappa .m-zona-t b{ font-size:26px; }
+  .m-zona.m-ultimo{ border-color:#a9bdd3; }
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
   .m-zona.m-scelto{ z-index:2; border-color:transparent; box-shadow:0 18px 40px rgba(23,34,49,.16); }
   .m-mappa.m-zoom ~ *, .m-mappa.m-zoom{ pointer-events:none; }
@@ -23264,6 +23267,7 @@ function editorLettereSvuota(){
   @media (hover:hover){ html[data-m-tema="scuro"] :is(.m-voce, .m-righe .m-rigalink):hover{ background:var(--m-box); } }
   html[data-m-tema="scuro"] .m-settori .m-pill{ background:#22374f; box-shadow:none; }
   html[data-m-tema="scuro"] .m-settori.m-modo .m-pill{ background:#1d4a78; }
+  html[data-m-tema="scuro"] .m-mappa .m-zona{ border-color:var(--m-line); box-shadow:none; }
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set, .m-mappa)::before{ display:none; }
