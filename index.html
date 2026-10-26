@@ -22490,6 +22490,8 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view #output-card .btn.primary{ background:#2f6aa3; border-color:#2f6aa3; color:#fff; box-shadow:none; }
   /* niente Azzera tutto: al suo posto Fatto, come in alto, per tornare indietro */
   html[data-ui="minimal"] #clinical-view #reset-btn{ display:none; }
+  /* nel ricovero chiude il Fatto dell'esame obiettivo: niente "Fatto: chiudi esame obiettivo" */
+  html[data-ui="minimal"] #ricovero-eo-chiudi{ display:none !important; }
   html[data-ui="minimal"] #clinical-view #output-card .btn.m-eo-fatto{ margin-left:auto; padding-inline:20px; background:var(--m-notte); border-color:var(--m-notte); border-radius:999px; color:#fff; box-shadow:none; }
   html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
@@ -24658,7 +24660,8 @@ const resetEo = document.getElementById('reset-btn');
 if(resetEo){
   const fattoEo = document.createElement('button');
   fattoEo.className = 'btn m-eo-fatto'; fattoEo.type = 'button'; fattoEo.textContent = 'Fatto';
-  fattoEo.addEventListener('click', () => { if(M.vista === 'eo') fineVisita(); });
+  // dentro un ricovero, Fatto chiude l'esame obiettivo e torna al ricovero
+  fattoEo.addEventListener('click', () => { if(esameObiettivoInlineAperto) chiudiEsameObiettivoInline(); else if(M.vista === 'eo') fineVisita(); });
   resetEo.after(fattoEo);
 }
 
