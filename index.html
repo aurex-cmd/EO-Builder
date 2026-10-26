@@ -23435,7 +23435,7 @@ function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
   return `<ul>${v('m-oggi-l', '<span class="m-leg-v">Visto oggi</span><span class="m-leg-d">Diario da copiare</span>')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
-    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento (il colore dice il germe)')}
+    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
