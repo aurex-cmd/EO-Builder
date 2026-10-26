@@ -22670,6 +22670,7 @@ function editorLettereSvuota(){
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   .m-ingr.m-pri :is(.m-sh, .m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
+  .m-ingr.m-pri .m-sh, .m-ingr.m-pri .m-sh svg{ color:#fff; }
   .m-elenco{ flex:none; margin-top:16px; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   /* da fare oggi: righe come l'elenco, a destra un cerchio che diventa il baffo teal */
   .m-fare-t{ display:flex; align-items:center; gap:6px; margin:20px 0 8px; }
@@ -22795,23 +22796,21 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:10px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
-  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box, .m-acc-scena){ display:none !important; }
   /* l'accesso sta nella sua pagina, Account: in Impostazioni non si ripete */
   html[data-ui="minimal"] #impostazioni-view:not(.m-solo-account) > .sync-box{ display:none !important; }
-  /* Account: in basso una scena come in Visita e Diari. Non connesso: grigia,
-     lucchetto aperto, puntini fermi; connesso: verde acqua, il lucchetto si
-     chiude, i puntini scorrono dal telefono al cloud e compare la spunta */
-  .m-acc-scena{ display:none; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
-  body:has(#impostazioni-view.m-solo-account:not([style*="none"])) .m-acc-scena{ display:block; }
-  .m-acc-onde{ position:absolute; left:0; right:0; bottom:0; height:120px; background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23f1f4f5%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e6ebed%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; transition:opacity .6s; }
-  .m-acc-onde.m-verdi{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef7f4%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e1f1ec%22/%3E%3C/svg%3E"); opacity:0; }
-  .m-acc-scena svg{ position:absolute; left:50%; bottom:8px; width:390px; height:230px; margin-left:-195px; }
+  /* Account: sotto il riquadro, sospesa a metà pagina, una scena ordinata
+     (telefono e cloud allineati, puntini in linea retta). Non connesso:
+     grigia, lucchetto aperto, puntini fermi; connesso: verde acqua, il
+     lucchetto si chiude, i puntini scorrono verso il cloud e compare la spunta */
+  .m-acc-scena{ display:none; pointer-events:none; }
+  #impostazioni-view.m-solo-account > .m-acc-scena{ display:block; }
+  .m-acc-scena svg{ display:block; width:300px; max-width:100%; height:auto; margin:72px auto 24px; }
   .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#cfdcd9; transition:fill .6s; }
   .m-acc-scena .a-riga{ fill:#e8efed; transition:fill .6s; }
   .m-acc-scena .a-linea{ fill:none; stroke:#c6d4d1; stroke-width:4; stroke-linecap:round; stroke-dasharray:1 9; transition:stroke .4s; }
   .m-acc-scena .a-ansa{ transform-box:fill-box; transform-origin:100% 100%; transform:translate(0, -6px) rotate(-30deg); transition:transform .45s var(--m-molla); }
   .m-acc-scena .a-ok{ transform-box:fill-box; transform-origin:50% 50%; transform:scale(0); opacity:0; transition:transform .45s var(--m-molla), opacity .2s; }
-  .m-acc-scena.m-connesso .m-verdi{ opacity:1; }
   .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:#a8d5ca; }
   .m-acc-scena.m-connesso .a-riga{ fill:#d4ebe5; }
   .m-acc-scena.m-connesso .a-linea{ stroke:#6fbfad; animation:m-flusso 1.1s linear infinite; }
@@ -22968,7 +22967,7 @@ function editorLettereSvuota(){
   /* pagine dei letti (anche la mappa dei settori), stile piatto come la home: fondo bianco e, in basso,
      una scena tenue (Visita: un letto e lo stetoscopio; Diari: i fogli, la
      matita e una busta) su due onde */
-  #m-app:has(.m-set, .m-mappa)::before{ content:""; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
+  #m-app:has(.m-set, .m-mappa)::before{ content:""; opacity:.45; position:fixed; left:0; right:0; bottom:0; height:230px; z-index:-1; pointer-events:none; }
   #m-app:has(.m-set:not(.m-diari), .m-mappa:not(.m-diari))::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28212 92%29%22%3E%3Crect x=%220%22 y=%2220%22 width=%229%22 height=%2262%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%22128%22 y=%2240%22 width=%229%22 height=%2242%22 rx=%224.5%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%224%22 y=%2250%22 width=%22128%22 height=%2212%22 rx=%226%22 fill=%22%23a9c0d8%22/%3E%3Crect x=%228%22 y=%2238%22 width=%22122%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3Crect x=%2212%22 y=%2226%22 width=%2230%22 height=%2215%22 rx=%227.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 38h80a6 6 0 016 6v2H44z%22 fill=%22%23c9d9ea%22/%3E%3Ccircle cx=%2218%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3Ccircle cx=%22122%22 cy=%2288%22 r=%225%22 fill=%22%238aa3bd%22/%3E%3C/g%3E%3Cg transform=%22translate%2840 120%29 scale%28.75%29%22%3E%3Cpath d=%22M44 20v26a20 20 0 0040 0V20%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M64 66v12a20 20 0 0040 0v-6%22 fill=%22none%22 stroke=%22%23a9c0d8%22 stroke-width=%227%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22104%22 cy=%2262%22 r=%2213%22 fill=%22%23fff%22 stroke=%22%23a9c0d8%22 stroke-width=%225%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23eef3f8%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23e3ecf5%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   #m-app:has(.m-set.m-diari, .m-mappa.m-diari)::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%28214 70%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3Cg transform=%22translate%2846 140%29%22%3E%3Crect x=%220%22 y=%220%22 width=%2258%22 height=%2240%22 rx=%228%22 fill=%22%23f2cdb8%22/%3E%3Cpath d=%22M0 8l29 18 29-18%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23fdf3ec%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23fae8dc%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   /* il SETTORE aperto: in alto "Tutti i settori" e, a destra, nome, dati e
@@ -23148,7 +23147,9 @@ function editorLettereSvuota(){
   .m-settori.m-modo{ margin-bottom:2px; }
   .m-settori.m-modo button{ flex:1; }
   /* quello acceso nel blu notte della scheda Reparto della home */
-  .m-settori.m-modo .m-pill{ background:var(--m-notte); box-shadow:none; }
+  .m-settori.m-modo .m-pill{ background:var(--m-notte); box-shadow:none; transition:transform .36s var(--m-molla), width .36s var(--m-molla), background-color .36s; }
+  /* in Diari la pillola diventa pesca, come il tondo dei diari */
+  .m-settori.m-modo:has([data-v="diari"][aria-pressed="true"]) .m-pill{ background:#c96b44; }
   .m-settori.m-modo button[aria-pressed="true"]{ color:#fff; }
 
   /* pressione lunga su un letto (righe e riquadri): si riempie di rosso */
@@ -23267,13 +23268,12 @@ function editorLettereSvuota(){
   @media (hover:hover){ html[data-m-tema="scuro"] :is(.m-voce, .m-righe .m-rigalink):hover{ background:var(--m-box); } }
   html[data-m-tema="scuro"] .m-settori .m-pill{ background:#22374f; box-shadow:none; }
   html[data-m-tema="scuro"] .m-settori.m-modo .m-pill{ background:#1d4a78; }
+  html[data-m-tema="scuro"] .m-settori.m-modo:has([data-v="diari"][aria-pressed="true"]) .m-pill{ background:#b9643c; }
   html[data-m-tema="scuro"] .m-mappa .m-zona{ border-color:var(--m-line); box-shadow:none; }
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:#2e4a68; }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
   html[data-m-tema="scuro"] #m-app:has(.m-set, .m-mappa)::before{ display:none; }
   /* la scena di Account nel tema scuro: stessi disegni, toni notte */
-  html[data-m-tema="scuro"] .m-acc-onde{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23111e2e%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%2316263b%22/%3E%3C/svg%3E"); }
-  html[data-m-tema="scuro"] .m-acc-onde.m-verdi{ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%2310292b%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23123634%22/%3E%3C/svg%3E"); }
   html[data-m-tema="scuro"] .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#26364b; }
   html[data-m-tema="scuro"] .m-acc-scena .a-riga{ fill:#33475f; }
   html[data-m-tema="scuro"] .m-acc-scena .a-chiaro{ fill:#132133; }
@@ -23539,7 +23539,8 @@ function bloccoFare(copiati){
     if(nuove.length){ f.pdIds = viste.concat(nuove); cambiato = true; }
   }
   if(pdScadute.length || f.pdGiorno === oggi){
-    righe.push({ k:'pd', fatta:!pdScadute.length, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:'Post-degenze',
+    const nPd = pdScadute.length || (f.pdIds || []).length;
+    righe.push({ k:'pd', fatta:!pdScadute.length, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:nPd === 1 ? 'Post-degenza' : 'Post-degenze',
       dato:pdScadute.length ? '' : esitoPostDegenze(f.pdIds || [], voci, domani), conta:pdScadute.length ? `${pdScadute.length} da controllare` : '' });
   }
   // consegne (nei feriali): da fare dopo il primo diario copiato; come le
@@ -25054,12 +25055,11 @@ if(temaChiaro && temaScuro){
 }
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
-// Account: la scena in basso, grigia se non connesso e verde acqua (lucchetto
+// Account: la scena sotto il riquadro, grigia se non connesso e verde acqua (lucchetto
 // chiuso, spunta) se connesso; passando dall'uno all'altro si anima
 const scenaAccount = document.createElement('div');
 scenaAccount.className = 'm-acc-scena'; scenaAccount.setAttribute('aria-hidden', 'true');
-scenaAccount.innerHTML = '<div class="m-acc-onde"></div><div class="m-acc-onde m-verdi"></div><svg viewBox="0 0 390 230"><g transform="translate(62 84)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" class="a-chiaro" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" class="a-chiaro" fill="#fff"/></g><path class="a-linea" d="M132 118 C 160 84 190 78 212 92"/><g transform="translate(212 48)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect class="a-chiaro" x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" class="a-bollo" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
-document.body.appendChild(scenaAccount);
+scenaAccount.innerHTML = '<svg viewBox="0 0 320 130"><g transform="translate(28 15)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" class="a-chiaro" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" class="a-chiaro" fill="#fff"/></g><path class="a-linea" d="M102 70 H176"/><g transform="translate(156 3)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect class="a-chiaro" x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" class="a-bollo" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
 const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
 aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
@@ -25069,6 +25069,8 @@ if(syncDentro) new MutationObserver(() => {
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
 if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
+// la scena dell'Account subito sotto il riquadro
+(syncBox || impostazioniView.firstChild).after(scenaAccount);
 // Ricoveri: Calendario | Statistiche in cima, al posto del link "N ricoveri totali"
 const ricTab = document.createElement('div');
 ricTab.className = 'm-settori m-ric-tab'; ricTab.id = 'm-ric-tab';
