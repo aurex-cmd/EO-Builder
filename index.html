@@ -23181,7 +23181,9 @@ function editorLettereSvuota(){
   /* due righe fisse sotto l'anello: i quadratini dei settori non scendono quando il testo va a capo */
   #m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
   #m-rep-dx :is(.m-lbl-app, #m-appoggi){ display:none; }
-  .m-tl-nuovo .m-gg{ color:var(--m-faint); }
+  /* il "+" e "appoggio" uno sopra l'altro, centrati insieme nel riquadro */
+  .m-tl-nuovo:not(.m-scrivi){ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+  .m-tl.m-tl-nuovo .m-gg{ position:static; color:var(--m-faint); }
   .m-tl-nuovo.m-scrivi .m-gg{ display:none; }
   /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
   .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
