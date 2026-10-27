@@ -24737,6 +24737,8 @@ sc.addEventListener('focusout', e => {
     v = aggiungiUnitaMancantiTesto(v);
     if(v !== t.value){ t.value = v; alza(t); }
     D.provv = v; salvaOra(); pianificaAiuti();
+    // il menu "/" chiuso senza scegliere: niente "- /" lasciato lì
+    setTimeout(() => { if(!strumentoAperto() && document.activeElement !== t) pulisciComandiProvv(); });
   }
   if(t.id === 'm-eo'){ D.eo = t.value; salvaOra(); }
 });
@@ -24933,6 +24935,28 @@ function apriStrumenti(){
   alza(t);
   t.dispatchEvent(new Event('input', { bubbles:true }));
 }
+// chiuso uno strumento (o il menu "/" senza sceglierne uno), nei
+// provvedimenti non resta niente di suo: via i comandi "/..." e le righe
+// rimaste vuote ("-", "- /", "- EGA:", "- VFG"); quel che lo strumento ha
+// scritto (la riga dell'EGA, il VFG, lo score) resta
+function pulisciComandiProvv(){
+  const t = $m('#m-provv'); if(!t || !t.isConnected) return;
+  const chiavi = comandiCostruisciElenco().filter(c => c.inserisci.startsWith('/')).flatMap(c => c.chiavi)
+    .sort((x, y) => y.length - x.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const reCmd = new RegExp('(^|[ \\t])\\/(?:' + chiavi.join('|') + ')(?![a-z0-9])[ \\t]*', 'gim');
+  const v = t.value.replace(reCmd, '$1').split('\n')
+    .filter(r => !/^\s*(?:-\s*(?:\/|EGA:?|VFG)?|\/|EGA:?|VFG)\s*$/i.test(r))
+    .map(r => r.replace(/[ \t]+$/, '')).join('\n');
+  if(v === t.value) return;
+  t.value = v; alza(t);
+  // come se si fosse scritto: i trigger tolti si possono riaprire
+  t.dispatchEvent(new Event('input', { bubbles:true }));
+  salvaOra();
+}
+const strumentoAperto = () => !!document.querySelector('[id$="-overlay"].show');
+new MutationObserver(ms => {
+  if(ms.some(m => m.oldValue && /\bshow\b/.test(m.oldValue) && !m.target.classList.contains('show'))) setTimeout(() => { if(!strumentoAperto()) pulisciComandiProvv(); });
+}).observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'], attributeOldValue:true });
 // il menu dell'app, ma dentro la scheda: sempre sopra la riga che si sta
 // scrivendo (la scheda scorre se serve), mai sotto il pulsante "Copia"
 const corpoScheda = $m('#m-s-corpo');
