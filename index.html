@@ -1050,6 +1050,8 @@
   .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
   table.ric-cons td{ border:1px solid #3a4652; padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
+  /* diagnosi e comorbidità giustificate */
+  table.ric-cons td.giustificato{ text-align:justify; }
   table.ric-cons tr.testa td{ font-weight:700; color:#12181e; }
   table.ric-cons b{ color:var(--ink); }
   table.ric-cons .derivato{ color:var(--ink-dim); }
@@ -3092,6 +3094,8 @@
   .ric-consegna .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   table.ric-cons{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; line-height:1.45; }
   table.ric-cons td{ border:1px solid #cfd6dc; padding:5px 7px; vertical-align:top; color:var(--ink); word-wrap:break-word; }
+  /* diagnosi e comorbidità giustificate */
+  table.ric-cons td.giustificato{ text-align:justify; }
   table.ric-cons tr.testa td{ font-weight:700; color:#12181e; }
   table.ric-cons b{ color:var(--ink); }
   table.ric-cons .derivato{ color:var(--ink-dim); }
@@ -8172,8 +8176,8 @@ function renderAnteprimaConsegna(rec){
   tLetto.id = 'ric-cons-letto'; tNome.id = 'ric-cons-nome'; tEta.id = 'ric-cons-eta';
   riga(tLetto, tNome, tEta).className = 'testa';
 
-  const tDiag = cella(3); etichetta(tDiag, 'Diagnosi:'); derivato(tDiag, 'ric-cons-diagnosi'); riga(tDiag);
-  const tCom = cella(3); etichetta(tCom, 'Comorbidità:'); derivato(tCom, 'ric-cons-comorbidita'); riga(tCom);
+  const tDiag = cella(3); tDiag.className = 'giustificato'; etichetta(tDiag, 'Diagnosi:'); derivato(tDiag, 'ric-cons-diagnosi'); riga(tDiag);
+  const tCom = cella(3); tCom.className = 'giustificato'; etichetta(tCom, 'Comorbidità:'); derivato(tCom, 'ric-cons-comorbidita'); riga(tCom);
   const tProg = cella(3); etichetta(tProg, 'Programma:'); derivato(tProg, 'ric-cons-programma'); riga(tProg);
 
   const tProb = cella(2); etichetta(tProb, 'Problemi attivi:');
