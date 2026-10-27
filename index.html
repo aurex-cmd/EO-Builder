@@ -22505,6 +22505,13 @@ function editorLettereSvuota(){
      dell'app), con schede bianche piatte, tag selezionati in teal e i blu
      della minimal; Aurex e Scuro tengono le schede in blu notte qui sopra */
   html[data-ui="minimal"][data-m-tema="chiaro"][data-m-orig]{ --page:#eef2f6; --page-line:#dfe5ec; }
+  /* tema Scuro: tutto in blu notte, anche le superfici dell'app (schermata
+     dei tag, ricovero, riquadri), senza i grigi del tema scuro originale */
+  html[data-ui="minimal"][data-m-tema="scuro"], html[data-ui="minimal"][data-m-tema="scuro"] #clinical-view{
+    --page:#0c1622; --page-line:#1e3047; --page-ink:#e9eff6; --page-ink-dim:#8b9fb6;
+    --panel:#132235; --panel-2:#1a2b40; --panel-3:#22374f; --line:#1e3047; --line-soft:#182a3e;
+    --ink-dim:#8b9fb6; --ink-faint:#5a6f88;
+  }
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card{ background:#ffffff; border-color:#e1e7ee; box-shadow:0 1px 2px rgba(22,36,58,.05), 0 6px 18px rgba(22,36,58,.06); }
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card h2{ color:#16243a; }
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card h2 .hicon{ stroke:#1f4e79; color:#1f4e79; }
