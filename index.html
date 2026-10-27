@@ -23308,53 +23308,47 @@ function editorLettereSvuota(){
   .m-mini.m-svuota{ background-color:var(--m-rosso) !important; color:#fff !important; box-shadow:none !important; opacity:0 !important; transform:scale(.7); transition-property:background-color, transform, opacity; transition-duration:.15s, .28s, .28s; }
   .m-mini.m-svuota *{ display:none; }
 
-  /* AGGIORNA CONSEGNE: la tabella di Diari, una scheda per letto */
+  /* AGGIORNA CONSEGNE: una scheda bianca sola (come quella del settore),
+     una riga per letto divisa da un filo. A sinistra il letto identico a
+     quello del settore (stessi colori, bollini e spunta), a destra le
+     etichette e il testo. Rosa, azzurro e giallo sono gli evidenziatori che
+     finiranno nel documento delle consegne: qui li si vede in anteprima */
   .m-aggcons-vuoto{ margin:8px 0 0; padding:16px; border-radius:16px; background:var(--m-box); color:var(--m-muted); font-size:15px; }
-  #m-aggcons{ margin-top:4px; }
+  #m-aggcons{ margin-top:16px; }
   #m-aggcons .note-box{ margin:0 0 12px !important; padding:12px 14px; border-radius:10px; background:var(--m-notte-box); color:var(--m-notte); font-size:15px; line-height:1.45; border:0; }
   #m-aggcons .agg-cons-scroll{ overflow:visible; }
   #m-aggcons table.agg-cons, #m-aggcons table.agg-cons tbody, #m-aggcons table.agg-cons tr, #m-aggcons table.agg-cons td{ display:block; width:auto; }
   #m-aggcons table.agg-cons colgroup, #m-aggcons table.agg-cons thead{ display:none; }
-  #m-aggcons table.agg-cons tr{ background:#fff; border:1px solid var(--m-line); border-radius:16px; padding:14px 16px 12px; margin-bottom:12px; animation:m-compare .36s var(--m-molla) both; animation-delay:calc(var(--i) * 35ms); }
+  #m-aggcons table.agg-cons tbody{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  #m-aggcons table.agg-cons tr{ display:grid; grid-template-columns:64px minmax(0, 1fr); column-gap:14px; align-items:start; padding:14px; border-top:1px solid var(--m-line); background:none; animation:m-compare .36s var(--m-molla) both; animation-delay:calc(var(--i) * 35ms); }
+  #m-aggcons table.agg-cons tr:first-child{ border-top:0; }
   #m-aggcons table.agg-cons td{ background:none; border:0; border-radius:0; padding:0; color:var(--m-ink); font-family:var(--m-sans); }
-  #m-aggcons table.agg-cons td:first-child{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:8px; font-weight:400; font-size:inherit; }
-  #m-aggcons table.agg-cons td:first-child > div:first-child{ margin:0 6px 0 0; font-size:22px; font-weight:800; letter-spacing:-.02em; }
-  #m-aggcons table.agg-cons .agg-cons-tile{ display:none; }
-  #m-aggcons table.agg-cons .agg-cons-etichetta{ display:inline-flex; align-items:center; gap:5px; width:auto; margin:0; padding:4px 10px 4px 5px; border:0; border-radius:999px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:12px; line-height:1.3; cursor:pointer; }
-  #m-aggcons table.agg-cons .agg-cons-etichetta .ico-sotto{ display:inline; margin:0; color:var(--m-muted); }
-  #m-aggcons table.agg-cons .agg-cons-etichetta .ee{ background:#f2cdf3; border-radius:999px; padding:1px 8px; }
-  #m-aggcons table.agg-cons .agg-cons-etichetta .dim{ background:#c9f3f3; border-radius:999px; padding:1px 8px; }
-  #m-aggcons table.agg-cons .agg-cons-righe{ font-size:15px; line-height:1.55; color:var(--m-ink); }
-  #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#fff3a1; border-radius:6px; padding:0 3px; }
-  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ border:0; background:none; color:var(--m-muted); }
-  #m-aggcons table.agg-cons .agg-cons-vuoto{ font-size:13px; color:var(--m-faint); }
-  #m-aggcons table.agg-cons textarea.agg-cons-testo{ width:100%; border:0; border-radius:10px; background:var(--m-box); padding:9px 11px; font-family:var(--m-sans); font-size:15px; line-height:1.5; color:var(--m-ink); outline:none; box-shadow:inset 0 0 0 1.5px var(--m-teal); }
+  #m-aggcons table.agg-cons td:first-child{ display:contents; }
+  #m-aggcons table.agg-cons td:first-child > div:first-child{ display:none; }
+  #m-aggcons table.agg-cons td:last-child{ grid-column:2; }
+  /* il letto: lo stesso riquadro del settore, solo da guardare */
+  #m-aggcons table.agg-cons .agg-cons-tile{ display:block; grid-column:1; grid-row:1 / span 20; margin:0; }
+  #m-aggcons .agg-cons-tile .m-tl{ width:100%; animation:none; pointer-events:none; }
+  /* etichette: il testo evidenziato come nel documento e l'icona per copiarlo */
+  #m-aggcons table.agg-cons .agg-cons-etichetta{ grid-column:2; justify-self:start; display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 6px; width:auto; margin:0 0 8px; padding:0; border:0; background:none; color:var(--m-faint); font:inherit; font-size:13px; font-weight:600; line-height:1.4; text-align:left; cursor:pointer; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta .ico-sotto{ display:inline; margin:0; color:var(--m-faint); }
+  #m-aggcons table.agg-cons .agg-cons-etichetta :is(.ee, .dim){ color:var(--m-ink); border-radius:4px; padding:1px 6px; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta .ee{ background:#f4d4f4; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta .dim{ background:#cdf1f1; }
+  #m-aggcons table.agg-cons .agg-cons-etichetta:active{ transform:scale(.97); }
+  #m-aggcons table.agg-cons .agg-cons-righe{ font-size:15px; line-height:1.5; color:var(--m-ink); }
+  #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#fbefa6; color:var(--m-ink); border-radius:4px; padding:0 4px; }
+  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ border:0; background:none; color:var(--m-faint); }
+  #m-aggcons table.agg-cons .agg-cons-vuoto{ display:block; padding-top:2px; font-size:13px; line-height:1.45; color:var(--m-muted); }
+  #m-aggcons table.agg-cons textarea.agg-cons-testo{ width:100%; border:0; border-radius:10px; background:var(--m-box); padding:9px 11px; font-family:var(--m-sans); font-size:15px; line-height:1.5; color:var(--m-ink); outline:none; box-shadow:inset 0 0 0 1.5px var(--m-notte); }
   /* Copia qui non serve (le etichette e le richieste si copiano da sole):
      resta solo un piccolo "Esami" per vederli */
   #m-aggcons table.agg-cons .agg-cons-azioni{ gap:6px; margin-top:8px; }
   #m-aggcons table.agg-cons .agg-cons-azioni button:first-child{ display:none; }
   #m-aggcons table.agg-cons .agg-cons-azioni:not(:has(button + button)){ display:none; }
-  #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:3px 10px; background:var(--m-box); color:var(--m-muted); font:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
+  #m-aggcons table.agg-cons .agg-cons-azioni button{ border:0; border-radius:999px; padding:4px 11px; background:var(--m-box); color:var(--m-muted); font:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:transform .12s var(--m-molla); }
   #m-aggcons table.agg-cons .agg-cons-azioni button:active{ transform:scale(.94); }
-  #m-aggcons table.agg-cons .agg-cons-esami{ margin-top:10px; padding:10px 12px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-muted); font-size:13px; }
-  /* ogni consegna nel blu dell'esame obiettivo (un tono più chiaro: sul
-     bianco lo stesso blu sembra più scuro), col letto (come in Reparto) a sinistra e
-     a destra etichette e testo; intorno resta il bianco della pagina */
-  #m-aggcons table.agg-cons tr{ display:grid; grid-template-columns:auto minmax(0, 1fr); column-gap:14px; align-items:start; background:#1b2f47; border-color:#24405e; color:#fff; }
-  #m-aggcons table.agg-cons td:first-child{ display:contents; }
-  #m-aggcons table.agg-cons td:first-child > div:first-child{ display:none; }
-  #m-aggcons table.agg-cons .agg-cons-tile{ display:block; grid-column:1; grid-row:1 / span 20; margin:2px 0 0; }
-  #m-aggcons table.agg-cons .agg-cons-etichetta{ grid-column:2; justify-self:start; margin:0 0 6px; background:rgba(255,255,255,.12); color:#fff; }
-  #m-aggcons table.agg-cons .agg-cons-etichetta .ico-sotto{ color:rgba(255,255,255,.6); }
-  #m-aggcons table.agg-cons .agg-cons-etichetta :is(.ee, .dim){ color:#1b2433; }
-  #m-aggcons table.agg-cons td:last-child{ grid-column:2; color:#fff; }
-  #m-aggcons table.agg-cons .agg-cons-righe{ color:#fff; }
-  #m-aggcons table.agg-cons .agg-cons-righe .r{ color:var(--m-ink); }
-  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ color:rgba(255,255,255,.6); }
-  #m-aggcons table.agg-cons .agg-cons-vuoto{ color:rgba(255,255,255,.5); }
-  #m-aggcons table.agg-cons textarea.agg-cons-testo{ background:#fff; color:var(--m-ink); }
-  #m-aggcons table.agg-cons .agg-cons-azioni button{ background:rgba(255,255,255,.12); color:rgba(255,255,255,.8); }
-  #m-aggcons table.agg-cons .agg-cons-esami{ background:rgba(255,255,255,.08); color:rgba(255,255,255,.8); }
+  #m-aggcons table.agg-cons .agg-cons-esami{ margin-top:10px; padding:10px 12px; border:0; border-radius:10px; background:var(--m-box); color:var(--m-muted); font-size:13px; white-space:pre-line; }
 
   /* UNO STILE SOLO. Titoli: freccia nella barra e titolo grande sotto (il
      titolo piccolo centrato resta solo all'esame obiettivo, accanto a Fatto).
@@ -23401,7 +23395,7 @@ function editorLettereSvuota(){
     --st-bar:#24384f; --st-bar-hi:#4d6a8a;
   }
   html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-fare-r, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
-  html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga, html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:var(--m-carta); }
+  html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga{ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-scheda{ --m-bg:var(--m-carta); }
   html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); border-color:color-mix(in srgb, var(--m-notte) 72%, #000); }
   html[data-m-tema="scuro"] :is(.m-piede a, .m-bar .m-azione), html[data-m-tema="scuro"] .m-voce .m-vc, html[data-m-tema="scuro"] .m-rigalink .m-conta{ color:var(--m-link); }
@@ -23430,9 +23424,10 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
   html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
   html[data-m-tema="scuro"] .m-bar{ border-bottom-color:var(--m-line); }
-  html[data-m-tema="scuro"] #m-aggcons table.agg-cons tr{ background:#132235; border-color:#1c3048; }
   html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
-  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; color:#fff3c4; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .ee{ background:#5b2f5c; color:#f6dcf6; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .dim{ background:#1d4f50; color:#d3f4f4; }
   html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
   /* letti */
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl){ background-color:var(--m-l-base); }
@@ -24172,6 +24167,17 @@ function nuovoAppoggio(tile){
 // la stessa tabella "Aggiorna consegne" di Diari (renderAggiornaConsegne:
 // sintesi delle aggiunte, EE e dimissione da copiare formattati, doppio
 // tocco per modificare, Esami), una scheda per letto
+// in Aggiorna consegne il letto è lo stesso riquadro del settore (come
+// nell'app, dove è lo stesso della griglia del reparto)
+const tileAppSolaLettura = tileLettoSolaLettura;
+window.tileLettoSolaLettura = function(id, p, consegne, critici){
+  if(M.vista !== 'aggcons') return tileAppSolaLettura(id, p, consegne, critici);
+  const wrap = document.createElement('div');
+  wrap.className = 'agg-cons-tile';
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.innerHTML = tileLetto(p.name, inizialiLetto(p.name), 0).replace('<button ', '<button tabindex="-1" ');
+  return wrap;
+};
 function vAggCons(){
   barra('Consegne');
   $m('#m-vista').innerHTML = `
