@@ -24277,7 +24277,7 @@ function salvaOra(){
 function salvaPresto(){ clearTimeout(timerSalva); timerSalva = setTimeout(() => { salvaOra(); pianificaAiuti(); }, 500); }
 function segnaStato(copiato){
   const s = $m('#m-stato'); if(!s) return;
-  s.textContent = copiato ? 'Copiato oggi' : 'Da copiare'; s.classList.toggle('m-ok', copiato);
+  s.textContent = copiato ? 'Copiato' : 'Da copiare'; s.classList.toggle('m-ok', copiato);
   if(!copiato) $m('#m-copia').classList.remove('m-fatto');
 }
 // letture ripetute dei pazienti mentre si prepara la scheda: un solo JSON.parse
@@ -24343,7 +24343,7 @@ function rigaStrum(n){
 }
 function disegnaScheda(){
   const i = infoLetto(M.letto);
-  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato oggi' : 'Da copiare'}</span></div>
+  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span></div>
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
   const presenti = D.ordine;
