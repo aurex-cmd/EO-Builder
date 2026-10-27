@@ -23658,15 +23658,17 @@ function barra(titolo, azione){
 // ognuno vede il suo settore
 function contiHome(){
   const wm = getWardMap(), ap = loadAppoggi();
-  let visti = 0, copiati = 0;
-  const nomi = new Set();
+  let visti = 0, copiati = 0, copiatiCons = 0;
+  const nomi = new Set(), ric = new Set(ricoveratiEO());
   settori().forEach(s => [...(wm[s] || []).map(bedName), ...(ap[s] || [])].forEach(n => nomi.add(n)));
-  ricoveratiEO().forEach(n => nomi.add(n));
+  ric.forEach(n => nomi.add(n));
   nomi.forEach(n => {
     const i = infoLetto(n);
-    if(i.vistoOggi){ visti++; if(i.copiato) copiati++; }
+    if(i.vistoOggi){ visti++; if(i.copiato){ copiati++; if(!ric.has(n)) copiatiCons++; } }
   });
-  return { visti, copiati };
+  // copiatiCons: senza i ricoveri, che hanno regole loro e non passano
+  // dalle consegne
+  return { visti, copiati, copiatiCons };
 }
 // lo stato dell'accesso, letto dal riquadro della sincronizzazione dell'app
 function statoAccount(){
@@ -23701,7 +23703,8 @@ function bloccoFare(copiati){
     righe.push({ k:'pd', fatta:!pdScadute.length, attr:'data-m="pagina" data-p="postdegenze"', ic:ICON.postdegenze, nome:nPd === 1 ? 'Post-degenza' : 'Post-degenze',
       dato:pdScadute.length ? '' : esitoPostDegenze(f.pdIds || [], voci, domani), conta:pdScadute.length ? `${pdScadute.length} da controllare` : '' });
   }
-  // consegne (nei feriali): da fare dopo il primo diario copiato; come le
+  // consegne (nei feriali): da fare dopo il primo diario copiato (non di un
+  // ricovero: il ricovero non passa dalle consegne); come le
   // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
   const lettere = f.lettere || {};
   const kCons = `cons|${oggi}`;
@@ -23770,7 +23773,7 @@ function segnaFatto(btn){
 }
 function vHome(){
   barra();
-  const { visti, copiati } = contiHome();
+  const { visti, copiati, copiatiCons } = contiHome();
   const festivo = eFestivo(new Date());
   const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
@@ -23806,7 +23809,7 @@ function vHome(){
   const consegne = festivo
     ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne Weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
     : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'diari di oggi');
-  const fare = bloccoFare(copiati);
+  const fare = bloccoFare(copiatiCons);
   const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni', dimTesto)
