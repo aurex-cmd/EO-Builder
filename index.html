@@ -22463,6 +22463,9 @@ function editorLettereSvuota(){
     /* stati: pieno, letto (la casella), tenue (i fondi) */
     --m-teal:#0e7571; --m-teal-box:#e3f4f3; --m-visto:#c3e4df;
     --m-rame:#b65b33; --m-rame-box:#fbe5d8;
+    /* Diari: il colore abbinato all'accento (rame, o ambra quando l'accento
+       è già rame o bordeaux) */
+    --m-diari:var(--m-rame); --m-diari-box:var(--m-rame-box);
     --m-blu:#2f80c9; --m-blu-box:#e8f1fb;
     --m-viola:#5b45a0; --m-viola-box:#eee9f8; --m-critico:#6a1fb0;
     --m-rosso:#c9473d; --m-rosso-box:#fde6e1;
@@ -22612,7 +22615,7 @@ function editorLettereSvuota(){
   .m-s-titolo{ display:flex; align-items:center; gap:10px; }
   .m-s-titolo .m-pallini{ position:static; gap:4px; }
   .m-s-titolo .m-pal{ width:20px; height:20px; font-size:10.5px; box-shadow:none; }
-  .m-stato{ font-size:13px; font-weight:600; color:var(--m-rame); }
+  .m-stato{ font-size:13px; font-weight:600; color:var(--m-diari); }
   .m-stato.m-ok{ color:var(--m-teal); }
   .m-chiudi{ width:30px; height:30px; border-radius:50%; border:0; background:var(--m-sec); color:var(--m-muted); display:grid; place-items:center; flex:0 0 auto; cursor:pointer; transition:transform .12s var(--m-molla); }
   .m-chiudi:active{ transform:scale(.88); }
@@ -22758,6 +22761,10 @@ function editorLettereSvuota(){
   html[data-m-pulsante="viola"]{ --m-acc-l:#5b4a9e; --m-acc-d:#6f5cc0; --m-acc-link-d:#b9a9f0; }
   html[data-m-pulsante="bordeaux"]{ --m-acc-l:#8a3550; --m-acc-d:#a84866; --m-acc-link-d:#eba2b8; }
   html[data-m-pulsante="grafite"]{ --m-acc-l:#36414f; --m-acc-d:#56647a; --m-acc-link-d:#b3bfcf; }
+  /* accento rame o bordeaux: Diari passa all'ambra, così Visita e Diari
+     restano due colori diversi */
+  html[data-m-pulsante="rame"], html[data-m-pulsante="bordeaux"]{ --m-diari:#9a6a12; --m-diari-box:#fbf0d6; --m-l-dacop:#f1d48f; }
+  html[data-m-tema="scuro"]:is([data-m-pulsante="rame"], [data-m-pulsante="bordeaux"]){ --m-diari:#b8862b; --m-diari-box:#2f2a1c; --m-l-dacop:#8a6a1f; }
   .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
   .m-pulsanti button{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:var(--c); cursor:pointer; box-shadow:0 0 0 2px var(--m-bg), 0 0 0 2px transparent; transition:box-shadow .2s, transform .12s var(--m-molla); display:grid; place-items:center; color:#fff; }
   .m-pulsanti button:active{ transform:scale(.9); }
@@ -23090,7 +23097,7 @@ function editorLettereSvuota(){
   .m-anello-mini .m-anello-in b{ font-size:13px; } .m-anello-mini .m-anello-in b small{ font-size:9px; }
   .m-anello-mini .m-anello-in span{ display:none; }
   .m-set .m-anello-f{ stroke:var(--m-home-f); } .m-set .m-anello-a{ stroke:var(--m-notte); }
-  .m-set.m-diari .m-anello-f{ stroke:var(--m-rame-box); } .m-set.m-diari .m-anello-a{ stroke:var(--m-rame); }
+  .m-set.m-diari .m-anello-f{ stroke:var(--m-diari-box); } .m-set.m-diari .m-anello-a{ stroke:var(--m-diari); }
   .m-set-carta{ position:relative; isolation:isolate; padding:16px 14px 18px; }
   .m-set-fondo{ position:absolute; inset:0; z-index:-1; border:1px solid var(--m-line); border-radius:16px; background:#fff; }
   .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:11px 9px; }
@@ -23117,7 +23124,7 @@ function editorLettereSvuota(){
   .m-rh-tondo b{ position:relative; font-size:15px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:600; }
   .m-set-carta .m-rep-link{ background:var(--m-sec); }
   .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; }
-  .m-rep-cons > svg:first-child{ width:15px; height:15px; color:var(--m-rame); margin-right:2px; }
+  .m-rep-cons > svg:first-child{ width:15px; height:15px; color:var(--m-diari); margin-right:2px; }
 
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
@@ -23254,7 +23261,7 @@ function editorLettereSvuota(){
   /* quello acceso nel blu notte della scheda Reparto della home */
   .m-settori.m-modo .m-pill{ background:var(--m-notte); box-shadow:none; transition:transform .36s var(--m-molla), width .36s var(--m-molla), background-color .36s; }
   /* in Diari la pillola diventa pesca, come il tondo dei diari */
-  .m-settori.m-modo:has([data-v="diari"][aria-pressed="true"]) .m-pill{ background:var(--m-rame); }
+  .m-settori.m-modo:has([data-v="diari"][aria-pressed="true"]) .m-pill{ background:var(--m-diari); }
   .m-settori.m-modo button[aria-pressed="true"]{ color:#fff; }
 
   /* pressione lunga su un letto (righe e riquadri): si riempie di rosso */
@@ -23354,7 +23361,7 @@ function editorLettereSvuota(){
     --m-bg:#0c1622; --m-box:#1a2b40; --m-ink:#e9eff6; --m-muted:#8b9fb6; --m-faint:#4d6178; --m-line:#1e3047;
     --m-teal:#14a39b; --m-teal-box:#123a3f; --m-critico:#c9a2ff; --m-sec:#1d3048; --m-home-f:#1d3048;
     --m-notte:var(--m-acc-d); --m-notte-box:color-mix(in srgb, var(--m-acc-d) 26%, #0c1622); --m-link:var(--m-acc-link-d);
-    --m-hover:#1a2b40; --m-line-forte:#2e4a68; --m-ink-2:#c3d0de; --m-l-base:#1a2a3e; --m-rame:#b9643c; --m-rame-box:#2e2a2c; --m-blu:#41a7f0; --m-rosso:#e0574c; --m-l-critico:#33204f;
+    --m-hover:#1a2b40; --m-line-forte:#2e4a68; --m-ink-2:#c3d0de; --m-l-base:#1a2a3e; --m-rame:#b9643c; --m-rame-box:#2e2a2c; --m-diari:var(--m-rame); --m-diari-box:var(--m-rame-box); --m-blu:#41a7f0; --m-rosso:#e0574c; --m-l-critico:#33204f;
     --m-home-a:#2d6aa6; --m-home-b:#b9643c; --m-home-c:#14504c; --m-home-d:#2c3a5c; --m-home-sub:#e9eff6;
     --m-carta:#132133; --m-visto:#1f625d;
     --m-l-visto:#1f625d; --m-l-recente:#27466a; --m-l-vecchio:#22344b; --m-l-dacop:#b9643c; --m-l-cop:#14504c;
@@ -23416,8 +23423,8 @@ function editorLettereSvuota(){
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl).m-vuoto{ background-color:var(--m-carta); }
   html[data-m-tema="scuro"] .m-tl-nuovo{ border-color:#2e4a68; color:var(--m-faint); }
   html[data-m-tema="scuro"] .m-set .m-anello-a{ stroke:var(--m-link); } html[data-m-tema="scuro"] .m-set .m-anello-f{ stroke:#1d3048; }
-  html[data-m-tema="scuro"] .m-set.m-diari .m-anello-a{ stroke:#e08a5c; } html[data-m-tema="scuro"] .m-set.m-diari .m-anello-f{ stroke:#2e2a2c; }
-  html[data-m-tema="scuro"] .m-rep-vitali > svg:first-child{ color:var(--m-link); } html[data-m-tema="scuro"] .m-rep-cons > svg:first-child{ color:#e08a5c; }
+  html[data-m-tema="scuro"] .m-set.m-diari .m-anello-a{ stroke:color-mix(in srgb, var(--m-diari) 75%, #fff); } html[data-m-tema="scuro"] .m-set.m-diari .m-anello-f{ stroke:var(--m-diari-box); }
+  html[data-m-tema="scuro"] .m-rep-vitali > svg:first-child{ color:var(--m-link); } html[data-m-tema="scuro"] .m-rep-cons > svg:first-child{ color:color-mix(in srgb, var(--m-diari) 70%, #fff); }
 </style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
@@ -25200,10 +25207,45 @@ if(temaChiaro && temaScuro){
     const b = e.target.closest('button[data-c]'); if(!b) return;
     document.documentElement.dataset.mPulsante = b.dataset.c;
     try{ localStorage.setItem(MPULSANTE_KEY, b.dataset.c); } catch(e){}
-    segnaPulsante();
+    segnaPulsante(); coloraScene();
   });
   segnaPulsante();
 }
+// le scene in fondo prendono la tinta del loro modo: Visita quella
+// dell'accento, Diari quella di Diari (come il pulsante e i letti da
+// copiare); ogni colore del disegno tiene la sua luminosità e prende tinta e
+// saturazione da lì (il bianco resta bianco)
+const sceneOrig = [];
+document.querySelectorAll('style').forEach(st => { try{ [...st.sheet.cssRules].forEach(r => {
+  if(r.selectorText && r.selectorText.includes('#m-app:has(') && r.selectorText.includes('::before') && r.style && r.style.backgroundImage.includes('data:image/svg')) sceneOrig.push([r, r.style.backgroundImage]);
+}); } catch(e){} });
+function hexHsl(h){
+  if(h.length === 3) h = h.replace(/./g, c => c + c);
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  if(!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(hh * 60 + 360) % 360, s, l];
+}
+function hslHex(h, s, l){
+  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+function coloraScene(){
+  const cs = getComputedStyle(document.documentElement);
+  sceneOrig.forEach(([r, orig]) => {
+    const acc = cs.getPropertyValue(r.selectorText.includes('.m-set.m-diari') ? '--m-diari' : '--m-acc-l').trim().replace('#', '');
+    if(!/^[0-9a-f]{6}$/i.test(acc)) return;
+    const [ah, as] = hexHsl(acc);
+    r.style.backgroundImage = orig.replace(/%23([0-9a-f]{6}|[0-9a-f]{3})(?![0-9a-f])/gi, (m, h) => {
+      const [, s, l] = hexHsl(h);
+      return l > .97 ? m : '%23' + hslHex(ah, Math.min(Math.max(s, .25), as, .5), l);
+    });
+  });
+}
+coloraScene();
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
 // Account: la scena a metà schermo, grigia se non connesso e verde acqua (lucchetto
