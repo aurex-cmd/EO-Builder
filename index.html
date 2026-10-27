@@ -4037,10 +4037,10 @@ function temaMinimal(){
 // scuro; per la schermata dei tag scuro tranne che in chiaro
 const MPULSANTE_KEY = 'eo_minimal_pulsante_v1';
 // colore d'accento (Impostazioni → Colore dell'app): il pulsante Reparto e
-// con lui tutti i pulsanti e i link; niente teal né rame, che sono stati.
-// Le scelte di prima che non ci sono più tornano al più vicino
-const MPULSANTI = [['blu', 'Blu notte', '#1f4e79', '#2d6aa6'], ['ardesia', 'Ardesia', '#3d5a73', '#557690'], ['indaco', 'Indaco', '#3b4a8f', '#5566b8'], ['grafite', 'Grafite', '#36414f', '#56647a'], ['prugna', 'Prugna', '#6b3a5e', '#8f5480']];
-const MPULSANTI_VECCHI = { teal:'blu', rame:'blu', viola:'indaco', bordeaux:'prugna' };
+// con lui tutti i pulsanti e i link. Ardesia, Indaco e Prugna (provati per
+// poco) tornano al più vicino
+const MPULSANTI = [['blu', 'Blu', '#1f4e79', '#2d6aa6'], ['teal', 'Verde acqua', '#0e7571', '#168a84'], ['rame', 'Rame', '#b0562f', '#c0683f'], ['viola', 'Viola', '#5b4a9e', '#6f5cc0'], ['bordeaux', 'Bordeaux', '#8a3550', '#a84866'], ['grafite', 'Grafite', '#36414f', '#56647a']];
+const MPULSANTI_VECCHI = { ardesia:'grafite', indaco:'viola', prugna:'bordeaux' };
 const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
 const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';
 if(UI_MINIMAL){
@@ -22753,10 +22753,11 @@ function editorLettereSvuota(){
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   /* l'accento scelto in Impostazioni: chiaro, scuro e link sul blu notte */
-  html[data-m-pulsante="ardesia"]{ --m-acc-l:#3d5a73; --m-acc-d:#557690; --m-acc-link-d:#a3bdd2; }
-  html[data-m-pulsante="indaco"]{ --m-acc-l:#3b4a8f; --m-acc-d:#5566b8; --m-acc-link-d:#a6b2ee; }
+  html[data-m-pulsante="teal"]{ --m-acc-l:#0e7571; --m-acc-d:#168a84; --m-acc-link-d:#6fd3c4; }
+  html[data-m-pulsante="rame"]{ --m-acc-l:#b0562f; --m-acc-d:#c0683f; --m-acc-link-d:#f0a77f; }
+  html[data-m-pulsante="viola"]{ --m-acc-l:#5b4a9e; --m-acc-d:#6f5cc0; --m-acc-link-d:#b9a9f0; }
+  html[data-m-pulsante="bordeaux"]{ --m-acc-l:#8a3550; --m-acc-d:#a84866; --m-acc-link-d:#eba2b8; }
   html[data-m-pulsante="grafite"]{ --m-acc-l:#36414f; --m-acc-d:#56647a; --m-acc-link-d:#b3bfcf; }
-  html[data-m-pulsante="prugna"]{ --m-acc-l:#6b3a5e; --m-acc-d:#8f5480; --m-acc-link-d:#dcaacd; }
   .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
   .m-pulsanti button{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:var(--c); cursor:pointer; box-shadow:0 0 0 2px var(--m-bg), 0 0 0 2px transparent; transition:box-shadow .2s, transform .12s var(--m-molla); display:grid; place-items:center; color:#fff; }
   .m-pulsanti button:active{ transform:scale(.9); }
