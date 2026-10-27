@@ -25211,9 +25211,10 @@ if(temaChiaro && temaScuro){
   });
   segnaPulsante();
 }
-// le scene in fondo a Visita e Diari (immagini diverse) prendono la tinta
-// dell'accento: ogni colore del disegno tiene la sua luminosità e prende
-// tinta e saturazione dal colore scelto (il bianco resta bianco)
+// le scene in fondo prendono la tinta del loro modo: Visita quella
+// dell'accento, Diari quella di Diari (come il pulsante e i letti da
+// copiare); ogni colore del disegno tiene la sua luminosità e prende tinta e
+// saturazione da lì (il bianco resta bianco)
 const sceneOrig = [];
 document.querySelectorAll('style').forEach(st => { try{ [...st.sheet.cssRules].forEach(r => {
   if(r.selectorText && r.selectorText.includes('#m-app:has(') && r.selectorText.includes('::before') && r.style && r.style.backgroundImage.includes('data:image/svg')) sceneOrig.push([r, r.style.backgroundImage]);
@@ -25233,10 +25234,11 @@ function hslHex(h, s, l){
   return [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
 }
 function coloraScene(){
-  const acc = getComputedStyle(document.documentElement).getPropertyValue('--m-acc-l').trim().replace('#', '');
-  if(!/^[0-9a-f]{6}$/i.test(acc)) return;
-  const [ah, as] = hexHsl(acc);
+  const cs = getComputedStyle(document.documentElement);
   sceneOrig.forEach(([r, orig]) => {
+    const acc = cs.getPropertyValue(r.selectorText.includes('.m-set.m-diari') ? '--m-diari' : '--m-acc-l').trim().replace('#', '');
+    if(!/^[0-9a-f]{6}$/i.test(acc)) return;
+    const [ah, as] = hexHsl(acc);
     r.style.backgroundImage = orig.replace(/%23([0-9a-f]{6}|[0-9a-f]{3})(?![0-9a-f])/gi, (m, h) => {
       const [, s, l] = hexHsl(h);
       return l > .97 ? m : '%23' + hslHex(ah, Math.min(Math.max(s, .25), as, .5), l);
