@@ -4022,13 +4022,23 @@ applicaTema(temaAttuale());
 // fondo alla pagina
 const UI_MINIMAL = new URLSearchParams(location.search).get('ui') === 'minimal';
 // tema di EO Minimal (Impostazioni → Tema), separato da quello dell'app:
-// chiaro di base, oppure "notte"
-const MTEMA_KEY = 'eo_minimal_tema_v1';
+// "chiaro" (tutto chiaro, anche l'esame obiettivo), "scuro" (tutto in blu
+// notte) o "aurex" (pagine chiare, esame obiettivo scuro: il predefinito).
+// La v1 aveva solo chiaro (che era l'attuale aurex) e scuro
+const MTEMA_KEY = 'eo_minimal_tema_v2', MTEMA_KEY_V1 = 'eo_minimal_tema_v1';
 function temaMinimal(){
-  try{ return localStorage.getItem(MTEMA_KEY) === 'scuro' ? 'scuro' : 'chiaro'; } catch(e){ return 'chiaro'; }
+  try{
+    const t = localStorage.getItem(MTEMA_KEY);
+    if(t === 'chiaro' || t === 'scuro' || t === 'aurex') return t;
+    return localStorage.getItem(MTEMA_KEY_V1) === 'scuro' ? 'scuro' : 'aurex';
+  } catch(e){ return 'aurex'; }
 }
+// il foglio dell'app da accendere: per le pagine chiaro tranne che in
+// scuro; per la schermata dei tag scuro tranne che in chiaro
+const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
+const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';
 if(UI_MINIMAL){
-  applicaTema(temaMinimal());
+  applicaTema(foglioPagine(temaMinimal()));
   document.documentElement.dataset.mTema = temaMinimal();
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
@@ -22481,7 +22491,7 @@ function editorLettereSvuota(){
   html[data-m-eo] .m-bar .m-bar-t{ font-family:var(--m-scheda); font-weight:800; }
   /* l'esame obiettivo è scuro anche quando si apre dentro un ricovero (lì
      resta acceso il tema chiaro delle pagine): i colori del tema scuro */
-  html[data-ui="minimal"]:not([data-m-orig]) #clinical-view{ --consegna:#4a9fd9; --consegna-rgb:74,159,217; --panel:#12181f; --panel-2:#1a222b; --panel-3:#212b38; --line:#242f3a; --line-soft:#1c252e; --ink:#eef2f5; --ink-dim:#93a4b1; --ink-faint:#5c6c78; --signal:#35d0ae; --signal-dark:#0c8f74; --signal-dim:#0f3832; --signal-soft:rgba(53,208,174,.14); --on-signal:#06231d; --folder:#dba94a; --folder-dim:#3c2f14; --on-folder:#221a08; --panel-folder:#241d10; --panel-folder-2:#2f2716; --violet:#b18cf0; --violet-dim:#2c2140; --on-violet:#1a1330; --vs-spo2:#4a90e2; --vs-pa:#f0953f; --vs-fc:#e35a5f; --vs-tc:#b9b6ff; --glow-signal:0 0 10px rgba(53,208,174,.35); --acid:#e2867e; --acid-strong:#e35a5f; --acid-dim:#3a201d; --on-acid:#2a0f0c; --acid-border:#7a3b33; --glow-acid:0 0 10px rgba(227,90,95,.35); --glow-folder:0 0 10px rgba(219,169,74,.35); --glow-violet:0 0 10px rgba(177,140,240,.35); color:var(--ink); color-scheme:dark; }
+  html[data-ui="minimal"]:not([data-m-orig], [data-m-tema="chiaro"]) #clinical-view{ --consegna:#4a9fd9; --consegna-rgb:74,159,217; --panel:#12181f; --panel-2:#1a222b; --panel-3:#212b38; --line:#242f3a; --line-soft:#1c252e; --ink:#eef2f5; --ink-dim:#93a4b1; --ink-faint:#5c6c78; --signal:#35d0ae; --signal-dark:#0c8f74; --signal-dim:#0f3832; --signal-soft:rgba(53,208,174,.14); --on-signal:#06231d; --folder:#dba94a; --folder-dim:#3c2f14; --on-folder:#221a08; --panel-folder:#241d10; --panel-folder-2:#2f2716; --violet:#b18cf0; --violet-dim:#2c2140; --on-violet:#1a1330; --vs-spo2:#4a90e2; --vs-pa:#f0953f; --vs-fc:#e35a5f; --vs-tc:#b9b6ff; --glow-signal:0 0 10px rgba(53,208,174,.35); --acid:#e2867e; --acid-strong:#e35a5f; --acid-dim:#3a201d; --on-acid:#2a0f0c; --acid-border:#7a3b33; --glow-acid:0 0 10px rgba(227,90,95,.35); --glow-folder:0 0 10px rgba(219,169,74,.35); --glow-violet:0 0 10px rgba(177,140,240,.35); color:var(--ink); color-scheme:dark; }
   html[data-ui="minimal"] #clinical-view .card{ background:#132235; border-color:#1c3048; border-radius:16px; box-shadow:0 1px 2px rgba(15,25,40,.10), 0 6px 18px rgba(15,25,40,.10); margin:12px 14px 0; }
   html[data-ui="minimal"] #clinical-view .card h2{ font-family:var(--m-scheda); font-weight:800; letter-spacing:-.01em; font-size:17px; }
   html[data-ui="minimal"] #clinical-view .card h2 .hicon{ stroke:#9cc3ea; color:#9cc3ea; }
@@ -22491,10 +22501,23 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view .chip.active{ background:#0f3a3e; border-color:#35d0ae; box-shadow:0 0 0 1px #35d0ae; color:#35d0ae; font-weight:600; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea, select){ background:#1b2f47; border-color:#24405e; box-shadow:none; color:#e6edf5; }
   html[data-ui="minimal"] #clinical-view :is(input, textarea)::placeholder{ color:#6f87a3; }
+  /* tema Chiaro: anche l'esame obiettivo è chiaro (il foglio chiaro
+     dell'app), con schede bianche piatte, tag selezionati in teal e i blu
+     della minimal; Aurex e Scuro tengono le schede in blu notte qui sopra */
+  html[data-ui="minimal"][data-m-tema="chiaro"][data-m-orig]{ --page:#eef2f6; --page-line:#dfe5ec; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card{ background:#ffffff; border-color:#e1e7ee; box-shadow:0 1px 2px rgba(22,36,58,.05), 0 6px 18px rgba(22,36,58,.06); }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card h2{ color:#16243a; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .card h2 .hicon{ stroke:#1f4e79; color:#1f4e79; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .group-label{ color:#6b7c90; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .chip:not(.active){ background:#f2f5f9; border-color:#dde4ec; color:#1b2633; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view .chip.active{ background:#e3f4f3; border-color:#0e7571; box-shadow:0 0 0 1px #0e7571; color:#0b5f5b; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view :is(input, textarea, select){ background:#f6f8fb; border-color:#dde4ec; color:#141b22; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view :is(input, textarea)::placeholder{ color:#8a97a6; }
   html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
   /* Copia referto e Fatto: due pulsanti uguali, metà spazio ciascuno */
   html[data-ui="minimal"] #clinical-view #output-card .row{ display:flex; gap:10px; }
   html[data-ui="minimal"] #clinical-view #output-card .row > .btn:is(.primary, .m-eo-fatto){ flex:1 1 0; min-width:0; margin:0; height:46px; padding:0 12px; justify-content:center; background:#2f6aa3; border:1px solid #2f6aa3; border-radius:12px; color:#fff; font-weight:600; box-shadow:none; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view #output-card .row > .btn:is(.primary, .m-eo-fatto){ background:var(--m-notte); border-color:var(--m-notte); }
   /* niente Azzera tutto: al suo posto Fatto, come in alto, per tornare indietro */
   html[data-ui="minimal"] #clinical-view #reset-btn{ display:none; }
   /* nel ricovero chiude il Fatto dell'esame obiettivo: niente "Fatto: chiudi esame obiettivo" */
@@ -23488,16 +23511,19 @@ function temaVisita(si){
   const html = document.documentElement;
   if(si === html.hasAttribute('data-m-orig')) return;
   html.toggleAttribute('data-m-orig', si);
-  applicaTema(si ? temaAttuale() : temaMinimal());
-  if(!si) document.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#0c1622' : '#ffffff';
+  coloreTema(si);
+}
+// il foglio del tema e il colore della barra di stato, per le pagine o per
+// la schermata dei tag
+function coloreTema(visita){
+  const t = temaMinimal(), f = visita ? foglioVisita(t) : foglioPagine(t);
+  applicaTema(f);
+  document.querySelector('meta[name="theme-color"]').content = f === 'scuro' ? '#0c1622' : visita ? '#eef2f6' : '#ffffff';
 }
 function impostaTemaMinimal(t){
   try{ localStorage.setItem(MTEMA_KEY, t); } catch(e){}
   document.documentElement.dataset.mTema = t;
-  if(!document.documentElement.hasAttribute('data-m-orig')){
-    applicaTema(t);
-    document.querySelector('meta[name="theme-color"]').content = t === 'scuro' ? '#0c1622' : '#ffffff';
-  }
+  coloreTema(document.documentElement.hasAttribute('data-m-orig'));
   renderImpostazioniTema();
 }
 function disegna(verso){
@@ -25086,12 +25112,16 @@ if(weVista){
   });
   renderConsegneLista();
 }
-// il tema di Impostazioni, in minimal, è quello di EO Minimal (chiaro o
-// notte), non quello dell'app
+// il tema di Impostazioni, in minimal, è quello di EO Minimal (chiaro,
+// aurex o scuro), non quello dell'app: Aurex si aggiunge tra i due
 const temaChiaro = document.getElementById('impostazioni-tema-chiaro'), temaScuro = document.getElementById('impostazioni-tema-scuro');
 if(temaChiaro && temaScuro){
-  [temaChiaro, temaScuro].forEach(c => { c.removeAttribute('onclick'); c.addEventListener('click', () => impostaTemaMinimal(c === temaScuro ? 'scuro' : 'chiaro')); });
-  renderImpostazioniTema = () => { const t = temaMinimal(); temaChiaro.classList.toggle('active', t === 'chiaro'); temaScuro.classList.toggle('active', t === 'scuro'); };
+  const temaAurex = document.createElement('div');
+  temaAurex.className = 'chip'; temaAurex.id = 'impostazioni-tema-aurex'; temaAurex.textContent = 'Aurex';
+  temaScuro.before(temaAurex);
+  const temi = [[temaChiaro, 'chiaro'], [temaAurex, 'aurex'], [temaScuro, 'scuro']];
+  temi.forEach(([c, t]) => { c.removeAttribute('onclick'); c.addEventListener('click', () => impostaTemaMinimal(t)); });
+  renderImpostazioniTema = () => { const att = temaMinimal(); temi.forEach(([c, t]) => c.classList.toggle('active', t === att)); };
   renderImpostazioniTema();
 }
 const syncBox = document.getElementById('sync-group');
