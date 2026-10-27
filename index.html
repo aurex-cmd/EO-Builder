@@ -22578,6 +22578,8 @@ function editorLettereSvuota(){
   .m-h2{ font-size:30px; line-height:1.05; font-weight:800; letter-spacing:-.02em; margin:6px 0 0; }
   .m-sub{ color:var(--m-muted); margin:0; font-size:15px; line-height:1.45; }
   .m-lbl{ font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); margin:16px 0 -6px; }
+  /* la prima sezione sotto il titolo: stessa distanza delle altre schermate */
+  .m-h2 + .m-lbl{ margin-top:4px; }
 
   .m-piede{ font-size:13px; color:var(--m-muted); text-align:center; margin-top:24px; }
   .m-piede a{ color:var(--m-notte); font-weight:600; text-decoration:none; }
@@ -23083,7 +23085,7 @@ function editorLettereSvuota(){
   #m-app:has(.m-set:not(.m-diari), .m-mappa:not(.m-diari))::before{ background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 230%22%3E%3Cg transform=%22translate%2856 44%29 rotate%28-18 60 60%29%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M30 14v30a24 24 0 0048 0V14%22 stroke=%22%23e6a888%22 stroke-width=%226%22/%3E%3Cpath d=%22M54 68v14c0 18 14 28 30 28s28-10 28-26v-10%22 stroke=%22%23e6a888%22 stroke-width=%226%22/%3E%3Ccircle cx=%2230%22 cy=%2211%22 r=%225.5%22 fill=%22%23c98c6c%22/%3E%3Ccircle cx=%2278%22 cy=%2211%22 r=%225.5%22 fill=%22%23c98c6c%22/%3E%3Ccircle cx=%22112%22 cy=%2260%22 r=%2216%22 fill=%22%23fff%22 stroke=%22%23e6a888%22 stroke-width=%225%22/%3E%3Ccircle cx=%22112%22 cy=%2260%22 r=%227%22 fill=%22%23f3d3c0%22/%3E%3C/g%3E%3Cg transform=%22translate%28222 38%29%22%3E%3Crect x=%220%22 y=%2214%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23efc9b3%22 transform=%22rotate%28-8 37 62%29%22/%3E%3Crect x=%2218%22 y=%228%22 width=%2274%22 height=%2296%22 rx=%229%22 fill=%22%23fff%22 transform=%22rotate%285 55 56%29%22/%3E%3Cg transform=%22rotate%285 55 56%29%22 stroke=%22%23f3d3c0%22 stroke-width=%225%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M32 32h40M32 48h46M32 64h46M32 80h28%22/%3E%3C/g%3E%3Cg transform=%22rotate%2838 104 92%29%22%3E%3Crect x=%2298%22 y=%2246%22 width=%2213%22 height=%2264%22 rx=%223.5%22 fill=%22%23e6a888%22/%3E%3Cpath d=%22M98 110h13l-6.5 13z%22 fill=%22%23c98c6c%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") center bottom 8px / 390px 230px no-repeat, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 390 120%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M0 40 Q100 10 200 30 T390 15 V120 H0z%22 fill=%22%23e5edf6%22/%3E%3Cpath d=%22M0 75 Q120 55 230 70 T390 60 V120 H0z%22 fill=%22%23d6e2ef%22/%3E%3C/svg%3E") center bottom / 100% 120px no-repeat; }
   /* il SETTORE aperto: in alto "Tutti i settori" e, a destra, nome, dati e
      il tondo; sotto una scheda sola coi letti grandi */
-  .m-set-su{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0 12px; }
+  .m-set-su{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:-4px 0 12px; }
   .m-set-indietro{ position:relative; display:inline-flex; align-items:center; gap:2px; height:36px; padding:0 13px 0 7px; border:0; border-radius:999px; background:var(--m-notte); color:#fff; font:inherit; font-size:13px; font-weight:600; cursor:pointer; flex:0 0 auto; }
   .m-set-indietro svg{ width:18px; height:18px; }
   .m-set-indietro::after{ content:""; position:absolute; inset:-4px; }
@@ -23104,7 +23106,10 @@ function editorLettereSvuota(){
   .m-set-fondo{ position:absolute; inset:0; z-index:-1; border:1px solid var(--m-line); border-radius:16px; background:#fff; }
   .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:11px 9px; }
   /* mentre i letti volano, il resto della scheda compare piano */
-  .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-tl-nuovo){ animation:m-compare .35s ease-out .22s both; }
+  .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
+  /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
+  #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) .48s both; }
+  @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
   .m-mappa.m-ritorno .m-zona{ animation:m-compare .35s ease-out both; }
   .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
@@ -23131,7 +23136,7 @@ function editorLettereSvuota(){
 
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
-  .m-mappa-sub{ margin:12px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
+  .m-mappa-sub{ margin:-6px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
   .m-mappa{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .m-mappa-rep{ grid-column:1 / -1; display:flex; align-items:baseline; gap:8px; margin:14px 2px 0; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
   .m-mappa-rep:first-child{ margin-top:0; }
@@ -23710,7 +23715,7 @@ function bloccoFare(copiati){
       dato:vuote ? 'da allegare' : !n ? (tot ? 'fatte' : 'nessuna da fare') : '', conta:n ? `${n} da fare` : '' });
   } else if(copiati || lettere[kCons]){
     righe.push({ k:kCons, segna:true, fatta:!!lettere[kCons], attr:'data-m="aggcons"', ic:ICON.consegne, nome:'Aggiorna consegne',
-      dato:lettere[kCons] ? 'aggiornate' : 'dai diari di oggi', etich:'Consegne aggiornate' });
+      dato:lettere[kCons] ? 'aggiornate' : 'diari di oggi', etich:'Consegne aggiornate' });
   }
   // lettere di dimissione per oggi e domani: si segnano a mano
   let dim = []; try{ dim = calcolaCalendarioDimissioni(); } catch(e){}
@@ -23759,7 +23764,7 @@ function segnaFatto(btn){
   riga.classList.toggle('m-appena', fatta);
   btn.setAttribute('aria-pressed', fatta);
   btn.setAttribute('aria-label', btn.dataset.e + (fatta ? ': tocca per togliere' : '?'));
-  if(k.startsWith('cons|')){ const v = riga.querySelector('.m-vv'); if(v) v.textContent = fatta ? 'aggiornate' : 'dai diari di oggi'; }
+  if(k.startsWith('cons|')){ const v = riga.querySelector('.m-vv'); if(v) v.textContent = fatta ? 'aggiornate' : 'diari di oggi'; }
   if(fattiPrima) fatta ? fattiPrima.add(k) : fattiPrima.delete(k);
   const t = $m('.m-fare-t'), tutte = ![...document.querySelectorAll('.m-fare-r')].some(r => !r.classList.contains('m-fatta'));
   if(t){ t.classList.toggle('m-tutto', tutte); t.innerHTML = tutte ? `${ICON.ok}Tutto fatto per oggi` : 'Da fare oggi'; }
@@ -23801,11 +23806,11 @@ function vHome(){
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
   const consegne = festivo
     ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne Weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
-    : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'dai diari di oggi');
+    : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'diari di oggi');
   const fare = bloccoFare(copiati);
   const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
-    + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Calendario dimissioni', dimTesto)
+    + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni', dimTesto)
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
@@ -23935,7 +23940,7 @@ function vSettore(){
           <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-b" id="m-anello-b" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
       <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti"><span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
-        <p class="m-rep-lbl m-lbl-str">Del settore</p><div class="m-elenco m-set-elenco"><button class="m-voce" data-m="vitali">${ICON.vitali}<span class="m-vn">Parametri vitali</span><span class="m-vv">tutti i letti</span>${ICON.chev}</button><button class="m-voce" data-m="aggcons">${ICON.consegne}<span class="m-vn">Aggiorna consegne</span><span class="m-vv">dai diari di oggi</span>${ICON.chev}</button></div></div>
+        <p class="m-rep-lbl m-lbl-str">Del settore</p><div class="m-elenco m-set-elenco"><button class="m-voce" data-m="vitali">${ICON.vitali}<span class="m-vn">Parametri vitali</span><span class="m-vv">tutti i letti</span>${ICON.chev}</button><button class="m-voce" data-m="aggcons">${ICON.consegne}<span class="m-vn">Aggiorna consegne</span><span class="m-vv">diari di oggi</span>${ICON.chev}</button></div></div>
     </div>`}`;
   // il selettore Visita/Diari, se c'è già, resta lo stesso: ridisegnarlo
   // interromperebbe la pillola mentre scorre verso l'altro pulsante
