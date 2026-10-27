@@ -23084,7 +23084,7 @@ function editorLettereSvuota(){
   /* il SETTORE aperto: in alto "Tutti i settori" e, a destra, nome, dati e
      il tondo; sotto una scheda sola coi letti grandi */
   .m-set-su{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0 12px; }
-  .m-set-indietro{ position:relative; display:inline-flex; align-items:center; gap:2px; height:36px; padding:0 13px 0 7px; border:0; border-radius:999px; background:var(--m-sec); color:var(--m-ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer; flex:0 0 auto; }
+  .m-set-indietro{ position:relative; display:inline-flex; align-items:center; gap:2px; height:36px; padding:0 13px 0 7px; border:0; border-radius:999px; background:var(--m-notte); color:#fff; font:inherit; font-size:13px; font-weight:600; cursor:pointer; flex:0 0 auto; }
   .m-set-indietro svg{ width:18px; height:18px; }
   .m-set-indietro::after{ content:""; position:absolute; inset:-4px; }
   .m-set-indietro:active{ transform:scale(.95); }
@@ -23180,6 +23180,11 @@ function editorLettereSvuota(){
   /* settori "Lettera": la lettera del settore dentro l'anello, gli altri in quadratini */
   /* due righe fisse sotto l'anello: i quadratini dei settori non scendono quando il testo va a capo */
   #m-rep-dx.m-ric :is(.m-lbl-app, #m-appoggi, .m-rep-vitali){ display:none; }
+  #m-rep-dx :is(.m-lbl-app, #m-appoggi){ display:none; }
+  /* il "+" e "appoggio" uno sopra l'altro, centrati insieme nel riquadro */
+  .m-tl-nuovo:not(.m-scrivi){ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+  .m-tl.m-tl-nuovo .m-gg{ position:static; color:var(--m-faint); }
+  .m-tl-nuovo.m-scrivi .m-gg{ display:none; }
   /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
   .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
   .m-togli::after{ content:""; position:absolute; inset:-10px; }
@@ -23294,6 +23299,9 @@ function editorLettereSvuota(){
   .m-tl .m-elimina-et{ left:0; right:0; top:auto; bottom:3px; transform:none; text-align:center; font-size:9.5px; }
   .m-bt .m-elimina-et{ top:auto; bottom:8px; transform:none; right:10px; }
   :is(.m-tl, .m-bt).m-via{ transform:scale(.92) !important; opacity:0; transition:transform .25s var(--m-molla), opacity .2s; }
+  /* settore svuotato: ogni letto con la scheda diventa rosso e svanisce */
+  .m-mini.m-svuota{ background-color:var(--m-rosso) !important; color:#fff !important; box-shadow:none !important; opacity:0 !important; transform:scale(.7); transition-property:background-color, transform, opacity; transition-duration:.15s, .28s, .28s; }
+  .m-mini.m-svuota *{ display:none; }
 
   /* AGGIORNA CONSEGNE: la tabella di Diari, una scheda per letto */
   .m-aggcons-vuoto{ margin:8px 0 0; padding:16px; border-radius:16px; background:var(--m-box); color:var(--m-muted); font-size:15px; }
@@ -24114,9 +24122,13 @@ function disegnaLetti(appena){
     return;
   }
   const letti = getWardMap()[M.settore] || [], app = loadAppoggi()[M.settore] || [];
-  $m('#m-appoggi').innerHTML = app.map((nome, k) => tileLetto(nome, inizialiLetto(nome), k, appena, true)).join('')
-    + `<div class="m-tl m-tl-nuovo" style="--i:${app.length}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}</div>`;
-  el.innerHTML = letti.map((n, k) => tileLetto(bedName(n), etichettaLetto(n), app.length + 1 + k, appena)).join('');
+  // gli appoggi in coda ai letti, nella stessa griglia, e per ultimo il "+"
+  // con scritto dentro "appoggio" (niente sezione a parte: la scheda resta
+  // corta e la scena in fondo si vede)
+  $m('#m-appoggi').innerHTML = '';
+  el.innerHTML = letti.map((n, k) => tileLetto(bedName(n), etichettaLetto(n), k, appena)).join('')
+    + app.map((nome, k) => tileLetto(nome, inizialiLetto(nome), letti.length + k, appena, true)).join('')
+    + `<div class="m-tl m-tl-nuovo" style="--i:${Math.min(letti.length + app.length, 20)}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}<span class="m-gg">appoggio</span></div>`;
   // anello: i letti visti oggi tra tutti quelli del settore (appoggi
   // compresi), tolti quelli segnati vuoti
   const vu = lettiVuoti();
@@ -24547,6 +24559,45 @@ function armaElimina(el){
   try{ navigator.vibrate && navigator.vibrate(18); } catch(err){}
   showToast('Tocca di nuovo ' + nome + (lettoDaEliminare.id ? ' per eliminare la scheda' : ': è vuoto e non conta più'));
 }
+// SVUOTA SETTORE: la finestra dell'app, anche per i Ricoveri (le schede
+// dell'esame obiettivo dei ricoverati); confermando, i letti con la scheda
+// diventano rossi uno dopo l'altro e svaniscono, poi si eliminano
+function schedeDaSvuotare(s){
+  if(s !== RIC) return schedeDelSettore(s);
+  const nomi = new Set(ricoveratiEO());
+  return Object.entries(loadPatients()).filter(([, p]) => nomi.has(p.name));
+}
+const apriSvuotaApp = apriSvuotaSettore, confermaSvuotaApp = confermaSvuotaSettore;
+window.apriSvuotaSettore = function(settore){
+  if(settore !== RIC) return apriSvuotaApp(settore);
+  apriSvuotaApp(settore);
+  const schede = schedeDaSvuotare(settore), n = schede.length;
+  const corpo = document.getElementById('svuota-settore-corpo'), btn = document.getElementById('svuota-settore-conferma');
+  if(!n){ corpo.innerHTML = '<div class="isolamento-modal-riga">Nessuna scheda da eliminare in Ricoveri.</div>'; btn.style.display = 'none'; return; }
+  corpo.innerHTML = `<div class="isolamento-modal-riga">Eliminare ${n === 1 ? 'la scheda' : 'tutte le ' + n + ' schede'} dell'esame obiettivo dei <b>Ricoveri</b>? I ricoveri restano.</div>`
+    + `<div class="isolamento-modal-riga" style="color:var(--ink-dim); font-size:13px;">${schede.map(([, p]) => escapeHtml(p.name)).join(', ')}</div>`;
+  btn.textContent = n === 1 ? 'Elimina 1 scheda' : `Elimina ${n} schede`; btn.style.display = '';
+};
+window.confermaSvuotaSettore = function(){
+  const settore = settoreDaSvuotare;
+  if(!settore){ confermaSvuotaApp(); return; }
+  const schede = schedeDaSvuotare(settore), nomi = new Set(schede.map(([, p]) => p.name));
+  document.getElementById('svuota-settore-overlay').classList.remove('show');
+  const zona = [...document.querySelectorAll('#m-mappa .m-zona')].find(z => z.dataset.s === settore);
+  const via = zona ? [...zona.querySelectorAll('.m-mini[data-n]')].filter(m => nomi.has(m.dataset.n)) : [];
+  via.forEach((m, k) => { m.style.transitionDelay = (k * 45) + 'ms, ' + (k * 45 + 180) + 'ms, ' + (k * 45 + 180) + 'ms'; m.classList.add('m-svuota'); });
+  setTimeout(() => {
+    if(settore !== RIC) confermaSvuotaApp();
+    else {
+      const ps = loadPatients(); let aperta = false;
+      schede.forEach(([id]) => { delete ps[id]; if(id === currentPatientId) aperta = true; aiutiMemoria.delete(id); });
+      savePatients(ps); settoreDaSvuotare = null;
+      if(aperta) chiudiPaziente(); else renderWardMap();
+      showToast(`Ricoveri: ${schede.length} ${schede.length === 1 ? 'scheda eliminata' : 'schede eliminate'}`);
+    }
+    disegnaLetti();
+  }, via.length ? 420 + via.length * 45 : 0);
+};
 function confermaElimina(){
   const { el, id, nome } = lettoDaEliminare;
   clearTimeout(lettoDaEliminare.t); lettoDaEliminare = null;
@@ -24566,7 +24617,7 @@ function confermaElimina(){
     if(e.button > 0) return;
     // pressione lunga: su un letto lo elimina, sul riquadro di un settore
     // della mappa apre "Svuota settore"
-    const t = e.target.closest('[data-m="letto"], .m-zona:not([data-s="${RIC}"])'.replace('${RIC}', RIC));
+    const t = e.target.closest('[data-m="letto"], .m-zona');
     if(!t || t.classList.contains('m-elimina') || e.target.closest('.m-togli')) return;
     // un appoggio senza scheda si toglie con la ×
     if(t.dataset.ap && !infoLetto(t.dataset.n).occupato) return;
