@@ -22828,6 +22828,9 @@ function editorLettereSvuota(){
   /* i pulsanti principali delle pagine nel blu notte della scheda Visita della home */
   html[data-ui="minimal"] .m-pagina .btn.primary, html[data-ui="minimal"]:not([data-m-orig]) .admit-copy-btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   html[data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:#fff !important; }
+  /* Editor di testo: Copia tutto e Svuota blu, uguali e affiancati */
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo{ display:flex; gap:10px; }
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > .btn{ flex:1 1 0; min-width:0; margin:0; justify-content:center; background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:10px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
