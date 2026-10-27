@@ -4035,11 +4035,16 @@ function temaMinimal(){
 }
 // il foglio dell'app da accendere: per le pagine chiaro tranne che in
 // scuro; per la schermata dei tag scuro tranne che in chiaro
+// colore del pulsante Reparto della home (Impostazioni → Pulsante della
+// home): pochi colori scuri abbastanza da tenere leggibile il bianco
+const MPULSANTE_KEY = 'eo_minimal_pulsante_v1';
+const MPULSANTI = [['blu', 'Blu', '#1f4e79'], ['teal', 'Verde acqua', '#0e7571'], ['rame', 'Rame', '#b0562f'], ['viola', 'Viola', '#5b4a9e'], ['bordeaux', 'Bordeaux', '#8a3550'], ['grafite', 'Grafite', '#36414f']];
 const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
 const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';
 if(UI_MINIMAL){
   applicaTema(foglioPagine(temaMinimal()));
   document.documentElement.dataset.mTema = temaMinimal();
+  try{ const c = localStorage.getItem(MPULSANTE_KEY); if(MPULSANTI.some(x => x[0] === c)) document.documentElement.dataset.mPulsante = c; } catch(e){}
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
   // icona e nome propri ("Aggiungi a Home" prende quelli della pagina aperta)
@@ -9401,12 +9406,12 @@ function repartoDelSettore(s){
   return m ? m[1].toLowerCase() : 'geriatria';
 }
 // FESTIVI: sabato, domenica e festività nazionali (Pasqua e Pasquetta
-// calcolate per l'anno)
+// calcolate per l'anno), più il 2 novembre, santo patrono di Schiavonia
 function eFestivo(d){
   d = d || new Date();
   if(d.getDay() === 0 || d.getDay() === 6) return true;
   const mmgg = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  if(['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'].includes(mmgg)) return true;
+  if(['01-01','01-06','04-25','05-01','06-02','08-15','11-01','11-02','12-08','12-25','12-26'].includes(mmgg)) return true;
   const Y = d.getFullYear(), a = Y % 19, b = Math.floor(Y / 100), c = Y % 100, dd = Math.floor(b / 4), e = b % 4,
     f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - dd - g + 15) % 30,
     i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
@@ -22733,6 +22738,22 @@ function editorLettereSvuota(){
   .m-ingr .m-ss{ margin-top:2px; font-size:13px; color:var(--m-muted); }
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
   .m-ingr.m-pri{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  /* il colore scelto in Impostazioni (pieno nel chiaro, sfumato nello scuro) */
+  html[data-m-pulsante="teal"]{ --m-pri:#0e7571; --m-pri-a:#11807b; --m-pri-b:#0a5552; }
+  html[data-m-pulsante="rame"]{ --m-pri:#b0562f; --m-pri-a:#b45a33; --m-pri-b:#8a4223; }
+  html[data-m-pulsante="viola"]{ --m-pri:#5b4a9e; --m-pri-a:#5f4ea6; --m-pri-b:#45387a; }
+  html[data-m-pulsante="bordeaux"]{ --m-pri:#8a3550; --m-pri-a:#8e3854; --m-pri-b:#6a283d; }
+  html[data-m-pulsante="grafite"]{ --m-pri:#36414f; --m-pri-a:#3b4757; --m-pri-b:#283039; }
+  html[data-m-pulsante]:not([data-m-pulsante="blu"]) .m-ingr.m-pri.m-rep-home{ background:var(--m-pri); border-color:var(--m-pri); }
+  html[data-m-tema="scuro"][data-m-pulsante]:not([data-m-pulsante="blu"]) .m-ingr.m-pri.m-rep-home{ background:linear-gradient(140deg, var(--m-pri-a), var(--m-pri-b)); border-color:var(--m-pri-a); }
+  .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+  .m-pulsanti button{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:var(--c); cursor:pointer; box-shadow:0 0 0 2px var(--m-bg), 0 0 0 2px transparent; transition:box-shadow .2s, transform .12s var(--m-molla); display:grid; place-items:center; color:#fff; }
+  .m-pulsanti button:active{ transform:scale(.9); }
+  .m-pulsanti button[aria-pressed="true"]{ box-shadow:0 0 0 3px var(--m-bg), 0 0 0 5px var(--c); }
+  .m-pulsanti button svg{ width:18px; height:18px; opacity:0; transition:opacity .2s; }
+  .m-pulsanti button[aria-pressed="true"] svg{ opacity:1; }
+  html[data-m-tema="scuro"] .m-pulsanti button[data-c="grafite"]{ --c:#4a5768; }
+  .m-pulsante-nome{ text-align:center; margin-top:8px; font-size:13px; color:var(--m-muted); }
   .m-ingr.m-pri :is(.m-ss, .m-sn small, svg){ color:rgba(255,255,255,.78); }
   /* la scritta "Reparto · Settore" (e la sua icona) in bianco pieno */
   .m-ingr.m-pri .m-sh, .m-ingr.m-pri .m-sh svg{ color:#fff; }
@@ -24737,6 +24758,8 @@ sc.addEventListener('focusout', e => {
     v = aggiungiUnitaMancantiTesto(v);
     if(v !== t.value){ t.value = v; alza(t); }
     D.provv = v; salvaOra(); pianificaAiuti();
+    // il menu "/" chiuso senza scegliere: niente "- /" lasciato lì
+    setTimeout(() => { if(!strumentoAperto() && document.activeElement !== t) pulisciComandiProvv(); });
   }
   if(t.id === 'm-eo'){ D.eo = t.value; salvaOra(); }
 });
@@ -24933,6 +24956,28 @@ function apriStrumenti(){
   alza(t);
   t.dispatchEvent(new Event('input', { bubbles:true }));
 }
+// chiuso uno strumento (o il menu "/" senza sceglierne uno), nei
+// provvedimenti non resta niente di suo: via i comandi "/..." e le righe
+// rimaste vuote ("-", "- /", "- EGA:", "- VFG"); quel che lo strumento ha
+// scritto (la riga dell'EGA, il VFG, lo score) resta
+function pulisciComandiProvv(){
+  const t = $m('#m-provv'); if(!t || !t.isConnected) return;
+  const chiavi = comandiCostruisciElenco().filter(c => c.inserisci.startsWith('/')).flatMap(c => c.chiavi)
+    .sort((x, y) => y.length - x.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const reCmd = new RegExp('(^|[ \\t])\\/(?:' + chiavi.join('|') + ')(?![a-z0-9])[ \\t]*', 'gim');
+  const v = t.value.replace(reCmd, '$1').split('\n')
+    .filter(r => !/^\s*(?:-\s*(?:\/|EGA:?|VFG)?|\/|EGA:?|VFG)\s*$/i.test(r))
+    .map(r => r.replace(/[ \t]+$/, '')).join('\n');
+  if(v === t.value) return;
+  t.value = v; alza(t);
+  // come se si fosse scritto: i trigger tolti si possono riaprire
+  t.dispatchEvent(new Event('input', { bubbles:true }));
+  salvaOra();
+}
+const strumentoAperto = () => !!document.querySelector('[id$="-overlay"].show');
+new MutationObserver(ms => {
+  if(ms.some(m => m.oldValue && /\bshow\b/.test(m.oldValue) && !m.target.classList.contains('show'))) setTimeout(() => { if(!strumentoAperto()) pulisciComandiProvv(); });
+}).observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'], attributeOldValue:true });
 // il menu dell'app, ma dentro la scheda: sempre sopra la riga che si sta
 // scrivendo (la scheda scorre se serve), mai sotto il pulsante "Copia"
 const corpoScheda = $m('#m-s-corpo');
@@ -25130,6 +25175,23 @@ if(temaChiaro && temaScuro){
   temi.forEach(([c, t]) => { c.removeAttribute('onclick'); c.addEventListener('click', () => impostaTemaMinimal(t)); });
   renderImpostazioniTema = () => { const att = temaMinimal(); temi.forEach(([c, t]) => c.classList.toggle('active', t === att)); };
   renderImpostazioniTema();
+  // sotto il tema, il colore del pulsante Reparto della home
+  const gruppo = document.createElement('div');
+  gruppo.className = 'group';
+  gruppo.innerHTML = `<div class="group-label" style="text-align:center;">Pulsante della home</div><div class="m-pulsanti">${MPULSANTI.map(([k, n, c]) => `<button type="button" data-c="${k}" style="--c:${c}" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join('')}</div><div class="m-pulsante-nome"></div>`;
+  temaChiaro.closest('.group').after(gruppo);
+  const segnaPulsante = () => {
+    const att = document.documentElement.dataset.mPulsante || 'blu';
+    gruppo.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === att)));
+    gruppo.querySelector('.m-pulsante-nome').textContent = MPULSANTI.find(x => x[0] === att)[1];
+  };
+  gruppo.addEventListener('click', e => {
+    const b = e.target.closest('button[data-c]'); if(!b) return;
+    document.documentElement.dataset.mPulsante = b.dataset.c;
+    try{ localStorage.setItem(MPULSANTE_KEY, b.dataset.c); } catch(e){}
+    segnaPulsante();
+  });
+  segnaPulsante();
 }
 const syncBox = document.getElementById('sync-group');
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
