@@ -23658,17 +23658,17 @@ function barra(titolo, azione){
 // ognuno vede il suo settore
 function contiHome(){
   const wm = getWardMap(), ap = loadAppoggi();
-  let visti = 0, copiati = 0, copiatiCons = 0;
+  let visti = 0, copiati = 0, copiatiCons = 0, ricDa = 0, ricCop = 0;
   const nomi = new Set(), ric = new Set(ricoveratiEO());
   settori().forEach(s => [...(wm[s] || []).map(bedName), ...(ap[s] || [])].forEach(n => nomi.add(n)));
   ric.forEach(n => nomi.add(n));
   nomi.forEach(n => {
     const i = infoLetto(n);
-    if(i.vistoOggi){ visti++; if(i.copiato){ copiati++; if(!ric.has(n)) copiatiCons++; } }
+    if(i.vistoOggi){ visti++; if(i.copiato){ copiati++; if(!ric.has(n)) copiatiCons++; else ricCop++; } else if(ric.has(n)) ricDa++; }
   });
   // copiatiCons: senza i ricoveri, che hanno regole loro e non passano
   // dalle consegne
-  return { visti, copiati, copiatiCons };
+  return { visti, copiati, copiatiCons, ricDa, ricCop };
 }
 // lo stato dell'accesso, letto dal riquadro della sincronizzazione dell'app
 function statoAccount(){
@@ -23773,7 +23773,7 @@ function segnaFatto(btn){
 }
 function vHome(){
   barra();
-  const { visti, copiati, copiatiCons } = contiHome();
+  const { visti, copiati, copiatiCons, ricDa, ricCop } = contiHome();
   const festivo = eFestivo(new Date());
   const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
@@ -23788,6 +23788,9 @@ function vHome(){
     ? [dimOggi && `${dimOggi} oggi`, dimDomani && `${dimDomani} domani`, (dimSett > dimOggi + dimDomani) && `${dimSett} in settimana`].filter(Boolean).join(' · ')
     : 'Nessuna in programma';
   const daCopiare = visti - copiati;
+  // nel conteggio si dice quanti sono ricoveri: "1 copiato (ricovero)",
+  // "3 da copiare (1 ricovero)"
+  const quantiRic = (r, n) => !r ? '' : r === n ? ` (${r === 1 ? 'ricovero' : 'ricoveri'})` : ` (${r} ricover${r === 1 ? 'o' : 'i'})`;
   // post-degenze in sospeso; quelle già da controllare (dal 10° giorno) in evidenza
   const pd = Object.values(caricaPostDegenze());
   const pdScadute = pd.filter(p => avvisoPostDegenza(p) <= Date.now()).length;
@@ -23802,7 +23805,7 @@ function vHome(){
         <span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
         <span class="m-ss">${st.n - st.visti} da vedere · ${st.visti - st.cop ? `${st.visti - st.cop} diar${st.visti - st.cop === 1 ? 'io' : 'i'} da copiare` : (st.visti ? 'diari tutti copiati' : 'nessun diario')}</span></button>`
     : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
-      visti ? (daCopiare ? `${daCopiare} da copiare · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
+      visti ? (daCopiare ? `${daCopiare} da copiare${quantiRic(ricDa, daCopiare)} · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}${quantiRic(ricCop, copiati)}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore');
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
@@ -24193,7 +24196,9 @@ function vAggCons(){
     <div id="m-aggcons"></div>`;
   const box = $m('#m-aggcons');
   conPazientiFermi(() => {
-    const entries = ordinaPazientiPerLetto(schedeConDatiPerGiorno(false), true);
+    // senza i ricoveri di oggi: hanno regole loro e non passano dalle consegne
+    const ric = new Set(ricoveratiEO());
+    const entries = ordinaPazientiPerLetto(schedeConDatiPerGiorno(false), true).filter(([, q]) => !ric.has(q.name));
     if(!entries.length){ box.innerHTML = '<p class="m-aggcons-vuoto">Nessun diario scritto oggi: le consegne si aggiornano a fine giro.</p>'; return; }
     renderAggiornaConsegne(box, entries);
   });
