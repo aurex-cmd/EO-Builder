@@ -9330,6 +9330,9 @@ function autosaveCurrentPatient(){
   // della scheda clinica: è quello che decide se il letto in Reparto
   // compare verde ("diario di oggi pronto") oppure viola
   patients[currentPatientId].esameAggiornatoIl = Date.now();
+  // i tag toccati (non le note del diario scritte da altrove): EO Pocket
+  // lo usa per dire "visitato oggi"
+  patients[currentPatientId].tagIl = Date.now();
   if(primaVoltaOggi) patients[currentPatientId].esameIniziatoOggiIl = Date.now();
   savePatients(patients);
 }
@@ -23121,6 +23124,7 @@ function editorLettereSvuota(){
   .m-rh-tondo svg{ position:absolute; inset:0; width:58px; height:58px; transform:rotate(-90deg); }
   .m-td-f{ fill:none; stroke:rgba(255,255,255,.18); stroke-width:9; }
   .m-td-a{ fill:none; stroke:#fff; stroke-width:9; stroke-linecap:round; }
+  .m-td-b{ fill:none; stroke:rgba(255,255,255,.45); stroke-width:9; stroke-linecap:round; }
   .m-rh-tondo b{ position:relative; font-size:15px; font-weight:800; letter-spacing:-.02em; color:#fff; } .m-rh-tondo b small{ font-size:9px; font-weight:600; }
   .m-set-carta .m-rep-link{ background:var(--m-sec); }
   .m-set-carta .m-rep-link.m-rep-cons{ display:flex; width:fit-content; margin:22px auto 0; }
@@ -23204,6 +23208,16 @@ function editorLettereSvuota(){
   .m-anello svg{ display:block; width:104px; height:104px; transform:rotate(-90deg); }
   .m-anello-f{ fill:none; stroke:var(--m-box); stroke-width:9; }
   .m-anello-a{ fill:none; stroke:var(--m-teal); stroke-width:9; stroke-linecap:round; stroke-dashoffset:276.5; transition:stroke-dashoffset 1s var(--m-molla); }
+  /* il secondo tratto dell'anello del giro: i visti, più chiari sotto i copiati */
+  .m-anello-b{ fill:none; stroke:var(--m-notte); opacity:.32; stroke-width:9; stroke-linecap:round; stroke-dashoffset:276.5; transition:stroke-dashoffset 1s var(--m-molla); }
+  .m-anello-mini .m-anello-b{ stroke-width:10; }
+  html[data-m-tema="scuro"] .m-anello-b{ stroke:var(--m-link); opacity:.4; }
+  /* da quanti giorni non si vede il letto: sotto il numero, che resta al centro */
+  .m-tl .m-gg{ position:absolute; left:0; right:0; bottom:5px; font-size:10px; font-weight:600; letter-spacing:0; line-height:1; color:var(--m-muted); pointer-events:none; }
+  .m-tl.m-critico .m-gg{ color:var(--m-critico); }
+  .m-leg-gg{ flex:0 0 auto; width:22px; font-size:9px; font-weight:600; color:var(--m-muted); text-align:center; }
+  .m-rep-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:22px; }
+  .m-set-carta .m-rep-links .m-rep-link{ display:flex; width:auto; margin:0; }
   .m-anello-in{ position:absolute; inset:0; display:grid; place-items:center; }
   .m-anello-in b{ display:block; font-size:22px; font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
   .m-anello-in b small{ font-size:13px; font-weight:600; }
@@ -23497,15 +23511,31 @@ function infoLetto(nome){
     e, id, p, occupato,
     diOggi: occupato && isOggi(p.esameAggiornatoIl),
     giorniFa: occupato ? giorniDiDifferenza(p.esameAggiornatoIl) : null,
+    vistoOggi: occupato && vistoOggi(p),
+    giorniVisita: occupato ? giorniDiDifferenza(ultimaVisita(p)) : null,
     copiato: !!(p && p.refertoCopiato && isOggi(p.refertoCopiatoIl)),
     pall, iso,
     consegne: cons ? ['V','E','S','C'].filter(l => cons[l] && !cons['fatto' + l]) : null,
     critico: !!loadCritici()[nome]
   };
 }
+// VISTO OGGI: la visita confermata con Fatto (visitaIl) o i tag toccati
+// oggi (tagIl, anche dall'app); le note del diario scritte da altrove e i
+// parametri vitali no. Le schede di prima di questa regola, senza né l'uno
+// né l'altro, valgono com'erano (esame salvato oggi) fino a quel momento
+const VISITE_DAL_KEY = 'eo_minimal_visite_dal_v1';
+const VISITE_DAL = (() => { try{ let t = +localStorage.getItem(VISITE_DAL_KEY); if(!t){ t = Date.now(); localStorage.setItem(VISITE_DAL_KEY, String(t)); } return t; } catch(e){ return Date.now(); } })();
+function vistoOggi(p){
+  if(isOggi(p.visitaIl) || isOggi(p.tagIl)) return true;
+  return !p.visitaIl && !p.tagIl && isOggi(p.esameAggiornatoIl) && p.esameAggiornatoIl < VISITE_DAL;
+}
+function ultimaVisita(p){ return Math.max(p.visitaIl || 0, p.tagIl || 0) || p.esameAggiornatoIl; }
+// sotto il numero, sui letti non visti oggi: da quanto non si vedono
+const scrittaGiorni = i => i.occupato && !i.vistoOggi && i.giorniVisita >= 1 && i.giorniVisita <= 3 ? (i.giorniVisita === 1 ? 'ieri' : i.giorniVisita + ' gg') : '';
 function classiLetto(i){
   const c = [];
-  if(i.occupato) c.push(i.diOggi ? 'm-oggi-l' : (i.giorniFa > 3 ? 'm-vecchio' : 'm-recente'));
+  // griglia unica: teal i visti oggi, tutti gli altri dello stesso grigio
+  if(i.occupato && i.vistoOggi) c.push('m-oggi-l');
   if(i.consegne) c.push('m-consegnato');
   if(i.critico) c.push('m-critico');
   if(i.pall.dimOggi) c.push('m-dimesso');
@@ -23521,8 +23551,8 @@ function palliniBasso(i, tocca){
 function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
-  return `<ul>${v('m-oggi-l', '<span class="m-leg-v">Visto oggi</span><span class="m-leg-d">Diario da copiare</span>')}${v('m-recente', 'Visto negli ultimi 3 giorni')}${v('m-vecchio', 'Visto più di 3 giorni fa')}${v('', 'Senza scheda')}
-    ${v('m-copiato', 'Diario copiato')}${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
+  return `<ul>${v('', 'Da vedere oggi: apre i tag')}${v('m-oggi-l', 'Visto oggi: apre il diario')}${v('m-copiato', 'Diario copiato')}<li><span class="m-leg-gg">ieri</span>Giorni dall'ultima visita (fino a 3)</li>
+    ${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
@@ -23619,7 +23649,7 @@ function contiHome(){
   ricoveratiEO().forEach(n => nomi.add(n));
   nomi.forEach(n => {
     const i = infoLetto(n);
-    if(i.diOggi){ visti++; if(i.copiato) copiati++; }
+    if(i.vistoOggi){ visti++; if(i.copiato) copiati++; }
   });
   return { visti, copiati };
 }
@@ -23750,7 +23780,7 @@ function vHome(){
   // una scheda sola, il Reparto: dentro Visita e Diari sono gli stessi letti
   const sett = settoreScelto(), st = sett && statoSettore(sett);
   const reparto = st
-    ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0)}</span>
+    ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0, st.n ? st.cop / st.n * 100 : 0)}</span>
         <span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
         <span class="m-ss">${st.n - st.visti} da vedere · ${st.visti - st.cop ? `${st.visti - st.cop} diar${st.visti - st.cop === 1 ? 'io' : 'i'} da copiare` : (st.visti ? 'diari tutti copiati' : 'nessun diario')}</span></button>`
     : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
@@ -23848,10 +23878,12 @@ function anelloHtml(){
 }
 const ANELLO_C = 2 * Math.PI * 44;
 // l'arco scorre fino al nuovo valore e la percentuale conta insieme a lui
-function aggiornaAnello(p, sotto, testo){
-  const a = $m('#m-anello-a'), el = $m('#m-anello-p'); if(!a || !el) return;
-  a.style.strokeDasharray = ANELLO_C;
-  requestAnimationFrame(() => { a.style.strokeDashoffset = ANELLO_C * (1 - p / 100); });
+function aggiornaAnello(p, sotto, testo, pc){
+  const a = $m('#m-anello-a'), b = $m('#m-anello-b'), el = $m('#m-anello-p'); if(!a || !el) return;
+  // con due tratti (b): b i visti, a i copiati; con uno solo, a
+  const pa = b ? (pc || 0) : p;
+  a.style.strokeDasharray = ANELLO_C; if(b) b.style.strokeDasharray = ANELLO_C;
+  requestAnimationFrame(() => { a.style.strokeDashoffset = ANELLO_C * (1 - pa / 100); if(b) b.style.strokeDashoffset = ANELLO_C * (1 - p / 100); });
   const da = el.dataset.v ? +el.dataset.v : 0, t0 = performance.now();
   el.dataset.v = p;
   cancelAnimationFrame(el._f);
@@ -23876,7 +23908,8 @@ function ricoveratiEO(){
   return nomi;
 }
 function vSettore(){
-  const diari = M.vista === 'diari';
+  // griglia unica: niente più Visita/Diari (si tocca il letto: tag o diario)
+  const diari = false;
   barra('');
   const ss = settori();
   const ricov = ricoveratiEO();
@@ -23889,21 +23922,20 @@ function vSettore(){
       <div class="m-set-su">
         <button class="m-set-indietro" data-m="mappa">${ICON.indietro}Tutti i settori</button>
         <div class="m-set-info"><div class="m-set-txt"><span id="m-anello-t"></span></div>
-          <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
+          <div class="m-anello m-anello-mini" id="m-anello"><div class="m-anello-o"><svg viewBox="0 0 104 104"><circle class="m-anello-f" cx="52" cy="52" r="44"/><circle class="m-anello-b" id="m-anello-b" cx="52" cy="52" r="44"/><circle class="m-anello-a" id="m-anello-a" cx="52" cy="52" r="44"/></svg><div class="m-anello-in"><div><b id="m-anello-p">0<small>%</small></b><span id="m-anello-s"></span></div></div></div></div></div>
       </div>
       <div class="m-set-carta" id="m-rep-dx"><span class="m-set-fondo" aria-hidden="true"></span><p class="m-rep-lbl" id="m-lbl-letti"><span class="m-lbl-t">Letti</span><button class="m-leg-btn" data-m="legenda" aria-expanded="false" aria-label="Cosa indicano colori e bollini">?</button></p><div class="m-legenda" id="m-legenda" hidden>${htmlLegenda()}</div><div class="m-griglia" id="m-letti"></div><p class="m-rep-lbl m-lbl-app">Appoggi</p><div class="m-griglia" id="m-appoggi"></div>
-        ${diari ? `<button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button>` : `<button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button>`}</div>
+        <div class="m-rep-links"><button class="m-rep-link m-rep-vitali" data-m="vitali">${ICON.vitali}Parametri vitali ${ICON.chev}</button><button class="m-rep-link m-rep-cons" data-m="aggcons">${ICON.consegne}Aggiorna consegne ${ICON.chev}</button></div></div>
     </div>`}`;
   // il selettore Visita/Diari, se c'è già, resta lo stesso: ridisegnarlo
   // interromperebbe la pillola mentre scorre verso l'altro pulsante
-  const vista = $m('#m-vista'), vecchio = vista.querySelector(':scope > #m-modo');
+  const vista = $m('#m-vista'), vecchio = null;
   if(vecchio){
     [...vista.children].forEach(el => { if(el !== vecchio) el.remove(); });
     vecchio.insertAdjacentHTML('beforebegin', titolo);
     vecchio.insertAdjacentHTML('afterend', corpo);
   } else {
-    vista.innerHTML = titolo + modo + corpo;
-    muoviPill(true);
+    vista.innerHTML = titolo + corpo;
   }
   disegnaLetti();
 }
@@ -23925,11 +23957,12 @@ function statoSettore(s){
   const nomi = s === RIC ? ricoveratiEO().map(n => [n, false])
     : [...(getWardMap()[s] || []).map(n => [bedName(n), false]), ...(loadAppoggi()[s] || []).map(n => [n, true])];
   const info = nomi.map(([n, ap]) => [ap, infoLetto(n), n]).filter(([ap, i, n]) => ap || i.occupato || !vu[n]).map(x => x[1]);
-  const oggi = info.filter(i => i.diOggi);
+  const oggi = info.filter(i => i.vistoOggi);
   return { nome:s === RIC ? 'Ricoveri' : nomeSettore(s), n:info.length, visti:oggi.length, cop:oggi.filter(i => i.copiato).length };
 }
-// tondo fermo (per la home): p da 0 a 100
-const tondo = p => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - p / 100)}"/></svg><b>${Math.round(p)}<small>%</small></b>`;
+// tondo fermo (per la home), due tratti: chiaro i visti, pieno i copiati
+// (pv e pc da 0 a 100); il numero è la percentuale dei visti
+const tondo = (pv, pc = 0) => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-b" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pv / 100)}"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pc / 100)}"/></svg><b>${Math.round(pv)}<small>%</small></b>`;
 
 /* ---------- la mappa del reparto ---------- */
 // tutti i settori insieme, ciascuno con i suoi letti in piccolo (appoggi in
@@ -23948,30 +23981,30 @@ function settoriMappa(){
   return out;
 }
 function htmlZona(g, k, azione){
-  const diari = M.vista === 'diari', vu = lettiVuoti();
-  let n = 0, f = 0;
+  const diari = false, vu = lettiVuoti();
+  let n = 0, f = 0, dc = 0;
   const mini = g.letti.map(([nome, et, ap]) => {
     const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
     if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
-    else if(ap || i.occupato || !vuoto){ n++; if(i.diOggi) f++; }
+    else if(ap || i.occupato || !vuoto){ n++; if(i.vistoOggi){ f++; if(!i.copiato) dc++; } }
     const cons = !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
     return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" data-n="${esc(nome)}">${esc(et)}${cons}</span>`;
   }).join('');
   const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
-  return { n, f, html:`<button class="m-zona${g.s === RIC ? ' m-zona-ric' : ''}${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
+  return { n, f, dc, html:`<button class="m-zona${g.s === RIC ? ' m-zona-ric' : ''}${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
       <span class="m-zona-t"><b>${esc(g.lettera)}</b><small>${conto}</small></span><span class="m-mini-g">${mini}</span></button>` };
 }
 function disegnaMappa(){
   const box = $m('#m-mappa'); if(!box) return;
-  const diari = M.vista === 'diari';
-  let tot = 0, fatti = 0;
+  const diari = false;
+  let tot = 0, fatti = 0, daCop = 0;
   box.classList.toggle('m-diari', diari);
   // i reparti aggiunti per oggi hanno il loro titolo sopra i settori e, in fondo, "Togli"
   // con un reparto aggiunto, anche quello di tutti i giorni ha il suo titolo
   const extra = getRepartiExtraOggi();
   let repPrima = extra.length ? null : getReparto();
   box.innerHTML = settoriMappa().map((g, k) => {
-    const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f;
+    const z = htmlZona(g, k, 'zoom'); tot += z.n; fatti += z.f; daCop += z.dc;
     const r = g.s === RIC ? repPrima : repartoDelSettore(g.s);
     const titolo = r !== repPrima ? `<p class="m-mappa-rep">${NOMI_REPARTO[r]}${r !== getReparto() ? '<small>solo oggi</small>' : ''}</p>` : '';
     repPrima = r;
@@ -23979,7 +24012,7 @@ function disegnaMappa(){
   }).join('') + (extra.length ? `<div class="m-mappa-togli">${extra.map(r => `<button data-m="togli-rep" data-r="${r}">Togli ${NOMI_REPARTO[r]}</button>`).join('')}</div>` : '');
   const sub = $m('#m-mappa-sub');
   // il conto di ogni settore è già nel suo riquadro: qui solo i diari ancora da copiare
-  const daCopiare = diari ? tot - fatti : 0;
+  const daCopiare = daCop;
   if(sub) sub.innerHTML = daCopiare ? `<b>${daCopiare}</b> diar${daCopiare === 1 ? 'io' : 'i'} da copiare · tocca un settore` : 'Tocca un settore';
 }
 // scelta del settore dalla mappa: gli altri settori svaniscono, poi ogni
@@ -24061,13 +24094,12 @@ function tileLetto(nome, etichetta, k, appena, appoggio){
   const i = infoLetto(nome);
   const armato = appoggio && rimuoviAppoggioArmato === M.settore + '|' + nome;
   const vuoto = !appoggio && !i.occupato && lettiVuoti()[nome];
-  return `<button class="m-tl ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}"${appoggio ? ' data-ap="1"' : ''} aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}">${esc(etichetta)}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
+  return `<button class="m-tl ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${nome === appena ? ' m-appena' : ''}${armato ? ' m-armato' : ''}" style="--i:${Math.min(k, 20)}" data-m="letto" data-n="${esc(nome)}"${appoggio ? ' data-ap="1"' : ''} aria-label="${esc(nome)}${appoggio ? ' (appoggio)' : ''}${scrittaGiorni(i) ? ', visto ' + (scrittaGiorni(i) === 'ieri' ? 'ieri' : scrittaGiorni(i).replace('gg', 'giorni fa')) : ''}">${esc(etichetta)}${scrittaGiorni(i) ? `<span class="m-gg" aria-hidden="true">${scrittaGiorni(i)}</span>` : ''}${htmlPallini(i)}${appoggio && !i.occupato && M.vista === 'visita' ? `<span class="m-togli" data-m="togli-appoggio" data-n="${esc(nome)}" aria-label="Togli l'appoggio">${ICON.x}</span>` : ''}</button>`;
 }
 function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
   if($m('#m-mappa')){ disegnaMappa(); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
-  const diari = M.vista === 'diari';
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
   const ric = M.settore === RIC;
   $m('#m-rep-dx').classList.toggle('m-ric', ric);
@@ -24075,12 +24107,7 @@ function disegnaLetti(appena){
   if(ric){
     const nomi = ricoveratiEO();
     el.innerHTML = nomi.map((n, k) => tileLetto(n, inizialiLetto(n), k, appena)).join('');
-    if(diari) anelloDiari(nomi.map(n => infoLetto(n)));
-    else {
-      const vistiR = nomi.filter(n => infoLetto(n).diOggi).length;
-      aggiornaAnello(nomi.length ? Math.round(vistiR / nomi.length * 100) : 0, '',
-        nomi.length ? `<b>${vistiR}</b> vist${vistiR === 1 ? 'o' : 'i'} su ${nomi.length}` : 'Nessun ricoverato');
-    }
+    anelloGiro(nomi.map(n => infoLetto(n)), 'Nessun ricoverato');
     return;
   }
   const letti = getWardMap()[M.settore] || [], app = loadAppoggi()[M.settore] || [];
@@ -24092,16 +24119,15 @@ function disegnaLetti(appena){
   const vu = lettiVuoti();
   const info = [...letti.map(n => [bedName(n), false]), ...app.map(n => [n, true])]
     .map(([n, ap]) => [n, ap, infoLetto(n)]).filter(([n, ap, i]) => ap || i.occupato || !vu[n]).map(x => x[2]);
-  if(diari){ anelloDiari(info); preparaAiuti(); return; }
-  const visti = info.filter(i => i.diOggi).length;
-  aggiornaAnello(info.length ? Math.round(visti / info.length * 100) : 0, '',
-    info.length ? `<b>${visti}</b> vist${visti === 1 ? 'o' : 'i'} su ${info.length} · ${info.length - visti} da vedere` : 'Tutti i letti sono vuoti');
+  anelloGiro(info, 'Tutti i letti sono vuoti');
+  preparaAiuti();
 }
-// Diari: l'anello dei diari copiati tra quelli scritti oggi nel settore
-function anelloDiari(info){
-  const oggi = info.filter(i => i.diOggi), cop = oggi.filter(i => i.copiato).length;
-  aggiornaAnello(oggi.length ? Math.round(cop / oggi.length * 100) : 0, '',
-    oggi.length ? `<b>${oggi.length - cop}</b> da copiare · ${cop} su ${oggi.length}` : 'Nessun diario di oggi');
+// l'anello del giro: due tratti, chiaro i visti e pieno i copiati; il
+// numero è la percentuale dei visti
+function anelloGiro(info, vuoto){
+  const n = info.length, visti = info.filter(i => i.vistoOggi).length, cop = info.filter(i => i.vistoOggi && i.copiato).length;
+  const testo = !n ? vuoto : [n - visti && `<b>${n - visti}</b> da vedere`, visti - cop && `<b>${visti - cop}</b> da copiare`].filter(Boolean).join(' · ') || 'Tutto visto e copiato';
+  aggiornaAnello(n ? Math.round(visti / n * 100) : 0, '', testo, n ? cop / n * 100 : 0);
 }
 function nuovoAppoggio(tile){
   if(tile.classList.contains('m-scrivi')) return;
@@ -24158,9 +24184,12 @@ function apriVisita(nome, daScheda){
     if(coloreIsolamento(iso)) setTimeout(() => { if(M.vista === 'eo' && M.letto === nome) apriIsolamento(iso); }, 350);
   }
 }
-function fineVisita(){
+function fineVisita(conferma){
   const nome = M.letto, torna = M.daScheda;
   if(typeof eseguiTuttiSalvataggiDiario === 'function') eseguiTuttiSalvataggiDiario();
+  // Fatto: il letto è visto oggi, anche senza aver cambiato niente (con
+  // Indietro conta solo se si sono toccati i tag, vedi vistoOggi)
+  if(conferma){ const ps = loadPatients(), e = Object.entries(ps).find(([, q]) => q.name === nome); if(e && schedaHaDati(e[1].state)){ e[1].visitaIl = Date.now(); savePatients(ps); } }
   indietro();
   if(torna){ const e = voce(nome); if(e) setTimeout(() => apriScheda(nome), 120); }
   else disegnaLetti();
@@ -24264,7 +24293,7 @@ function chiudiScheda(){
   clearTimeout($m('#m-scheda')._t);
   // i letti si ridisegnano a scheda già scesa, per non frenarne la discesa
   // senza animazione: il letto torna fermo al suo posto
-  if(M.vista === 'diari') setTimeout(() => { if(M.vista === 'diari') disegnaLetti(); }, 430);
+  if(M.vista === 'visita') setTimeout(() => { if(M.vista === 'visita') disegnaLetti(); }, 430);
 }
 function riga(id, nome, val, ph, nota){
   const fid = 'm-f-' + id.replace(/[^a-z0-9]/gi, '');
@@ -24357,12 +24386,12 @@ function preparaAiuti(){
   codaAiuti = (mostrati.length ? mostrati : (getWardMap()[M.settore] || []).map(bedName).concat(loadAppoggi()[M.settore] || []))
     .map(n => Object.keys(ps).find(id => ps[id].name === n)).filter(id => id && schedaHaDati(ps[id].state));
   const passo = scadenza => {
-    while(codaAiuti.length && M.vista === 'diari' && !$m('#m-scheda').classList.contains('m-su')){
+    while(codaAiuti.length && M.vista === 'visita' && !$m('#m-scheda').classList.contains('m-su')){
       const id = codaAiuti.shift(), p = loadPatients()[id];
       if(p) calcolaAiuti(p, id);
       if(!scadenza || !scadenza.timeRemaining || scadenza.timeRemaining() < 12) break;
     }
-    if(codaAiuti.length && M.vista === 'diari') quandoLibero(passo);
+    if(codaAiuti.length && M.vista === 'visita') quandoLibero(passo);
   };
   quandoLibero(passo);
 }
@@ -24672,7 +24701,7 @@ document.getElementById('m-app').addEventListener('click', e => {
     const box = $m('#m-legenda'); if(!box) return;
     box.hidden = !box.hidden; el.setAttribute('aria-expanded', String(!box.hidden));
   }
-  else if(a === 'fatto') fineVisita();
+  else if(a === 'fatto') fineVisita(true);
   else if(a === 'segna') segnaFatto(el);
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
@@ -24693,9 +24722,9 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'rubrica') apriRubrica();
   else if(a === 'letto'){
     const nome = el.dataset.n;
-    if(M.vista === 'visita') apriVisita(nome);
-    else if(infoLetto(nome).occupato) apriScheda(nome);
-    else { showToast('Nessun diario: parti dall\'esame obiettivo'); apriVisita(nome); }
+    // visto oggi: il diario; altrimenti la visita coi tag
+    if(infoLetto(nome).vistoOggi) apriScheda(nome);
+    else apriVisita(nome);
   }
   else if(a === 'chiudi') chiudiScheda();
   else if(a === 'strumenti') apriStrumenti();
@@ -24742,7 +24771,7 @@ if(resetEo){
   const fattoEo = document.createElement('button');
   fattoEo.className = 'btn m-eo-fatto'; fattoEo.type = 'button'; fattoEo.textContent = 'Fatto';
   // dentro un ricovero, Fatto chiude l'esame obiettivo e torna al ricovero
-  fattoEo.addEventListener('click', () => { if(esameObiettivoInlineAperto) chiudiEsameObiettivoInline(); else if(M.vista === 'eo') fineVisita(); });
+  fattoEo.addEventListener('click', () => { if(esameObiettivoInlineAperto) chiudiEsameObiettivoInline(); else if(M.vista === 'eo') fineVisita(true); });
   resetEo.after(fattoEo);
 }
 
