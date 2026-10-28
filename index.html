@@ -25447,6 +25447,20 @@ if(testoSync) new MutationObserver(aggiornaAccount).observe(testoSync, { childLi
 setInterval(() => { if(document.visibilityState === 'visible' && document.querySelector('#impostazioni-view.m-solo-account')) aggiornaAccount(); }, 30000);
 const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
 aggiornaScenaAccount();
+// aprendo la pagina Account da connessi l'animazione si rivede ogni volta
+// (lucchetto che si chiude, puntini, spunta): si parte da "non connesso" e
+// dopo un attimo si passa a connesso
+let accountAperto = false;
+new MutationObserver(() => {
+  const v = document.getElementById('impostazioni-view');
+  const aperto = v.classList.contains('m-solo-account') && v.style.display !== 'none';
+  if(aperto && !accountAperto && statoAccount() === 'Connesso'){
+    scenaAccount.classList.remove('m-connesso');
+    void scenaAccount.offsetWidth;
+    setTimeout(aggiornaScenaAccount, 250);
+  }
+  accountAperto = aperto;
+}).observe(document.getElementById('impostazioni-view'), { attributes:true, attributeFilter:['style', 'class'] });
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
   const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount().toLowerCase();
