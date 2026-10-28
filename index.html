@@ -9620,7 +9620,14 @@ function aggiungiLetto(settore, valoreGrezzo){
   if(!map[settore]){ showToast('Settore non più esistente'); return; }
   const giaEsistente = Object.values(map).some(lista => lista.includes(numero));
   if(giaEsistente){ showToast('Esiste già un letto "' + numero + '" nella mappa'); return; }
-  map[settore].push(numero);
+  // al suo posto in ordine di numero (9.2 prima di 10.1, 15.1 prima di
+  // 15.2): prima del primo letto con numero più alto; i nomi senza
+  // numero ("MR") in coda. Gli altri letti restano dove sono
+  const lista = map[settore];
+  const ordine = new Intl.Collator('it', { numeric:true });
+  const conNumero = v => /^\d/.test(String(v));
+  const dove = conNumero(numero) ? lista.findIndex(v => conNumero(v) && ordine.compare(String(v), numero) > 0) : -1;
+  if(dove === -1) lista.push(numero); else lista.splice(dove, 0, numero);
   salvaWardMap(map);
   showToast('Letto "' + numero + '" aggiunto a ' + settore);
 }
