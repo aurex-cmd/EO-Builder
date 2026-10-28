@@ -23090,9 +23090,16 @@ function editorLettereSvuota(){
   /* i pulsanti principali delle pagine nel blu notte della scheda Visita della home */
   html[data-ui="minimal"] .m-pagina .btn.primary, html[data-ui="minimal"]:not([data-m-orig]) .admit-copy-btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
   html[data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:#fff !important; }
-  /* Editor di testo: Copia tutto e Svuota blu, uguali e affiancati */
-  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo{ display:flex; gap:10px; }
-  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > .btn{ flex:1 1 0; min-width:0; margin:0; justify-content:center; background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  /* Editor di testo: affiancati, Copia tutto pieno e Svuota grigio (cancella
+     il testo: al primo tocco chiede conferma) */
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo{ display:flex; gap:10px; margin-top:12px; }
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > .btn{ flex:1 1 0; min-width:0; height:46px; margin:0; padding:0 12px; justify-content:center; border-radius:12px; }
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > .btn:first-child{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > #editor-svuota-btn{ background:var(--m-sec); border-color:var(--m-sec); color:var(--m-ink); }
+  html[data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > #editor-svuota-btn.m-armato{ background:var(--m-atb2); border-color:var(--m-atb2); color:#fff; }
+  html[data-ui="minimal"] #editor-view .m-ed-sub{ margin:-12px 0 18px; }
+  html[data-ui="minimal"] .m-pagina #editor-lettere-testo{ padding:14px 16px; border-radius:14px; font-size:16px; line-height:1.55; color:var(--m-ink); }
+  html[data-ui="minimal"] .m-pagina #editor-lettere-testo::placeholder{ color:var(--m-faint); }
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:10px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
@@ -24464,6 +24471,26 @@ const renderAvvisoPdApp = renderAvvisoPostDegenze;
 window.renderAvvisoPostDegenze = function(){
   renderAvvisoPdApp();
   document.querySelectorAll('#pd-avviso-lista .pd-manca').forEach(m => { m.textContent = m.textContent.replace(/^\s*—\s*/, ''); });
+};
+// EDITOR DI TESTO: le istruzioni sotto il titolo, nel riquadro solo l'invito
+(() => {
+  const ta = document.getElementById('editor-lettere-testo'), box = document.getElementById('editor-contenuto');
+  if(!ta || !box) return;
+  ta.placeholder = 'Scrivi o incolla qui';
+  const sub = document.createElement('p'); sub.className = 'm-sub m-ed-sub';
+  sub.textContent = 'Per le lettere: i referti incollati vanno su una riga, le unità di misura degli esami si aggiungono da sole.';
+  box.before(sub);
+})();
+// Svuota: al primo tocco "Confermi?" in rosso, come Ripristina in Backup
+const editorSvuotaApp = editorLettereSvuota;
+window.editorLettereSvuota = function(){
+  editorSvuotaApp();
+  const btn = document.getElementById('editor-svuota-btn');
+  clearTimeout(btn._t);
+  if(editorSvuotaArmato){
+    btn.textContent = 'Confermi?'; btn.classList.add('m-armato');
+    btn._t = setTimeout(() => btn.classList.remove('m-armato'), 3000);
+  } else btn.classList.remove('m-armato');
 };
 // BACKUP: le copie in una scheda, con il giorno detto a parole e quante
 // schede contiene; Ripristina (al primo tocco "Confermi?") resta quello dell'app
