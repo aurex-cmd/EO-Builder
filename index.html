@@ -22589,7 +22589,13 @@ function editorLettereSvuota(){
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view :is(input, textarea, select){ background:#f6f8fb; border-color:#dde4ec; color:#141b22; }
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view :is(input, textarea)::placeholder{ color:#8a97a6; }
   html[data-ui="minimal"] #clinical-view #output{ font-family:var(--m-scheda); font-size:14px; line-height:1.55; }
-  /* Copia referto e Fatto: due pulsanti uguali, metà spazio ciascuno */
+  /* Copia referto e Fatto: due pulsanti uguali, metà spazio ciascuno. In
+     Visita Vai al diario prende il posto di Copia referto; aperto dalla
+     scheda del diario resta solo Fatto */
+  html[data-ui="minimal"] #clinical-view #output-card .row > .m-eo-diario{ display:none; }
+  html[data-ui="minimal"] #clinical-view #output-card .row[data-m-eo] > .btn.primary{ display:none; }
+  html[data-ui="minimal"] #clinical-view #output-card .row[data-m-eo="visita"] > .m-eo-diario{ display:flex; flex:1 1 0; min-width:0; margin:0; height:46px; padding:0 12px; justify-content:center; align-items:center; border-radius:12px; font-weight:600; box-shadow:none; background:var(--m-acc-d); border:1px solid var(--m-acc-d); color:#fff; }
+  html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view #output-card .row[data-m-eo="visita"] > .m-eo-diario{ background:var(--m-notte); border-color:var(--m-notte); }
   html[data-ui="minimal"] #clinical-view #output-card .row{ display:flex; gap:10px; }
   html[data-ui="minimal"] #clinical-view #output-card .row > .btn:is(.primary, .m-eo-fatto){ flex:1 1 0; min-width:0; margin:0; height:46px; padding:0 12px; justify-content:center; background:var(--m-acc-d); border:1px solid var(--m-acc-d); border-radius:12px; color:#fff; font-weight:600; box-shadow:none; }
   html[data-ui="minimal"][data-m-tema="chiaro"] #clinical-view #output-card .row > .btn:is(.primary, .m-eo-fatto){ background:var(--m-notte); border-color:var(--m-notte); }
@@ -24333,6 +24339,7 @@ function vAggCons(){
 
 /* ---------- visita: la schermata dei tag dell'app ---------- */
 function apriVisita(nome, daScheda){
+  modoEo(daScheda ? 'scheda' : 'visita');
   vai('eo', { letto:nome, daScheda:!!daScheda });
   apriLetto(nome);
   mostraVista('clinical');
@@ -24980,7 +24987,24 @@ if(resetEo){
   // dentro un ricovero, Fatto chiude l'esame obiettivo e torna al ricovero
   fattoEo.addEventListener('click', () => { if(esameObiettivoInlineAperto) chiudiEsameObiettivoInline(); else if(M.vista === 'eo') fineVisita(true); });
   resetEo.after(fattoEo);
+  // in Visita, al posto di Copia referto (il diario si copia dalla sua
+  // scheda): Vai al diario, cioè Fatto e subito la scheda del diario di quel
+  // letto (per chi compila al PC). Aperto dalla scheda, Fatto basta; nel
+  // Ricovero resta Copia referto
+  const diarioEo = document.createElement('button');
+  diarioEo.className = 'btn m-eo-diario'; diarioEo.type = 'button'; diarioEo.textContent = 'Vai al diario';
+  diarioEo.addEventListener('click', () => {
+    if(M.vista !== 'eo') return;
+    const nome = M.letto;
+    fineVisita(true);
+    setTimeout(() => { if(voce(nome)) apriScheda(nome); }, 160);
+  });
+  resetEo.parentElement.prepend(diarioEo);
 }
+const rigaEo = resetEo && resetEo.parentElement;
+const modoEo = m => { if(rigaEo){ if(m) rigaEo.dataset.mEo = m; else delete rigaEo.dataset.mEo; } };
+const apriEoInlineApp = apriEsameObiettivoInline;
+window.apriEsameObiettivoInline = function(){ modoEo(null); return apriEoInlineApp.apply(this, arguments); };
 
 const sc = $m('#m-scheda');
 sc.addEventListener('input', e => {
