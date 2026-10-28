@@ -22966,7 +22966,12 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-out .row{ margin-top:14px; }
   html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in[style*="none"]{ display:none !important; }
   html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in .m-acc-righe{ flex:1 1 100%; margin-bottom:6px; }
-  html[data-ui="minimal"] .m-pagina .sync-box :is(#sync-logged-out .row, #sync-logged-in) .btn{ height:44px; margin:0; padding:0 18px; }
+  /* azioni larghe quanto il riquadro sopra: Accedi (principale) e Crea
+     account a metà ciascuno; da connesso Disconnetti su tutta la riga */
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-out .row{ display:grid; grid-template-columns:1fr 1fr; }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(#sync-logged-out .row, #sync-logged-in) .btn{ display:flex; align-items:center; justify-content:center; gap:6px; height:46px; margin:0; padding:0 12px; border-radius:10px; font-size:15px; font-weight:600; box-shadow:none; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in .btn{ flex:1 1 100%; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in .btn svg{ margin:0 !important; }
   html[data-ui="minimal"] .m-pagina .sync-box #sync-status:empty{ display:none; }
   html[data-ui="minimal"] #consegne-view textarea{ width:100%; padding:12px; }
   /* Consegne Weekend: riepilogo in cima, inserimento in un riquadro, legenda in "Come funziona" */
