@@ -22815,6 +22815,23 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #rubrica-editor > div:last-child{ flex-direction:row-reverse; gap:10px !important; margin-top:12px !important; }
   html[data-ui="minimal"] #rubrica-editor .btn{ height:46px; border-radius:12px; border:0; background:var(--m-sec); color:var(--m-ink); box-shadow:none; font-family:var(--m-sans); font-size:15px; font-weight:600; }
   html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
+  /* BACKUP: sottotitolo breve al posto del paragrafo; le copie in una
+     scheda bianca, ora grande e sotto il giorno e quante schede contiene;
+     Ripristina è un bottone secondario che al primo tocco chiede conferma */
+  html[data-ui="minimal"] #backup-view .group > .group-label:first-child{ display:none; }
+  html[data-ui="minimal"] #backup-view .m-bk-sub{ margin:-12px 0 20px; }
+  html[data-ui="minimal"] #backup-lista > .m-lbl{ margin:0 2px 8px; }
+  html[data-ui="minimal"] .m-bk-carta{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  html[data-ui="minimal"] .m-bk-r{ display:flex; align-items:center; gap:12px; padding:12px 12px 12px 14px; border-top:1px solid var(--m-line); }
+  html[data-ui="minimal"] .m-bk-r:first-child{ border-top:0; }
+  html[data-ui="minimal"] .m-bk-r > svg{ width:22px; height:22px; flex:none; color:var(--m-muted); }
+  html[data-ui="minimal"] .m-bk-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  html[data-ui="minimal"] .m-bk-t b{ font-size:16px; font-weight:500; color:var(--m-ink); font-variant-numeric:tabular-nums; }
+  html[data-ui="minimal"] .m-bk-t small{ font-size:13px; color:var(--m-muted); }
+  html[data-ui="minimal"] .m-bk-r button{ flex:none; height:38px; padding:0 14px; border:0; border-radius:10px; background:var(--m-sec); color:var(--m-ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s, color .2s, transform .14s var(--m-molla); }
+  html[data-ui="minimal"] .m-bk-r button:active{ transform:scale(.96); }
+  html[data-ui="minimal"] .m-bk-r button.m-armato{ background:var(--m-atb2); color:#fff; }
+  html[data-ui="minimal"] .m-bk-vuoto{ font-size:15px; color:var(--m-muted); margin:0 2px; }
   /* POST-DEGENZE: nell'avviso dal 10° giorno, paziente e cosa manca su due righe */
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
@@ -24447,6 +24464,29 @@ const renderAvvisoPdApp = renderAvvisoPostDegenze;
 window.renderAvvisoPostDegenze = function(){
   renderAvvisoPdApp();
   document.querySelectorAll('#pd-avviso-lista .pd-manca').forEach(m => { m.textContent = m.textContent.replace(/^\s*—\s*/, ''); });
+};
+// BACKUP: le copie in una scheda, con il giorno detto a parole e quante
+// schede contiene; Ripristina (al primo tocco "Confermi?") resta quello dell'app
+window.renderBackupLista = function(){
+  const vista = document.getElementById('backup-view'), lista = document.getElementById('backup-lista');
+  if(!lista) return;
+  if(vista && !vista.querySelector('.m-bk-sub')){
+    const sub = document.createElement('p'); sub.className = 'm-sub m-bk-sub';
+    sub.textContent = 'Una copia di tutte le schede al massimo ogni 15 minuti, solo su questo dispositivo. Se qualcosa va storto, torni a una versione precedente.';
+    lista.parentElement.before(sub);
+  }
+  let copie = [];
+  try{ copie = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); } catch(e){}
+  if(!copie.length){ lista.innerHTML = '<p class="m-bk-vuoto">Ancora nessuna copia: la prima arriva 15 minuti dopo la prima modifica.</p>'; return; }
+  const giorno = ts => { const g = chiaveGiorno(ts); return g === chiaveGiorno(Date.now()) ? 'oggi' : g === chiaveGiorno(Date.now() - 864e5) ? 'ieri' : (d => `${NOMI_GIORNI_SETTIMANA[d.getDay()]} ${d.getDate()} ${MESI_ITALIANI[d.getMonth()]}`)(new Date(ts)); };
+  const ora = ts => new Date(ts).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+  const quante = raw => { try{ const n = Object.values(JSON.parse(raw) || {}).filter(p => p && schedaHaDati(p.state)).length; return n === 1 ? '1 scheda' : n + ' schede'; } catch(e){ return ''; } };
+  const icona = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>';
+  lista.innerHTML = `<p class="m-lbl">Copie · ${copie.length}</p><div class="m-bk-carta">${copie.slice().reverse().map(b => {
+    const armato = backupArmatoTs === b.ts;
+    return `<div class="m-bk-r">${icona}<div class="m-bk-t"><b>${ora(b.ts)}</b><small>${[giorno(b.ts), quante(b.data)].filter(Boolean).join(' · ')}</small></div>`
+      + `<button type="button" class="${armato ? 'm-armato' : ''}" onclick="ripristinaBackup(${b.ts})">${armato ? 'Confermi?' : 'Ripristina'}</button></div>`;
+  }).join('')}</div>`;
 };
 const renderDimissioniApp = renderCalendarioDimissioni;
 window.renderCalendarioDimissioni = function(){
