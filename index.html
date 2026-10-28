@@ -22783,8 +22783,8 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #rubrica-box{ position:relative; max-width:600px; min-height:calc(100% - 0px); box-sizing:border-box; margin-top:auto; background:var(--m-bg); border:0; border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); padding:24px 18px calc(28px + env(safe-area-inset-bottom,0px)); font-family:var(--m-sans); color:var(--m-ink); }
   html[data-ui="minimal"] #rubrica-box::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
   html[data-ui="minimal"] #rubrica-box .farmaco-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; padding:0; border:0; }
-  html[data-ui="minimal"] #rubrica-box .tool-titolo{ margin:0; display:block; font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.025em; color:var(--m-ink); }
-  html[data-ui="minimal"] #rubrica-box .tool-titolo .hicon{ display:none; }
+  html[data-ui="minimal"] #rubrica-box .tool-titolo{ margin:0; display:flex; align-items:center; gap:10px; font-family:var(--m-scheda); font-size:24px; font-weight:800; letter-spacing:-.025em; color:var(--m-notte); }
+  html[data-ui="minimal"] #rubrica-box .tool-titolo .hicon{ width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   html[data-ui="minimal"] #rubrica-chiudi-btn{ position:relative; width:30px; height:30px; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font-size:13px; line-height:30px; padding:0; }
   html[data-ui="minimal"] #rubrica-chiudi-btn::after{ content:""; position:absolute; inset:-7px; }
   html[data-ui="minimal"] #rubrica-cerca{ height:46px; padding:0 14px 0 40px; border:1px solid transparent; border-radius:12px; background:var(--m-box) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366778b' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E") no-repeat 13px 50% / 18px; font-family:var(--m-sans); font-size:16px; color:var(--m-ink); box-shadow:none; outline:none; transition:border-color .2s, background-color .2s; }
@@ -22846,15 +22846,15 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .pd-data{ font-family:var(--m-sans); font-variant-numeric:tabular-nums; font-size:13px; color:var(--m-muted); margin:0 0 0 8px; }
   html[data-ui="minimal"] .pd-data.scaduta{ color:var(--m-atb1); font-weight:600; }
   html[data-ui="minimal"] .pd-vuota{ text-align:left; font-size:15px; color:var(--m-muted); padding:4px 2px; }
-  /* l'avviso dal 10° giorno: foglio dal basso come la Rubrica */
-  html[data-ui="minimal"] #pd-avviso-overlay{ align-items:flex-end; padding:calc(env(safe-area-inset-top,0px) + 56px) 0 0; background:rgba(15,20,28,.22); }
+  /* l'avviso dal 10° giorno: resta la finestra in alto, con dentro lo stile dell'app */
+  html[data-ui="minimal"] #pd-avviso-overlay{ background:rgba(15,20,28,.22); }
   html[data-ui="minimal"][data-m-tema="scuro"] #pd-avviso-overlay{ background:rgba(0,0,0,.35); }
-  html[data-ui="minimal"] #pd-avviso-overlay.show #pd-avviso-box{ animation:m-rub-su .44s var(--m-molla) both; }
-  html[data-ui="minimal"] #pd-avviso-box{ position:relative; max-width:600px; box-sizing:border-box; margin-top:auto; background:var(--m-bg); border:0; border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); padding:24px 18px calc(28px + env(safe-area-inset-bottom,0px)); font-family:var(--m-sans); color:var(--m-ink); }
-  html[data-ui="minimal"] #pd-avviso-box::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
+  html[data-ui="minimal"] #pd-avviso-box{ box-sizing:border-box; background:var(--m-bg); border:0; border-radius:20px; box-shadow:0 12px 32px rgba(23,34,49,.16), 0 2px 6px rgba(23,34,49,.06); padding:18px 18px 20px; font-family:var(--m-sans); color:var(--m-ink); }
   html[data-ui="minimal"] #pd-avviso-box .farmaco-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; padding:0; border:0; }
-  html[data-ui="minimal"] #pd-avviso-box .tool-titolo{ margin:0; display:block; font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.025em; color:var(--m-ink); }
-  html[data-ui="minimal"] #pd-avviso-box .tool-titolo .hicon{ display:none; }
+  html[data-ui="minimal"] #pd-avviso-box .tool-titolo{ margin:0; display:flex; align-items:center; gap:10px; font-family:var(--m-scheda); font-size:24px; font-weight:800; letter-spacing:-.025em; color:var(--m-notte); }
+  html[data-ui="minimal"] #pd-avviso-box .tool-titolo .hicon{ width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  html[data-ui="minimal"] #pd-avviso-box .tool-titolo{ font-size:20px; letter-spacing:-.02em; }
+  html[data-ui="minimal"][data-m-tema="scuro"] :is(#rubrica-box, #pd-avviso-box) .tool-titolo{ color:var(--m-link); }
   html[data-ui="minimal"] #pd-avviso-chiudi{ position:relative; width:30px; height:30px; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font-size:13px; line-height:30px; padding:0; }
   html[data-ui="minimal"] #pd-avviso-chiudi::after{ content:""; position:absolute; inset:-7px; }
   html[data-ui="minimal"] #pd-avviso-lista{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
@@ -22863,6 +22863,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .pd-avviso-quando{ font-size:13px; color:var(--m-muted); margin:4px 0 12px; }
   html[data-ui="minimal"] .pd-avviso-tasti{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   html[data-ui="minimal"] .pd-avviso-tasti .btn{ height:42px; padding:0 10px; border:0; border-radius:12px; background:var(--m-sec); color:var(--m-ink); box-shadow:none; font-family:var(--m-sans); font-size:14px; font-weight:600; }
+  html[data-ui="minimal"] .pd-avviso-tasti .btn{ white-space:nowrap; padding:0 6px; font-size:13.5px; }
   html[data-ui="minimal"] .pd-avviso-tasti .btn.primary{ background:var(--m-notte); color:#fff; }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
