@@ -22702,6 +22702,9 @@ function editorLettereSvuota(){
   .m-chiudi{ width:30px; height:30px; border-radius:50%; border:0; background:var(--m-sec); color:var(--m-muted); display:grid; place-items:center; flex:0 0 auto; cursor:pointer; transition:transform .12s var(--m-molla); }
   .m-chiudi:active{ transform:scale(.88); }
   .m-chiudi svg{ width:15px; height:15px; }
+  /* la X nell'angolo in alto a destra della scheda, non in fondo al titolo */
+  .m-s-testa .m-chiudi{ position:absolute; top:14px; right:14px; }
+  .m-s-testa{ padding-right:56px; }
   .m-s-corpo{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 18px; display:flex; flex-direction:column; gap:6px; }
   /* spazio in fondo per far salire l'ultima riga sopra "Copia": su iPhone il
      padding in fondo di un contenitore flex che scorre non conta, e il diario
