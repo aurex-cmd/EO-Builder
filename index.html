@@ -22799,6 +22799,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #rubrica-overlay{ align-items:flex-end; padding:calc(env(safe-area-inset-top,0px) + 56px) 0 0; background:rgba(15,20,28,.22); }
   html[data-ui="minimal"][data-m-tema="scuro"] #rubrica-overlay{ background:rgba(0,0,0,.35); }
   html[data-ui="minimal"] #rubrica-overlay.show #rubrica-box{ animation:m-rub-su .44s var(--m-molla) both; }
+  html[data-ui="minimal"] #rubrica-overlay.show #rubrica-box.m-rub-tr{ animation:none; }
   @keyframes m-rub-su{ from{ transform:translateY(40px); opacity:0; } to{ transform:none; opacity:1; } }
   html[data-ui="minimal"] #rubrica-box{ position:relative; max-width:600px; min-height:calc(100% - 0px); box-sizing:border-box; margin-top:auto; background:var(--m-bg); border:0; border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); padding:24px 18px calc(28px + env(safe-area-inset-bottom,0px)); font-family:var(--m-sans); color:var(--m-ink); }
   html[data-ui="minimal"] #rubrica-box::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
@@ -23660,7 +23661,8 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-mappa .m-zona{ border-color:var(--m-line); box-shadow:none; }
   html[data-m-tema="scuro"] .m-zona.m-ultimo{ border-color:color-mix(in srgb, var(--m-notte) 55%, #0c1622); }
   html[data-m-tema="scuro"] #toast{ background:#22374f; border-color:#2e4a68; color:var(--m-ink); }
-  html[data-m-tema="scuro"] #m-app:has(.m-set, .m-mappa)::before{ display:none; }
+  /* tema scuro: la stessa scena, in un colore solo (vedi sceneScure) */
+  html[data-m-tema="scuro"] #m-app:has(.m-set, .m-mappa)::before{ opacity:1; }
   /* la scena di Account nel tema scuro: stessi disegni, toni notte */
   html[data-m-tema="scuro"] .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#26364b; }
   html[data-m-tema="scuro"] .m-acc-scena .a-riga{ fill:#33475f; }
@@ -25361,6 +25363,59 @@ function lasciaVelo(){
   };
   corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
 })();
+// RUBRICA: si chiude trascinandola giù come la scheda del diario, dalla
+// testa o dall'elenco quando è già in cima
+(() => {
+  const ov = document.getElementById('rubrica-overlay'), box = document.getElementById('rubrica-box');
+  if(!ov || !box) return;
+  let y0 = null, x0 = 0, dy = 0, attivo = false, frame = 0, vy = 0, tPrec = 0, yPrec = 0;
+  const sposta = () => { frame = 0; box.style.transform = `translateY(${dy}px)`; };
+  const chiudiApp = window.chiudiRubrica;
+  window.chiudiRubrica = function(){
+    box.classList.remove('m-rub-tr'); box.style.transform = box.style.transition = '';
+    return chiudiApp.apply(this, arguments);
+  };
+  ov.addEventListener('touchstart', e => {
+    y0 = null;
+    const t0 = e.target;
+    if(e.touches.length !== 1 || !box.contains(t0) || t0.closest('input, textarea, button')) return;
+    const sc = t0.closest('#rubrica-lista, #rubrica-editor');
+    if(sc && sc.scrollTop > 0) return;
+    const t = e.touches[0];
+    y0 = yPrec = t.clientY; x0 = t.clientX; dy = 0; vy = 0; tPrec = performance.now(); attivo = false;
+  }, { passive:true });
+  ov.addEventListener('touchmove', e => {
+    if(y0 === null) return;
+    const t = e.touches[0], ddy = t.clientY - y0, ddx = t.clientX - x0;
+    if(!attivo){
+      if(ddy < -4 || Math.abs(ddx) > Math.abs(ddy) + 4){ y0 = null; return; }
+      if(ddy < 8) return;
+      attivo = true; box.classList.add('m-rub-tr'); box.style.transition = 'none';
+      if(document.activeElement && box.contains(document.activeElement)) document.activeElement.blur();
+    }
+    const ora = performance.now();
+    vy = (t.clientY - yPrec) / Math.max(1, ora - tPrec); yPrec = t.clientY; tPrec = ora;
+    dy = Math.max(0, ddy - 8);
+    if(!frame) frame = requestAnimationFrame(sposta);
+    if(e.cancelable) e.preventDefault();
+  }, { passive:false });
+  const fine = () => {
+    if(y0 === null) return;
+    y0 = null;
+    if(!attivo) return;
+    attivo = false;
+    if(frame){ cancelAnimationFrame(frame); frame = 0; }
+    if(dy > 120 || (vy > .5 && dy > 40)){
+      box.style.transition = 'transform .24s ease-in';
+      box.style.transform = 'translateY(100%)';
+      setTimeout(() => chiudiRubrica(), 230);
+    } else {
+      box.style.transition = 'transform .4s var(--m-molla)';
+      box.style.transform = '';
+    }
+  };
+  ov.addEventListener('touchend', fine); ov.addEventListener('touchcancel', fine);
+})();
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
 // (stessa sezione, stesso testo) e si anima solo lui
@@ -25742,6 +25797,20 @@ function coloraScene(){
   });
 }
 coloraScene();
+// tema scuro: le stesse scene in un colore solo, un blu notte appena più
+// chiaro del fondo; i chiari del disegno vanno verso il fondo, gli scuri
+// verso il chiaro, così le forme restano quelle
+(() => {
+  const st = document.createElement('style');
+  st.textContent = sceneOrig.map(([r, orig]) => {
+    const img = orig.replace(/%23([0-9a-f]{6}|[0-9a-f]{3})(?![0-9a-f])/gi, (m, h) => {
+      const [, , l] = hexHsl(h);
+      return '%23' + hslHex(213, .34, .095 + (1 - l) * .42);
+    });
+    return 'html[data-m-tema="scuro"] ' + r.selectorText + '{ background-image:' + img + '; }';
+  }).join('\n');
+  document.head.appendChild(st);
+})();
 const syncBox = document.getElementById('sync-group');
 // in Pocket l'account non è "in cima a Reparto" ma nella home
 const repFuori = document.getElementById('impostazioni-reparto-loggato-fuori');
