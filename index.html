@@ -22685,8 +22685,6 @@ function editorLettereSvuota(){
   .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:15px; color:var(--m-ink); }
   .m-scheda.m-su{ transform:translate3d(0,0,0); }
   .m-scheda.m-trascina{ transition:none; }
-  .m-scheda.m-tastiera .m-s-piede{ display:none; }
-  .m-scheda.m-tastiera .m-s-corpo{ padding-bottom:24px; }
   .m-s-testa{ position:relative; padding:24px 18px 8px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; touch-action:none; cursor:grab; }
   .m-s-testa::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
   .m-s-testa h2{ margin:0; font-size:22px; font-weight:800; letter-spacing:-.025em; }
@@ -22763,7 +22761,9 @@ function editorLettereSvuota(){
   .m-copia.m-subito::before, .m-copia.m-subito .m-et, .m-copia.m-subito .m-et svg{ transition:none !important; animation:none !important; }
   .m-lampo{ animation:m-lampo .9s ease-out both; animation-delay:calc(var(--k) * 55ms); }
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
-  .m-scheda{ will-change:transform; contain:layout paint; }
+  /* niente contain:paint: su iPhone impediva di scorrere la scheda (il dito
+     muoveva la pagina sotto) */
+  .m-scheda{ will-change:transform; }
   .m-aiuti.m-apre{ animation:m-aiuti-apre .42s var(--m-molla) both; overflow:hidden; }
   @keyframes m-aiuti-apre{ from{ max-height:0; opacity:0; padding-top:0; } to{ max-height:90px; opacity:1; } }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
@@ -24610,13 +24610,14 @@ function apriScheda(nome){
   // già in memoria: niente da ricalcolare; altrimenti a scheda ben ferma,
   // non proprio a fine salita (lì il lavoro si vedeva come uno scatto)
   clearTimeout(sh._t); if(!M.aiutiPronti) sh._t = setTimeout(() => pianificaAiuti(true), 750);
-  document.body.style.overflow = 'hidden';
+  // su iPhone basta il body bloccato solo a metà: si blocca anche html
+  document.documentElement.style.overflow = document.body.style.overflow = 'hidden';
 }
 function chiudiScheda(){
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
   salvaOra();
   $m('#m-scheda').classList.remove('m-su'); $m('#m-velo').classList.remove('m-su');
-  document.body.style.overflow = '';
+  document.documentElement.style.overflow = document.body.style.overflow = '';
   clearTimeout($m('#m-scheda')._t);
   // i letti si ridisegnano a scheda già scesa, per non frenarne la discesa
   // senza animazione: il letto torna fermo al suo posto
@@ -25331,21 +25332,6 @@ sc.addEventListener('paste', e => {
   };
   corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
 })();
-// tastiera aperta: la scheda finisce sopra la tastiera, così il diario si
-// legge tutto scorrendo la scheda (prima la parte bassa restava coperta e il
-// dito spostava la pagina sotto)
-if(window.visualViewport){
-  const adatta = () => {
-    const vv = visualViewport;
-    const sotto = sc.classList.contains('m-su') ? Math.max(0, Math.round(innerHeight - vv.offsetTop - vv.height)) : 0;
-    const tastiera = sotto > 80;
-    sc.style.bottom = tastiera ? sotto + 'px' : '';
-    sc.classList.toggle('m-tastiera', tastiera);
-  };
-  visualViewport.addEventListener('resize', adatta);
-  visualViewport.addEventListener('scroll', adatta);
-  document.addEventListener('focusout', () => setTimeout(adatta, 300));
-}
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
 // (stessa sezione, stesso testo) e si anima solo lui
