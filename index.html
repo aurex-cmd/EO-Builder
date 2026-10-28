@@ -22815,37 +22815,10 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #rubrica-editor > div:last-child{ flex-direction:row-reverse; gap:10px !important; margin-top:12px !important; }
   html[data-ui="minimal"] #rubrica-editor .btn{ height:46px; border-radius:12px; border:0; background:var(--m-sec); color:var(--m-ink); box-shadow:none; font-family:var(--m-sans); font-size:15px; font-weight:600; }
   html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
-  /* POST-DEGENZE: il modulo in una scheda (due campi e Aggiungi), sotto
-     l'etichetta "In sospeso" e l'elenco in una scheda bianca come
-     Dimissioni: cerchio per "risolta", paziente e cosa manca su due righe,
-     a destra la data (arancione dal 10° giorno) */
-  html[data-ui="minimal"] #postdegenze-view .m-pd-sub{ margin:-12px 0 20px; }
-  html[data-ui="minimal"] #pd-contenuto > .group:first-child{ display:flex; flex-direction:column; gap:8px; margin:0 0 22px; padding:12px; background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; }
-  html[data-ui="minimal"] #pd-contenuto .inline-fields{ display:flex; flex-direction:column; gap:8px; align-items:stretch !important; margin:0; }
-  html[data-ui="minimal"] #pd-contenuto :is(#pd-paziente, #pd-manca){ flex:none !important; width:100%; box-sizing:border-box; height:46px; margin:0 !important; padding:0 14px; border:1px solid transparent; border-radius:12px; background:var(--m-box); font-family:var(--m-sans); font-size:16px; color:var(--m-ink); box-shadow:none; outline:none; transition:border-color .2s, background-color .2s; }
-  html[data-ui="minimal"] #pd-contenuto :is(#pd-paziente, #pd-manca):focus{ border-color:var(--m-notte); background:var(--m-bg); }
-  html[data-ui="minimal"] #pd-contenuto :is(#pd-paziente, #pd-manca)::placeholder{ color:var(--m-faint); }
-  html[data-ui="minimal"] #pd-aggiungi-btn{ height:46px; margin:4px 0 0; border-radius:12px; }
-  html[data-ui="minimal"] #pd-modifica-nota{ margin:2px 2px 0 !important; opacity:1 !important; font-size:13px; text-transform:none; letter-spacing:0; color:var(--m-muted); }
-  html[data-ui="minimal"] #pd-modifica-nota span{ color:var(--m-notte) !important; font-weight:600; }
-  html[data-ui="minimal"] #pd-lista{ margin:0; }
-  html[data-ui="minimal"] #pd-lista > .m-lbl{ margin:0 2px 8px; }
-  html[data-ui="minimal"] #pd-lista .m-pd-carta{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
-  html[data-ui="minimal"] .pd-riga{ align-items:center; gap:4px; padding:12px 14px 12px 4px; border:0; border-top:1px solid var(--m-line); transition:background .2s; }
-  html[data-ui="minimal"] .pd-riga:first-child{ border-top:0; }
-  html[data-ui="minimal"] .pd-pallino{ position:relative; width:44px; height:44px; margin:-10px 0; border:0; border-radius:50%; background:none; color:transparent; font-size:0; display:grid; place-items:center; }
-  html[data-ui="minimal"] .pd-pallino::before{ content:""; width:24px; height:24px; box-sizing:border-box; border:1.5px solid var(--m-line-forte); border-radius:50%; transition:background .2s, border-color .2s; grid-area:1/1; }
-  html[data-ui="minimal"] .pd-pallino::after{ content:""; grid-area:1/1; width:12px; height:7px; margin-top:-3px; border:solid transparent; border-width:0 0 2.2px 2.2px; transform:rotate(-45deg); transition:border-color .2s; }
-  html[data-ui="minimal"] .pd-riga.risolta .pd-pallino{ background:none; }
-  html[data-ui="minimal"] .pd-riga.risolta .pd-pallino::before{ background:var(--m-teal); border-color:var(--m-teal); animation:m-pop .5s var(--m-molla); }
-  html[data-ui="minimal"] .pd-riga.risolta .pd-pallino::after{ border-color:#fff; }
-  html[data-ui="minimal"] .pd-riga.risolta .pd-testo{ opacity:.45; }
-  html[data-ui="minimal"] .pd-testo{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; cursor:pointer; }
-  html[data-ui="minimal"] .pd-testo .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
-  html[data-ui="minimal"] .pd-testo .pd-manca{ font-size:13px; color:var(--m-muted); }
-  html[data-ui="minimal"] .pd-data{ font-family:var(--m-sans); font-variant-numeric:tabular-nums; font-size:13px; color:var(--m-muted); margin:0 0 0 8px; }
-  html[data-ui="minimal"] .pd-data.scaduta{ color:var(--m-atb1); font-weight:600; }
-  html[data-ui="minimal"] .pd-vuota{ text-align:left; font-size:15px; color:var(--m-muted); padding:4px 2px; }
+  /* POST-DEGENZE: nell'avviso dal 10° giorno, paziente e cosa manca su due righe */
+  html[data-ui="minimal"] #pd-avviso-lista .pd-testo{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
+  html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-manca{ font-size:13px; color:var(--m-muted); }
   /* l'avviso dal 10° giorno: resta la finestra in alto, con dentro lo stile dell'app */
   html[data-ui="minimal"] #pd-avviso-overlay{ background:rgba(15,20,28,.22); }
   html[data-ui="minimal"][data-m-tema="scuro"] #pd-avviso-overlay{ background:rgba(0,0,0,.35); }
@@ -24469,26 +24442,7 @@ function fraseDimissione(p){
   const f = riga.replace(/[.;\s]+$/, '');
   return f.length > 70 ? 'Dimissione' : f.charAt(0).toUpperCase() + f.slice(1);
 }
-// POST-DEGENZE: sottotitolo, etichetta "In sospeso" e l'elenco in una
-// scheda; "cosa manca" va a capo sotto il paziente, senza il trattino
-const renderPostDegenzeApp = renderPostDegenze;
-window.renderPostDegenze = function(){
-  renderPostDegenzeApp();
-  const vista = document.getElementById('postdegenze-view'), lista = document.getElementById('pd-lista');
-  if(!lista) return;
-  if(vista && !vista.querySelector('.m-pd-sub')){
-    const sub = document.createElement('p'); sub.className = 'm-sub m-pd-sub';
-    sub.textContent = 'Esami ancora senza esito dopo la dimissione. Dal 10° giorno compaiono in Da fare oggi.';
-    document.getElementById('pd-contenuto').before(sub);
-  }
-  lista.querySelectorAll('.pd-manca').forEach(m => { m.textContent = m.textContent.replace(/^\s*—\s*/, ''); });
-  const righe = [...lista.querySelectorAll(':scope > .pd-riga')];
-  if(!righe.length) return;
-  const carta = document.createElement('div'); carta.className = 'm-pd-carta';
-  righe.forEach(r => carta.appendChild(r));
-  const lbl = document.createElement('p'); lbl.className = 'm-lbl'; lbl.textContent = 'In sospeso · ' + righe.length;
-  lista.append(lbl, carta);
-};
+// POST-DEGENZE: nell'avviso "cosa manca" va a capo sotto il paziente, senza il trattino
 const renderAvvisoPdApp = renderAvvisoPostDegenze;
 window.renderAvvisoPostDegenze = function(){
   renderAvvisoPdApp();
