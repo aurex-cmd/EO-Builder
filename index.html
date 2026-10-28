@@ -22773,6 +22773,47 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .comandi-desc{ font-size:13px; color:var(--m-muted); }
   html[data-ui="minimal"] .comandi-tipo{ font-size:12px; letter-spacing:0; text-transform:none; color:var(--m-faint); }
   html[data-ui="minimal"] .comandi-voce.attiva .comandi-cmd{ color:var(--m-notte); }
+  /* RUBRICA: un foglio dal basso come la scheda del diario (maniglia,
+     titolo, ✕ grigio), ricerca come un campo dell'app, voci in una scheda
+     bianca divise da un filo; "Modifica elenco" è un link come "Cambia i tag" */
+  html[data-ui="minimal"] #rubrica-overlay{ align-items:flex-end; padding:calc(env(safe-area-inset-top,0px) + 56px) 0 0; background:rgba(15,20,28,.22); }
+  html[data-ui="minimal"][data-m-tema="scuro"] #rubrica-overlay{ background:rgba(0,0,0,.35); }
+  html[data-ui="minimal"] #rubrica-overlay.show #rubrica-box{ animation:m-rub-su .44s var(--m-molla) both; }
+  @keyframes m-rub-su{ from{ transform:translateY(40px); opacity:0; } to{ transform:none; opacity:1; } }
+  html[data-ui="minimal"] #rubrica-box{ position:relative; max-width:600px; min-height:calc(100% - 0px); box-sizing:border-box; margin-top:auto; background:var(--m-bg); border:0; border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); padding:24px 18px calc(28px + env(safe-area-inset-bottom,0px)); font-family:var(--m-sans); color:var(--m-ink); }
+  html[data-ui="minimal"] #rubrica-box::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
+  html[data-ui="minimal"] #rubrica-box .farmaco-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px; padding:0; border:0; }
+  html[data-ui="minimal"] #rubrica-box .tool-titolo{ margin:0; display:block; font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.025em; color:var(--m-ink); }
+  html[data-ui="minimal"] #rubrica-box .tool-titolo .hicon{ display:none; }
+  html[data-ui="minimal"] #rubrica-chiudi-btn{ position:relative; width:30px; height:30px; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font-size:13px; line-height:30px; padding:0; }
+  html[data-ui="minimal"] #rubrica-chiudi-btn::after{ content:""; position:absolute; inset:-7px; }
+  html[data-ui="minimal"] #rubrica-cerca{ height:46px; padding:0 14px 0 40px; border:1px solid transparent; border-radius:12px; background:var(--m-box) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366778b' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E") no-repeat 13px 50% / 18px; font-family:var(--m-sans); font-size:16px; color:var(--m-ink); box-shadow:none; outline:none; transition:border-color .2s, background-color .2s; }
+  html[data-ui="minimal"] #rubrica-cerca:focus{ border-color:var(--m-notte); background-color:var(--m-bg); }
+  html[data-ui="minimal"] #rubrica-cerca::placeholder{ color:var(--m-faint); }
+  html[data-ui="minimal"] .rubrica-esterno{ font-family:var(--m-sans); font-size:13px; color:var(--m-muted); margin:10px 2px 14px; }
+  html[data-ui="minimal"] .rubrica-esterno:empty{ margin:0 0 14px; }
+  html[data-ui="minimal"] #rubrica-lista{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  html[data-ui="minimal"] #rubrica-lista:has(> .rubrica-vuota){ background:none; border:0; }
+  html[data-ui="minimal"] .rubrica-voce{ align-items:center; gap:12px; padding:13px 14px; border-bottom:0; border-top:1px solid var(--m-line); transition:background .2s; }
+  html[data-ui="minimal"] .rubrica-voce:first-child{ border-top:0; }
+  html[data-ui="minimal"] .rubrica-voce .nome{ font-size:16px; font-weight:500; color:var(--m-ink); }
+  html[data-ui="minimal"] .rubrica-voce .nota{ font-size:13px; color:var(--m-muted); margin-top:1px; }
+  html[data-ui="minimal"] .rubrica-voce .numeri{ font-family:var(--m-sans); font-variant-numeric:tabular-nums; font-size:15px; font-weight:600; color:var(--m-notte); }
+  html[data-ui="minimal"] #rubrica-lista:not(.cercando) .rubrica-voce:not(.aperta) .numeri{ font-size:15px; font-weight:500; opacity:1; color:var(--m-muted); }
+  html[data-ui="minimal"] #rubrica-lista.cercando .rubrica-voce, html[data-ui="minimal"] .rubrica-voce.aperta{ padding:14px 14px 16px; border-radius:0; }
+  html[data-ui="minimal"] .rubrica-voce.aperta{ background:color-mix(in srgb, var(--m-notte) 6%, transparent); }
+  html[data-ui="minimal"] #rubrica-lista.cercando .rubrica-voce .nome, html[data-ui="minimal"] .rubrica-voce.aperta .nome{ font-size:16px; font-weight:600; }
+  html[data-ui="minimal"] #rubrica-lista.cercando .rubrica-voce .numeri, html[data-ui="minimal"] .rubrica-voce.aperta .numeri{ font-size:30px; font-weight:700; letter-spacing:-.01em; margin-top:6px; color:var(--m-notte); }
+  html[data-ui="minimal"] #rubrica-lista.cercando .rubrica-voce .numeri span.n, html[data-ui="minimal"] .rubrica-voce.aperta .numeri span.n{ margin-right:22px; }
+  html[data-ui="minimal"] #rubrica-lista.cercando .rubrica-voce .numeri .ext, html[data-ui="minimal"] .rubrica-voce.aperta .numeri .ext{ font-size:13px; font-weight:500; letter-spacing:0; color:var(--m-muted); margin-top:2px; }
+  html[data-ui="minimal"] .rubrica-vuota{ font-size:15px; color:var(--m-muted); padding:6px 2px; }
+  html[data-ui="minimal"] .rubrica-piede{ margin-top:6px; }
+  html[data-ui="minimal"] #rubrica-modifica-btn{ border:0; background:none; box-shadow:none; padding:12px 2px; font-family:var(--m-sans); font-size:15px; font-weight:600; color:var(--m-notte); }
+  html[data-ui="minimal"] #rubrica-editor .score-nota{ font-family:var(--m-sans); font-size:13px; line-height:1.45; color:var(--m-muted); margin:0 2px 10px !important; }
+  html[data-ui="minimal"] #rubrica-testo{ box-sizing:border-box; min-height:320px !important; padding:12px 14px; border:1px solid transparent; border-radius:12px; background:var(--m-box); font-family:var(--m-sans) !important; font-size:15px !important; line-height:1.5; color:var(--m-ink); outline:none; resize:vertical; }
+  html[data-ui="minimal"] #rubrica-testo:focus{ border-color:var(--m-notte); background:var(--m-bg); }
+  html[data-ui="minimal"] #rubrica-editor > div:last-child{ flex-direction:row-reverse; gap:10px !important; margin-top:12px !important; }
+  html[data-ui="minimal"] #rubrica-editor .btn{ height:46px; border-radius:12px; border:0; background:var(--m-sec); color:var(--m-ink); box-shadow:none; font-family:var(--m-sans); font-size:15px; font-weight:600; }
   html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
