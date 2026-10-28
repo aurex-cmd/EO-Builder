@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E.O. Builder</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="E.O. Builder">
+<!-- E.O. BUILDER (l'app originale): la stessa app (index.html) con
+     l'interfaccia di prima; all'indirizzo normale si apre EO Pocket.
+     Stessi dati e stessa sincronizzazione, perché è la stessa pagina -->
+<script>location.replace('../?ui=classic' + location.hash);</script>
+</head>
+<body>
+<p><a href="../?ui=classic">Apri E.O. Builder</a></p>
+</body>
+</html>

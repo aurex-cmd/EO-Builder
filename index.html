@@ -4012,14 +4012,15 @@ function renderImpostazioniTema(){
   if(btnScuro) btnScuro.classList.toggle('active', t === 'scuro');
 }
 applicaTema(temaAttuale());
-// EO MINIMAL: la stessa app con un'altra interfaccia (home con Visita e
-// Diari, scheda del letto a tutto schermo), aperta da .../minimal/ (che
-// rimanda qui con ?ui=minimal). Stessi dati e stessa sincronizzazione; solo
-// tema chiaro, con la sua grafica (html[data-ui="minimal"]); la schermata
-// dei tag resta quella dell'app, col suo tema (vedi temaVisita). Aperta
-// normalmente, l'app non cambia in niente — vedi il blocco "EO MINIMAL" in
+// EO POCKET (internamente "minimal"): la stessa app con un'altra
+// interfaccia, ed è quella che si apre all'indirizzo normale. L'app
+// originale si apre con ?ui=classic (da .../classic/); .../pocket/,
+// .../minimal/ e ?ui=minimal portano ancora a Pocket. Stessi dati e stessa
+// sincronizzazione: è la stessa pagina — vedi il blocco "EO MINIMAL" in
 // fondo alla pagina
-const UI_MINIMAL = new URLSearchParams(location.search).get('ui') === 'minimal';
+const UI_PARAMS = new URLSearchParams(location.search);
+// la finestrella dell'editor di testo (?editor) resta quella dell'app
+const UI_MINIMAL = UI_PARAMS.get('ui') !== 'classic' && !UI_PARAMS.has('editor');
 // tema di EO Minimal (Impostazioni → Tema), separato da quello dell'app:
 // "chiaro" (tutto chiaro, anche l'esame obiettivo), "scuro" (tutto in blu
 // notte) o "aurex" (pagine chiare, esame obiettivo scuro: il predefinito).
