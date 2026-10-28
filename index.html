@@ -23824,7 +23824,7 @@ function vHome(){
   const dimSett = dim.filter(r => r.data.getTime() >= inizio && r.data.getTime() <= fra7).length;
   const dimTesto = dimOggi || dimDomani || dimSett
     ? [dimOggi && `${dimOggi} oggi`, dimDomani && `${dimDomani} domani`, (dimSett > dimOggi + dimDomani) && `${dimSett} in settimana`].filter(Boolean).join(' · ')
-    : 'Nessuna in programma';
+    : 'nessuna in programma';
   const daCopiare = visti - copiati;
   // nel conteggio si dice quanti sono ricoveri: "1 copiato (ricovero)",
   // "3 da copiare (1 ricovero)"
@@ -23857,7 +23857,7 @@ function vHome(){
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
-    + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount())
+    + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount().toLowerCase())
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
@@ -25449,7 +25449,7 @@ const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', s
 aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
-  const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount();
+  const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount().toLowerCase();
   aggiornaScenaAccount(); aggiornaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
