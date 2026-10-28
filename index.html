@@ -5323,7 +5323,7 @@ function cloudPush(key, rawValue){
         try{ attuale = localStorage.getItem(key) ?? rawValue; } catch(e){}
         if(valoreCloud !== null && valoreCloud !== base && valoreCloud !== attuale){
           if(key === PATIENTS_KEY) aggiornaBackupLocale(attuale, true);
-          const fuso = fondiSchedePazienti(base, attuale, valoreCloud);
+          const fuso = fondiPerVoce(key, base, attuale, valoreCloud);
           try{ localStorage.setItem(key, fuso); } catch(e){}
           rawValue = fuso;
           if(key === PATIENTS_KEY && typeof ricaricaSchedaApertaDopoSync === 'function') ricaricaSchedaApertaDopoSync(attuale, fuso);
@@ -5388,11 +5388,25 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   // create prima del login non arriverebbero mai sul cloud
   'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1', 'eo_builder_postdegenze_v1',
   // EO Pocket: i letti segnati vuoti (pressione lunga), uguali su tutti i dispositivi
-  'eo_minimal_letti_vuoti_v1'];
+  'eo_minimal_letti_vuoti_v1',
+  // EO Pocket: "Da fare oggi" segnato a mano (consegne aggiornate, lettere scritte)
+  'eo_minimal_dafare_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
-const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY;
+// "Da fare oggi" di EO Pocket: fuso voce per voce anche lui, e dentro i segni
+// (lettere) uno per uno: consegne segnate dal PC e una lettera dal telefono
+// restano entrambe
+const FARE_SYNC_KEY = 'eo_minimal_dafare_v1';
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY;
+function fondiPerVoce(key, rawBase, rawLocale, rawCloud){
+  const fuso = fondiSchedePazienti(rawBase, rawLocale, rawCloud);
+  if(key !== FARE_SYNC_KEY) return fuso;
+  const parte = r => { try{ const o = JSON.parse(r || '{}'); return JSON.stringify((o && o.lettere) || {}); } catch(e){ return '{}'; } };
+  const out = JSON.parse(fuso);
+  out.lettere = JSON.parse(fondiSchedePazienti(rawBase === null || rawBase === undefined ? rawBase : parte(rawBase), parte(rawLocale), parte(rawCloud)));
+  return JSON.stringify(out);
+}
 
 // sincronizza nelle due direzioni: scarica dal cloud le chiavi che il cloud
 // ha già (sovrascrivendo il locale, MA SOLO se il locale non è più recente
@@ -5512,7 +5526,7 @@ async function cloudPullAll(){
           // copia di sicurezza della versione locale prima di toccarla,
           // senza aspettare l'intervallo dei 15 minuti dei backup
           if(row.key === PATIENTS_KEY) aggiornaBackupLocale(valoreLocaleAttuale, true);
-          const fuso = fondiSchedePazienti(sincronizzato, valoreLocaleAttuale, row.value);
+          const fuso = fondiPerVoce(row.key, sincronizzato, valoreLocaleAttuale, row.value);
           try{ localStorage.setItem(row.key, fuso); } catch(e){}
           if(fuso === row.value){ segnaValoreSincronizzato(row.key, row.value); }
           else { segnaValoreSincronizzato(row.key, row.value); await cloudPush(row.key, fuso); }
@@ -23792,12 +23806,12 @@ function statoAccount(){
   return dentro && dentro.style.display !== 'none' ? 'Connesso' : 'Non connesso';
 }
 /* ---------- da fare oggi: post-degenze, consegne, lettere di dimissione ---------- */
-// cosa è già stato fatto oggi resta qui (solo su questo dispositivo): le
+// cosa è già stato fatto oggi (sincronizzato con l'account): le
 // consegne e le lettere di dimissione segnate a mano, e se oggi c'erano
 // post-degenze da controllare (per mostrarle "fatte" quando non ne restano)
 const FARE_KEY = 'eo_minimal_dafare_v1';
 function leggiFare(){ try{ return JSON.parse(localStorage.getItem(FARE_KEY)) || {}; } catch(e){ return {}; } }
-function scriviFare(f){ try{ localStorage.setItem(FARE_KEY, JSON.stringify(f)); } catch(e){} }
+function scriviFare(f){ setLocalAndCloud(FARE_KEY, JSON.stringify(f)); }
 let fattiPrima = null;
 function bloccoFare(copiati){
   const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
