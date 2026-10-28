@@ -5386,7 +5386,9 @@ function setLocalAndCloud(key, rawValue){
 const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1', 'eo_builder_ricoveri_seq_v1', 'eo_builder_last_patient_v1', 'eo_builder_consegne_v1', 'eo_builder_ward_map_v1', 'eo_builder_reset_giornaliero_v1', 'eo_builder_sezioni_nascoste_v1',
   // anche queste passano da setLocalAndCloud: senza elencarle qui, quelle
   // create prima del login non arriverebbero mai sul cloud
-  'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1', 'eo_builder_postdegenze_v1'];
+  'eo_builder_reparto_v1', 'eo_builder_reparti_extra_v1', 'eo_builder_appoggi_v1', 'eo_builder_rubrica_v1', 'eo_builder_postdegenze_v1',
+  // EO Pocket: i letti segnati vuoti (pressione lunga), uguali su tutti i dispositivi
+  'eo_minimal_letti_vuoti_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -22742,7 +22744,9 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #rubrica-box .btn.primary{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
   /* la barra di scorrimento (sul computer) ha sempre il suo spazio: aprendo
      la legenda la pagina non si sposta */
-  html[data-ui="minimal"]:not([data-m-orig]){ scrollbar-gutter:stable; }
+  /* lo spazio della barra di scorrimento (sul PC) da tutti e due i lati:
+     senza, il margine destro risultava più largo del sinistro */
+  html[data-ui="minimal"]:not([data-m-orig]){ scrollbar-gutter:stable both-edges; }
   /* pressione lunga: su un letto scritto lo fa diventare rosso (un altro
      tocco elimina la scheda), su un settore chiede se svuotarlo */
   .m-settori button.m-premuto{ color:var(--m-rosso); transition:color .55s linear .1s; }
@@ -24200,7 +24204,8 @@ function lettiVuoti(){ try{ return JSON.parse(localStorage.getItem(VUOTI_KEY)) |
 function segnaVuoto(nome, si){
   const v = lettiVuoti();
   if(si) v[nome] = 1; else delete v[nome];
-  try{ localStorage.setItem(VUOTI_KEY, JSON.stringify(v)); } catch(e){}
+  // sincronizzati: un letto liberato dal telefono risulta libero anche al PC
+  setLocalAndCloud(VUOTI_KEY, JSON.stringify(v));
 }
 function tileLetto(nome, etichetta, k, appena, appoggio){
   const i = infoLetto(nome);
