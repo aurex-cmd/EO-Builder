@@ -23832,10 +23832,8 @@ function vHome(){
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
-    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
-    // Account solo quando c'è da fare (non connesso): da connesso si trova
-    // in Strumenti → Impostazioni
-    + (statoAccount() === 'Connesso' ? '' : voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount()));
+    + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount())
+    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
       <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
@@ -25399,10 +25397,7 @@ const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', s
 aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
-  // connesso (anche all'avvio, dopo aver disegnato la home): la riga
-  // Account in home non serve più
-  const r = document.querySelector('.m-voce[data-p="account"]');
-  if(r){ if(statoAccount() === 'Connesso') r.remove(); else r.querySelector('.m-vv').textContent = statoAccount(); }
+  const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount();
   aggiornaScenaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
