@@ -17122,8 +17122,17 @@ function composeToraceClean(){
     const blocchi = t.reperteLocPerTipo[o.value];
     const sparsiSoli = o.sparsiSenzaSede && (blocchi || []).some(b => b && b.has('sparsi'));
     const loc = !o.hasLoc ? '' : sparsiSoli ? 'sparsi' : comporreSedeToraceMulti(blocchi, o.diffusoParola);
-    return { frag, loc, text: loc ? `${frag} ${loc}` : frag, uni: sparsiSoli ? null : sedeToraceUnilaterale(blocchi) };
+    // i nomi uno per uno (per sibili/fischi/gemiti le sotto-voci scelte),
+    // per poterli poi unire a quelli di un altro reperto con la stessa sede
+    const sotto = o.value === 'sibili_fischi_gemiti' ? ['sibili','fischi','gemiti'].filter(v => t.reperteSottotipi[o.value] && t.reperteSottotipi[o.value].has(v)) : [];
+    const nomi = sotto.length ? sotto : o.value === 'sibili_fischi_gemiti' ? ['sibili','fischi','gemiti'] : [frag];
+    return { frag, nomi, loc, text: loc ? `${frag} ${loc}` : frag, uni: sparsiSoli ? null : sedeToraceUnilaterale(blocchi) };
   });
+  // ronchi "sparsi" insieme a un reperto "diffusi su TAP": sparsi è già
+  // compreso in diffusi, quindi i ronchi prendono quella sede e le due voci
+  // si uniranno ("ronchi e sibili diffusi su TAP")
+  const diffusiTap = repItems.find(r => /^diffusi su TAP$/.test(r.loc));
+  if(diffusiTap) repItems.forEach(r => { if(r.loc === 'sparsi'){ r.loc = diffusiTap.loc; r.text = `${r.frag} ${r.loc}`; } });
 
   // se un MV ha una sede e un reperto condivide ESATTAMENTE la stessa sede
   // (es. entrambi "base dx"), le due frasi si fondono con "con" invece di
@@ -17157,7 +17166,18 @@ function composeToraceClean(){
     }
     return `${loc ? frag + ' ' + loc : frag} con ${repItems[idx].frag}${suffisso}`;
   });
-  const corpoParti = [...mvParti, ...repItems.filter((_, j) => !usati.has(j)).map(r => r.text)].filter(Boolean);
+  // i reperti rimasti con la stessa identica sede si dicono insieme:
+  // "ronchi e sibili diffusi su TAP" invece di "ronchi diffusi su TAP,
+  // sibili diffusi su TAP"
+  const gruppi = [];
+  repItems.forEach((r, j) => {
+    if(usati.has(j)) return;
+    const g = r.loc && gruppi.find(x => x.loc === r.loc);
+    if(g) g.nomi.push(...r.nomi);
+    else gruppi.push({ loc: r.loc, nomi: [...r.nomi], text: r.text });
+  });
+  const repParti = gruppi.map(g => g.nomi.length > 1 && g.loc ? `${joinIt(g.nomi)} ${g.loc}` : g.text);
+  const corpoParti = [...mvParti, ...repParti].filter(Boolean);
   if(!corpoParti.length) return '';
   const body = corpoParti.join(', ') + '.';
 
