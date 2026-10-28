@@ -23488,7 +23488,13 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:color-mix(in srgb, var(--m-link) 45%, var(--m-carta)); }
   html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-riga{ fill:color-mix(in srgb, var(--m-link) 70%, var(--m-carta)); }
   html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-linea{ stroke:var(--m-link); }
-  html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
+  /* Aurex: sopra l'esame obiettivo (scuro, in Visita) la finestra
+     dell'isolamento è quella del tema scuro, coi suoi colori */
+  html[data-ui="minimal"][data-m-tema="aurex"][data-m-orig] #isolamento-modal{
+    --m-bg:#0c1622; --m-carta:#132133; --m-box:#1a2b40; --m-ink:#e9eff6; --m-ink-2:#c3d0de; --m-muted:#8b9fb6; --m-faint:#4d6178; --m-line:#1e3047; --m-teal:#14a39b;
+    background:var(--m-carta); color-scheme:dark;
+  }
+  html[data-m-tema="scuro"] #isolamento-modal.m-iso, html[data-ui="minimal"][data-m-tema="aurex"][data-m-orig] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
   html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
   html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
