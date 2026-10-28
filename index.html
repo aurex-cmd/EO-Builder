@@ -24306,7 +24306,10 @@ function zoomSettore(s, blocco){
     // il fondo della scheda: dal riquadro del settore alla sua misura
     const c = $m('.m-set-carta');
     if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
-    $m('#m-set').classList.add('m-set-entra');
+    const set = $m('#m-set'); set.classList.add('m-set-entra');
+    // a entrata finita si toglie: i letti si ridisegnano (es. chiudendo un
+    // diario) e il + appoggio spariva e ricompariva
+    setTimeout(() => set.classList.remove('m-set-entra'), 900);
     void document.body.offsetWidth;
     requestAnimationFrame(() => avvia.forEach(f => f()));
   }, 160);
