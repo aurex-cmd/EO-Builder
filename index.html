@@ -22685,6 +22685,7 @@ function editorLettereSvuota(){
   .m-aiuto em{ font-style:normal; font-weight:400; color:var(--m-faint); }
   .m-aiuto.atb{ --acc:var(--m-atb0); } .m-aiuto.atb.liv1{ --acc:var(--m-atb1); } .m-aiuto.atb.liv2{ --acc:var(--m-atb2); } .m-aiuto.atb.liv2 em{ color:var(--m-atb2); font-weight:500; }
   .m-aiuto.ric{ --acc:var(--m-viola); }
+  .m-aiuto.cv{ --acc:var(--m-atb1); }
   .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 6px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-faint); font-weight:500; font-size:12px; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
   .m-aiuto .m-ok:active{ transform:scale(.85); color:var(--m-teal); }
   .m-aiuto.m-chiusa{ opacity:0; transform:scale(.85); max-width:0; padding-left:0; padding-right:0; margin-right:-6px; }
@@ -24581,7 +24582,11 @@ function disegnaAiuti(primaVolta, soloMemoria){
   const calc = calcolaAiuti(p, M.id, soloMemoria);
   if(!calc){ if(primaVolta){ box.innerHTML = ''; box.dataset.ora = ''; box.hidden = true; } return false; }
   const { atb, ric } = calc;
+  // dimissione programmata con il catetere ancora scritto nel diario (come nell'app)
+  let cv = false;
+  try{ cv = avvisoRimozioneCV(p, M.id); } catch(e){}
   const voci = [
+    ...(cv ? [{ k:'cv', html:'<span class="m-aiuto cv" data-k="cv" title="Dimissione programmata con catetere vescicale in sede"><i></i>Valuta rimozione CV</span>' }] : []),
     ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
     ...ric.map((r, n) => ({ k:'r:' + r.chiave, html:`<span class="m-aiuto ric" data-k="r:${esc(r.chiave)}" title="Richiesta ancora senza esito"><i></i>${esc(r.testo)} <em>${r.giorni ? r.giorni + ' g' : 'oggi'}</em><button class="m-ok" data-m="chiudi-ric" data-r="${n}" aria-label="Fatta">✓</button></span>` }))
   ];
