@@ -22702,7 +22702,11 @@ function editorLettereSvuota(){
   .m-chiudi{ width:30px; height:30px; border-radius:50%; border:0; background:var(--m-sec); color:var(--m-muted); display:grid; place-items:center; flex:0 0 auto; cursor:pointer; transition:transform .12s var(--m-molla); }
   .m-chiudi:active{ transform:scale(.88); }
   .m-chiudi svg{ width:15px; height:15px; }
-  .m-s-corpo{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 18px 120px; display:flex; flex-direction:column; gap:6px; }
+  .m-s-corpo{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 18px; display:flex; flex-direction:column; gap:6px; }
+  /* spazio in fondo per far salire l'ultima riga sopra "Copia": su iPhone il
+     padding in fondo di un contenitore flex che scorre non conta, e il diario
+     sembrava finire dietro il pulsante senza poter scorrere */
+  .m-s-corpo::after{ content:""; flex:0 0 auto; height:114px; }
   .m-scheda .m-lbl{ margin-bottom:0; }
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-link); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
