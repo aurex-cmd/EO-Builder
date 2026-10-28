@@ -25348,6 +25348,31 @@ function lasciaVelo(){
   };
   corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
 })();
+// PROVA TEMPORANEA: riga di dati nella scheda per capire perché su iPhone
+// il diario non scorre (da togliere)
+(() => {
+  const corpo = $m('#m-s-corpo');
+  const box = document.createElement('div');
+  box.id = 'm-diag';
+  box.style.cssText = 'flex:0 0 auto;margin:0 18px 6px;padding:6px 8px;border-radius:8px;background:#fff3c4;color:#5a4500;font:11px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;';
+  sc.insertBefore(box, corpo);
+  const st = { mosse:0, bloccate:0, scroll:0, bersaglio:'-', dy:0, y0:0, fine:'-' };
+  const des = el => el ? (el.id ? '#' + el.id : el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/)[0] : '')) : '-';
+  const scrivi = () => {
+    if(!sc.classList.contains('m-su')) return;
+    const cs = getComputedStyle(corpo), ss = getComputedStyle(sc);
+    box.textContent =
+      `corpo top ${Math.round(corpo.scrollTop)} alto ${corpo.scrollHeight} visto ${corpo.clientHeight} ovf ${cs.overflowY}\n` +
+      `scheda h ${Math.round(sc.getBoundingClientRect().height)} tr ${ss.transform === 'none' ? 'no' : 'sì'} · html ${getComputedStyle(document.documentElement).overflowY} body ${getComputedStyle(document.body).overflowY}\n` +
+      `dito su ${st.bersaglio} · mosse ${st.mosse} bloccate ${st.bloccate} · dy ${st.dy} · scroll ${st.scroll} · ${st.fine}`;
+  };
+  window.addEventListener('touchstart', e => { if(!sc.contains(e.target)) return; st.mosse = 0; st.bloccate = 0; st.scroll = 0; st.bersaglio = des(e.target); st.y0 = e.touches[0].clientY; st.dy = 0; st.fine = 'giù'; scrivi(); }, { passive:true });
+  window.addEventListener('touchmove', e => { if(!sc.contains(e.target)) return; st.mosse++; if(e.defaultPrevented) st.bloccate++; st.dy = Math.round(e.touches[0].clientY - st.y0); scrivi(); }, { passive:true });
+  window.addEventListener('touchend', e => { if(!sc.contains(e.target)) return; st.fine = 'su'; scrivi(); }, { passive:true });
+  window.addEventListener('touchcancel', e => { if(!sc.contains(e.target)) return; st.fine = 'annullato'; scrivi(); }, { passive:true });
+  corpo.addEventListener('scroll', () => { st.scroll++; scrivi(); }, { passive:true });
+  new MutationObserver(() => setTimeout(scrivi, 600)).observe(sc, { attributes:true, attributeFilter:['class'] });
+})();
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
 // (stessa sezione, stesso testo) e si anima solo lui
