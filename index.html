@@ -22683,8 +22683,14 @@ function editorLettereSvuota(){
      scura): sfocare tutto lo schermo a fine salita faceva scattare il telefono */
   .m-velo.m-su{ opacity:1; pointer-events:auto; }
   .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:15px; color:var(--m-ink); }
-  .m-scheda.m-su{ transform:translate3d(0,0,0); }
+  /* ferma, la scheda non resta trasformata: su iPhone una scheda fissa
+     trasformata non faceva scorrere il diario (il dito non muoveva niente) */
+  .m-scheda.m-su{ transform:none; }
   .m-scheda.m-trascina{ transition:none; }
+  /* trascinandola giù si scopre la pagina: lì serve lo sfocato intero, e
+     l'oscurità cala man mano che la scheda scende */
+  .m-velo.m-tutto{ height:auto; bottom:0; box-shadow:none; clip-path:none; }
+  .m-velo.m-velo-segue{ transition:none; }
   .m-s-testa{ position:relative; padding:24px 18px 8px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; touch-action:none; cursor:grab; }
   .m-s-testa::before{ content:""; position:absolute; top:7px; left:50%; width:36px; height:4px; margin-left:-18px; border-radius:2px; background:var(--m-line); }
   .m-s-testa h2{ margin:0; font-size:22px; font-weight:800; letter-spacing:-.025em; }
@@ -22696,7 +22702,7 @@ function editorLettereSvuota(){
   .m-chiudi{ width:30px; height:30px; border-radius:50%; border:0; background:var(--m-sec); color:var(--m-muted); display:grid; place-items:center; flex:0 0 auto; cursor:pointer; transition:transform .12s var(--m-molla); }
   .m-chiudi:active{ transform:scale(.88); }
   .m-chiudi svg{ width:15px; height:15px; }
-  .m-s-corpo{ flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 18px 120px; display:flex; flex-direction:column; gap:6px; }
+  .m-s-corpo{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 18px 120px; display:flex; flex-direction:column; gap:6px; }
   .m-scheda .m-lbl{ margin-bottom:0; }
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-link); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
@@ -22763,7 +22769,7 @@ function editorLettereSvuota(){
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
   /* niente contain:paint: su iPhone impediva di scorrere la scheda (il dito
      muoveva la pagina sotto) */
-  .m-scheda{ will-change:transform; }
+  .m-scheda.m-trascina{ will-change:transform; }
   .m-aiuti.m-apre{ animation:m-aiuti-apre .42s var(--m-molla) both; overflow:hidden; }
   @keyframes m-aiuti-apre{ from{ max-height:0; opacity:0; padding-top:0; } to{ max-height:90px; opacity:1; } }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
@@ -25288,12 +25294,19 @@ sc.addEventListener('paste', e => {
   nota.firstElementChild.textContent = 'Referto portato su una riga'; nota.classList.add('m-fatto');
 });
 // trascina giù la scheda per chiuderla
+const velo = $m('#m-velo');
+// a fine trascinamento lo sfocato torna alla sola striscia in alto (o se ne
+// va con la scheda), con l'oscurità di nuovo piena
+function lasciaVelo(){
+  velo.classList.remove('m-velo-segue'); velo.style.opacity = '';
+  setTimeout(() => velo.classList.remove('m-tutto'), 450);
+}
 (() => {
   const testa = $m('#m-s-testa');
   let y0 = null, dy = 0;
-  testa.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; y0 = e.clientY; dy = 0; sc.classList.add('m-trascina'); testa.setPointerCapture(e.pointerId); });
-  testa.addEventListener('pointermove', e => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); sc.style.transform = `translateY(${dy}px)`; });
-  const fine = () => { if(y0 === null) return; sc.classList.remove('m-trascina'); sc.style.transform = ''; if(dy > 120) chiudiScheda(); y0 = null; };
+  testa.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; y0 = e.clientY; dy = 0; sc.classList.add('m-trascina'); velo.classList.add('m-tutto', 'm-velo-segue'); testa.setPointerCapture(e.pointerId); });
+  testa.addEventListener('pointermove', e => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = Math.max(0, 1 - dy / 500); });
+  const fine = () => { if(y0 === null) return; sc.classList.remove('m-trascina'); sc.style.transform = ''; lasciaVelo(); if(dy > 120) chiudiScheda(); y0 = null; };
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
 // ...e anche dal centro, come le finestre di iOS: col contenuto già in cima,
@@ -25302,7 +25315,7 @@ sc.addEventListener('paste', e => {
 (() => {
   const corpo = $m('#m-s-corpo');
   let y0 = null, x0 = 0, dy = 0, attivo = false, frame = 0, vy = 0, tPrec = 0, yPrec = 0;
-  const sposta = () => { frame = 0; sc.style.transform = `translateY(${dy}px)`; };
+  const sposta = () => { frame = 0; sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = Math.max(0, 1 - dy / 500); };
   corpo.addEventListener('touchstart', e => {
     y0 = null;
     if(e.touches.length !== 1 || corpo.scrollTop > 0 || e.target === document.activeElement && e.target.matches('textarea, input')) return;
@@ -25315,7 +25328,7 @@ sc.addEventListener('paste', e => {
     if(!attivo){
       if(ddy < -4 || Math.abs(ddx) > Math.abs(ddy) + 4 || corpo.scrollTop > 0){ y0 = null; return; }
       if(ddy < 8) return;
-      attivo = true; sc.classList.add('m-trascina');
+      attivo = true; sc.classList.add('m-trascina'); velo.classList.add('m-tutto', 'm-velo-segue');
       if(document.activeElement && corpo.contains(document.activeElement)) document.activeElement.blur();
     }
     const ora = performance.now();
@@ -25330,7 +25343,7 @@ sc.addEventListener('paste', e => {
     if(!attivo) return;
     attivo = false;
     if(frame){ cancelAnimationFrame(frame); frame = 0; }
-    sc.classList.remove('m-trascina'); sc.style.transform = '';
+    sc.classList.remove('m-trascina'); sc.style.transform = ''; lasciaVelo();
     if(dy > 120 || (vy > .5 && dy > 40)) chiudiScheda();
   };
   corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
