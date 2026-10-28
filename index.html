@@ -4390,7 +4390,7 @@ if(UI_MINIMAL){
   </div>
 
   <div class="group">
-    <div class="group-label" style="text-align:center;">Dimensione testo (e di tutto il resto)</div>
+    <div class="group-label" style="text-align:center;">Dimensione del testo</div>
     <div class="inline-fields" style="align-items:center; justify-content:center;">
       <button class="btn" onclick="riduciZoom()" title="Riduci" aria-label="Riduci dimensione">－</button>
       <div class="group-label" id="zoom-livello-testo" style="min-width:48px; text-align:center; font-family:var(--font-mono);">100%</div>
@@ -4399,7 +4399,7 @@ if(UI_MINIMAL){
   </div>
 
   <div class="group">
-    <div class="group-label" style="text-align:center;">Tag normali già selezionati in un esame nuovo</div>
+    <div class="group-label" style="text-align:center;">Nuovo esame: tag normali già selezionati</div>
     <div class="inline-fields" style="align-items:center; justify-content:center;">
       <div class="chip" id="impostazioni-tagnormale-si" onclick="impostaTagNormale(true)">Sì</div>
       <div class="chip" id="impostazioni-tagnormale-no" onclick="impostaTagNormale(false)">No</div>
@@ -4407,7 +4407,7 @@ if(UI_MINIMAL){
   </div>
 
   <div class="group">
-    <div class="group-label" style="text-align:center;">Nuovo giorno: mantieni l'esame obiettivo del giorno precedente</div>
+    <div class="group-label" style="text-align:center;">Nuovo giorno: riparti dall'ultimo esame obiettivo</div>
     <!-- a differenza delle due impostazioni sopra, questa NON è una
          preferenza di dispositivo: vale per tutto l'account (vedi
          RESET_GIORNALIERO_KEY). Sì = mantieni (reset giornaliero spento,
@@ -4424,7 +4424,7 @@ if(UI_MINIMAL){
     <!-- come "Nuovo giorno", vale per tutto l'account (SEZIONI_NASCOSTE_KEY):
          le parti spente restano una riga chiusa, che si apre toccandola -->
     <div class="chips" id="impostazioni-sezioni" style="justify-content:center;"></div>
-    <div class="group-label" style="text-align:center; margin:8px 0 0; font-size:11.5px;">Le parti spente restano una riga chiusa: toccandola si apre, e torna chiusa la volta dopo.</div>
+    <div class="group-label" style="text-align:center; margin:8px 0 0; font-size:11.5px;">Le altre restano chiuse: si aprono toccandole.</div>
   </div>
 
   <div class="group">
@@ -4440,7 +4440,7 @@ if(UI_MINIMAL){
 
   <div class="group">
     <div class="ric-lista-riga" onclick="toggleImpostazioniReparto()">
-      <span class="ric-lista-nome">Editor reparto</span>
+      <span class="ric-lista-nome">Settori e letti</span>
       <span class="admit-chev" id="impostazioni-reparto-chev">›</span>
     </div>
     <!-- questa parte NON è una preferenza di dispositivo come le due sopra:
@@ -23510,7 +23510,7 @@ document.title = 'EO Pocket';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
 // pagine dell'app aperte da minimal (sotto la barra minimal)
-const PAGINE = { consegne:'Consegne Weekend', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
+const PAGINE = { consegne:'Consegne weekend', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
   dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup', vitali:'Parametri vitali' };
 // la vista dell'app di ciascuna pagina ("vitali" è vitali-settore-view)
 // ("account" è Impostazioni col solo riquadro dell'accesso)
@@ -23751,7 +23751,7 @@ function bloccoFare(copiati){
     const cw = loadConsegne(); let n = 0, tot = 0;
     Object.values(cw).forEach(v => ['V','E','S','C'].forEach(l => { if(v && v[l]){ tot++; if(!v['fatto' + l]) n++; } }));
     const vuote = !Object.keys(cw).length;
-    righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne Weekend',
+    righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne weekend',
       dato:vuote ? 'da allegare' : !n ? (tot ? 'fatte' : 'nessuna da fare') : '', conta:n ? `${n} da fare` : '' });
   } else if(copiati || lettere[kCons]){
     righe.push({ k:kCons, segna:true, fatta:!!lettere[kCons], attr:'data-m="aggcons"', ic:ICON.consegne, nome:'Aggiorna consegne',
@@ -23848,7 +23848,7 @@ function vHome(){
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
   const consegne = festivo
-    ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne Weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
+    ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
     : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'diari di oggi');
   const fare = bloccoFare(copiatiCons);
   const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
@@ -23886,7 +23886,7 @@ function vStrumenti(){
     <p class="m-lbl">Clinici</p>
     <div class="m-righe">${righeApp('Clinici')}</div>
     <p class="m-lbl">Sistema</p>
-    <div class="m-righe">${rigaHome('impostazioni', 'Impostazioni', 'Account, testo, tag e reparto')}${righeApp('Sistema', /impostazioni/)}</div>`;
+    <div class="m-righe">${rigaHome('impostazioni', 'Impostazioni', 'Tema, testo, esame e reparto')}${righeApp('Sistema', /impostazioni/)}</div>`;
   document.querySelectorAll('#m-vista .m-righe > .m-rigalink').forEach((el, k) => el.style.setProperty('--i', Math.min(k, 8)));
 }
 
@@ -25410,6 +25410,9 @@ function coloraScene(){
 }
 coloraScene();
 const syncBox = document.getElementById('sync-group');
+// in Pocket l'account non è "in cima a Reparto" ma nella home
+const repFuori = document.getElementById('impostazioni-reparto-loggato-fuori');
+if(repFuori) repFuori.textContent = 'Per cambiare settori e letti accedi prima al tuo account (dalla home, Account): la disposizione è condivisa tra i tuoi dispositivi.';
 // la riga Account della home segue l'accesso (che si verifica dopo l'avvio)
 // Account: la scena a metà schermo, grigia se non connesso e verde acqua (lucchetto
 // chiuso, spunta) se connesso; passando dall'uno all'altro si anima
