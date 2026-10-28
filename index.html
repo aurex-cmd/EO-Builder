@@ -23716,7 +23716,9 @@ function temaVisita(si){
 function coloreTema(visita){
   const t = temaMinimal(), f = visita ? foglioVisita(t) : foglioPagine(t);
   applicaTema(f);
-  document.querySelector('meta[name="theme-color"]').content = f === 'scuro' ? '#0c1622' : visita ? '#eef2f6' : '#ffffff';
+  // la barra del telefono come la barra in alto: scura solo col tema Scuro
+  // (con Aurex l'esame obiettivo è scuro ma la barra resta chiara)
+  document.querySelector('meta[name="theme-color"]').content = t === 'scuro' ? '#0c1622' : visita ? (t === 'aurex' ? '#eef1f3' : '#eef2f6') : '#ffffff';
 }
 function impostaTemaMinimal(t){
   try{ localStorage.setItem(MTEMA_KEY, t); } catch(e){}
