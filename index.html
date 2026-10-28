@@ -22829,6 +22829,12 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .rubrica-vuota{ font-size:15px; color:var(--m-muted); padding:6px 2px; }
   html[data-ui="minimal"] .rubrica-piede{ margin-top:6px; }
   html[data-ui="minimal"] #rubrica-modifica-btn{ border:0; background:none; box-shadow:none; padding:12px 2px; font-family:var(--m-sans); font-size:15px; font-weight:600; color:var(--m-notte); }
+  /* scorrono solo i numeri: titolo, ricerca e "Modifica elenco" restano fermi */
+  html[data-ui="minimal"] #rubrica-overlay{ overflow:hidden; }
+  html[data-ui="minimal"] #rubrica-box{ height:100%; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+  html[data-ui="minimal"] #rubrica-box > *{ flex:0 0 auto; }
+  html[data-ui="minimal"] #rubrica-box > #rubrica-lista{ flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  html[data-ui="minimal"] #rubrica-box > #rubrica-editor{ flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
   html[data-ui="minimal"] #rubrica-editor .score-nota{ font-family:var(--m-sans); font-size:13px; line-height:1.45; color:var(--m-muted); margin:0 2px 10px !important; }
   html[data-ui="minimal"] #rubrica-testo{ box-sizing:border-box; min-height:320px !important; padding:12px 14px; border:1px solid transparent; border-radius:12px; background:var(--m-box); font-family:var(--m-sans) !important; font-size:15px !important; line-height:1.5; color:var(--m-ink); outline:none; resize:vertical; }
   html[data-ui="minimal"] #rubrica-testo:focus{ border-color:var(--m-notte); background:var(--m-bg); }
