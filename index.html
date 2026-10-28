@@ -10842,7 +10842,10 @@ function aggiornaVitaleLetto(nome, campo, valore){
 
   if(!entry){
     const nuovoId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    patients[nuovoId] = { name: nome, savedAt: Date.now(), state: JSON.parse(DEFAULT_SNAPSHOT_JSON) };
+    // solo parametri vitali, nessun esame scritto: esameAggiornatoIl a 1
+    // (e non assente) perché i controlli che ripiegano su savedAt non lo
+    // prendano per un diario di oggi (Diari, Aggiorna consegne)
+    patients[nuovoId] = { name: nome, savedAt: Date.now(), esameAggiornatoIl: 1, state: JSON.parse(DEFAULT_SNAPSHOT_JSON) };
     entry = [nuovoId, patients[nuovoId]];
   } else if(entry[1].savedAt && !isOggi(entry[1].savedAt)){
     // stesso azzeramento automatico di selezionaPaziente: l'ultimo
