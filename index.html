@@ -22761,7 +22761,9 @@ function editorLettereSvuota(){
   .m-copia.m-subito::before, .m-copia.m-subito .m-et, .m-copia.m-subito .m-et svg{ transition:none !important; animation:none !important; }
   .m-lampo{ animation:m-lampo .9s ease-out both; animation-delay:calc(var(--k) * 55ms); }
   @keyframes m-lampo{ 0%{ background:transparent; } 25%{ background:rgba(14,117,113,.09); } 100%{ background:transparent; } }
-  .m-scheda{ will-change:transform; contain:layout paint; }
+  /* niente contain:paint: su iPhone impediva di scorrere la scheda (il dito
+     muoveva la pagina sotto) */
+  .m-scheda{ will-change:transform; }
   .m-aiuti.m-apre{ animation:m-aiuti-apre .42s var(--m-molla) both; overflow:hidden; }
   @keyframes m-aiuti-apre{ from{ max-height:0; opacity:0; padding-top:0; } to{ max-height:90px; opacity:1; } }
   html[data-ui="minimal"] [id$="-overlay"]{ z-index:220; }
@@ -24304,7 +24306,10 @@ function zoomSettore(s, blocco){
     // il fondo della scheda: dal riquadro del settore alla sua misura
     const c = $m('.m-set-carta');
     if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
-    $m('#m-set').classList.add('m-set-entra');
+    const set = $m('#m-set'); set.classList.add('m-set-entra');
+    // a entrata finita si toglie: i letti si ridisegnano (es. chiudendo un
+    // diario) e il + appoggio spariva e ricompariva
+    setTimeout(() => set.classList.remove('m-set-entra'), 900);
     void document.body.offsetWidth;
     requestAnimationFrame(() => avvia.forEach(f => f()));
   }, 160);
@@ -24608,13 +24613,14 @@ function apriScheda(nome){
   // già in memoria: niente da ricalcolare; altrimenti a scheda ben ferma,
   // non proprio a fine salita (lì il lavoro si vedeva come uno scatto)
   clearTimeout(sh._t); if(!M.aiutiPronti) sh._t = setTimeout(() => pianificaAiuti(true), 750);
-  document.body.style.overflow = 'hidden';
+  // su iPhone basta il body bloccato solo a metà: si blocca anche html
+  document.documentElement.style.overflow = document.body.style.overflow = 'hidden';
 }
 function chiudiScheda(){
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
   salvaOra();
   $m('#m-scheda').classList.remove('m-su'); $m('#m-velo').classList.remove('m-su');
-  document.body.style.overflow = '';
+  document.documentElement.style.overflow = document.body.style.overflow = '';
   clearTimeout($m('#m-scheda')._t);
   // i letti si ridisegnano a scheda già scesa, per non frenarne la discesa
   // senza animazione: il letto torna fermo al suo posto
