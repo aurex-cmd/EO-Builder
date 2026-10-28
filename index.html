@@ -11665,12 +11665,9 @@ function calcolaCalendarioDimissioni(){
     });
   });
 
-  const ordineLetti = ordinaPazientiPerLetto(Object.entries(patients)).map(([id]) => id);
-  risultati.sort((a, b) => {
-    const diffData = a.data - b.data;
-    if(diffData !== 0) return diffData;
-    return ordineLetti.indexOf(a.id) - ordineLetti.indexOf(b.id);
-  });
+  // stesso giorno: in ordine di letto per numero (8.1, 8.2, 12.2), anche
+  // i letti fuori dalla mappa del reparto
+  risultati.sort((a, b) => (a.data - b.data) || confrontaNomiLetto(a.nome, b.nome));
   return risultati;
 }
 
