@@ -22928,26 +22928,46 @@ function editorLettereSvuota(){
      (telefono e cloud allineati, puntini in linea retta). Non connesso:
      grigia, lucchetto aperto, puntini fermi; connesso: verde acqua, il
      lucchetto si chiude, i puntini scorrono verso il cloud e compare la spunta */
-  /* ferma a metà schermo: non si sposta quando, connessi, il riquadro si accorcia */
-  .m-acc-scena{ display:none; position:fixed; left:0; right:0; top:max(440px, 56%); z-index:-1; pointer-events:none; }
-  body:has(#impostazioni-view.m-solo-account:not([style*="none"])) > .m-acc-scena{ display:block; }
-  .m-acc-scena svg{ display:block; width:300px; max-width:calc(100% - 32px); height:auto; margin:0 auto; }
-  .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#cfdcd9; transition:fill .6s; }
-  .m-acc-scena .a-riga{ fill:#e8efed; transition:fill .6s; }
-  .m-acc-scena .a-linea{ fill:none; stroke:#c6d4d1; stroke-width:4; stroke-linecap:round; stroke-dasharray:1 9; transition:stroke .4s; }
+  /* dentro la scheda, in cima: racconta lo stato accanto a ciò che lo cambia.
+     Non connesso grigia; connessa nel colore principale (come le altre scene) */
+  .m-acc-scena{ pointer-events:none; margin:-2px 0 6px; }
+  .m-acc-scena svg{ display:block; width:220px; max-width:100%; height:auto; margin:0 auto; }
+  .m-acc-scena :is(.a-tel, .a-nuvola){ fill:#d5dce5; transition:fill .6s; }
+  .m-acc-scena .a-riga{ fill:#e9eef3; transition:fill .6s; }
+  .m-acc-scena .a-linea{ fill:none; stroke:#c9d3de; stroke-width:4; stroke-linecap:round; stroke-dasharray:1 9; transition:stroke .4s; }
   .m-acc-scena .a-ansa{ transform-box:fill-box; transform-origin:100% 100%; transform:translate(0, -6px) rotate(-30deg); transition:transform .45s var(--m-molla); }
   .m-acc-scena .a-ok{ transform-box:fill-box; transform-origin:50% 50%; transform:scale(0); opacity:0; transition:transform .45s var(--m-molla), opacity .2s; }
-  .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:#a8d5ca; }
-  .m-acc-scena.m-connesso .a-riga{ fill:#d4ebe5; }
-  .m-acc-scena.m-connesso .a-linea{ stroke:#6fbfad; animation:m-flusso 1.1s linear infinite; }
+  .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:color-mix(in srgb, var(--m-notte) 38%, var(--m-carta)); }
+  .m-acc-scena.m-connesso .a-riga{ fill:color-mix(in srgb, var(--m-notte) 16%, var(--m-carta)); }
+  .m-acc-scena.m-connesso .a-linea{ stroke:color-mix(in srgb, var(--m-notte) 60%, var(--m-carta)); animation:m-flusso 1.1s linear infinite; }
   .m-acc-scena.m-connesso .a-ansa{ transform:none; transition-delay:.3s; }
   .m-acc-scena.m-connesso .a-ok{ transform:none; opacity:1; transition-delay:.65s; }
   @keyframes m-flusso{ to{ stroke-dashoffset:-20; } }
   @media (prefers-reduced-motion:reduce){ .m-acc-scena *{ animation:none !important; transition:none !important; } }
   html[data-ui="minimal"] .m-pagina .sync-box{ background:#fff; border:1px solid var(--m-line); border-radius:16px; box-shadow:none; padding:16px; margin-bottom:22px; }
   html[data-ui="minimal"] .m-pagina .sync-title{ font-family:var(--m-sans); font-weight:600; color:var(--m-ink); }
-  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:var(--m-box); width:100%; box-sizing:border-box; max-width:none !important; padding:11px 12px; }
-  html[data-ui="minimal"] .m-pagina .sync-box .inline-fields{ flex-direction:column; gap:8px; }
+  /* ACCOUNT: lo stesso scheletro nei due stati, così la scheda non cambia
+     altezza: scena, stato, due righe di spiegazione, due righe in un
+     riquadro (email e password / account e sincronizzazione), azioni */
+  html[data-ui="minimal"] .m-pagina .sync-box :is(.sync-header-row, #sync-logged-in-text){ display:none !important; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-out > .group-label:first-child{ display:none; }
+  .m-acc-t{ display:block; font-size:17px; font-weight:700; color:var(--m-ink); text-align:center; }
+  .m-acc-d{ margin:4px 0 14px; min-height:calc(2 * 1.45em); font-size:14px; line-height:1.45; color:var(--m-muted); text-align:center; text-wrap:balance; }
+  html[data-ui="minimal"] .m-pagina .sync-box .inline-fields, .m-acc-righe{ display:flex; flex-direction:column; gap:0; margin:0; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; background:var(--m-carta); }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ display:block; width:100%; height:48px; box-sizing:border-box; max-width:none !important; margin:0; padding:0 14px; border:0; border-radius:0; background:none; box-shadow:none; font-family:var(--m-sans); font-size:15px; color:var(--m-ink); }
+  html[data-ui="minimal"] .m-pagina .sync-box input[type=password]{ border-top:1px solid var(--m-line); }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]):focus{ outline:none; background:color-mix(in srgb, var(--m-notte) 6%, transparent); }
+  .m-acc-riga{ display:flex; align-items:center; justify-content:space-between; gap:12px; height:48px; box-sizing:border-box; padding:0 14px; font-size:15px; }
+  .m-acc-riga + .m-acc-riga{ border-top:1px solid var(--m-line); }
+  .m-acc-riga span{ color:var(--m-muted); flex:none; }
+  .m-acc-riga b{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; color:var(--m-ink); }
+  .m-acc-riga b.m-acc-errore{ color:var(--m-rosso); }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(#sync-logged-out .row, #sync-logged-in){ display:flex; flex-wrap:wrap; gap:8px; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-out .row{ margin-top:14px; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in[style*="none"]{ display:none !important; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in .m-acc-righe{ flex:1 1 100%; margin-bottom:6px; }
+  html[data-ui="minimal"] .m-pagina .sync-box :is(#sync-logged-out .row, #sync-logged-in) .btn{ height:44px; margin:0; padding:0 18px; }
+  html[data-ui="minimal"] .m-pagina .sync-box #sync-status:empty{ display:none; }
   html[data-ui="minimal"] #consegne-view textarea{ width:100%; padding:12px; }
   /* Consegne Weekend: riepilogo in cima, inserimento in un riquadro, legenda in "Come funziona" */
   html[data-ui="minimal"] #consegne-view > .m-we-orig{ display:none; }
@@ -23432,9 +23452,9 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-acc-scena .a-ansa{ stroke:#132133; }
   html[data-m-tema="scuro"] .m-acc-scena .a-linea{ stroke:#3a4d66; }
   html[data-m-tema="scuro"] .m-acc-scena .a-bollo{ fill:#14a39b; stroke:#0c1622; }
-  html[data-m-tema="scuro"] .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:#1f625d; }
-  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-riga{ fill:#2c7b73; }
-  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-linea{ stroke:#35d0ae; }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso :is(.a-tel, .a-nuvola){ fill:color-mix(in srgb, var(--m-link) 45%, var(--m-carta)); }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-riga{ fill:color-mix(in srgb, var(--m-link) 70%, var(--m-carta)); }
+  html[data-m-tema="scuro"] .m-acc-scena.m-connesso .a-linea{ stroke:var(--m-link); }
   html[data-m-tema="scuro"] #isolamento-modal.m-iso{ background:linear-gradient(160deg, color-mix(in srgb, var(--iso-c1) 30%, var(--m-carta)) 0, var(--m-carta) 46%); }
   html[data-m-tema="scuro"] :is(#isolamento-modal, #svuota-settore-modal){ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
@@ -25391,14 +25411,38 @@ const syncBox = document.getElementById('sync-group');
 const scenaAccount = document.createElement('div');
 scenaAccount.className = 'm-acc-scena'; scenaAccount.setAttribute('aria-hidden', 'true');
 scenaAccount.innerHTML = '<svg viewBox="0 0 320 130"><g transform="translate(28 15)"><rect class="a-tel" width="58" height="100" rx="11"/><rect x="5" y="10" width="48" height="76" rx="6" class="a-chiaro" fill="#fff"/><rect class="a-riga" x="11" y="20" width="34" height="7" rx="3.5"/><rect class="a-riga" x="11" y="33" width="26" height="7" rx="3.5"/><rect class="a-riga" x="11" y="46" width="30" height="7" rx="3.5"/><rect x="21" y="91" width="16" height="4" rx="2" class="a-chiaro" fill="#fff"/></g><path class="a-linea" d="M102 70 H176"/><g transform="translate(156 3)"><path class="a-nuvola" d="M30 92 H128 A26 26 0 0 0 126 40 A38 38 0 0 0 54 30 A30 30 0 0 0 30 92 Z"/><path class="a-ansa" d="M71 60 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect class="a-chiaro" x="64" y="58" width="34" height="27" rx="6" fill="#fff"/><circle class="a-nuvola" cx="81" cy="70" r="3.6"/><rect class="a-nuvola" x="79.4" y="70" width="3.2" height="7" rx="1.6"/><g class="a-ok"><circle cx="124" cy="34" r="15" class="a-bollo" fill="#0e7571" stroke="#fff" stroke-width="3"/><path d="M117.5 34.5l4.5 4.5 8.5-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg>';
-// fuori dalla pagina, così resta ferma anche quando il riquadro cambia altezza
-document.body.appendChild(scenaAccount);
+// in cima alla scheda, con sotto lo stato in parole; da connesso le due
+// righe dicono l'account e l'ultima sincronizzazione
+const statoAcc = document.createElement('div');
+statoAcc.innerHTML = '<b class="m-acc-t"></b><p class="m-acc-d"></p>';
+if(syncBox){ syncBox.prepend(scenaAccount, statoAcc); }
+const righeAcc = document.createElement('div');
+righeAcc.className = 'm-acc-righe';
+righeAcc.innerHTML = '<div class="m-acc-riga"><span>Account</span><b class="m-acc-email"></b></div><div class="m-acc-riga"><span>Sincronizzato</span><b class="m-acc-sync"></b></div>';
+document.getElementById('sync-logged-in')?.prepend(righeAcc);
+const fa = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'adesso' : m < 60 ? `${m} min fa` : `${Math.floor(m / 60)} h fa`; };
+function aggiornaAccount(){
+  const dentro = statoAccount() === 'Connesso';
+  const testo = document.getElementById('sync-logged-in-text')?.textContent || '';
+  const problema = dentro && testo.startsWith('⚠');
+  statoAcc.querySelector('.m-acc-t').textContent = dentro ? 'Connesso' : 'Non connesso';
+  statoAcc.querySelector('.m-acc-d').textContent = dentro ? 'Schede, diari e ricoveri uguali su tutti i tuoi dispositivi.' : 'Senza account i dati restano solo su questo telefono.';
+  if(!dentro) return;
+  righeAcc.querySelector('.m-acc-email').textContent = (testo.match(/Connesso come (\S+)/) || [])[1] || '';
+  const sync = righeAcc.querySelector('.m-acc-sync');
+  sync.textContent = problema ? 'non riuscito, riprovo' : (typeof ultimoPullRiuscito !== 'undefined' && ultimoPullRiuscito ? fa(ultimoPullRiuscito) : 'in corso…');
+  sync.classList.toggle('m-acc-errore', problema);
+}
+aggiornaAccount();
+const testoSync = document.getElementById('sync-logged-in-text');
+if(testoSync) new MutationObserver(aggiornaAccount).observe(testoSync, { childList:true, characterData:true, subtree:true });
+setInterval(() => { if(document.visibilityState === 'visible' && document.querySelector('#impostazioni-view.m-solo-account')) aggiornaAccount(); }, 30000);
 const aggiornaScenaAccount = () => scenaAccount.classList.toggle('m-connesso', statoAccount() === 'Connesso');
 aggiornaScenaAccount();
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
   const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount();
-  aggiornaScenaAccount();
+  aggiornaScenaAccount(); aggiornaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
 if(syncBox) impostazioniView.insertBefore(syncBox, impostazioniView.querySelector('.group'));
