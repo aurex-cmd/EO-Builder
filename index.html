@@ -19273,7 +19273,9 @@ function apriEgaAnalyzer(testoDiario, textareaEl, patientId, opzioni){
   // tutto il box e alla chiusura il box riceve commento + valori
   const modo = (opzioni && opzioni.modo) || 'diario';
   const inizio = opzioni && typeof opzioni.inizio === 'number' ? opzioni.inizio : null;
-  egaContestoAttivo = { textareaEl, patientId, modo, inizio };
+  // dopo(analisiFatta): chi apre lo strumento viene avvisato alla chiusura
+  // (EO Pocket: senza analisi la riga EGA resta da scrivere a mano)
+  egaContestoAttivo = { textareaEl, patientId, modo, inizio, dopo: opzioni && opzioni.dopo };
   egaResetForm();
   const valori = egaParseValori(modo === 'esame' ? (testoDiario || '') : egaEstraiRiga((testoDiario || '').slice(inizio || 0)));
   ['ph','pco2','hco3','lac','po2','fio2'].forEach(campo => {
@@ -19363,7 +19365,7 @@ function chiudiEgaAnalyzer(){
       const el = egaContestoAttivo.textareaEl;
       el.value = egaComponiRefertoEsame(riga.replace(/^EGA:\s*/, ''), el.value);
       autoResizeTextarea(el);
-      aggiornaRicoveroDalForm();
+      if(!egaContestoAttivo.dopo) aggiornaRicoveroDalForm();
     }
   } else if(analisiFatta && egaContestoAttivo && egaContestoAttivo.textareaEl){
     const nuovaRiga = egaComponiRigaFinale();
@@ -19378,8 +19380,10 @@ function chiudiEgaAnalyzer(){
       autoResizeTextarea(textareaEl);
     }
   }
+  const dopo = egaContestoAttivo && egaContestoAttivo.dopo;
   egaContestoAttivo = null;
   document.getElementById('ega-modal-overlay').classList.remove('show');
+  if(dopo) dopo(analisiFatta);
 }
 
 // referto dell'esame EGA nel Ricovero: commento + valori calcolati al
@@ -22689,6 +22693,7 @@ function editorLettereSvuota(){
   .m-riga-nome{ font-weight:600; font-size:15px; white-space:nowrap; cursor:pointer; }
   input.m-nome-esame{ width:7.5em; border:0; background:none; padding:0; margin:0; font:inherit; font-weight:600; font-size:15px; color:var(--m-ink); outline:none; box-shadow:none; cursor:text; }
   input.m-nome-esame::placeholder{ color:var(--m-faint); font-weight:500; }
+  input.m-rinomina{ min-width:5ch; max-width:60%; border-bottom:1.5px solid var(--m-notte); }
   .m-riga-altro{ animation:m-compare .3s var(--m-molla) both; }
   .m-riga textarea.m-testo{ font-size:15px; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
   .m-riga.m-vuota{ cursor:pointer; }
@@ -24932,7 +24937,16 @@ document.getElementById('m-app').addEventListener('click', e => {
     const r = tmp.firstElementChild;
     $m('.m-aggiungi').before(r);
     setTimeout(() => el.remove(), 220);
-    apriRiga(r);
+    if(n !== 'EGA') return apriRiga(r);
+    // EGA: si apre lo strumento; analisi fatta → il referto è nella riga;
+    // chiuso senza usarlo → la riga resta aperta per scriverlo a mano
+    r.classList.remove('m-vuota');
+    const t = r.querySelector('textarea');
+    apriEgaAnalyzer('', t, M.id, { modo:'esame', dopo: fatta => {
+      if(!r.isConnected) return;
+      if(fatta && t.value.trim()){ t.value = t.value.charAt(0).toLowerCase() + t.value.slice(1); chiudiRiga(r); }
+      else apriRiga(r);
+    } });
   }
   else if(a === 'esame-altro'){
     // il primo tocco apre l'elenco degli esami, il secondo la riga libera
@@ -25027,6 +25041,43 @@ sc.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
+// toccando il nome di un esame (EGA, TC addome…) lo si può cambiare, per
+// esempio "TC addome con mdc"; il referto resta com'è
+sc.addEventListener('click', e => {
+  const lab = e.target.closest('.m-riga[data-riga^="s:"]:not(.m-vuota) label.m-riga-nome');
+  if(!lab) return;
+  e.preventDefault(); e.stopPropagation();
+  const r = lab.closest('.m-riga'), vecchio = r.dataset.riga.slice(2);
+  const inp = document.createElement('input');
+  inp.className = 'm-riga-nome m-nome-esame m-rinomina';
+  inp.value = vecchio; inp.setAttribute('aria-label', "Nome dell'esame"); inp.autocapitalize = 'sentences';
+  const larga = () => { inp.style.width = Math.max(5, inp.value.length + 1) + 'ch'; };
+  larga(); inp.addEventListener('input', larga);
+  lab.replaceWith(inp);
+  inp.focus(); inp.select();
+  let fatto = false;
+  const conferma = () => {
+    if(fatto) return; fatto = true;
+    const nuovo = inp.value.replace(/[:"\n]/g, ' ').replace(/\s+/g, ' ').trim();
+    const ok = nuovo && nuovo !== vecchio && !D.ordine.includes(nuovo);
+    const nome = ok ? nuovo : vecchio;
+    if(ok){
+      D.strum[nome] = D.strum[vecchio]; delete D.strum[vecchio];
+      D.ordine = D.ordine.map(x => x === vecchio ? nome : x);
+      r.dataset.riga = 's:' + nome;
+      r.querySelector('textarea').dataset.campo = 's:' + nome;
+      salvaOra(); disegnaAggiungi();
+    }
+    const l = document.createElement('label');
+    l.className = 'm-riga-nome'; l.htmlFor = r.querySelector('textarea').id; l.textContent = nome + ':';
+    inp.replaceWith(l);
+  };
+  inp.addEventListener('blur', conferma);
+  inp.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter'){ ev.preventDefault(); ev.stopPropagation(); conferma(); r.querySelector('textarea').focus(); }
+    if(ev.key === 'Escape'){ ev.stopPropagation(); inp.value = vecchio; conferma(); }
+  });
+}, true);
 sc.addEventListener('paste', e => {
   const t = e.target;
   if(!t.matches('textarea[data-campo^="s:"]')) return;
