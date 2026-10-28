@@ -1928,6 +1928,10 @@
 
 </style>
 <style>
+  /* EO Pocket all'avvio: nascosta finché non è pronta (vedi m-pronto) */
+  html[data-ui="minimal"]:not(.m-pronto) body{ visibility:hidden; }
+  html[data-ui="minimal"]:not(.m-pronto){ background:#ffffff; }
+  html[data-ui="minimal"][data-m-tema="scuro"]:not(.m-pronto){ background:#0c1622; }
   #cute-reperti > .finding-row[data-reperto="ecchimosi"] .finding-drawer.open{ max-height:1200px; }
   #cute-reperti > .finding-row:is([data-reperto="cicatrice"], [data-reperto="ernia"]) .finding-drawer.open{ max-height:700px; }
   /* ernie: un blocco per tipo; sotto, una riga di opzioni per ogni lato scelto */
@@ -4052,6 +4056,10 @@ if(UI_MINIMAL){
   document.documentElement.dataset.mPulsante = colore;
   document.documentElement.dataset.stile = 'minimal';
   document.documentElement.dataset.ui = 'minimal';
+  // fino a quando Pocket non ha disegnato la home la pagina resta nascosta
+  // (sul colore del tema): prima si vedeva un attimo l'app classica. Se
+  // qualcosa andasse storto, dopo 4 secondi si mostra comunque
+  setTimeout(() => document.documentElement.classList.add('m-pronto'), 4000);
   // icona e nome propri ("Aggiungi a Home" prende quelli della pagina aperta)
   const testa = document.head;
   testa.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]').forEach(l => l.remove());
@@ -25858,6 +25866,7 @@ mostraVista = function(v){
 
 nascondiViste();
 disegna();
+document.documentElement.classList.add('m-pronto');
 })();
 </script>
 <!-- =================== fine EO MINIMAL =================== -->
