@@ -23191,6 +23191,9 @@ function editorLettereSvuota(){
   #m-mappa .m-zona{ border-width:1.5px; }
   #m-mappa .m-zona{ background-image:radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--m-notte) 9%, transparent), transparent 55%); }
   html[data-m-tema="scuro"] #m-mappa .m-zona{ background-image:radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--m-link) 10%, transparent), transparent 55%); }
+  /* Ricoveri è largo il doppio: il velo resta della misura di un settore */
+  #m-mappa .m-zona-ric{ background-image:radial-gradient(circle 240px at 100% 100%, color-mix(in srgb, var(--m-notte) 9%, transparent), transparent 55%); }
+  html[data-m-tema="scuro"] #m-mappa .m-zona-ric{ background-image:radial-gradient(circle 240px at 100% 100%, color-mix(in srgb, var(--m-link) 10%, transparent), transparent 55%); }
   .m-zona.m-premuto{ border-color:var(--m-rosso); box-shadow:inset 0 0 0 1.5px var(--m-rosso); transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
   .m-zona-t{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
   .m-zona-t b{ font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1; }
