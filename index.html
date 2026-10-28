@@ -22720,6 +22720,9 @@ function editorLettereSvuota(){
   /* chiuso si vede solo "+ Altro": toccandolo compaiono gli esami */
   .m-aggiungi.m-chiuso button:not(.m-fisso){ display:none; }
   .m-aggiungi.m-apre button:not(.m-fisso){ animation:m-compare .32s var(--m-molla) both; animation-delay:calc(var(--k) * 35ms); }
+  /* aperto, in fondo un Chiudi tenue che riporta al solo "+ Altro" */
+  .m-aggiungi button.m-chiudi-el{ color:var(--m-faint); font-weight:400; }
+  .m-aggiungi:not(:has([data-x])) .m-chiudi-el{ display:none; }
   .m-riga.m-via{ opacity:0; transition:opacity .2s; }
   .m-s-piede{ position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--m-bg) 72%, transparent); }
   .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:10px; height:52px; background:var(--m-notte); color:#fff; font:inherit; font-weight:600; font-size:15px; cursor:pointer; transition:transform .16s var(--m-molla); }
@@ -24473,7 +24476,7 @@ function riga(id, nome, val, ph, nota){
   </div>`;
 }
 function htmlAggiungi(altri){
-  return altri.map((n, k) => `<button data-m="altro" data-x="${esc(n)}" style="--k:${k}">+ ${esc(n)}</button>`).join('') + '<button data-m="esame-altro" class="m-fisso">+ Altro</button>';
+  return altri.map((n, k) => `<button data-m="altro" data-x="${esc(n)}" style="--k:${k}">+ ${esc(n)}</button>`).join('') + '<button data-m="esame-altro" class="m-fisso">+ Altro</button>' + `<button data-m="esame-chiudi" class="m-chiudi-el" style="--k:${altri.length + 1}">Chiudi</button>`;
 }
 function disegnaAggiungi(){
   const box = $m('.m-aggiungi'); if(box) box.innerHTML = htmlAggiungi(STRUM_ALTRI.filter(n => !D.ordine.includes(n)));
@@ -24970,6 +24973,10 @@ document.getElementById('m-app').addEventListener('click', e => {
     $m('.m-aggiungi').before(r);
     r.querySelector('input').focus({ preventScroll:true });
     setTimeout(() => r.scrollIntoView({ block:'nearest', behavior:'smooth' }), 80);
+  }
+  else if(a === 'esame-chiudi'){
+    const box = el.closest('.m-aggiungi');
+    clearTimeout(box._t); box.classList.remove('m-apre'); box.classList.add('m-chiuso');
   }
   else if(a === 'chiudi-ric'){
     const box = $m('#m-aiuti'), r = (box._ric || [])[+el.dataset.r], c = el.closest('.m-aiuto');
