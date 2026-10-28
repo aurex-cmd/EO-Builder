@@ -22830,6 +22830,8 @@ function editorLettereSvuota(){
   /* la nota sull'app, sempre in fondo alla home */
   .m-home-info{ flex:none; margin-top:auto; padding-top:18px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
   .m-home-info p{ margin:0; } .m-home-info b{ color:var(--m-ink-2); font-weight:700; }
+  /* la nota giustificata; la sillabazione evita i buchi tra le parole */
+  .m-home-info p:not(.m-firma){ text-align:justify; -webkit-hyphens:auto; hyphens:auto; }
   .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-faint); }
   #m-vista.m-ferma .m-rigalink{ animation:none; }
   .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
@@ -23881,7 +23883,7 @@ function vHome(){
       ${fare.html}
       ${fare.html ? '<p class="m-lbl m-fare-t">Sempre a portata</p>' : ''}
       <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
-      <div class="m-home-info"><p><b>E.O. Builder</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
+      <div class="m-home-info"><p><b>EO Pocket</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
 }
 
