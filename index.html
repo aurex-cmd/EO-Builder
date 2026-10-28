@@ -22721,25 +22721,38 @@ function editorLettereSvuota(){
   @keyframes m-onda{ to{ transform:scale(1); opacity:0; } }
   .m-rigalink.m-vitali{ margin-top:4px; padding:12px 14px; border:1px solid var(--m-line); border-radius:16px; background:#fff; animation:none; }
   .m-rigalink.m-vitali svg:first-child{ color:var(--m-notte); }
-  /* parametri vitali del settore: una scheda per letto */
-  html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:flex; flex-direction:column; gap:10px; }
-  html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ background:#fff; border:1px solid var(--m-line); border-radius:16px; padding:10px 12px 8px; margin:0; animation:m-compare .35s var(--m-molla) both; }
-  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ border-color:var(--m-notte); box-shadow:inset 0 0 0 1px var(--m-notte); }
-  html[data-ui="minimal"] #vitali-settore-view .riga-label{ font-family:var(--m-sans); font-size:15px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--m-ink); display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
-  html[data-ui="minimal"] #vitali-settore-view .riga-label .riga-stato{ font-size:12px; font-weight:500; color:var(--m-muted); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ background:none; border:0; box-shadow:none; padding:0; margin:0; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ font-family:var(--m-sans); font-size:10px; font-weight:600; letter-spacing:.08em; color:var(--m-muted); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-scheda); font-size:22px; font-weight:800; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); }
+  /* PARAMETRI VITALI del settore: come Aggiorna consegne, una scheda bianca
+     sola con una riga per letto divisa da un filo; a sinistra il letto
+     identico a quello del settore, a destra PA, SpO₂, FC e TC. Niente
+     "Aggiorna": i dati arrivano da soli (al rientro nell'app e ogni minuto) */
+  html[data-ui="minimal"] #vitali-settore-view .group:has(#vitali-aggiorna-btn){ display:none; }
+  html[data-ui="minimal"] #vitali-settore-view .m-vit-sub{ margin:-12px 0 16px; }
+  html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:block; margin:0; padding:0; background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ display:grid; grid-template-columns:64px minmax(0, 1fr); column-gap:12px; align-items:center; margin:0; padding:12px 14px 12px 14px; border:0; border-top:1px solid var(--m-line); border-radius:0; background:none; transition:background .2s; animation:m-compare .35s var(--m-molla) both; }
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:first-child{ border-top:0; }
+  /* la riga in cui si sta scrivendo: un velo del colore principale */
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ background:color-mix(in srgb, var(--m-notte) 7%, transparent); }
+  html[data-ui="minimal"] #vitali-settore-view .riga-label{ display:none; }
+  html[data-ui="minimal"] #vitali-settore-view .m-vit-letto .m-tl{ width:100%; animation:none; pointer-events:none; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ display:grid; grid-template-columns:1.5fr 1fr .9fr .9fr; gap:0; background:none; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v{ padding:0; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ margin-bottom:4px; font-family:var(--m-sans); font-size:10px; font-weight:600; letter-spacing:.08em; color:var(--m-muted); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-sans); font-size:19px; font-weight:700; letter-spacing:-.01em; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); width:34px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input{ width:36px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:42px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input:focus{ background:none; border:0; }
   /* valori scritti: gli stessi colori dell'app (SpO₂ blu, PA arancio, FC rosso, TC viola) */
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input.filled{ color:var(--vs-pa); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.fc input.filled{ color:var(--vs-fc); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input.filled{ color:var(--vs-tc); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:54px; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input::placeholder{ color:var(--m-faint); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v .unit, html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa .sep{ font-family:var(--m-sans); color:var(--m-faint); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v:not(:last-child)::after{ background:var(--m-line); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input::placeholder{ color:var(--m-line-forte); font-weight:400; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v .unit, html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa .sep{ font-family:var(--m-sans); font-size:11px; color:var(--m-faint); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v:not(:last-child)::after{ top:10%; bottom:10%; background:var(--m-line); }
+  /* i nomi dei parametri solo sulla prima riga, come intestazione: ripetuti
+     su ogni letto erano rumore. Via "bpm" (FC basta) per far stare i numeri */
+  html[data-ui="minimal"] #vitali-settore-view .vitali-riga:not(:first-child) .vitals-strip .v label{ display:none; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.fc .unit{ display:none; }
   /* home: i due ingressi restano fermi, scorre solo l'elenco sotto */
   .m-main.m-main-home{ padding-bottom:0; }
   .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
@@ -23477,7 +23490,7 @@ const PAGINE = { consegne:'Consegne Weekend', ricoveri:'Ricoveri', 'ricovero-sin
 // la vista dell'app di ciascuna pagina ("vitali" è vitali-settore-view)
 // ("account" è Impostazioni col solo riquadro dell'accesso)
 const vistaPagina = v => document.getElementById(v === 'vitali' ? 'vitali-settore-view' : v === 'account' ? 'impostazioni-view' : v + '-view');
-const titoloPagina = v => v === 'vitali' ? 'Parametri vitali · ' + String(settoreVitali || '').replace(/^.*?(Settore\s+)/, '$1') : (PAGINE[v] || '');
+const titoloPagina = v => PAGINE[v] || '';
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 const ICON = {
@@ -24177,6 +24190,26 @@ function nuovoAppoggio(tile){
 // la stessa tabella "Aggiorna consegne" di Diari (renderAggiornaConsegne:
 // sintesi delle aggiunte, EE e dimissione da copiare formattati, doppio
 // tocco per modificare, Esami), una scheda per letto
+// Parametri vitali: sotto il titolo il settore e, in ogni riga, il letto
+// identico a quello del settore al posto di "Letto 4.1 · occupato"
+const renderVitaliApp = renderVitaliSettore;
+window.renderVitaliSettore = function(){
+  renderVitaliApp();
+  const vista = document.getElementById('vitali-settore-view'), lista = document.getElementById('vitali-settore-lista');
+  if(!vista || !lista) return;
+  let sub = vista.querySelector('.m-vit-sub');
+  if(!sub){ sub = document.createElement('p'); sub.className = 'm-sub m-vit-sub'; lista.before(sub); }
+  sub.textContent = nomeSettoreTitolo(settoreVitali || settoreAttivo) + ' · Invio passa al letto dopo';
+  lista.querySelectorAll('.vitali-riga').forEach((riga, k) => {
+    riga.style.animationDelay = Math.min(k, 10) * 30 + 'ms';
+    const nome = riga.querySelector('.riga-label span')?.textContent;
+    if(!nome) return;
+    const t = document.createElement('div');
+    t.className = 'm-vit-letto'; t.setAttribute('aria-hidden', 'true');
+    t.innerHTML = tileLetto(nome, inizialiLetto(nome), 0).replace('<button ', '<button tabindex="-1" ');
+    riga.prepend(t);
+  });
+};
 // in Aggiorna consegne il letto è lo stesso riquadro del settore (come
 // nell'app, dove è lo stesso della griglia del reparto)
 const tileAppSolaLettura = tileLettoSolaLettura;
