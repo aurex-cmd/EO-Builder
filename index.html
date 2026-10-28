@@ -22885,30 +22885,19 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:block; margin:0; padding:0; background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ display:grid; grid-template-columns:64px minmax(0, 1fr); column-gap:12px; align-items:center; margin:0; padding:12px 14px 12px 14px; border:0; border-top:1px solid var(--m-line); border-radius:0; background:none; transition:background .2s; animation:m-compare .35s var(--m-molla) both; }
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga:first-child{ border-top:0; }
-  /* DIMISSIONI: solo l'elenco dei letti da dimettere e quando. Per ogni
-     giorno la data in grande (numero, giorno e mese; "oggi" e "domani"
-     come etichetta), sotto una scheda con un letto per riga e a destra la
-     L della lettera: vuota da scrivere, piena nel colore principale se scritta */
-  html[data-ui="minimal"] #dimissioni-view .m-dim-sub{ margin:-12px 0 22px; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-g{ margin:0 0 22px; animation:m-compare .35s var(--m-molla) both; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-data{ display:flex; align-items:center; gap:12px; margin:0 2px 10px; font:inherit; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-n{ font-family:var(--m-scheda); font-size:34px; line-height:1; font-weight:800; letter-spacing:-.03em; color:var(--m-ink); font-variant-numeric:tabular-nums; min-width:44px; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-gm{ display:flex; flex-direction:column; gap:1px; line-height:1.15; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-gm b{ font-size:17px; font-weight:700; color:var(--m-ink); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-gm small{ font-size:14px; color:var(--m-muted); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-quando{ margin-left:auto; padding:4px 10px; border-radius:999px; font-style:normal; font-size:13px; font-weight:600; color:var(--m-notte); background:var(--m-notte-box); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-quando.m-oggi{ color:#fff; background:var(--m-notte); }
-  html[data-ui="minimal"][data-m-tema="scuro"] #dimissioni-view .m-dim-quando:not(.m-oggi){ color:var(--m-link); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-carta{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-r{ display:flex; align-items:center; gap:12px; padding:6px 8px 6px 16px; border-top:1px solid var(--m-line); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-r:first-child{ border-top:0; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-nome{ flex:1 1 auto; min-width:0; min-height:44px; padding:0; border:0; background:none; text-align:left; font:inherit; font-size:17px; font-weight:500; color:var(--m-ink); cursor:pointer; overflow-wrap:anywhere; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-l{ position:relative; flex:none; width:44px; height:44px; padding:0; border:0; background:none; display:grid; place-items:center; cursor:pointer; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-l span{ width:34px; height:34px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--m-line-forte); display:grid; place-items:center; font-family:var(--m-scheda); font-size:15px; font-weight:800; color:var(--m-muted); transition:background .2s, border-color .2s, color .2s; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-r.m-fatta .m-dim-l span{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-r.m-fatta.m-appena .m-dim-l span{ animation:m-pop .5s var(--m-molla); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-l:active span{ transform:scale(.9); }
-  html[data-ui="minimal"] #dimissioni-view .m-dim-vuoto{ color:var(--m-muted); font-size:15px; }
+  /* DIMISSIONI: la pagina dell'app classica (data, letti, L della lettera)
+     col carattere di Pocket; i letti di ogni giorno come righe di Pocket,
+     in una scheda bianca divisa da un filo */
+  html[data-ui="minimal"] #dimissioni-lista .group-label{ margin:22px 2px 10px !important; font-family:var(--m-sans); font-size:17px; font-weight:700 !important; letter-spacing:-.01em; text-transform:none; }
+  html[data-ui="minimal"] #dimissioni-lista .group-label:first-child{ margin-top:4px !important; }
+  html[data-ui="minimal"] #dimissioni-lista .ric-lista-riga{ display:flex; align-items:center; gap:12px; margin:0; padding:10px 12px 10px 16px; background:var(--m-carta); border:1px solid var(--m-line); border-top-width:0; border-radius:0; box-shadow:none; }
+  html[data-ui="minimal"] #dimissioni-lista .group-label + .ric-lista-riga{ border-top-width:1px; border-radius:16px 16px 0 0; }
+  html[data-ui="minimal"] #dimissioni-lista .ric-lista-riga:is(:has(+ .group-label), :last-child){ border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+  html[data-ui="minimal"] #dimissioni-lista .ric-lista-nome{ flex:1 1 auto; min-width:0; font-family:var(--m-sans); font-size:17px; font-weight:500; color:var(--m-ink); cursor:pointer; }
+  html[data-ui="minimal"] #dimissioni-lista .lettera-toggle{ width:34px; height:34px; box-sizing:border-box; flex:none; display:grid; place-items:center; border-radius:50%; border:1.5px solid var(--m-line-forte); background:none; box-shadow:none; font-family:var(--m-sans); font-size:15px; font-weight:700; color:var(--m-muted); transition:background .2s, border-color .2s, color .2s, transform .14s var(--m-molla); }
+  html[data-ui="minimal"] #dimissioni-lista .lettera-toggle:active{ transform:scale(.9); }
+  html[data-ui="minimal"] #dimissioni-lista .lettera-toggle.attivo{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; box-shadow:none; }
+  html[data-ui="minimal"] #dimissioni-lista > .group-label:only-child{ font-size:15px; font-weight:400 !important; color:var(--m-muted) !important; }
   /* la riga in cui si sta scrivendo: un velo del colore principale */
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ background:color-mix(in srgb, var(--m-notte) 7%, transparent); }
   html[data-ui="minimal"] #vitali-settore-view .riga-label{ display:none; }
@@ -24464,49 +24453,12 @@ function segnaLettera(id, g){
   if(f.lettere && f.lettere[id + '|' + g]){ delete f.lettere[id + '|' + g]; scriviFare(f); }
   return fatta;
 }
-const renderDimissioniApp = renderCalendarioDimissioni;
-window.renderCalendarioDimissioni = function(){
-  const vista = document.getElementById('dimissioni-view'), lista = document.getElementById('dimissioni-lista');
-  if(!vista || !lista) return;
-  let sub = vista.querySelector('.m-dim-sub');
-  if(!sub){ sub = document.createElement('p'); sub.className = 'm-sub m-dim-sub'; lista.parentElement.before(sub); }
-  sub.textContent = 'I letti da dimettere, dai diari. Tocca la L quando la lettera è scritta.';
-  const righe = calcolaCalendarioDimissioni();
-  if(!righe.length){ lista.innerHTML = '<p class="m-dim-vuoto">Nessuna dimissione scritta nei diari.</p>'; return; }
-  const oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
-  const giorni = [];
-  righe.forEach(r => {
-    const g = chiaveGiorno(r.data.getTime());
-    let gr = giorni[giorni.length - 1];
-    if(!gr || gr.g !== g){ gr = { g, d: r.data, righe: [] }; giorni.push(gr); }
-    gr.righe.push(r);
-  });
-  lista.innerHTML = giorni.map((gr, k) => {
-    const quando = gr.g === oggi ? '<em class="m-dim-quando m-oggi">oggi</em>' : gr.g === domani ? '<em class="m-dim-quando">domani</em>' : '';
-    return `<section class="m-dim-g" style="animation-delay:${Math.min(k, 8) * 40}ms">`
-      + `<h3 class="m-dim-data"><span class="m-dim-n">${gr.d.getDate()}</span><span class="m-dim-gm"><b>${cap(NOMI_GIORNI_SETTIMANA[gr.d.getDay()])}</b><small>${MESI_ITALIANI[gr.d.getMonth()]}</small></span>${quando}</h3>`
-      + `<div class="m-dim-carta">${gr.righe.map(r => {
-        const fatta = letteraScritta(r.id, gr.g);
-        return `<div class="m-dim-r${fatta ? ' m-fatta' : ''}" data-id="${esc(r.id)}" data-g="${gr.g}" data-n="${esc(r.nome)}">`
-          + `<button type="button" class="m-dim-nome" aria-label="Apri il diario: ${esc(r.nome)}">${esc(r.nome)}</button>`
-          + `<button type="button" class="m-dim-l" aria-pressed="${fatta}" aria-label="Lettera di dimissione scritta"><span>L</span></button></div>`;
-      }).join('')}</div></section>`;
-  }).join('');
-};
-if(!document.getElementById('dimissioni-lista').dataset.mClic){
-  const lista = document.getElementById('dimissioni-lista');
-  lista.dataset.mClic = '1';
-  lista.addEventListener('click', e => {
-    const riga = e.target.closest('.m-dim-r'); if(!riga) return;
-    if(e.target.closest('.m-dim-l')){
-      const fatta = segnaLettera(riga.dataset.id, riga.dataset.g);
-      riga.classList.toggle('m-fatta', fatta); riga.classList.toggle('m-appena', fatta);
-      riga.querySelector('.m-dim-l').setAttribute('aria-pressed', fatta);
-      return;
-    }
-    if(e.target.closest('.m-dim-nome') && voce(riga.dataset.n)) apriScheda(riga.dataset.n);
-  });
-}
+// DIMISSIONI (la pagina dell'app): toccando il nome si apre il diario di Pocket
+document.getElementById('dimissioni-lista').addEventListener('click', e => {
+  const n = e.target.closest('.ric-lista-nome'); if(!n) return;
+  e.stopPropagation();
+  if(voce(n.textContent.trim())) apriScheda(n.textContent.trim());
+}, true);
 // in Aggiorna consegne il letto è lo stesso riquadro del settore (come
 // nell'app, dove è lo stesso della griglia del reparto)
 const tileAppSolaLettura = tileLettoSolaLettura;
