@@ -24194,10 +24194,12 @@ function aggiornaAnello(p, sotto, testo, pc){
   const pa = b ? (pc || 0) : p;
   a.style.strokeDasharray = ANELLO_C; if(b) b.style.strokeDasharray = ANELLO_C;
   requestAnimationFrame(() => { a.style.strokeDashoffset = ANELLO_C * (1 - pa / 100); if(b) b.style.strokeDashoffset = ANELLO_C * (1 - p / 100); });
+  // il numero: i visti finché non si copia il primo diario, poi i copiati
+  const q = pc ? Math.round(pc) : p;
   const da = el.dataset.v ? +el.dataset.v : 0, t0 = performance.now();
-  el.dataset.v = p;
+  el.dataset.v = q;
   cancelAnimationFrame(el._f);
-  const passo = t => { const k = Math.min(1, (t - t0) / 800), e = 1 - Math.pow(1 - k, 3); el.innerHTML = Math.round(da + (p - da) * e) + '<small>%</small>'; if(k < 1) el._f = requestAnimationFrame(passo); };
+  const passo = t => { const k = Math.min(1, (t - t0) / 800), e = 1 - Math.pow(1 - k, 3); el.innerHTML = Math.round(da + (q - da) * e) + '<small>%</small>'; if(k < 1) el._f = requestAnimationFrame(passo); };
   el._f = requestAnimationFrame(passo);
   $m('#m-anello-s').textContent = sotto;
   $m('#m-anello-t').innerHTML = testo;
@@ -24281,8 +24283,9 @@ function statoSettore(s){
   return { nome:s === RIC ? 'Ricoveri' : nomeSettore(s), n:info.length, visti:oggi.length, cop:oggi.filter(i => i.copiato).length };
 }
 // tondo fermo (per la home), due tratti: chiaro i visti, pieno i copiati
-// (pv e pc da 0 a 100); il numero è la percentuale dei visti
-const tondo = (pv, pc = 0) => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-b" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pv / 100)}"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pc / 100)}"/></svg><b>${Math.round(pv)}<small>%</small></b>`;
+// (pv e pc da 0 a 100); il numero è la percentuale dei visti, dal primo
+// diario copiato quella dei copiati
+const tondo = (pv, pc = 0) => `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="44" class="m-td-f"/><circle cx="52" cy="52" r="44" class="m-td-b" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pv / 100)}"/><circle cx="52" cy="52" r="44" class="m-td-a" stroke-dasharray="${ANELLO_C}" stroke-dashoffset="${ANELLO_C * (1 - pc / 100)}"/></svg><b>${Math.round(pc || pv)}<small>%</small></b>`;
 
 /* ---------- la mappa del reparto ---------- */
 // tutti i settori insieme, ciascuno con i suoi letti in piccolo (appoggi in
@@ -24451,7 +24454,7 @@ function disegnaLetti(appena){
   preparaAiuti();
 }
 // l'anello del giro: due tratti, chiaro i visti e pieno i copiati; il
-// numero è la percentuale dei visti
+// numero è la percentuale dei visti, dal primo diario copiato quella dei copiati
 function anelloGiro(info, vuoto){
   const n = info.length, visti = info.filter(i => i.vistoOggi).length, cop = info.filter(i => i.vistoOggi && i.copiato).length;
   const testo = !n ? vuoto : [n - visti && `<b>${n - visti}</b> da vedere`, visti - cop && `<b>${visti - cop}</b> da copiare`].filter(Boolean).join(' · ') || 'Tutto visto e copiato';
