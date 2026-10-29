@@ -25902,7 +25902,15 @@ document.getElementById('m-app').addEventListener('pointerdown', e => {
 const renderWardMapApp = renderWardMap;
 renderWardMap = function(){
   const r = renderWardMapApp.apply(this, arguments);
-  if(M.vista === 'visita' || M.vista === 'diari') disegnaLetti();
+  if(M.vista === 'visita' || M.vista === 'diari'){
+    // ridisegno da sincronizzazione: senza cascata. Alla prima apertura il
+    // pull dal cloud arrivava mentre i settori stavano ancora entrando, e
+    // ridisegnati ripartivano da trasparenti: comparivano, sparivano e
+    // ricomparivano
+    const v = $m('#m-vista');
+    if(v){ clearTimeout(quietaTimer); v.classList.add('m-quieta'); }
+    disegnaLetti();
+  }
   if(M.vista === 'home') vHome();
   return r;
 };
