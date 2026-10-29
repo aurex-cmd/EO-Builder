@@ -25275,6 +25275,20 @@ sc.addEventListener('input', e => {
     } catch(err){}
   }
 });
+// VFG dai provvedimenti: la creatinina sta di solito in "Agli EE", che qui è
+// una casella a parte e non arriva al calcolatore col testo dei
+// provvedimenti: se manca la si prende da lì (e poi dal resto del diario)
+const vfgApp = window.apriVfgCalc;
+window.apriVfgCalc = function(testo, area, id){
+  const r = vfgApp.apply(this, arguments);
+  const cr = document.getElementById('vfg-creat');
+  if(area && area.id === 'm-provv' && cr && !cr.value){
+    const ee = (sc.querySelector('[data-campo="ee"]') || {}).value || (D && D.ee) || '';
+    const v = vfgTrovaCreatinina(ee) || vfgTrovaCreatinina([D && D.eo, ...Object.values((D && D.strum) || {})].join('\n'));
+    if(v) cr.value = v;
+  }
+  return r;
+};
 sc.addEventListener('focusout', e => {
   const t = e.target;
   if(t.matches('[data-campo]')){
