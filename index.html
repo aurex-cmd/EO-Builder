@@ -23689,8 +23689,14 @@ function editorLettereSvuota(){
 XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8.5' y='8.5' width='11.5' height='11.5' rx='2.2'/%3E%3Cpath d='M15.5 8.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7.5a2 2 0 002 2h2.5'/%3E%3C/svg%3E"); }
   #m-aggcons table.agg-cons .agg-cons-etichetta:active{ transform:scale(.97); }
   #m-aggcons table.agg-cons .agg-cons-righe{ font-size:15px; line-height:1.5; color:var(--m-ink); }
-  #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#fbefa6; color:var(--m-ink); border-radius:4px; padding:0 4px; }
-  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ border:0; background:none; color:var(--m-faint); }
+  /* le richieste si copiano toccandole (niente icona, come EE e dimissione) */
+  #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#ffe14a; color:var(--m-ink); border-radius:4px; padding:0 4px; cursor:pointer; transition:background .25s; }
+  #m-aggcons table.agg-cons .agg-cons-righe .r.m-copiata{ background:#cdf1f1; }
+  #m-aggcons table.agg-cons .agg-cons-righe .r.m-copiata::after{ content:" ✓"; color:var(--m-teal); font-weight:700; }
+  #m-aggcons table.agg-cons .agg-cons-righe .r-copia{ display:none; }
+  /* pallini al posto dei trattini (il testo copiato resta con i trattini) */
+  #m-aggcons table.agg-cons .agg-cons-righe .riga .tr{ font-size:0; }
+  #m-aggcons table.agg-cons .agg-cons-righe .riga .tr:not(:empty)::before{ content:"•"; font-size:15px; color:var(--m-muted); }
   #m-aggcons table.agg-cons .agg-cons-vuoto{ display:block; padding-top:2px; font-size:13px; line-height:1.45; color:var(--m-muted); }
   #m-aggcons table.agg-cons textarea.agg-cons-testo{ width:100%; border:0; border-radius:10px; background:var(--m-box); padding:9px 11px; font-family:var(--m-sans); font-size:15px; line-height:1.5; color:var(--m-ink); outline:none; box-shadow:inset 0 0 0 1.5px var(--m-notte); }
   /* Copia qui non serve (le etichette e le richieste si copiano da sole):
@@ -23788,7 +23794,8 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
   html[data-m-tema="scuro"] .m-bar{ border-bottom-color:var(--m-line); }
   html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
-  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#5a4d12; color:#fff3c4; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#7a6300; color:#fff3c4; }
+  html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r.m-copiata{ background:#1d4f50; color:#d3f4f4; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .ee{ background:#5b2f5c; color:#f6dcf6; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .dim{ background:#1d4f50; color:#d3f4f4; }
   html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
@@ -24835,6 +24842,15 @@ function vAggCons(){
     const entries = ordinaPazientiPerLetto(schedeConDatiPerGiorno(false), true).filter(([, q]) => !ric.has(q.name));
     if(!entries.length){ box.innerHTML = '<p class="m-aggcons-vuoto">Nessun diario scritto oggi: le consegne si aggiornano a fine giro.</p>'; return; }
     renderAggiornaConsegne(box, entries);
+  });
+  // un tocco sulla richiesta in giallo la copia (la stessa copia dell'icona,
+  // che qui è nascosta) e la fa diventare "copiata" per un attimo
+  box.addEventListener('click', e => {
+    const r = e.target.closest('.agg-cons-righe .r'); if(!r) return;
+    const b = r.nextElementSibling;
+    if(b && b.classList.contains('r-copia')) b.click();
+    r.classList.add('m-copiata'); clearTimeout(r._copiata);
+    r._copiata = setTimeout(() => r.classList.remove('m-copiata'), 1200);
   });
   box.querySelectorAll('table.agg-cons tbody tr').forEach((tr, k) => {
     tr.style.setProperty('--i', Math.min(k, 10));
