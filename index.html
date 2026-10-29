@@ -25662,6 +25662,12 @@ sc.addEventListener('paste', e => {
 const velo = $m('#m-velo');
 // a fine trascinamento lo sfocato torna alla sola striscia in alto (o se ne
 // va con la scheda), con l'oscurità di nuovo piena
+// lo sfocato resta quasi pieno nel primo tratto e cala solo quando la scheda
+// è ormai scesa: in proporzione all'altezza della scheda, non a 500px fissi
+function opacitaVelo(dy){
+  const f = Math.min(1, dy / (sc.offsetHeight || 700));
+  return 1 - f * f;
+}
 function lasciaVelo(){
   velo.classList.remove('m-velo-segue'); velo.style.opacity = '';
   setTimeout(() => velo.classList.remove('m-tutto'), 450);
@@ -25670,7 +25676,7 @@ function lasciaVelo(){
   const testa = $m('#m-s-testa');
   let y0 = null, dy = 0;
   testa.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; y0 = e.clientY; dy = 0; sc.classList.add('m-trascina'); velo.classList.add('m-tutto', 'm-velo-segue'); testa.setPointerCapture(e.pointerId); });
-  testa.addEventListener('pointermove', e => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = Math.max(0, 1 - dy / 500); });
+  testa.addEventListener('pointermove', e => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = opacitaVelo(dy); });
   const fine = () => { if(y0 === null) return; sc.classList.remove('m-trascina'); sc.style.transform = ''; lasciaVelo(); if(dy > 120) chiudiScheda(); y0 = null; };
   testa.addEventListener('pointerup', fine); testa.addEventListener('pointercancel', fine);
 })();
@@ -25680,7 +25686,7 @@ function lasciaVelo(){
 (() => {
   const corpo = $m('#m-s-corpo');
   let y0 = null, x0 = 0, dy = 0, attivo = false, frame = 0, vy = 0, tPrec = 0, yPrec = 0;
-  const sposta = () => { frame = 0; sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = Math.max(0, 1 - dy / 500); };
+  const sposta = () => { frame = 0; sc.style.transform = `translateY(${dy}px)`; velo.style.opacity = opacitaVelo(dy); };
   corpo.addEventListener('touchstart', e => {
     y0 = null;
     if(e.touches.length !== 1 || corpo.scrollTop > 0 || e.target === document.activeElement && e.target.matches('textarea, input')) return;
