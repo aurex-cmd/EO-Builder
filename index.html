@@ -22737,6 +22737,9 @@ function editorLettereSvuota(){
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-link); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
   .m-modifica:active{ transform:scale(.94); opacity:.7; }
   .m-aiuti{ display:flex; flex-wrap:wrap; gap:5px; padding:4px 0 0; }
+  /* senza etichette il riquadro sparisce davvero: display:flex vinceva su hidden e lasciava
+     uno spazio vuoto tra il titolo e l'esame obiettivo */
+  .m-aiuti[hidden]{ display:none; }
   .m-aiuto{ display:inline-flex; align-items:center; gap:5px; max-width:100%; background:none; border:1px solid var(--m-line); border-radius:6px; padding:0 7px 0 6px; font-size:12px; line-height:20px; font-weight:500; color:var(--m-muted); overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
   .m-aiuto i{ width:5px; height:5px; border-radius:50%; flex:0 0 auto; background:var(--acc); }
   .m-aiuto em{ font-style:normal; font-weight:400; color:var(--m-faint); }
