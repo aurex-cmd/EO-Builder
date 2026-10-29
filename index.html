@@ -4053,7 +4053,20 @@ const festeNatale = () => { const d = new Date(), m = d.getMonth(), g = d.getDat
 const stagioneNatale = () => { const d = new Date(); return String(d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear()); };
 const MNATALE_NO_KEY = 'eo_minimal_natale_no_v1';
 const natalePerTutti = () => { try{ return festeNatale() && localStorage.getItem(MNATALE_NO_KEY) !== stagioneNatale(); } catch(e){ return festeNatale(); } };
-const pulsantiDisponibili = () => festeNatale() ? [...MPULSANTI, ['natale', 'Natale', '#b3232c', '#c8323b']] : MPULSANTI;
+// il creatore dell'app può scegliere il Natale tutto l'anno: lo si riconosce
+// dall'impronta SHA-256 dell'email dell'account (l'email non è nel codice),
+// controllata a ogni accesso e ricordata su questo dispositivo
+const MCREATORE_HASH = '87d3c2b14ceba8f5b9939989ffca11c3027d628cd749fc5dcbac243785397c3a';
+const MCREATORE_KEY = 'eo_minimal_creatore_v1';
+const creatoreApp = () => { try{ return localStorage.getItem(MCREATORE_KEY) === '1'; } catch(e){ return false; } };
+async function segnaCreatore(user){
+  try{
+    if(!user || !user.email){ localStorage.removeItem(MCREATORE_KEY); return; }
+    const h = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(user.email.trim().toLowerCase())))].map(b => b.toString(16).padStart(2, '0')).join('');
+    if(h === MCREATORE_HASH) localStorage.setItem(MCREATORE_KEY, '1'); else localStorage.removeItem(MCREATORE_KEY);
+  } catch(e){}
+}
+const pulsantiDisponibili = () => festeNatale() || creatoreApp() ? [...MPULSANTI, ['natale', 'Natale', '#b3232c', '#c8323b']] : MPULSANTI;
 const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
 const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';
 if(UI_MINIMAL){
@@ -4063,7 +4076,7 @@ if(UI_MINIMAL){
   let colore = 'teal';
   try{
     let c = localStorage.getItem(MPULSANTE_KEY); c = MPULSANTI_VECCHI[c] || c;
-    if(MPULSANTI.some(x => x[0] === c)) colore = c;
+    if(MPULSANTI.some(x => x[0] === c) || (c === 'natale' && creatoreApp())) colore = c;
   } catch(e){}
   if(natalePerTutti()) colore = 'natale';
   document.documentElement.dataset.mPulsante = colore;
@@ -5693,6 +5706,8 @@ async function aggiornaStatoSync(){
   if(!supabaseClient) return;
   const { data } = await supabaseClient.auth.getUser();
   const user = data && data.user;
+  // il creatore dalla sessione salvata (vale anche senza rete)
+  try{ const { data:ss } = await supabaseClient.auth.getSession(); segnaCreatore(ss && ss.session && ss.session.user); } catch(e){}
   const outEl = document.getElementById('sync-logged-out');
   const inEl = document.getElementById('sync-logged-in');
   const badge = document.getElementById('sync-connesso-badge');
@@ -26261,7 +26276,9 @@ if(temaChiaro && temaScuro){
       // a Natale: un altro colore toglie il rosso per queste feste, il
       // Natale lo rimette; il colore di sempre non si tocca
       if(b.dataset.c === 'natale') localStorage.removeItem(MNATALE_NO_KEY);
-      else{
+      // fuori dalle feste (solo il creatore lo vede) si salva come gli altri
+      if(b.dataset.c === 'natale' && !festeNatale()) localStorage.setItem(MPULSANTE_KEY, 'natale');
+      else if(b.dataset.c !== 'natale'){
         if(festeNatale()) localStorage.setItem(MNATALE_NO_KEY, stagioneNatale());
         localStorage.setItem(MPULSANTE_KEY, b.dataset.c);
       }
