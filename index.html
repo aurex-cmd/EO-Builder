@@ -23066,6 +23066,8 @@ function editorLettereSvuota(){
   .m-f-luci circle:nth-child(2n){ animation-delay:-.8s; } .m-f-luci circle:nth-child(3n){ animation-delay:-.4s; }
   @keyframes m-f-luce{ from{ opacity:.25; } to{ opacity:1; } }
   .m-f-pupazzo{ position:absolute; right:52px; bottom:2px; width:40px; height:54px; transform:translateY(110%); animation:m-f-spunta 30s ease-in-out 2s infinite; }
+  /* il cappello che si alza esce dal disegno: niente taglio */
+  .m-festa .m-f-pupazzo svg{ overflow:visible; }
   .m-f-braccio{ transform-origin:32px 36px; animation:m-f-saluta .5s ease-in-out infinite alternate; }
   .m-f-cappello{ transform-origin:20px 12px; animation:m-f-cappello 30s ease-in-out 2s infinite; }
   .m-f-lancio{ transform-origin:8px 36px; animation:m-f-lancio 30s ease-in-out 2s infinite; }
