@@ -5400,7 +5400,9 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   // EO Pocket: "Da fare oggi" segnato a mano (consegne aggiornate, lettere scritte)
   'eo_minimal_dafare_v1',
   // i letti 1.1-2.2 del Settore A già aggiunti alla mappa salvata (vedi conLettiA12)
-  'eo_builder_ward_map_a12_v1'];
+  'eo_builder_ward_map_a12_v1',
+  // EO Pocket: le pratiche dei pazienti (decesso, OdC, hospice...) e i loro moduli
+  'eo_minimal_pratiche_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -5408,7 +5410,9 @@ const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
 // (lettere) uno per uno: consegne segnate dal PC e una lettera dal telefono
 // restano entrambe
 const FARE_SYNC_KEY = 'eo_minimal_dafare_v1';
-const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY;
+// pratiche di EO Pocket: una voce per paziente e pratica, fuse voce per voce
+const PRATICHE_SYNC_KEY = 'eo_minimal_pratiche_v1';
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY;
 function fondiPerVoce(key, rawBase, rawLocale, rawCloud){
   const fuso = fondiSchedePazienti(rawBase, rawLocale, rawCloud);
   if(key !== FARE_SYNC_KEY) return fuso;
@@ -22293,14 +22297,17 @@ document.getElementById('pd-lista').addEventListener('click', (e) => {
 // dell'avviso sta nella voce stessa (avvisoDal), quindi è sincronizzato:
 // posticipato dal PC, non ricompare sul telefono
 const POSTDEGENZA_GIORNI_AVVISO = 10;
+// l'avviso arriva alle 14 del giorno (prima a mezzogiorno: quelli già
+// rimandati a mezzogiorno si spostano anche loro alle 14)
 function mezzogiornoTra(ts, giorni){
   const d = new Date(ts);
   d.setDate(d.getDate() + giorni);
-  d.setHours(12, 0, 0, 0);
+  d.setHours(14, 0, 0, 0);
   return d.getTime();
 }
 function avvisoPostDegenza(v){
-  return v.avvisoDal || mezzogiornoTra(v.inseritoIl || v.savedAt || Date.now(), POSTDEGENZA_GIORNI_AVVISO);
+  if(v.avvisoDal){ const d = new Date(v.avvisoDal); if(d.getHours() === 12 && !d.getMinutes()) d.setHours(14); return d.getTime(); }
+  return mezzogiornoTra(v.inseritoIl || v.savedAt || Date.now(), POSTDEGENZA_GIORNI_AVVISO);
 }
 let avvisoPostDegenzeMostrato = [];
 function controllaAvvisoPostDegenze(){
@@ -22719,7 +22726,7 @@ function editorLettereSvuota(){
   .m-chiudi svg{ width:15px; height:15px; }
   /* la X nell'angolo in alto a destra della scheda, non in fondo al titolo */
   .m-s-testa .m-chiudi{ position:absolute; top:14px; right:14px; }
-  .m-s-testa{ padding-right:56px; }
+  .m-s-testa{ padding-right:96px; }
   .m-s-corpo{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 18px; display:flex; flex-direction:column; gap:6px; }
   /* spazio in fondo per far salire l'ultima riga sopra "Copia": su iPhone il
      padding in fondo di un contenitore flex che scorre non conta, e il diario
@@ -23012,6 +23019,46 @@ function editorLettereSvuota(){
   .m-fare{ flex:none; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   .m-elenco.m-dopo-fare{ margin-top:0; }
   .m-fare-r{ display:flex; align-items:center; background:#fff; border-top:1px solid var(--m-line); }
+  /* PRATICHE: una riga che si apre (quante ne mancano e la freccia a destra,
+     al posto del cerchio) e sotto i pazienti coi moduli da spuntare */
+  .m-pr-riga .m-voce .m-vc{ margin-left:auto; }
+  .m-pr-freccia{ flex:none; display:grid; place-items:center; width:24px; height:24px; margin:0 14px 0 4px; padding:0; border:0; background:none; color:var(--m-muted); cursor:pointer; transition:transform .3s var(--m-molla); }
+  .m-pr-freccia svg{ width:20px; height:20px; }
+  .m-pr-riga.m-aperta .m-pr-freccia{ transform:rotate(180deg); }
+  .m-pr-tutte{ padding:0 14px 14px 46px; background:#fff; border-top:1px solid var(--m-line); animation:m-compare .3s ease-out both; }
+  .m-pr-paz{ padding-top:12px; }
+  .m-pr-paz + .m-pr-paz{ border-top:1px dashed var(--m-line); margin-top:12px; }
+  .m-pr-tit{ font-size:13px; font-weight:600; color:var(--m-ink); margin-bottom:8px; }
+  .m-pr-tit em{ font-style:normal; font-weight:500; color:var(--m-muted); }
+  .m-pr-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .m-pr{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px 0 8px; border:1px solid var(--m-line-forte); border-radius:999px; font:inherit; font-size:13px; font-weight:500; color:var(--m-ink); background:transparent; cursor:pointer; transition:background .2s, color .2s, border-color .2s; }
+  .m-pr i{ position:relative; width:15px; height:15px; border-radius:50%; border:1.5px solid var(--m-line-forte); box-sizing:border-box; flex:none; transition:background .2s, border-color .2s; }
+  .m-pr.m-ok{ color:var(--m-teal); border-color:color-mix(in srgb, var(--m-teal) 40%, transparent); background:var(--m-teal-box); }
+  .m-pr.m-ok i{ background:var(--m-teal); border-color:var(--m-teal); }
+  .m-pr.m-ok i::after{ content:""; position:absolute; left:3.5px; top:3px; width:5px; height:2.6px; border:solid #fff; border-width:0 0 1.6px 1.6px; transform:rotate(-45deg); }
+  .m-pr.m-nuovo{ animation:m-scelto .45s var(--m-molla); }
+  /* nella scheda: le stesse spunte tra le etichette, e il pulsante accanto alla X */
+  .m-pr-scheda[hidden]{ display:none; }
+  button.m-aiuto.m-pr-s{ font:inherit; font-size:12px; line-height:20px; cursor:pointer; border-color:var(--m-line-forte); color:var(--m-ink); }
+  .m-aiuto.m-pr-s b{ width:10px; height:10px; border-radius:50%; border:1.3px solid var(--m-line-forte); box-sizing:border-box; flex:none; }
+  .m-aiuto.m-pr-s.m-ok{ color:var(--m-teal); background:var(--m-teal-box); border-color:color-mix(in srgb, var(--m-teal) 40%, transparent); }
+  .m-aiuto.m-pr-s.m-ok b{ background:var(--m-teal); border-color:var(--m-teal); }
+  .m-s-testa .m-s-pratica{ position:absolute; top:14px; right:54px; width:30px; height:30px; border-radius:50%; border:0; background:var(--m-sec); color:var(--m-muted); display:grid; place-items:center; cursor:pointer; transition:transform .12s var(--m-molla); }
+  .m-s-testa .m-s-pratica::after{ content:""; position:absolute; inset:-7px; }
+  .m-s-testa .m-s-pratica:active{ transform:scale(.88); }
+  .m-s-testa .m-s-pratica svg{ width:16px; height:16px; }
+  .m-pr-menu{ position:absolute; top:52px; right:14px; z-index:5; width:min(290px, calc(100% - 28px)); max-height:min(420px, 70%); overflow-y:auto; padding:6px; background:var(--m-bg); border:1px solid var(--m-line); border-radius:12px; box-shadow:0 12px 32px rgba(23,34,49,.14), 0 2px 6px rgba(23,34,49,.06); animation:m-riquadro .25s var(--m-molla) both; transform-origin:100% 0; }
+  .m-pr-menu p{ margin:6px 10px 6px; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-pr-menu button{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; width:100%; padding:9px 10px; border:0; border-radius:8px; background:none; font:inherit; text-align:left; cursor:pointer; }
+  .m-pr-menu button:active{ background:var(--m-hover); }
+  .m-pr-menu button span{ font-size:15px; font-weight:600; color:var(--m-ink); }
+  .m-pr-menu button small{ font-size:12px; color:var(--m-muted); }
+  .m-pr-menu button small:empty{ display:none; }
+  .m-pr-menu button.m-attiva span{ color:var(--m-teal); }
+  .m-pr-menu button.m-attiva small{ color:var(--m-atb2); }
+  .m-pr-altro{ display:block; padding:6px 4px 4px; border-top:1px solid var(--m-line); margin-top:4px; }
+  .m-pr-altro input{ width:100%; box-sizing:border-box; height:38px; padding:0 10px; border:1px solid transparent; border-radius:8px; background:var(--m-box); font:inherit; font-size:15px; color:var(--m-ink); outline:none; }
+  .m-pr-altro input:focus{ border-color:var(--m-notte); background:var(--m-bg); }
   .m-fare-r:first-child{ border-top:0; }
   .m-fare-r .m-voce{ flex:1; min-width:0; border-top:0; padding-right:8px; }
   .m-fare-r .m-voce .m-chev{ display:none; }
@@ -23670,7 +23717,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
     --page:#0c1622; --signal:var(--m-link); --signal-dim:var(--m-notte-box); --signal-soft:color-mix(in srgb, var(--m-link) 14%, transparent); --on-signal:#04121f; --clay-border:#1e3047;
     --st-bar:#24384f; --st-bar-hi:#4d6a8a;
   }
-  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-fare-r, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
+  html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-fare-r, .m-pr-tutte, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
   html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga{ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-scheda{ --m-bg:var(--m-carta); }
   html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); border-color:color-mix(in srgb, var(--m-notte) 72%, #000); }
@@ -23964,6 +24011,138 @@ const FARE_KEY = 'eo_minimal_dafare_v1';
 function leggiFare(){ try{ return JSON.parse(localStorage.getItem(FARE_KEY)) || {}; } catch(e){ return {}; } }
 function scriviFare(f){ setLocalAndCloud(FARE_KEY, JSON.stringify(f)); }
 let fattiPrima = null;
+/* ---------- pratiche ---------- */
+// moduli da compilare per alcuni pazienti: decesso, trasferimento in OdC o in
+// hospice, invalidità, esami con mezzo di contrasto, TAV. Nascono da soli dal
+// diario (le aggiunte: esami e provvedimenti) o a mano dalla scheda, e un
+// modulo scritto come già fatto ("compilata invalidità civile", "redatta
+// scheda Hospice") si spunta da solo. Restano finché non sono tutti
+// spuntati, anche nei giorni dopo, e si sincronizzano voce per voce
+// (PRATICHE_SYNC_KEY): una voce per paziente e pratica, con i moduli fatti e
+// quelli toccati a mano (che il diario non cambia più)
+const PR_FATTO = /\b(?:compilat|redatt|inviat|eseguit|fatt|completat|consegnat|trasmess|effettuat|firmat|inoltrat|stilat|presentat)[oaie]\b/i;
+const PR_SVAMA = /\bs\.?v\.?a\.?m\.?a\b/i;
+const PR_TIPI = {
+  decesso:    { nome:'Decesso', re:/\b(?:exitus|decess[oi]|decedut[oa])\b/i,
+                moduli:[['SDO', /\bsdo\b/i], ['ISTAT', /\bistat\b/i], ['INPS', /\binps\b/i], ['Diario', /\bdiario\b/i], ['Tanatogramma', /tanatogramm/i]] },
+  odc:        { nome:'OdC', re:/\bodc\b|ospedale di comunit/i,
+                moduli:[['SVAMA', PR_SVAMA], ['Eleggibilità OdC', /eleggibilit/i]] },
+  hospice:    { nome:'Hospice', re:/\bhospice\b/i,
+                moduli:[['SVAMA', PR_SVAMA], ['Scheda Hospice', /\bscheda\b[^.\n]*\bhospice\b|\bhospice\b[^.\n]*\bscheda\b/i], ['Karnofsky', /karnofsk/i], ['Eleggibilità Hospice', /eleggibilit/i]] },
+  invalidita: { nome:'Invalidità', re:/invalidit[aà]/i, moduli:[['Invalidità', /invalidit[aà]/i]] },
+  mdc:        { nome:'Mezzo di contrasto', re:/\bm\.?d\.?c\b|mezzo di contrasto/i, no:/\bsenza\s+(?:m\.?d\.?c\b|mezzo di contrasto)/i,
+                moduli:[['Modulo MDC', /\b(?:modulo|consenso)\b[^.\n]*(?:\bm\.?d\.?c\b|contrasto)|(?:\bm\.?d\.?c\b|contrasto)[^.\n]*\b(?:modulo|consenso)\b/i]] },
+  tav:        { nome:'TAV', re:/\btav\b/i,
+                moduli:[['Modulo TAV', /\b(?:modulo|consenso)\b[^.\n]*\btav\b|\btav\b[^.\n]*\b(?:modulo|consenso)\b/i]] }
+};
+ICON.pratica = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13.5l2 2 4-4"/></svg>';
+ICON.praticaPiu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>';
+const PR_APERTE_KEY = 'eo_minimal_pratiche_aperte_v1';   // elenco aperto in home (solo su questo dispositivo)
+function leggiPratiche(){ try{ const v = JSON.parse(localStorage.getItem(PRATICHE_SYNC_KEY)); return v && typeof v === 'object' ? v : {}; } catch(e){ return {}; } }
+function scriviPratiche(pr){ setLocalAndCloud(PRATICHE_SYNC_KEY, JSON.stringify(pr)); }
+const praticaFinita = v => !Object.values(v.moduli || {}).some(x => !x);
+// legge i diari: nuove pratiche e moduli scritti come fatti
+function aggiornaPratiche(){
+  const pr = leggiPratiche(), ps = loadPatients(), ora = Date.now();
+  let cambiato = false;
+  Object.entries(ps).forEach(([id, p]) => {
+    if(!p || !p.state || !schedaHaDati(p.state)) return;
+    const testo = statoScheda(id, p).outputExtra || ''; if(!testo.trim()) return;
+    const frasi = testo.split(/\n|(?<=[.;])\s+/).filter(f => f.trim());
+    const fatto = re => frasi.some(f => re.test(f) && PR_FATTO.test(f) && !/\bnon\b/i.test(f));
+    Object.entries(PR_TIPI).forEach(([t, d]) => {
+      if(!frasi.some(f => d.re.test(f) && !(d.no && d.no.test(f)))) return;
+      const k = id + '|' + t;
+      let v = pr[k];
+      if(!v){ v = pr[k] = { id, tipo:t, nome:d.nome, letto:p.name, moduli:Object.fromEntries(d.moduli.map(([m]) => [m, false])), mano:{}, savedAt:ora }; cambiato = true; }
+      if(v.tolta) return;
+      d.moduli.forEach(([m, re]) => {
+        if(v.moduli[m] || (v.mano || {})[m] || !fatto(re)) return;
+        v.moduli[m] = true; v.savedAt = ora; cambiato = true;
+      });
+    });
+  });
+  // le voci chiuse (finite o tolte) da più di un mese non servono più
+  Object.keys(pr).forEach(k => { const v = pr[k]; if((v.tolta || praticaFinita(v)) && ora - (v.savedAt || 0) > 30 * 864e5){ delete pr[k]; cambiato = true; } });
+  if(cambiato) scriviPratiche(pr);
+  return pr;
+}
+// pratiche con qualcosa da fare, dei letti in nomi (o di tutti), in ordine di letto
+function praticheDaFare(nomi){
+  const pr = aggiornaPratiche(), ps = loadPatients();
+  return Object.entries(pr).filter(([, v]) => !v.tolta && !praticaFinita(v))
+    .map(([k, v]) => ({ k, v, letto:(ps[v.id] && ps[v.id].name) || v.letto || '' }))
+    .filter(x => !nomi || nomi.has(x.letto))
+    .sort((a, b) => confrontaNomiLetto(a.letto, b.letto) || String(a.v.nome).localeCompare(String(b.v.nome)));
+}
+const chipModulo = (k, m, ok) => `<button class="m-pr${ok ? ' m-ok' : ''}" data-m="pr-modulo" data-k="${esc(k)}" data-mod="${esc(m)}" aria-pressed="${!!ok}"><i></i>${esc(m)}</button>`;
+// la riga "Pratiche" di Da fare oggi: chiusa mostra solo quante cose
+// mancano; aperta, i pazienti con i loro moduli da spuntare
+function htmlPratiche(nomi){
+  const lista = praticheDaFare(nomi);
+  if(!lista.length) return '';
+  const n = lista.reduce((t, x) => t + Object.values(x.v.moduli).filter(y => !y).length, 0);
+  let aperta = false; try{ aperta = localStorage.getItem(PR_APERTE_KEY) === '1'; } catch(e){}
+  const gruppi = lista.map(({ k, v, letto }) => `<div class="m-pr-paz"><div class="m-pr-tit">${esc(letto)} · <em>${esc(v.nome)}</em></div><div class="m-pr-chips">${Object.entries(v.moduli).map(([m, ok]) => chipModulo(k, m, ok)).join('')}</div></div>`).join('');
+  return `<div class="m-fare-r m-pr-riga${aperta ? ' m-aperta' : ''}"><button class="m-voce" data-m="pr-apri" aria-expanded="${aperta}">${ICON.pratica}<span class="m-vn">Pratiche</span><span class="m-vc">${n} da fare</span></button><button class="m-pr-freccia" data-m="pr-apri" aria-label="${aperta ? 'Chiudi' : 'Apri'} le pratiche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="m-pr-tutte"${aperta ? '' : ' hidden'}>${gruppi}</div>`;
+}
+function apriPratiche(){
+  const riga = $m('.m-pr-riga'), box = $m('.m-pr-tutte'); if(!riga || !box) return;
+  const aperta = !riga.classList.contains('m-aperta');
+  riga.classList.toggle('m-aperta', aperta); box.hidden = !aperta;
+  riga.querySelector('.m-voce').setAttribute('aria-expanded', aperta);
+  try{ localStorage.setItem(PR_APERTE_KEY, aperta ? '1' : '0'); } catch(e){}
+}
+function segnaModulo(btn){
+  const k = btn.dataset.k, m = btn.dataset.mod;
+  const pr = leggiPratiche(), v = pr[k]; if(!v) return;
+  v.moduli[m] = !v.moduli[m]; v.mano = v.mano || {}; v.mano[m] = true; v.savedAt = Date.now();
+  scriviPratiche(pr);
+  document.querySelectorAll('[data-m="pr-modulo"]').forEach(b => {
+    if(b.dataset.k !== k || b.dataset.mod !== m) return;
+    b.classList.toggle('m-ok', v.moduli[m]); b.setAttribute('aria-pressed', v.moduli[m]);
+    if(v.moduli[m]){ b.classList.remove('m-nuovo'); void b.offsetWidth; b.classList.add('m-nuovo'); }
+  });
+  // quanti ne mancano, sulla riga chiusa
+  const conto = $m('.m-pr-riga .m-vc'), tutte = $m('.m-pr-tutte');
+  if(conto && tutte){ const n = tutte.querySelectorAll('.m-pr:not(.m-ok)').length; conto.textContent = n ? `${n} da fare` : 'fatte'; }
+}
+// nella scheda del diario: le pratiche del paziente sotto il titolo, accanto
+// alle altre etichette (niente se non ce ne sono)
+function disegnaPraticheScheda(){
+  const box = $m('#m-pr-scheda'); if(!box || !M.id) return;
+  const pr = aggiornaPratiche();
+  const sue = Object.entries(pr).filter(([, v]) => v.id === M.id && !v.tolta && !praticaFinita(v));
+  const html = sue.map(([k, v]) => Object.entries(v.moduli).map(([m, ok]) => `<button class="m-aiuto m-pr-s${ok ? ' m-ok' : ''}" data-m="pr-modulo" data-k="${esc(k)}" data-mod="${esc(m)}" aria-pressed="${!!ok}" title="${esc(v.nome)}"><b></b>${esc(m)}</button>`).join('')).join('');
+  if(box.dataset.html !== html){ box.dataset.html = html; box.innerHTML = html; }
+  box.hidden = !html;
+}
+// il pulsante accanto alla X: le pratiche da aggiungere (o da togliere)
+function menuPratiche(btn){
+  const vecchio = $m('.m-pr-menu'); if(vecchio){ vecchio.remove(); return; }
+  const pr = leggiPratiche();
+  const attiva = t => { const v = pr[M.id + '|' + t]; return v && !v.tolta && !praticaFinita(v); };
+  const menu = document.createElement('div');
+  menu.className = 'm-pr-menu';
+  menu.innerHTML = `<p>Pratiche · ${esc(M.letto)}</p>` + Object.entries(PR_TIPI).map(([t, d]) => `<button data-m="pr-nuova" data-t="${t}"${attiva(t) ? ' class="m-attiva"' : ''}><span>${esc(d.nome)}</span><small>${attiva(t) ? 'togli' : d.moduli.length > 1 ? d.moduli.map(x => x[0]).join(' · ') : ''}</small></button>`).join('')
+    + Object.entries(pr).filter(([k, v]) => v.id === M.id && v.tipo.startsWith('altro:') && !v.tolta && !praticaFinita(v)).map(([k, v]) => `<button data-m="pr-nuova" data-t="${esc(v.tipo)}" class="m-attiva"><span>${esc(Object.keys(v.moduli)[0])}</span><small>togli</small></button>`).join('')
+    + `<label class="m-pr-altro"><input placeholder="Altro modulo…" enterkeyhint="done" aria-label="Nome di un altro modulo"></label>`;
+  sc.appendChild(menu);
+  const inp = menu.querySelector('input');
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); const n = inp.value.trim(); if(n) nuovaPratica('altro:' + n.toLowerCase(), n); } if(e.key === 'Escape') menu.remove(); });
+  setTimeout(() => document.addEventListener('pointerdown', function fuori(e){ if(!menu.isConnected){ document.removeEventListener('pointerdown', fuori, true); return; } if(!menu.contains(e.target) && !e.target.closest('[data-m="pr-menu"]')){ menu.remove(); document.removeEventListener('pointerdown', fuori, true); } }, true));
+}
+function nuovaPratica(t, nomeAltro){
+  const pr = leggiPratiche(), k = M.id + '|' + t, v = pr[k], d = PR_TIPI[t];
+  if(v && !v.tolta && !praticaFinita(v)){ v.tolta = true; v.savedAt = Date.now(); }
+  else {
+    const moduli = d ? Object.fromEntries(d.moduli.map(([m]) => [m, false])) : { [nomeAltro || t.slice(6)]: false };
+    pr[k] = { id:M.id, tipo:t, nome:d ? d.nome : 'Altro', letto:M.letto, moduli, mano:Object.fromEntries(Object.keys(moduli).map(m => [m, true])), savedAt:Date.now() };
+  }
+  scriviPratiche(pr);
+  const menu = $m('.m-pr-menu'); if(menu) menu.remove();
+  disegnaPraticheScheda();
+}
 // soloSettore: per la scheda del settore, senza le post-degenze (che non sono
 // di un settore)
 function bloccoFare(copiati, soloSettore){
@@ -24012,20 +24191,22 @@ function bloccoFare(copiati, soloSettore){
       nome:`Lettera · ${esc(String(r.nome || '').replace(/^Letto\s+/i, 'letto '))}`, dato:g === oggi ? 'oggi' : 'domani' });
   });
   if(cambiato) scriviFare(f);
-  if(!righe.length){ fattiPrima = new Set(); return { html:'', chiavi:new Set() }; }
+  // pratiche dei pazienti del settore scelto (o di tutti), in una riga che si apre
+  let pratiche = ''; try{ const s = soloSettore ? M.settore : settoreScelto(); pratiche = htmlPratiche(s ? nomiDelSettore(s) : null); } catch(e){}
+  if(!righe.length && !pratiche){ fattiPrima = new Set(); return { html:'', chiavi:new Set() }; }
   // prima quello che manca, poi il fatto; il baffo "salta" solo se è appena comparso
   righe.sort((a, b) => a.fatta - b.fatta);
   const fattiOra = new Set(righe.filter(r => r.fatta).map(r => r.k));
   const appena = k => fattiPrima && !fattiPrima.has(k) && fattiOra.has(k);
   fattiPrima = fattiOra;
-  const tutte = righe.every(r => r.fatta);
+  const tutte = righe.every(r => r.fatta) && !pratiche;
   const html = `<p class="m-lbl m-fare-t${tutte ? ' m-tutto' : ''}">${tutte ? `${ICON.ok}Tutto fatto per oggi` : 'Da fare oggi'}</p><div class="m-fare">${righe.map(r => {
     const segno = r.segna
       ? `<button class="m-fare-ok" data-m="segna" data-k="${esc(r.k)}" data-e="${r.etich}" aria-pressed="${r.fatta}" aria-label="${r.etich}${r.fatta ? ': tocca per togliere' : '?'}">${ICON.ok}</button>`
       : `<span class="m-fare-ok" aria-hidden="true">${ICON.ok}</span>`;
     const destra = r.conta ? `<span class="m-vc">${r.conta}</span>` : `<span class="m-vv">${r.dato || ''}</span>`;
     return `<div class="m-fare-r${r.fatta ? ' m-fatta' : ''}${appena(r.k) ? ' m-appena' : ''}" data-k="${esc(r.k)}"><button class="m-voce" ${r.attr}>${r.ic}<span class="m-vn">${r.nome}</span>${destra}</button>${segno}</div>`;
-  }).join('')}</div>`;
+  }).join('')}${pratiche}</div>`;
   return { html, chiavi:new Set(righe.map(r => r.k.startsWith('cons|') ? 'cons' : r.k)) };
 }
 // "controllate", "rimandate a domani" o "1 risolta · 1 rimandata"
@@ -24271,9 +24452,12 @@ const dimissioniTutte = window.calcolaCalendarioDimissioni;
 window.calcolaCalendarioDimissioni = function(){
   const tutte = dimissioniTutte.apply(this, arguments);
   const s = settoreScelto(); if(!s) return tutte;
-  const nomi = new Set(s === RIC ? ricoveratiEO() : [...(getWardMap()[s] || []).map(bedName), ...(loadAppoggi()[s] || [])]);
+  const nomi = nomiDelSettore(s);
   return tutte.filter(r => nomi.has(r.nome));
 };
+function nomiDelSettore(s){
+  return new Set(s === RIC ? ricoveratiEO() : [...(getWardMap()[s] || []).map(bedName), ...(loadAppoggi()[s] || [])]);
+}
 // letti che contano (appoggi compresi, tolti i segnati vuoti), visti oggi,
 // diari di oggi e copiati
 function statoSettore(s){
@@ -24728,11 +24912,13 @@ function rigaStrum(n){
 function disegnaScheda(){
   const i = infoLetto(M.letto);
   $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span></div>
+    <button class="m-s-pratica" data-m="pr-menu" aria-label="Pratiche: aggiungi o togli">${ICON.praticaPiu}</button>
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
   const presenti = D.ordine;
   $m('#m-s-corpo').innerHTML = `
     <div class="m-aiuti" id="m-aiuti"></div>
+    <div class="m-aiuti m-pr-scheda" id="m-pr-scheda" hidden></div>
     <div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-eo" rows="3" aria-label="Esame obiettivo">${esc(D.eo)}</textarea></div>
     <div class="m-lbl">Esami</div>
@@ -24802,6 +24988,7 @@ function preparaAiuti(){
 // funzioni dell'app (leggono anche i diari dei giorni passati)
 function disegnaAiuti(primaVolta, soloMemoria){
   if(!M.id) return;
+  try{ disegnaPraticheScheda(); } catch(e){}
   const p = loadPatients()[M.id]; if(!p) return;
   const extra = (statoScheda(M.id, p).outputExtra || '');
   const i = infoLetto(M.letto);
@@ -25155,6 +25342,10 @@ document.getElementById('m-app').addEventListener('click', e => {
   }
   else if(a === 'fatto') fineVisita(true);
   else if(a === 'segna') segnaFatto(el);
+  else if(a === 'pr-apri') apriPratiche();
+  else if(a === 'pr-modulo') segnaModulo(el);
+  else if(a === 'pr-menu') menuPratiche(el);
+  else if(a === 'pr-nuova') nuovaPratica(el.dataset.t);
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
