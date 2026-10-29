@@ -24260,6 +24260,16 @@ function settoreScelto(){
   return settori().includes(s) ? s : null;
 }
 function ricordaSettore(s){ try{ localStorage.setItem(SETT_KEY, s); } catch(e){} }
+// le dimissioni (calendario e lettere in "Da fare oggi") seguono il settore
+// scelto: chi oggi è passato al B non ha più le lettere del C di ieri.
+// Senza un settore scelto restano tutte
+const dimissioniTutte = window.calcolaCalendarioDimissioni;
+window.calcolaCalendarioDimissioni = function(){
+  const tutte = dimissioniTutte.apply(this, arguments);
+  const s = settoreScelto(); if(!s) return tutte;
+  const nomi = new Set(s === RIC ? ricoveratiEO() : [...(getWardMap()[s] || []).map(bedName), ...(loadAppoggi()[s] || [])]);
+  return tutte.filter(r => nomi.has(r.nome));
+};
 // letti che contano (appoggi compresi, tolti i segnati vuoti), visti oggi,
 // diari di oggi e copiati
 function statoSettore(s){
