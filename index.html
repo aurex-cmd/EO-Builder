@@ -22761,6 +22761,11 @@ function editorLettereSvuota(){
   .m-riga-altro{ animation:m-compare .3s var(--m-molla) both; }
   .m-riga textarea.m-testo{ font-size:15px; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
   .m-riga.m-vuota{ cursor:pointer; }
+  /* gli esami aggiunti (radiologici, visite, Altro): il nome sopra e il referto
+     sotto, largo quanto la scheda; solo a schermo, la copia resta com'è */
+  .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) textarea.m-testo{ grid-column:1 / -1; margin-top:3px; }
+  .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) .m-nota{ grid-column:1 / -1; }
+  .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) .m-piu{ grid-row:1; }
   .m-riga.m-vuota textarea.m-testo{ display:none; }
   .m-riga.m-vuota:active{ background:var(--m-box); }
   .m-riga .m-piu{ width:18px; height:18px; color:var(--m-faint); align-self:center; grid-column:3; transition:transform .35s var(--m-molla), color .2s, opacity .2s; }
