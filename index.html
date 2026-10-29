@@ -23119,6 +23119,12 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina > .back-link, html[data-ui="minimal"] .m-pagina > h2{ display:none !important; }
   html[data-ui="minimal"] .m-pagina .group{ background:none; border:0; box-shadow:none; padding:0; margin:0 0 18px; }
   html[data-ui="minimal"] .m-pagina .group-label{ font-family:var(--m-sans); color:var(--m-muted); }
+  /* editor del reparto: il "+" per un letto nuovo, tratteggiato come quello
+     degli appoggi; toccato diventa la casella dove scriverlo */
+  html[data-ui="minimal"] #impostazioni-reparto-lista .chip.m-ed-piu{ display:inline-grid; place-items:center; min-width:68px; height:36px; box-sizing:border-box; padding:0 14px; border-style:dashed; border-color:var(--m-line-forte); color:var(--m-faint); font-size:20px; font-weight:400; line-height:1; cursor:pointer; }
+  html[data-ui="minimal"] #impostazioni-reparto-lista .chip.m-ed-piu.m-scrivi{ border-style:solid; border-color:var(--m-teal); background:var(--m-teal-box); padding:0 6px; vertical-align:top; }
+  html[data-ui="minimal"] #impostazioni-reparto-lista .chip.m-ed-piu input{ width:56px; height:34px; border:0; background:none; outline:none; padding:0; text-align:center; font:inherit; font-size:15px; font-weight:600; color:var(--m-teal); box-shadow:none; }
+  html[data-ui="minimal"] #impostazioni-reparto-lista .chip.m-ed-piu input::placeholder{ color:var(--m-teal); opacity:.5; font-weight:500; }
   html[data-ui="minimal"] .m-pagina .chip{ border:1px solid var(--m-line); background:transparent; border-radius:10px; padding:7px 14px; font-family:var(--m-sans); font-size:15px; font-weight:500; color:var(--m-muted); box-shadow:none; transition:background .28s, color .28s, border-color .28s, transform .18s var(--m-molla); }
   html[data-ui="minimal"] .m-pagina .chip.active{ background:var(--m-notte-box); border-color:var(--m-notte); color:var(--m-notte); font-weight:600; box-shadow:none; }
   html[data-ui="minimal"] .m-pagina .chip:active{ transform:scale(.94); }
@@ -25430,6 +25436,48 @@ function lasciaVelo(){
     }
   };
   ov.addEventListener('touchend', fine); ov.addEventListener('touchcancel', fine);
+})();
+// EDITOR DEL REPARTO: il letto si aggiunge come l'appoggio nel settore, con
+// un quadrato "+" in coda ai letti che, toccato, diventa la casella dove
+// scrivere il numero (niente campo e pulsante sotto)
+(() => {
+  const renderApp = window.renderImpostazioniReparto;
+  if(typeof renderApp !== 'function') return;
+  window.renderImpostazioniReparto = function(){
+    const r = renderApp.apply(this, arguments);
+    const settori = Object.keys(getWardMapGeriatria());
+    document.querySelectorAll('#impostazioni-reparto-lista input[id^="impostazioni-nuovo-letto-"]').forEach(inp => {
+      const settore = settori[+inp.id.split('-').pop()]; if(!settore) return;
+      const riga = inp.closest('.inline-fields'), card = riga.parentElement, chips = card.querySelector('.chips');
+      riga.style.display = 'none';
+      if(!chips) return;
+      chips.querySelectorAll(':scope > div:not(.chip)').forEach(x => x.remove());
+      const piu = document.createElement('div');
+      piu.className = 'chip m-ed-piu'; piu.setAttribute('role', 'button'); piu.tabIndex = 0;
+      piu.setAttribute('aria-label', 'Aggiungi un letto a ' + settore);
+      piu.innerHTML = '+';
+      const scrivi = () => {
+        if(piu.classList.contains('m-scrivi')) return;
+        piu.classList.add('m-scrivi');
+        piu.innerHTML = '<input inputmode="decimal" enterkeyhint="done" placeholder="n°" aria-label="Numero del nuovo letto">';
+        const campo = piu.querySelector('input');
+        let fatto = false;
+        const chiudi = v => {
+          if(fatto) return; fatto = true;
+          v = (v || '').trim();
+          if(v) aggiungiLetto(settore, v);
+          if(document.contains(piu)) window.renderImpostazioniReparto();
+        };
+        campo.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); chiudi(campo.value); } if(e.key === 'Escape') chiudi(''); });
+        campo.addEventListener('blur', () => chiudi(campo.value));
+        campo.focus();
+      };
+      piu.addEventListener('click', e => { e.stopPropagation(); scrivi(); });
+      piu.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target === piu){ e.preventDefault(); scrivi(); } });
+      chips.appendChild(piu);
+    });
+    return r;
+  };
 })();
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
