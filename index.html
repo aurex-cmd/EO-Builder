@@ -5398,7 +5398,9 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   // EO Pocket: i letti segnati vuoti (pressione lunga), uguali su tutti i dispositivi
   'eo_minimal_letti_vuoti_v1',
   // EO Pocket: "Da fare oggi" segnato a mano (consegne aggiornate, lettere scritte)
-  'eo_minimal_dafare_v1'];
+  'eo_minimal_dafare_v1',
+  // i letti 1.1-2.2 del Settore A già aggiunti alla mappa salvata (vedi conLettiA12)
+  'eo_builder_ward_map_a12_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -9376,12 +9378,24 @@ function autosaveCurrentPatient(){
    visibile solo a chi è loggato (vedi aggiornaStatoSync).
    ------------------------------------------------------------ */
 const WARD_MAP_DEFAULT = {
-  'Settore A': ['4.1','4.2','5.1','5.2','6.1','6.2','7.1','7.2'],
+  'Settore A': ['1.1','1.2','2.1','2.2','4.1','4.2','5.1','5.2','6.1','6.2','7.1','7.2'],
   'Settore B': ['8.1','9.1','9.2','10.1','10.2','11.1','11.2','12.1','12.2','13.1','13.2','14.1','14.2'],
   'Settore C': ['15.1','15.2','16.1','16.2','17.1','17.2','18.1','18.2','19.1','19.2','20.1','21.1','22'],
   'Settore D': ['23.1','23.2','24.1','24.2','25.1','25.2','26.1','26.2','27.1','27.2','28.1','28.2','29.1']
 };
 const WARD_MAP_KEY = 'eo_builder_ward_map_v1';
+// letti 1.1, 1.2, 2.1, 2.2 arrivati dopo nel Settore A: compaiono anche nelle
+// mappe già salvate, finché la mappa non si modifica a mano (da lì in poi
+// vale quella, anche se i letti vengono tolti)
+const LETTI_A12_KEY = 'eo_builder_ward_map_a12_v1';
+function conLettiA12(map){
+  try{ if(localStorage.getItem(LETTI_A12_KEY)) return map; } catch(e){ return map; }
+  if(!Array.isArray(map['Settore A'])) return map;
+  const presenti = new Set(Object.values(map).flat().map(String));
+  const nuovi = ['1.1','1.2','2.1','2.2'].filter(n => !presenti.has(n));
+  if(nuovi.length) map['Settore A'] = map['Settore A'].concat(nuovi);
+  return map;
+}
 
 // REPARTI. La Geriatria usa la mappa modificabile qui sopra (WARD_MAP_KEY,
 // letti "Letto 4.1"). Le due Medicine hanno una mappa fissa, ricavata dalle
@@ -9478,7 +9492,7 @@ function getWardMapGeriatria(){
     const raw = localStorage.getItem(WARD_MAP_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed === 'object' && Object.keys(parsed).length) return ordinaLetti(parsed);
+      if(parsed && typeof parsed === 'object' && Object.keys(parsed).length) return ordinaLetti(conLettiA12(parsed));
     }
   } catch(e){}
   return ordinaLetti(JSON.parse(JSON.stringify(WARD_MAP_DEFAULT)));
@@ -9504,6 +9518,7 @@ function etichettaLetto(n){ return String(n).replace(/^C[12]:/, ''); }
 // fantasma
 function salvaWardMap(map){
   setLocalAndCloud(WARD_MAP_KEY, JSON.stringify(ordinaLetti(map)));
+  setLocalAndCloud(LETTI_A12_KEY, '1');
   if(settoreAttivo !== SETTORE_EXTRA && !getWardMap()[settoreAttivo]){
     settoreAttivo = Object.keys(getWardMap())[0] || SETTORE_EXTRA;
     try{ localStorage.setItem(LAST_SETTORE_KEY, settoreAttivo); }catch(e){}
