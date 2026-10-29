@@ -22992,6 +22992,7 @@ function editorLettereSvuota(){
      restano due colori diversi */
   html[data-m-pulsante="rame"], html[data-m-pulsante="bordeaux"]{ --m-diari:#9a6a12; --m-diari-box:#fbf0d6; --m-l-dacop:#f1d48f; }
   html[data-m-tema="scuro"]:is([data-m-pulsante="rame"], [data-m-pulsante="bordeaux"]){ --m-diari:#b8862b; --m-diari-box:#2f2a1c; --m-l-dacop:#8a6a1f; }
+  .m-ingr.m-anteprima{ margin:0 0 18px; cursor:default; pointer-events:none; transition:background .35s, border-color .35s; }
   .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
   .m-pulsanti button{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:var(--c); cursor:pointer; box-shadow:0 0 0 2px var(--m-bg), 0 0 0 2px transparent; transition:box-shadow .2s, transform .12s var(--m-molla); display:grid; place-items:center; color:#fff; }
   .m-pulsanti button:active{ transform:scale(.9); }
@@ -25810,7 +25811,12 @@ if(temaChiaro && temaScuro){
   // sotto il tema, il colore d'accento dell'app
   const gruppo = document.createElement('div');
   gruppo.className = 'group';
-  gruppo.innerHTML = `<div class="group-label" style="text-align:center;">Colore dell'app</div><div class="m-pulsanti">${MPULSANTI.map(([k, n, c, d]) => `<button type="button" data-c="${k}" style="--c-l:${c}; --c-d:${d}" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join('')}</div><div class="m-pulsante-nome"></div>`;
+  // sopra i colori, il pulsante Reparto della home con dati d'esempio: si
+  // vede subito come starà il colore scelto
+  const anteprima = `<div class="m-ingr m-pri m-rep-home m-anteprima" aria-hidden="true"><span class="m-sh">${ICON.steto}Reparto · Settore A</span><span class="m-rh-tondo">${tondo(58, 33)}</span>
+      <span class="m-sn">7<small>su 12 visti oggi</small></span>
+      <span class="m-ss">5 da vedere · 3 diari da copiare</span></div>`;
+  gruppo.innerHTML = `<div class="group-label" style="text-align:center;">Colore dell'app</div>${anteprima}<div class="m-pulsanti">${MPULSANTI.map(([k, n, c, d]) => `<button type="button" data-c="${k}" style="--c-l:${c}; --c-d:${d}" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join('')}</div><div class="m-pulsante-nome"></div>`;
   temaChiaro.closest('.group').after(gruppo);
   const segnaPulsante = () => {
     const att = document.documentElement.dataset.mPulsante || 'teal';
