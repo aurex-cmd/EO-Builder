@@ -24842,7 +24842,13 @@ function aggiornaCopia(copiato){
   void c.offsetWidth;
   requestAnimationFrame(() => c.classList.remove('m-subito'));
 }
-function alza(t){ t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+// per misurare la casella la si accorcia un attimo: la scheda, di colpo più
+// corta, perdeva lo scorrimento e a fine diario saltava su. Si rimette dov'era
+function alza(t){
+  const c = t.closest('.m-s-corpo'), st = c ? c.scrollTop : 0;
+  t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px';
+  if(c && c.scrollTop !== st) c.scrollTop = st;
+}
 function apriRiga(r){
   r.classList.remove('m-vuota');
   const t = r.querySelector('textarea');
