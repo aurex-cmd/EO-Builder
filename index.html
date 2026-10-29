@@ -23037,6 +23037,27 @@ function editorLettereSvuota(){
   .m-pr.m-ok i{ background:var(--m-teal); border-color:var(--m-teal); }
   .m-pr.m-ok i::after{ content:""; position:absolute; left:3.5px; top:3px; width:5px; height:2.6px; border:solid #fff; border-width:0 0 1.6px 1.6px; transform:rotate(-45deg); }
   .m-pr.m-nuovo{ animation:m-scelto .45s var(--m-molla); }
+  .m-pr-chiedi .m-pr-tit em{ color:var(--m-ink); }
+  .m-pr.m-pr-no, .m-pr.m-pr-si{ padding:0 16px; font-weight:600; }
+  .m-pr.m-pr-si{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  /* il box della conferma */
+  .m-pr-box-ov{ position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(15,20,28,.32); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); animation:m-compare .2s ease-out both; }
+  .m-pr-box{ width:100%; max-width:360px; box-sizing:border-box; padding:20px 18px 16px; border-radius:16px; background:var(--m-bg); box-shadow:0 20px 50px rgba(15,20,28,.22); font-family:var(--m-scheda); color:var(--m-ink); animation:m-riquadro .3s var(--m-molla) both; }
+  .m-pr-box-su{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .m-pr-box h3{ margin:0; font-size:20px; font-weight:800; letter-spacing:-.02em; }
+  .m-pr-box-su span{ flex:none; font-size:13px; font-weight:600; color:var(--m-muted); }
+  .m-pr-box p{ margin:14px 0 6px; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--m-muted); }
+  .m-pr-box-mod{ border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
+  .m-pr-box-mod label{ display:flex; align-items:center; gap:10px; min-height:44px; padding:0 12px; border-top:1px solid var(--m-line); font-size:15px; cursor:pointer; }
+  .m-pr-box-mod label:first-child{ border-top:0; }
+  .m-pr-box-mod input{ width:20px; height:20px; margin:0; accent-color:var(--m-teal); flex:none; }
+  .m-pr-box-mod span{ flex:1; }
+  .m-pr-box-mod small{ font-size:12px; font-weight:600; color:var(--m-teal); }
+  .m-pr-box-mod label.m-gia span{ color:var(--m-teal); }
+  .m-pr-box-giu{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .m-pr-box-giu button{ height:46px; border:0; border-radius:12px; background:var(--m-sec); color:var(--m-ink); font:inherit; font-size:15px; font-weight:600; cursor:pointer; }
+  .m-pr-box-giu .m-pr-box-si{ background:var(--m-notte); color:#fff; }
+  html[data-m-tema="scuro"] .m-pr-box{ --m-bg:var(--m-carta); }
   /* nella scheda: le stesse spunte tra le etichette, e il pulsante accanto alla X */
   .m-pr-scheda[hidden]{ display:none; }
   button.m-aiuto.m-pr-s{ font:inherit; font-size:12px; line-height:20px; cursor:pointer; border-color:var(--m-line-forte); color:var(--m-ink); }
@@ -24022,17 +24043,19 @@ let fattiPrima = null;
 // quelli toccati a mano (che il diario non cambia più)
 const PR_FATTO = /\b(?:compilat|redatt|inviat|eseguit|fatt|completat|consegnat|trasmess|effettuat|firmat|inoltrat|stilat|presentat)[oaie]\b/i;
 const PR_SVAMA = /\bs\.?v\.?a\.?m\.?a\b/i;
+// ogni pratica letta nel diario prima si conferma (una volta sola): un box
+// chiede se va fatta e quali moduli servono; "No" non la richiede più
 const PR_TIPI = {
-  decesso:    { nome:'Decesso', re:/\b(?:exitus|decess[oi]|decedut[oa])\b/i,
+  decesso:    { nome:'Decesso', domanda:'Paziente deceduto?', re:/\b(?:exitus|decess[oi]|decedut[oa])\b/i,
                 moduli:[['SDO', /\bsdo\b/i], ['ISTAT', /\bistat\b/i], ['INPS', /\binps\b/i], ['Diario', /\bdiario\b/i], ['Tanatogramma', /tanatogramm/i]] },
-  odc:        { nome:'OdC', re:/\bodc\b|ospedale di comunit/i,
+  odc:        { nome:'OdC', domanda:'Trasferimento in OdC?', re:/\bodc\b|ospedale di comunit/i,
                 moduli:[['SVAMA', PR_SVAMA], ['Eleggibilità OdC', /eleggibilit/i]] },
-  hospice:    { nome:'Hospice', re:/\bhospice\b/i,
+  hospice:    { nome:'Hospice', domanda:'Trasferimento in Hospice?', re:/\bhospice\b/i,
                 moduli:[['SVAMA', PR_SVAMA], ['Scheda Hospice', /\bscheda\b[^.\n]*\bhospice\b|\bhospice\b[^.\n]*\bscheda\b/i], ['Karnofsky', /karnofsk/i], ['Eleggibilità Hospice', /eleggibilit/i]] },
-  invalidita: { nome:'Invalidità', re:/invalidit[aà]/i, moduli:[['Invalidità', /invalidit[aà]/i]] },
-  mdc:        { nome:'Mezzo di contrasto', re:/\bm\.?d\.?c\b|mezzo di contrasto/i, no:/\bsenza\s+(?:m\.?d\.?c\b|mezzo di contrasto)/i,
+  invalidita: { nome:'Invalidità', domanda:'Domanda di invalidità?', re:/invalidit[aà]/i, moduli:[['Invalidità', /invalidit[aà]/i]] },
+  mdc:        { nome:'Mezzo di contrasto', domanda:'Esame con mezzo di contrasto?', re:/\bm\.?d\.?c\b|mezzo di contrasto/i, no:/\bsenza\s+(?:m\.?d\.?c\b|mezzo di contrasto)/i,
                 moduli:[['Modulo MDC', /\b(?:modulo|consenso)\b[^.\n]*(?:\bm\.?d\.?c\b|contrasto)|(?:\bm\.?d\.?c\b|contrasto)[^.\n]*\b(?:modulo|consenso)\b/i]] },
-  tav:        { nome:'TAV', re:/\btav\b/i,
+  tav:        { nome:'TAV', domanda:'Richiesta di TAV?', re:/\btav\b/i,
                 moduli:[['Modulo TAV', /\b(?:modulo|consenso)\b[^.\n]*\btav\b|\btav\b[^.\n]*\b(?:modulo|consenso)\b/i]] }
 };
 ICON.pratica = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13.5l2 2 4-4"/></svg>';
@@ -24054,7 +24077,7 @@ function aggiornaPratiche(){
       if(!frasi.some(f => d.re.test(f) && !(d.no && d.no.test(f)))) return;
       const k = id + '|' + t;
       let v = pr[k];
-      if(!v){ v = pr[k] = { id, tipo:t, nome:d.nome, letto:p.name, moduli:Object.fromEntries(d.moduli.map(([m]) => [m, false])), mano:{}, savedAt:ora }; cambiato = true; }
+      if(!v){ v = pr[k] = { id, tipo:t, nome:d.nome, letto:p.name, moduli:Object.fromEntries(d.moduli.map(([m]) => [m, false])), mano:{}, chiedi:true, savedAt:ora }; cambiato = true; }
       if(v.tolta) return;
       d.moduli.forEach(([m, re]) => {
         if(v.moduli[m] || (v.mano || {})[m] || !fatto(re)) return;
@@ -24070,7 +24093,7 @@ function aggiornaPratiche(){
 // pratiche con qualcosa da fare, dei letti in nomi (o di tutti), in ordine di letto
 function praticheDaFare(nomi){
   const pr = aggiornaPratiche(), ps = loadPatients();
-  return Object.entries(pr).filter(([, v]) => !v.tolta && !praticaFinita(v))
+  return Object.entries(pr).filter(([, v]) => !v.tolta && (v.chiedi || !praticaFinita(v)))
     .map(([k, v]) => ({ k, v, letto:(ps[v.id] && ps[v.id].name) || v.letto || '' }))
     .filter(x => !nomi || nomi.has(x.letto))
     .sort((a, b) => confrontaNomiLetto(a.letto, b.letto) || String(a.v.nome).localeCompare(String(b.v.nome)));
@@ -24081,10 +24104,16 @@ const chipModulo = (k, m, ok) => `<button class="m-pr${ok ? ' m-ok' : ''}" data-
 function htmlPratiche(nomi){
   const lista = praticheDaFare(nomi);
   if(!lista.length) return '';
-  const n = lista.reduce((t, x) => t + Object.values(x.v.moduli).filter(y => !y).length, 0);
+  const n = lista.filter(x => !x.v.chiedi).reduce((t, x) => t + Object.values(x.v.moduli).filter(y => !y).length, 0);
+  const nc = lista.filter(x => x.v.chiedi).length;
   let aperta = false; try{ aperta = localStorage.getItem(PR_APERTE_KEY) === '1'; } catch(e){}
-  const gruppi = lista.map(({ k, v, letto }) => `<div class="m-pr-paz"><div class="m-pr-tit">${esc(letto)} · <em>${esc(v.nome)}</em></div><div class="m-pr-chips">${Object.entries(v.moduli).map(([m, ok]) => chipModulo(k, m, ok)).join('')}</div></div>`).join('');
-  return `<div class="m-fare-r m-pr-riga${aperta ? ' m-aperta' : ''}"><button class="m-voce" data-m="pr-apri" aria-expanded="${aperta}">${ICON.pratica}<span class="m-vn">Pratiche</span><span class="m-vc">${n} da fare</span></button><button class="m-pr-freccia" data-m="pr-apri" aria-label="${aperta ? 'Chiudi' : 'Apri'} le pratiche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="m-pr-tutte"${aperta ? '' : ' hidden'}>${gruppi}</div>`;
+  // quelle lette in un diario scritto altrove (sul PC) e non ancora confermate:
+  // la domanda sta qui, al posto dei moduli
+  const gruppi = lista.map(({ k, v, letto }) => v.chiedi
+    ? `<div class="m-pr-paz m-pr-chiedi"><div class="m-pr-tit">${esc(letto)} · <em>${esc((PR_TIPI[v.tipo] || {}).domanda || v.nome + '?')}</em></div><div class="m-pr-chips"><button class="m-pr m-pr-no" data-m="pr-no" data-k="${esc(k)}">No</button><button class="m-pr m-pr-si" data-m="pr-si" data-k="${esc(k)}">Sì</button></div></div>`
+    : `<div class="m-pr-paz"><div class="m-pr-tit">${esc(letto)} · <em>${esc(v.nome)}</em></div><div class="m-pr-chips">${Object.entries(v.moduli).map(([m, ok]) => chipModulo(k, m, ok)).join('')}</div></div>`).join('');
+  const conto = [n && `${n} da fare`, nc && `${nc} da confermare`].filter(Boolean).join(' · ') || 'fatte';
+  return `<div class="m-fare-r m-pr-riga${aperta ? ' m-aperta' : ''}"><button class="m-voce" data-m="pr-apri" aria-expanded="${aperta}">${ICON.pratica}<span class="m-vn">Pratiche</span><span class="m-vc">${conto}</span></button><button class="m-pr-freccia" data-m="pr-apri" aria-label="${aperta ? 'Chiudi' : 'Apri'} le pratiche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="m-pr-tutte"${aperta ? '' : ' hidden'}>${gruppi}</div>`;
 }
 function apriPratiche(){
   const riga = $m('.m-pr-riga'), box = $m('.m-pr-tutte'); if(!riga || !box) return;
@@ -24105,14 +24134,59 @@ function segnaModulo(btn){
   });
   // quanti ne mancano, sulla riga chiusa
   const conto = $m('.m-pr-riga .m-vc'), tutte = $m('.m-pr-tutte');
-  if(conto && tutte){ const n = tutte.querySelectorAll('.m-pr:not(.m-ok)').length; conto.textContent = n ? `${n} da fare` : 'fatte'; }
+  if(conto && tutte){ const n = tutte.querySelectorAll('[data-m="pr-modulo"]:not(.m-ok)').length, nc = tutte.querySelectorAll('.m-pr-chiedi').length; conto.textContent = [n && `${n} da fare`, nc && `${nc} da confermare`].filter(Boolean).join(' · ') || 'fatte'; }
+}
+// dopo una conferma: la riga Pratiche del settore o della home
+function ridisegnaPratiche(){
+  if($m('#m-set-fare')) disegnaFareSettore();
+  else if($m('#m-vista .m-fare, #m-vista .m-home-giu')) disegna();
+}
+// il box della conferma: la domanda, i moduli da compilare (spuntati; quelli
+// già scritti come fatti lo dicono) e No / Sì
+function chiediPratica(k){
+  if(document.getElementById('m-pr-box')) return;
+  const pr = leggiPratiche(), v = pr[k]; if(!v || !v.chiedi) return;
+  const d = PR_TIPI[v.tipo] || { domanda:v.nome + '?', moduli:Object.keys(v.moduli).map(m => [m]) };
+  const ps = loadPatients(), letto = (ps[v.id] && ps[v.id].name) || v.letto || '';
+  const ov = document.createElement('div');
+  ov.id = 'm-pr-box'; ov.className = 'm-pr-box-ov';
+  ov.innerHTML = `<div class="m-pr-box" role="dialog" aria-modal="true" aria-labelledby="m-pr-box-t"><div class="m-pr-box-su"><h3 id="m-pr-box-t">${esc(d.domanda)}</h3><span>${esc(letto)}</span></div>
+    <p>Moduli da compilare</p><div class="m-pr-box-mod">${Object.entries(v.moduli).map(([m, ok]) => `<label${ok ? ' class="m-gia"' : ''}><input type="checkbox" value="${esc(m)}" checked${ok ? ' disabled' : ''}><span>${esc(m)}</span>${ok ? '<small>già fatto</small>' : ''}</label>`).join('')}</div>
+    <div class="m-pr-box-giu"><button data-r="no">No</button><button data-r="si" class="m-pr-box-si">Sì</button></div></div>`;
+  document.body.appendChild(ov);
+  const chiudi = si => {
+    const pr2 = leggiPratiche(), w = pr2[k];
+    if(w){
+      w.chiedi = false; w.savedAt = Date.now();
+      if(!si) w.tolta = true;
+      else {
+        const scelti = new Set([...ov.querySelectorAll('input:checked')].map(i => i.value));
+        Object.keys(w.moduli).forEach(m => { if(!scelti.has(m) && !w.moduli[m]) delete w.moduli[m]; });
+        if(!Object.keys(w.moduli).length || praticaFinita(w)) w.tolta = !Object.keys(w.moduli).length;
+      }
+      scriviPratiche(pr2);
+    }
+    ov.remove();
+    disegnaPraticheScheda();
+    ridisegnaPratiche();
+    // altre da confermare per lo stesso paziente (scheda aperta)
+    if(sc.classList.contains('m-su')) setTimeout(chiediPraticheScheda, 250);
+  };
+  ov.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if(b) chiudi(b.dataset.r === 'si'); else if(e.target === ov) ov.remove(); });
+}
+// scheda aperta: le pratiche appena lette nel suo diario si confermano subito
+function chiediPraticheScheda(){
+  if(!M.id || !sc.classList.contains('m-su')) return;
+  const pr = aggiornaPratiche();
+  const k = Object.keys(pr).find(k => pr[k].id === M.id && pr[k].chiedi && !pr[k].tolta);
+  if(k) chiediPratica(k);
 }
 // nella scheda del diario: le pratiche del paziente sotto il titolo, accanto
 // alle altre etichette (niente se non ce ne sono)
 function disegnaPraticheScheda(){
   const box = $m('#m-pr-scheda'); if(!box || !M.id) return;
   const pr = aggiornaPratiche();
-  const sue = Object.entries(pr).filter(([, v]) => v.id === M.id && !v.tolta && !praticaFinita(v));
+  const sue = Object.entries(pr).filter(([, v]) => v.id === M.id && !v.tolta && !v.chiedi && !praticaFinita(v));
   const html = sue.map(([k, v]) => Object.entries(v.moduli).map(([m, ok]) => `<button class="m-aiuto m-pr-s${ok ? ' m-ok' : ''}" data-m="pr-modulo" data-k="${esc(k)}" data-mod="${esc(m)}" aria-pressed="${!!ok}" title="${esc(v.nome)}"><b></b>${esc(m)}</button>`).join('')).join('');
   if(box.dataset.html !== html){ box.dataset.html = html; box.innerHTML = html; }
   box.hidden = !html;
@@ -24121,7 +24195,7 @@ function disegnaPraticheScheda(){
 function menuPratiche(btn){
   const vecchio = $m('.m-pr-menu'); if(vecchio){ vecchio.remove(); return; }
   const pr = leggiPratiche();
-  const attiva = t => { const v = pr[M.id + '|' + t]; return v && !v.tolta && !praticaFinita(v); };
+  const attiva = t => { const v = pr[M.id + '|' + t]; return v && !v.tolta && !v.chiedi && !praticaFinita(v); };
   const menu = document.createElement('div');
   menu.className = 'm-pr-menu';
   menu.innerHTML = `<p>Pratiche · ${esc(M.letto)}</p>` + Object.entries(PR_TIPI).map(([t, d]) => `<button data-m="pr-nuova" data-t="${t}"${attiva(t) ? ' class="m-attiva"' : ''}><span>${esc(d.nome)}</span><small>${attiva(t) ? 'togli' : d.moduli.length > 1 ? d.moduli.map(x => x[0]).join(' · ') : ''}</small></button>`).join('')
@@ -24134,7 +24208,7 @@ function menuPratiche(btn){
 }
 function nuovaPratica(t, nomeAltro){
   const pr = leggiPratiche(), k = M.id + '|' + t, v = pr[k], d = PR_TIPI[t];
-  if(v && !v.tolta && !praticaFinita(v)){ v.tolta = true; v.savedAt = Date.now(); }
+  if(v && !v.tolta && !v.chiedi && !praticaFinita(v)){ v.tolta = true; v.savedAt = Date.now(); }
   else {
     const moduli = d ? Object.fromEntries(d.moduli.map(([m]) => [m, false])) : { [nomeAltro || t.slice(6)]: false };
     pr[k] = { id:M.id, tipo:t, nome:d ? d.nome : 'Altro', letto:M.letto, moduli, mano:Object.fromEntries(Object.keys(moduli).map(m => [m, true])), savedAt:Date.now() };
@@ -24988,7 +25062,7 @@ function preparaAiuti(){
 // funzioni dell'app (leggono anche i diari dei giorni passati)
 function disegnaAiuti(primaVolta, soloMemoria){
   if(!M.id) return;
-  try{ disegnaPraticheScheda(); } catch(e){}
+  try{ disegnaPraticheScheda(); if(!soloMemoria) chiediPraticheScheda(); } catch(e){}
   const p = loadPatients()[M.id]; if(!p) return;
   const extra = (statoScheda(M.id, p).outputExtra || '');
   const i = infoLetto(M.letto);
@@ -25346,6 +25420,8 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'pr-modulo') segnaModulo(el);
   else if(a === 'pr-menu') menuPratiche(el);
   else if(a === 'pr-nuova') nuovaPratica(el.dataset.t);
+  else if(a === 'pr-si') chiediPratica(el.dataset.k);
+  else if(a === 'pr-no'){ const pr = leggiPratiche(), v = pr[el.dataset.k]; if(v){ v.chiedi = false; v.tolta = true; v.savedAt = Date.now(); scriviPratiche(pr); } ridisegnaPratiche(); }
   else if(a === 'visita' || a === 'diari') vai(a);
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
