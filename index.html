@@ -23746,6 +23746,10 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri), .m-voce, .m-fare-r, .m-pr-tutte, .m-zona, .m-set-fondo, .m-legenda, .m-rigalink.m-vitali, .m-righe .m-rigalink, .m-tl-nuovo, .m-tl .m-togli),
   html[data-m-tema="scuro"] .m-pagina .sync-box, html[data-m-tema="scuro"] #vitali-settore-view .vitali-riga{ background:var(--m-carta); }
   html[data-m-tema="scuro"] .m-scheda{ --m-bg:var(--m-carta); }
+  /* Copia il diario: sull'accento del tema scuro il bianco non arrivava a
+     4,5:1 (verde acqua 4,2, rame 4,0; "Copiato" 3,1): il fondo un po' più scuro */
+  html[data-m-tema="scuro"] .m-copia{ background:color-mix(in srgb, var(--m-notte) 85%, #000); }
+  html[data-m-tema="scuro"] .m-copia::before{ background:color-mix(in srgb, var(--m-teal) 78%, #000); }
   html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); border-color:color-mix(in srgb, var(--m-notte) 72%, #000); }
   html[data-m-tema="scuro"] :is(.m-piede a, .m-bar .m-azione), html[data-m-tema="scuro"] .m-voce .m-vc, html[data-m-tema="scuro"] .m-rigalink .m-conta{ color:var(--m-link); }
   html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri) .m-sh, .m-home-info b){ color:var(--m-muted); }
