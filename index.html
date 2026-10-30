@@ -9394,6 +9394,11 @@ let appInitialized = false;
 function autosaveCurrentPatient(){
   if(!appInitialized) return;
   if(!currentPatientId){
+    // EO Pocket lavora sempre su un letto: senza scheda aperta un
+    // salvataggio arriva da un ridisegno dello stato (sincronizzazione,
+    // impostazioni...), non da un esame scritto, e creava schede fantasma
+    // "Paziente N" (P22, P32... in Aggiorna consegne)
+    if(UI_MINIMAL) return;
     // rete di sicurezza: se l'utente inizia a compilare senza aver aperto
     // prima un letto dalla mappa reparto, ne creiamo una scheda "libera"
     // così il lavoro non va perso.
