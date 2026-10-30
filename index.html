@@ -22819,15 +22819,20 @@ function editorLettereSvuota(){
   .m-blocco:focus-within::after, .m-riga:focus-within::after{ transform:scaleX(1); }
   .m-riga{ position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; column-gap:10px; padding:12px 2px; border-bottom:1px solid var(--m-line); cursor:text; transition:background .25s; animation:m-compare .3s var(--m-molla) both; }
   .m-riga-nome{ font-weight:600; font-size:15px; white-space:nowrap; cursor:pointer; }
-  input.m-nome-esame{ width:7.5em; border:0; background:none; padding:0; margin:0; font:inherit; font-weight:600; font-size:15px; color:var(--m-ink); outline:none; box-shadow:none; cursor:text; }
+  /* largo quanto il nome scritto (vedi largaNome), fino alla riga intera
+     meno il + : il nome dell'esame non si taglia */
+  input.m-nome-esame{ width:7.5em; max-width:calc(100vw - 96px); border:0; background:none; padding:0; margin:0; font:inherit; font-weight:600; font-size:15px; color:var(--m-ink); outline:none; box-shadow:none; cursor:text; }
   input.m-nome-esame::placeholder{ color:var(--m-faint); font-weight:500; }
-  input.m-rinomina{ min-width:5ch; max-width:60%; border-bottom:1.5px solid var(--m-notte); }
+  input.m-rinomina{ min-width:5ch; border-bottom:1.5px solid var(--m-notte); }
   .m-riga-altro{ animation:m-compare .3s var(--m-molla) both; }
   .m-riga textarea.m-testo{ font-size:15px; line-height:1.5; animation:m-scrivi .32s var(--m-molla) both; }
   .m-riga.m-vuota{ cursor:pointer; }
   /* gli esami aggiunti (radiologici, visite, Altro): il nome sopra e il referto
      sotto, largo quanto la scheda; solo a schermo, la copia resta com'è */
   .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) textarea.m-testo{ grid-column:1 / -1; margin-top:3px; }
+  /* il nome di un esame lungo va a capo invece di uscire dalla riga
+     (il referto è già sotto, il nome ha tutta la riga meno il +) */
+  .m-riga[data-riga^="s:"]:not(.m-vuota) label.m-riga-nome{ grid-column:1 / span 2; white-space:normal; }
   .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) .m-nota{ grid-column:1 / -1; }
   .m-riga:is([data-riga^="s:"], .m-riga-altro):not(.m-vuota) .m-piu{ grid-row:1; }
   .m-riga.m-vuota textarea.m-testo{ display:none; }
@@ -25780,6 +25785,16 @@ sc.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
+// il campo del nome di un esame largo quanto il testo (o il segnaposto),
+// misurato col font vero: niente nomi tagliati né spazi vuoti
+let misuraNome = null;
+function largaNome(inp){
+  const ctx = misuraNome || (misuraNome = document.createElement('canvas').getContext('2d'));
+  const cs = getComputedStyle(inp);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  inp.style.width = Math.ceil(ctx.measureText(inp.value || inp.placeholder || '').width + 6) + 'px';
+}
+sc.addEventListener('input', e => { if(e.target.matches('input.m-nome-esame:not(.m-rinomina)')) largaNome(e.target); });
 // toccando il nome di un esame (EGA, TC addome…) lo si può cambiare, per
 // esempio "TC addome con mdc"; il referto resta com'è
 sc.addEventListener('click', e => {
@@ -25790,9 +25805,8 @@ sc.addEventListener('click', e => {
   const inp = document.createElement('input');
   inp.className = 'm-riga-nome m-nome-esame m-rinomina';
   inp.value = vecchio; inp.setAttribute('aria-label', "Nome dell'esame"); inp.autocapitalize = 'sentences';
-  const larga = () => { inp.style.width = Math.max(5, inp.value.length + 1) + 'ch'; };
-  larga(); inp.addEventListener('input', larga);
   lab.replaceWith(inp);
+  largaNome(inp); inp.addEventListener('input', () => largaNome(inp));
   inp.focus(); inp.select();
   let fatto = false;
   const conferma = () => {
