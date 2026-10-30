@@ -23028,11 +23028,14 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:42px; }
   /* ossigenoterapia: la modalità (menu del telefono) e il suo dato */
   html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-row{ display:flex; justify-content:center; align-items:baseline; gap:4px; }
-  html[data-ui="minimal"] #vitali-settore-view .v.o2 select{ flex:none; width:auto; min-width:0; appearance:none; -webkit-appearance:none; border:0; background:none; padding:2px 0; margin:0; font-family:var(--m-sans); font-size:16px; font-weight:700; color:var(--m-line-forte); cursor:pointer; }
-  html[data-ui="minimal"] #vitali-settore-view .v.o2 select.filled{ color:var(--vs-tc); }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input{ width:26px; font-size:16px; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input[type="text"]{ width:52px; font-size:14px; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input.filled{ color:var(--vs-tc); }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 select{ flex:none; width:auto; min-width:0; appearance:none; -webkit-appearance:none; border:0; background:none; padding:2px 0; margin:0; font-family:var(--m-sans); font-size:13px; font-weight:700; color:var(--m-line-forte); cursor:pointer; }
+  /* più piccola e in azzurro: è una correzione, non un parametro da leggere al volo */
+  html[data-ui="minimal"] #vitali-settore-view .v.o2{ --o2:#2f9bd6; }
+  html[data-ui="minimal"][data-m-tema="scuro"] #vitali-settore-view .v.o2{ --o2:#6cc0f0; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 select.filled{ color:var(--o2); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input{ width:22px; font-size:13px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input[type="text"]{ width:48px; font-size:12px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input.filled{ color:var(--o2); }
   html[data-ui="minimal"] #vitali-settore-view .v.o2 [hidden]{ display:none; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input:focus{ background:none; border:0; }
   /* valori scritti: gli stessi colori dell'app (SpO₂ blu, PA arancio, FC rosso, TC viola) */
