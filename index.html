@@ -23014,7 +23014,8 @@ function editorLettereSvuota(){
      che resta sotto; scorrono solo se non ci stanno */
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:0 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
   /* home sobria: un blu notte solo sull'azione principale, bordi sottili, grigi neutri */
-  .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:14px; }
+  /* il nome del reparto alla stessa altezza dei titoli delle altre viste (Settori, …) */
+  .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
   .m-home-su .m-sub{ margin-top:-10px; font-size:15px; }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
   .m-ingr{ display:flex; flex-direction:column; min-height:140px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; }
