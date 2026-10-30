@@ -23601,10 +23601,10 @@ function editorLettereSvuota(){
   /* settori quadrati su ogni telefono (Ricoveri, largo il doppio, no); con
      tanti letti il riquadro si allunga quanto serve */
   .m-mappa .m-zona:not(.m-zona-ric){ aspect-ratio:1; min-width:0; }
-  /* i letti in basso nel quadrato e tutti dalla stessa altezza: le griglie
-     sono alte quanto quella con più file (--file); chi ne ha meno lascia
-     lo spazio vuoto sotto */
-  .m-mappa .m-zona:not(.m-zona-ric) .m-mini-g{ margin-top:auto; align-content:start; min-height:calc(var(--file, 1) * 26px + (var(--file, 1) - 1) * 4px); }
+  /* i letti a metà dello spazio sotto il titolo e tutti dalla stessa
+     altezza: le griglie sono alte quanto quella con più file (--file); chi
+     ne ha meno lascia lo spazio vuoto sotto */
+  .m-mappa .m-zona:not(.m-zona-ric) .m-mini-g{ margin-block:auto; align-content:start; min-height:calc(var(--file, 1) * 26px + (var(--file, 1) - 1) * 4px); }
   .m-zona.m-ultimo{ border-color:color-mix(in srgb, var(--m-notte) 38%, #fff); }
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
   .m-zona.m-scelto{ z-index:2; border-color:transparent; box-shadow:0 18px 40px rgba(23,34,49,.16); }
@@ -24686,8 +24686,9 @@ function htmlZona(g, k, azione){
     if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
     else if(ap || i.occupato || !vuoto){ n++; if(i.vistoOggi){ f++; if(!i.copiato) dc++; } }
     const cons = !diari && i.consegne ? `<span class="m-mini-cons">${i.consegne.map(l => `<i class="m-pal ${classePalCons(l)}"></i>`).join('')}</span>` : '';
-    // esami domani e dimissione: pallini in basso a destra, come le consegne in alto
-    const bas = [i.pall.esamiDomani && 'e', (i.pall.dimOggi || i.pall.dimDomani) && 'd'].filter(Boolean);
+    // esami domani e dimissione: pallini in basso a destra, come le consegne
+    // in alto; solo nel settore selezionato
+    const bas = g.s !== M.settore ? [] : [i.pall.esamiDomani && 'e', (i.pall.dimOggi || i.pall.dimDomani) && 'd'].filter(Boolean);
     const sotto = bas.length ? `<span class="m-mini-bas">${bas.map(c => `<i class="m-pal ${c}"></i>`).join('')}</span>` : '';
     return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" data-n="${esc(nome)}">${esc(et)}${cons}${sotto}</span>`;
   }).join('');
