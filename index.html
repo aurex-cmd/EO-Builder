@@ -26146,8 +26146,28 @@ document.getElementById('m-app').addEventListener('pointerdown', e => {
 
 // dati arrivati dalla sincronizzazione (o salvati altrove): l'app ridisegna
 // Reparto; qui si ridisegnano i letti visibili
+// schede fantasma "Paziente N" create da EO Pocket prima della correzione
+// (vedi autosaveCurrentPatient): si tolgono quelle che non sono un letto né
+// un appoggio, salvate prima del 1° novembre 2026 (dopo, una "Paziente N"
+// può essere vera, creata dall'app classica). Anche dopo ogni
+// sincronizzazione: un altro dispositivo può ancora averle
+const FANTASMI_FINO_A = new Date(2026, 10, 1).getTime();
+function pulisciFantasmi(){
+  const ps = loadPatients(), letti = new Set();
+  Object.values(getWardMap()).forEach(l => (l || []).forEach(n => letti.add(bedName(n))));
+  Object.values(loadAppoggi()).forEach(a => (a || []).forEach(n => letti.add(n)));
+  let tolte = 0;
+  Object.entries(ps).forEach(([id, p]) => {
+    if(!p || !/^Paziente \d+$/.test(p.name || '') || letti.has(p.name) || id === currentPatientId) return;
+    if((p.savedAt || 0) >= FANTASMI_FINO_A) return;
+    delete ps[id]; tolte++;
+  });
+  if(tolte) savePatients(ps);
+}
+try{ pulisciFantasmi(); } catch(e){}
 const renderWardMapApp = renderWardMap;
 renderWardMap = function(){
+  try{ pulisciFantasmi(); } catch(e){}
   const r = renderWardMapApp.apply(this, arguments);
   if(M.vista === 'visita' || M.vista === 'diari'){
     // ridisegno da sincronizzazione: senza cascata. Alla prima apertura il
