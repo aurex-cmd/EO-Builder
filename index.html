@@ -24217,7 +24217,8 @@ const PR_TIPI = {
   invalidita: { nome:'Invalidità', domanda:'Domanda di invalidità?', re:/invalidit[aà]/i, moduli:[['Invalidità', /invalidit[aà]/i]] },
   mdc:        { nome:'Mezzo di contrasto', domanda:'Esame con mezzo di contrasto?', re:/\bm\.?d\.?c\b|mezzo di contrasto/i, no:/\bsenza\s+(?:m\.?d\.?c\b|mezzo di contrasto)/i,
                 moduli:[['Modulo MDC', /\b(?:modulo|consenso)\b[^.\n]*(?:\bm\.?d\.?c\b|contrasto)|(?:\bm\.?d\.?c\b|contrasto)[^.\n]*\b(?:modulo|consenso)\b/i]] },
-  tav:        { nome:'TAV', domanda:'Richiesta di TAV?', re:/\btav\b/i,
+  // "rivalutazione TAV" riguarda una TAV già in atto: non è una richiesta
+  tav:        { nome:'TAV', domanda:'Richiesta di TAV?', re:/\btav\b/i, no:/\brivalut\w*[^.\n]*\btav\b|\btav\b[^.\n]*\brivalut\w*/i,
                 moduli:[['Modulo TAV', /\b(?:modulo|consenso)\b[^.\n]*\btav\b|\btav\b[^.\n]*\b(?:modulo|consenso)\b/i]] }
 };
 ICON.pratica = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13.5l2 2 4-4"/></svg>';
