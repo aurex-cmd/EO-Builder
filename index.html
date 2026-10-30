@@ -24205,7 +24205,10 @@ const PR_SVAMA = /\bs\.?v\.?a\.?m\.?a\b/i;
 // ogni pratica letta nel diario prima si conferma (una volta sola): un box
 // chiede se va fatta e quali moduli servono; "No" non la richiede più
 const PR_TIPI = {
+  // "possibile exitus", "rischio di decesso", "exitus imminente": è una
+  // previsione, non un decesso avvenuto, quindi niente domanda
   decesso:    { nome:'Decesso', domanda:'Paziente deceduto?', re:/\b(?:exitus|decess[oi]|decedut[oa])\b/i,
+                no:/\b(?:possibil[\wà]*|probabil\w*|imminent\w*|eventual\w*|prevedibil\w*|rischio\s+di|pericolo\s+di|verso\s+(?:l'|il\s+)?|in\s+caso\s+di)\s*(?:di\s+|del\s+|dell'|d'|l'|il\s+|un\s+)?(?:exitus|decess[oi])\b|\b(?:exitus|decesso)\s+(?:possibil|probabil|imminent|prevedibil|attes|vicin)\w*/i,
                 moduli:[['SDO', /\bsdo\b/i], ['ISTAT', /\bistat\b/i], ['INPS', /\binps\b/i], ['Diario', /\bdiario\b/i], ['Tanatogramma', /tanatogramm/i]] },
   odc:        { nome:'OdC', domanda:'Trasferimento in OdC?', re:/\bodc\b|ospedale di comunit/i,
                 moduli:[['SVAMA', PR_SVAMA], ['Eleggibilità OdC', /eleggibilit/i]] },
