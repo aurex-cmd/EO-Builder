@@ -11319,6 +11319,11 @@ function ordinaConAppoggiPrima(entries){
 // capire se la parte "esame" è rimasta identica al testo auto-generato
 // (nel qual caso non è una modifica manuale, vedi aggiornaDiarioTesto)
 function composeAutoTextFor(patientState){
+  // lo stato vivo della scheda aperta (statoScheda): basta comporlo. Prima
+  // lo si ricaricava su se stesso con applyStateObject, che lo azzera e lo
+  // rilegge dallo stesso oggetto: si perdevano per esempio le sedi del
+  // torace appena scelte (il diario mostrava "MV abolito" senza sede)
+  if(typeof state !== 'undefined' && patientState === state) return composeReferto();
   const backup = serializeState();
   applyStateObject(patientState);
   const autoText = composeReferto();
