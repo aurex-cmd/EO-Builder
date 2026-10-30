@@ -5074,12 +5074,12 @@ if(UI_MINIMAL){
     <div class="chips" id="neuro-generale"></div>
   </div>
   <div class="group">
-    <div class="group-label">Linguaggio</div>
-    <div class="chips" id="neuro-linguaggio"></div>
-  </div>
-  <div class="group">
     <div class="group-label">Pupille</div>
     <div class="finding-list" id="neuro-pupille"></div>
+  </div>
+  <div class="group">
+    <div class="group-label">Linguaggio</div>
+    <div class="chips" id="neuro-linguaggio"></div>
   </div>
   <div class="group">
     <div class="group-label">Mingazzini</div>
@@ -16745,7 +16745,9 @@ const OPT = {
   ],
   neuroGenerale: [
     {value:'muove_arti', label:'Muove i quattro arti', frag:'muove i quattro arti'},
-    {value:'non_segni_lato', label:'Non segni di lato', frag:'non segni di lato'}
+    {value:'non_segni_lato', label:'Non segni di lato', frag:'non segni di lato'},
+    // tag corto, frase intera: nncc = nervi cranici
+    {value:'nncc', label:'Non deficit NNCC', frag:'non deficit dei nncc'}
   ],
   neuroLinguaggio: [
     {value:'non_disartria', label:'Non disartria', negativo:true},
@@ -17757,10 +17759,6 @@ function composeNeuro(){
 
   OPT.neuroGenerale.filter(o => n.generale.has(o.value)).forEach(o => parts.push(o.frag));
 
-  const linguaggioLabel = { non_disartria:'non disartria', disartrico: state.sesso === 'F' ? 'disartrica' : 'disartrico', afasico: state.sesso === 'F' ? 'afasica' : 'afasico' };
-  const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
-  if(ling.length) parts.push(joinIt(ling));
-
   if(n.pupille && n.pupille.has('iso')){
     parts.push('pupille isocicliche e isocoriche');
   } else if(n.pupille && n.pupille.size){
@@ -17769,6 +17767,10 @@ function composeNeuro(){
     if(n.pupille.has('anisocicliche')) pezzi.push('anisocicliche' + (n.pupilleCicliaLato ? ', irregolare la ' + n.pupilleCicliaLato : ''));
     parts.push('pupille ' + pezzi.join(', e '));
   }
+
+  const linguaggioLabel = { non_disartria:'non disartria', disartrico: state.sesso === 'F' ? 'disartrica' : 'disartrico', afasico: state.sesso === 'F' ? 'afasica' : 'afasico' };
+  const ling = [...n.linguaggio].map(v => linguaggioLabel[v]);
+  if(ling.length) parts.push(joinIt(ling));
 
   if(n.mingazzini.has('positivo')){
     parts.push('Mingazzini positivo' + (n.mingazziniLato ? ' a ' + n.mingazziniLato : ''));
