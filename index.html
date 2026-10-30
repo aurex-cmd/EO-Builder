@@ -5490,10 +5490,40 @@ function fondiSchedePazienti(rawBase, rawLocale, rawCloud){
     else if(haBase && sc === sb) scelta = l;          // cambiata solo qui
     else if(l === undefined) scelta = c;              // c'è solo da una parte:
     else if(c === undefined) scelta = l;              // la si tiene
+    else if(haBase && [b, l, c].every(x => x && typeof x === 'object' && !Array.isArray(x))) scelta = fondiScheda(b, l, c);
     else scelta = ((l.savedAt || 0) >= (c.savedAt || 0)) ? l : c;
     if(scelta !== undefined) risultato[id] = scelta;
   });
   return JSON.stringify(risultato);
+}
+// stessa scheda cambiata da ENTRAMBE le parti: prima vinceva tutta la scheda
+// salvata per ultima, quindi la SpO2 scritta dal telefono cancellava il
+// diario scritto nel frattempo sul PC. Ora si fonde campo per campo (dentro
+// lo stato dell'esame, e dentro il respiro un livello più giù): ogni campo
+// cambiato da una parte sola tiene quella modifica; solo un campo cambiato
+// da tutte e due prende la versione salvata per ultima
+function fondiCampi(b, l, c, localePiuNuovo){
+  b = b || {}; l = l || {}; c = c || {};
+  const js = x => x === undefined ? undefined : JSON.stringify(x);
+  const out = {};
+  new Set([...Object.keys(l), ...Object.keys(c)]).forEach(k => {
+    const sl = js(l[k]), sc = js(c[k]), sb = js(b[k]);
+    const v = sl === sc ? l[k] : sl === sb ? c[k] : sc === sb ? l[k] : (localePiuNuovo ? l[k] : c[k]);
+    if(v !== undefined) out[k] = v;
+  });
+  return out;
+}
+function fondiScheda(b, l, c){
+  const nuovo = (l.savedAt || 0) >= (c.savedAt || 0);
+  const out = fondiCampi(b, l, c, nuovo);
+  if(l.state && c.state && typeof l.state === 'object' && typeof c.state === 'object'){
+    const bs = (b.state && typeof b.state === 'object') ? b.state : {};
+    out.state = fondiCampi(bs, l.state, c.state, nuovo);
+    if(l.state.respiro && c.state.respiro) out.state.respiro = fondiCampi(bs.respiro, l.state.respiro, c.state.respiro, nuovo);
+  }
+  if(l.storico || c.storico) out.storico = fondiCampi(b.storico, l.storico, c.storico, nuovo);
+  out.savedAt = Math.max(l.savedAt || 0, c.savedAt || 0);
+  return out;
 }
 
 // dopo una fusione fatta durante un INVIO: se la scheda aperta a schermo
@@ -11289,6 +11319,11 @@ function ordinaConAppoggiPrima(entries){
 // capire se la parte "esame" è rimasta identica al testo auto-generato
 // (nel qual caso non è una modifica manuale, vedi aggiornaDiarioTesto)
 function composeAutoTextFor(patientState){
+  // lo stato vivo della scheda aperta (statoScheda): basta comporlo. Prima
+  // lo si ricaricava su se stesso con applyStateObject, che lo azzera e lo
+  // rilegge dallo stesso oggetto: si perdevano per esempio le sedi del
+  // torace appena scelte (il diario mostrava "MV abolito" senza sede)
+  if(typeof state !== 'undefined' && patientState === state) return composeReferto();
   const backup = serializeState();
   applyStateObject(patientState);
   const autoText = composeReferto();
