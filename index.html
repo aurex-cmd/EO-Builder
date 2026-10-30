@@ -23568,14 +23568,6 @@ function editorLettereSvuota(){
   #m-vista.m-quieta .m-zona{ animation:none; }
   .m-zona:active{ transform:scale(.97); }
   .m-zona{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
-  /* nella mappa dei settori un velo appena accennato del colore scelto,
-     che nasce dall'angolo in basso a destra (quasi sempre vuoto) */
-  #m-mappa .m-zona{ border-width:1.5px; }
-  #m-mappa .m-zona{ background-image:radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--m-notte) 9%, transparent), transparent 55%); }
-  html[data-m-tema="scuro"] #m-mappa .m-zona{ background-image:radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--m-link) 10%, transparent), transparent 55%); }
-  /* Ricoveri è largo il doppio: il velo resta della misura di un settore */
-  #m-mappa .m-zona-ric{ background-image:radial-gradient(circle 240px at 100% 100%, color-mix(in srgb, var(--m-notte) 9%, transparent), transparent 55%); }
-  html[data-m-tema="scuro"] #m-mappa .m-zona-ric{ background-image:radial-gradient(circle 240px at 100% 100%, color-mix(in srgb, var(--m-link) 10%, transparent), transparent 55%); }
   .m-zona.m-premuto{ border-color:var(--m-rosso); box-shadow:inset 0 0 0 1.5px var(--m-rosso); transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
   .m-zona-t{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
   .m-zona-t b{ font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1; }
@@ -23599,8 +23591,10 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
   /* Visita: i letti coi loro colori; quelli senza niente da dire, tenui (come in Diari) */
   .m-mappa:not(.m-diari) .m-mini:not(.m-oggi-l, .m-recente, .m-vecchio, .m-consegnato, .m-critico, .m-dimesso){ color:var(--m-muted); opacity:.55; }
-  /* i settori ben visibili, in Visita e in Diari: bordo più marcato, un'ombra leggera, lettera grande */
-  .m-mappa .m-zona{ border:1.5px solid var(--m-line-forte); box-shadow:0 2px 8px rgba(22,36,58,.07); }
+  /* i settori ben visibili, in Visita e in Diari: bianchi, bordo appena
+     accennato e un'ombra morbida che li stacca dal fondo (niente velo di
+     colore: stonava col resto dell'app); lettera grande */
+  .m-mappa .m-zona{ border:1px solid rgba(22,36,58,.06); box-shadow:0 1px 2px rgba(22,36,58,.06), 0 6px 20px rgba(22,36,58,.11); }
   .m-mappa .m-zona-t b{ font-size:26px; }
   .m-zona.m-ultimo{ border-color:color-mix(in srgb, var(--m-notte) 38%, #fff); }
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
