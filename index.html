@@ -24181,6 +24181,9 @@ function aggiornaPratiche(){
         if(v.moduli[m] || (v.mano || {})[m] || !fatto(re)) return;
         v.moduli[m] = true; v.savedAt = ora; cambiato = true;
       });
+      // tutto già scritto come fatto ("redatta SVAMA ed eleggibilità per
+      // OdC"): non c'è niente da chiedere né da fare
+      if(v.chiedi && praticaFinita(v)){ v.chiedi = false; v.savedAt = ora; cambiato = true; }
     });
   });
   // le voci chiuse (finite o tolte) da più di un mese non servono più
