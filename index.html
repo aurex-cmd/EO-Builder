@@ -22844,7 +22844,7 @@ function editorLettereSvuota(){
   /* spazio in fondo per far salire l'ultima riga sopra "Copia": su iPhone il
      padding in fondo di un contenitore flex che scorre non conta, e il diario
      sembrava finire dietro il pulsante senza poter scorrere */
-  .m-s-corpo::after{ content:""; flex:0 0 auto; height:114px; }
+  .m-s-corpo::after{ content:""; flex:0 0 auto; height:calc(114px + var(--m-tastiera, 0px)); }
   .m-scheda .m-lbl{ margin-bottom:0; }
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-link); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
@@ -26061,6 +26061,29 @@ function lasciaVelo(){
     return r;
   };
 })();
+// tastiera aperta (iPhone): la riga in cui si scrive sale sopra la tastiera.
+// Con la scheda aperta la pagina sotto è bloccata e Safari non riusciva più
+// a spostarla: scorre la scheda, che in fondo ha spazio quanto la tastiera
+if(window.visualViewport){
+  let tTastiera = 0;
+  const sopraTastiera = () => {
+    const vv = visualViewport;
+    const tastiera = Math.max(0, Math.round(innerHeight - vv.offsetTop - vv.height));
+    const aperta = tastiera > 80;
+    sc.style.setProperty('--m-tastiera', (aperta ? tastiera : 0) + 'px');
+    const el = document.activeElement;
+    if(!aperta || !el || !el.matches('textarea, input:not([type=checkbox]):not([type=radio]):not([type=button])')) return;
+    const fondo = vv.offsetTop + vv.height - 16;
+    let y = el.getBoundingClientRect().bottom;
+    if(el.matches('textarea')) y = Math.min(y, comandiPosizioneCursore(el, el.selectionEnd).y + 8);
+    if(y <= fondo) return;
+    if(sc.classList.contains('m-su') && sc.contains(el)) $m('#m-s-corpo').scrollTop += y - fondo;
+    else window.scrollBy(0, y - fondo);
+  };
+  const presto = () => { clearTimeout(tTastiera); tTastiera = setTimeout(sopraTastiera, 60); };
+  visualViewport.addEventListener('resize', presto);
+  document.addEventListener('focusin', () => setTimeout(sopraTastiera, 400));
+}
 window.addEventListener('resize', muoviPill);
 // tag toccato: l'app spesso ridisegna i tag, quindi si ritrova quello nuovo
 // (stessa sezione, stesso testo) e si anima solo lui
