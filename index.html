@@ -24437,6 +24437,12 @@ function nuovaPratica(t, nomeAltro){
 // di un settore)
 function bloccoFare(copiati, soloSettore){
   const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
+  // consegne, lettere e pratiche sono del settore (quello aperto, o in home
+  // l'ultimo scelto): segnare le consegne del A non le dà fatte anche nel B
+  let sett = null; try{ sett = soloSettore ? M.settore : settoreScelto(); } catch(e){}
+  const nomiSett = sett ? nomiDelSettore(sett) : null;
+  const delSettore = n => !nomiSett || nomiSett.has(n);
+  if(nomiSett && sett !== RIC){ copiati = 0; nomiSett.forEach(n => { const i = infoLetto(n); if(i.vistoOggi && i.copiato) copiati++; }); }
   let cambiato = false;
   const righe = [];
   // post-degenze dal 10° giorno: fatte quando oggi ce n'erano e ora non più.
@@ -24459,11 +24465,13 @@ function bloccoFare(copiati, soloSettore){
   // ricovero: il ricovero non passa dalle consegne); come le
   // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
   const lettere = f.lettere || {};
-  const kCons = `cons|${oggi}`;
-  if(eFestivo(new Date())){
+  const kCons = sett ? `cons|${sett}|${oggi}` : `cons|${oggi}`;
+  if(sett === RIC){
+    // i ricoveri non passano dalle consegne
+  } else if(eFestivo(new Date())){
     // nel weekend e nei festivi: le consegne del giorno, da incollare e poi da fare
     const cw = loadConsegne(); let n = 0, tot = 0;
-    Object.values(cw).forEach(v => ['V','E','S','C'].forEach(l => { if(v && v[l]){ tot++; if(!v['fatto' + l]) n++; } }));
+    Object.entries(cw).forEach(([nome, v]) => { if(delSettore(nome)) ['V','E','S','C'].forEach(l => { if(v && v[l]){ tot++; if(!v['fatto' + l]) n++; } }); });
     const vuote = !Object.keys(cw).length;
     righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne weekend',
       dato:vuote ? 'da allegare' : !n ? (tot ? 'fatte' : 'nessuna da fare') : '', conta:n ? `${n} da fare` : '' });
@@ -24475,14 +24483,14 @@ function bloccoFare(copiati, soloSettore){
   let dim = []; try{ dim = calcolaCalendarioDimissioni(); } catch(e){}
   dim.forEach(r => {
     const g = chiaveGiorno(r.data.getTime());
-    if(g !== oggi && g !== domani) return;
+    if(g !== oggi && g !== domani || !delSettore(r.nome)) return;
     const k = `${r.id}|${g}`;
     righe.push({ k, segna:true, etich:'Lettera scritta', fatta:letteraScritta(r.id, g), attr:'data-m="pagina" data-p="dimissioni"', ic:ICON.calendario,
       nome:`Lettera · ${esc(String(r.nome || '').replace(/^Letto\s+/i, 'letto '))}`, dato:g === oggi ? 'oggi' : 'domani' });
   });
   if(cambiato) scriviFare(f);
   // pratiche dei pazienti del settore scelto (o di tutti), in una riga che si apre
-  let pratiche = ''; try{ const s = soloSettore ? M.settore : settoreScelto(); pratiche = htmlPratiche(s ? nomiDelSettore(s) : null); } catch(e){}
+  let pratiche = ''; try{ pratiche = htmlPratiche(nomiSett); } catch(e){}
   if(!righe.length && !pratiche){ fattiPrima = new Set(); return { html:'', chiavi:new Set() }; }
   // prima quello che manca, poi il fatto; il baffo "salta" solo se è appena comparso
   righe.sort((a, b) => a.fatta - b.fatta);
