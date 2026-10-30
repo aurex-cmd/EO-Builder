@@ -10805,6 +10805,7 @@ function renderVitaliSettore(){
     let respiro;
     if(isCurrent) respiro = state.respiro;
     else if(entry && diOggi) respiro = entry[1].state.respiro || {};
+    else if(entry) respiro = Object.assign({}, entry[1].state.respiro || {}, respiroVuotoDiOggi());
     else respiro = respiroVuotoDiOggi();
 
     const riga = document.createElement('div');
@@ -10960,7 +10961,11 @@ function aggiornaVitaleLetto(nome, campo, valore){
     if(resetGiornalieroAttivo()){
       entry[1].state = statoResetGiornalieroCompleto(entry[1].state);
     } else {
-      entry[1].state.respiro = respiroVuotoDiOggi();
+      // solo i valori del giorno si azzerano (SpO2, PA, FC, TC): dispnea,
+      // ossigenoterapia e nota restano, come aprendo la scheda
+      // (selezionaPaziente). Prima si sostituiva tutto il respiro e un
+      // "in NC 2L/min" tornava "in AA" alla prima SpO2 scritta da qui
+      entry[1].state.respiro = Object.assign(entry[1].state.respiro || {}, respiroVuotoDiOggi());
       entry[1].state.outputEsameManuale = '';
     }
   }
