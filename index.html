@@ -23361,6 +23361,38 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .isolamento-modal-riga, html[data-ui="minimal"] .isolamento-modal-dpi{ font-size:15px; line-height:1.55; color:var(--m-ink); }
   html[data-ui="minimal"] .isolamento-modal-riga{ padding:8px 0; border-bottom:1px solid var(--m-line); margin:0; }
   html[data-ui="minimal"] .isolamento-modal-nota{ color:var(--m-teal); font-size:13px; }
+  /* calcolatore VFG in stile Pocket: riquadro al centro, titolo teal con
+     l'icona, sesso a segmenti, campi e pulsante come nella scheda */
+  html[data-ui="minimal"] #vfg-modal-overlay{ background:rgba(15,20,28,.32); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+  html[data-ui="minimal"] #vfg-modal{ max-width:380px; background:var(--m-bg); border:0; border-radius:16px; box-shadow:0 20px 50px rgba(15,20,28,.22); padding:20px 18px 18px; font-family:var(--m-scheda); color:var(--m-ink); animation:m-riquadro .3s var(--m-molla) both; }
+  html[data-ui="minimal"] .vfg-modal-header{ align-items:center; margin-bottom:4px; }
+  html[data-ui="minimal"] .vfg-modal-header h2{ font-family:var(--m-scheda); font-size:22px; font-weight:800; letter-spacing:-.02em; color:var(--m-teal); }
+  html[data-ui="minimal"] .vfg-modal-header .sub{ font-family:var(--m-scheda); font-size:13px; color:var(--m-muted); margin-top:3px; }
+  html[data-ui="minimal"] #vfg-chiudi-btn{ width:30px; height:30px; background:var(--m-sec); border:0; box-shadow:none; color:var(--m-muted); font-size:13px; }
+  html[data-ui="minimal"] #vfg-modal .group{ margin:0; }
+  html[data-ui="minimal"] #vfg-modal .group-label{ margin:16px 0 6px; font-family:var(--m-scheda); font-size:13px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--m-muted); }
+  html[data-ui="minimal"] #vfg-modal .group-label::first-letter{ text-transform:uppercase; }
+  html[data-ui="minimal"] #vfg-modal .chips{ display:grid; grid-template-columns:1fr 1fr; gap:0; padding:3px; border-radius:11px; background:var(--m-sec); }
+  html[data-ui="minimal"] #vfg-modal .chip{ height:36px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; box-shadow:none; font-family:var(--m-scheda); font-size:15px; font-weight:600; color:var(--m-muted); transition:background .2s, color .2s, box-shadow .2s; }
+  html[data-ui="minimal"] #vfg-modal .chip.active{ background:var(--m-bg); color:var(--m-ink); box-shadow:0 1px 3px rgba(15,20,28,.12); }
+  html[data-ui="minimal"] #vfg-modal .group-row{ margin:0; display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; align-items:end; }
+  html[data-ui="minimal"] #vfg-modal input[type=number]{ box-sizing:border-box; height:46px; padding:0 12px; border:1px solid var(--m-line); border-radius:10px; background:var(--m-bg); box-shadow:none; font-family:var(--m-scheda); font-size:17px; font-weight:600; color:var(--m-ink); -moz-appearance:textfield; appearance:textfield; }
+  html[data-ui="minimal"] #vfg-modal input[type=number]::-webkit-inner-spin-button, html[data-ui="minimal"] #vfg-modal input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  html[data-ui="minimal"] #vfg-modal input[type=number]:focus{ outline:none; border-color:var(--m-teal); box-shadow:0 0 0 3px color-mix(in srgb, var(--m-teal) 16%, transparent); }
+  html[data-ui="minimal"] #vfg-modal input[type=number]::placeholder{ color:var(--m-faint); font-weight:500; }
+  html[data-ui="minimal"] #vfg-modal .btn.primary{ width:100%; height:52px; margin-top:18px !important; border:0; border-radius:10px; background:var(--m-notte); box-shadow:none; color:#fff; font-family:var(--m-scheda); font-size:15px; font-weight:600; }
+  html[data-ui="minimal"] #vfg-modal .btn.primary:active{ transform:scale(.98); }
+  html[data-ui="minimal"] #vfg-output-card{ margin:14px 0 0; padding:14px 16px 6px; border:0; border-radius:12px; background:var(--m-box); box-shadow:none; }
+  html[data-ui="minimal"] #vfg-modal .vfg-value{ font-family:var(--m-scheda); font-size:40px; font-weight:800; letter-spacing:-.03em; color:var(--m-ink); margin:0 0 6px; }
+  html[data-ui="minimal"] #vfg-modal .vfg-value .unit{ font-family:var(--m-scheda); font-size:15px; font-weight:600; letter-spacing:0; color:var(--m-muted); }
+  html[data-ui="minimal"] #vfg-modal .detail-line{ padding:9px 0; border-bottom:0; font-size:14px; }
+  html[data-ui="minimal"] #vfg-modal .detail-line + .detail-line{ border-top:1px solid var(--m-line); }
+  html[data-ui="minimal"] #vfg-modal .detail-line .label{ color:var(--m-muted); }
+  html[data-ui="minimal"] #vfg-modal .detail-line .value{ font-family:var(--m-scheda); font-weight:600; color:var(--m-ink); }
+  html[data-ui="minimal"] #vfg-modal .note-box{ margin-top:14px !important; padding:0; border:0; border-radius:0; background:none; box-shadow:none; font-family:var(--m-scheda) !important; font-size:12px !important; line-height:1.5; color:var(--m-muted) !important; }
+  html[data-ui="minimal"] #vfg-modal #vfg-avvisoUnita{ margin:6px 0 8px !important; padding:8px 10px; border-radius:8px; background:var(--m-bg); font-size:13px !important; color:var(--m-ink) !important; }
+  html[data-m-tema="scuro"] #vfg-modal{ --m-bg:var(--m-carta); }
+  html[data-m-tema="scuro"] #vfg-modal .chip.active{ background:var(--m-line-forte); }
   /* home: le voci sotto i due ingressi, come l'elenco "Consulta" di Osteoclick */
   .m-righe{ display:flex; flex-direction:column; }
   .m-rigalink{ display:flex; align-items:center; gap:12px; width:100%; border:0; border-bottom:1px solid var(--m-line); background:none; padding:10px 0; text-align:left; font:inherit; font-size:15px; font-weight:600; color:var(--m-ink); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; animation:m-compare .4s var(--m-molla) both; animation-delay:calc(var(--i) * 45ms + 90ms); }
