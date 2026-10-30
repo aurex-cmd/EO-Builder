@@ -25141,13 +25141,19 @@ function componi(d){
   return righe.length ? eo + '\n\n' + righe.join('\n') : eo;
 }
 let D = null;           // diario della scheda aperta
+// il diario com'era all'apertura (o all'ultimo salvataggio): se non lo si è
+// toccato non si salva niente. Prima bastava aprire e chiudere il diario di
+// un paziente visto ieri per salvarlo come diario di oggi (comparendo in
+// Aggiorna consegne con "Nessuna novità rispetto a ieri")
+let dAperto = '';
 let timerSalva = null, modificato = false;
 function salvaOra(){
   clearTimeout(timerSalva);
   if(!M.id || !D) return;
   const prima = getRefertoFor(statoScheda(M.id, loadPatients()[M.id]));
   const ora = componi(D);
-  if(ora === prima) return;
+  if(ora === prima || ora === dAperto) return;
+  dAperto = ora;
   aggiornaDiarioTesto(M.id, ora);
   // il testo è cambiato dopo la copia: va ricopiato
   const ps = loadPatients();
@@ -25172,7 +25178,7 @@ function apriScheda(nome){
   // tutto il lavoro prima che la scheda si muova: durante la salita il
   // telefono deve solo spostarla (antibiotici e richieste vengono dalla
   // memoria, vedi calcolaAiuti; se mancano si calcolano a scheda ferma)
-  conPazientiFermi(() => { D = leggiDiario(M.id); disegnaScheda(); });
+  conPazientiFermi(() => { D = leggiDiario(M.id); dAperto = D ? componi(D) : ''; disegnaScheda(); });
   const sh = $m('#m-scheda');
   void sh.offsetHeight;
   requestAnimationFrame(() => requestAnimationFrame(() => {
