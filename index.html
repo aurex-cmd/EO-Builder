@@ -10831,7 +10831,7 @@ function renderVitaliSettore(){
     // obiettivo, per correggerla (es. "in AA" che era "in NC 1 L/min")
     if(UI_MINIMAL){
       campi.querySelector('.v.tc').remove();
-      campi.querySelector('.v.spo2').insertAdjacentHTML('afterend', `<div class="v o2"><label>O₂</label><div class="o2-row"><select id="${idPrefix}-o2" aria-label="Ossigenoterapia"><option value="">—</option>${OPT.respiroO2.map(o => `<option value="${o.value}">${o.value}</option>`).join('')}</select><input id="${idPrefix}-o2v" placeholder="—"><span class="unit"></span></div></div>`);
+      campi.querySelector('.v.spo2').insertAdjacentHTML('afterend', `<div class="v o2"><label>O₂</label><div class="o2-row"><select id="${idPrefix}-o2" aria-label="Ossigenoterapia"><option value="">—</option>${OPT.respiroO2.map(o => `<option value="${o.value}">${o.value}</option>`).join('')}</select><span class="o2-val"><input id="${idPrefix}-o2v" placeholder="—"><span class="unit"></span></span></div></div>`);
     }
     riga.appendChild(campi);
     lista.appendChild(riga);
@@ -23020,14 +23020,18 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ background:color-mix(in srgb, var(--m-notte) 7%, transparent); }
   html[data-ui="minimal"] #vitali-settore-view .riga-label{ display:none; }
   html[data-ui="minimal"] #vitali-settore-view .m-vit-letto .m-tl{ width:100%; animation:none; pointer-events:none; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ display:grid; grid-template-columns:1.25fr .85fr 1.5fr .75fr; gap:0; background:none; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ display:grid; grid-template-columns:1.3fr .9fr 1fr .8fr; gap:0; background:none; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v{ padding:0; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ margin-bottom:4px; font-family:var(--m-sans); font-size:10px; font-weight:600; letter-spacing:.08em; color:var(--m-muted); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-sans); font-size:19px; font-weight:700; letter-spacing:-.01em; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); width:34px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input{ width:36px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:42px; }
   /* ossigenoterapia: la modalità (menu del telefono) e il suo dato */
-  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-row{ display:flex; justify-content:center; align-items:baseline; gap:4px; }
+  /* la modalità sopra (NC), il dato sotto (1 L) */
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-row{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-val{ display:flex; align-items:baseline; gap:2px; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-val:has(input[hidden]){ display:none; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input{ padding:0; text-align:center; }
   html[data-ui="minimal"] #vitali-settore-view .v.o2 select{ flex:none; width:auto; min-width:0; appearance:none; -webkit-appearance:none; border:0; background:none; padding:2px 0; margin:0; font-family:var(--m-sans); font-size:13px; font-weight:700; color:var(--m-line-forte); cursor:pointer; }
   /* più piccola e in azzurro: è una correzione, non un parametro da leggere al volo */
   html[data-ui="minimal"] #vitali-settore-view .v.o2{ --o2:#2f9bd6; }
