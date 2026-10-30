@@ -23599,6 +23599,9 @@ function editorLettereSvuota(){
   /* settori quadrati su ogni telefono (Ricoveri, largo il doppio, no); con
      tanti letti il riquadro si allunga quanto serve */
   .m-mappa .m-zona:not(.m-zona-ric){ aspect-ratio:1; min-width:0; }
+  /* lo spazio che avanza nel quadrato si divide sopra e sotto i letti,
+     invece di restare tutto in fondo */
+  .m-mappa .m-zona:not(.m-zona-ric) .m-mini-g{ margin-block:auto; }
   .m-zona.m-ultimo{ border-color:color-mix(in srgb, var(--m-notte) 38%, #fff); }
   .m-mappa.m-zoom .m-zona:not(.m-scelto){ opacity:0; transform:scale(.9); pointer-events:none; }
   .m-zona.m-scelto{ z-index:2; border-color:transparent; box-shadow:0 18px 40px rgba(23,34,49,.16); }
