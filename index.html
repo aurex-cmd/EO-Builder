@@ -17757,7 +17757,12 @@ function composeNeuro(){
   const n = state.neuro;
   const parts = [];
 
-  OPT.neuroGenerale.filter(o => n.generale.has(o.value)).forEach(o => parts.push(o.frag));
+  // "non segni di lato" e "non deficit dei nncc" insieme: una frase sola
+  const latoENncc = n.generale.has('non_segni_lato') && n.generale.has('nncc');
+  OPT.neuroGenerale.filter(o => n.generale.has(o.value)).forEach(o => {
+    if(latoENncc && o.value === 'nncc') return;
+    parts.push(latoENncc && o.value === 'non_segni_lato' ? 'non deficit di lato o dei nncc' : o.frag);
+  });
 
   if(n.pupille && n.pupille.has('iso')){
     parts.push('pupille isocicliche e isocoriche');
