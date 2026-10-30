@@ -10826,6 +10826,13 @@ function renderVitaliSettore(){
       <div class="v fc"><label>FC</label><div class="val-row"><input type="number" id="${idPrefix}-fc" min="0" inputmode="numeric" placeholder="—"><span class="unit">bpm</span></div></div>
       <div class="v tc"><label>TC</label><input type="number" id="${idPrefix}-temp" min="30" max="43" step="0.1" inputmode="decimal" placeholder="—"></div>
     `;
+    // EO Pocket: niente TC (apiretico/febbrile si scrive nell'esame
+    // obiettivo); accanto alla SpO2 l'ossigenoterapia, la stessa dell'esame
+    // obiettivo, per correggerla (es. "in AA" che era "in NC 1 L/min")
+    if(UI_MINIMAL){
+      campi.querySelector('.v.tc').remove();
+      campi.querySelector('.v.spo2').insertAdjacentHTML('afterend', `<div class="v o2"><label>O₂</label><div class="o2-row"><select id="${idPrefix}-o2" aria-label="Ossigenoterapia"><option value="">—</option>${OPT.respiroO2.map(o => `<option value="${o.value}">${o.value}</option>`).join('')}</select><span class="o2-val"><input id="${idPrefix}-o2v" placeholder="—"><span class="unit"></span></span></div></div>`);
+    }
     riga.appendChild(campi);
     lista.appendChild(riga);
 
@@ -10847,7 +10854,33 @@ function renderVitaliSettore(){
       sat: { lunghezza: v => /^1/.test(v) ? 3 : 2, prossimo: 'fc' }
       // 'fc' non compare qui apposta: ci si ferma, non si salta da soli a TC
     };
-    [['pas','pas'], ['pad','pad'], ['sat','sat'], ['fc','fc'], ['temp','tempValore']].forEach(([suffix, campo]) => {
+    if(UI_MINIMAL){
+      // ossigenoterapia: la modalità e, accanto, il dato che le serve (L/min
+      // per NC/MS/MR, FiO2 per MV, testo libero per HFNC). La SpO2 salta
+      // comunque alla FC, questo campo si tocca solo per correggere
+      const sel = document.getElementById(`${idPrefix}-o2`), val = document.getElementById(`${idPrefix}-o2v`), unita = val.nextElementSibling;
+      const campoO2 = o => ['NC', 'MS', 'MR'].includes(o) ? 'litri' : o === 'MV' ? 'fio2' : o === 'HFNC' ? 'altro' : '';
+      const mostraO2 = () => {
+        const c = campoO2(sel.value);
+        val.hidden = unita.hidden = !c;
+        val.type = c === 'altro' ? 'text' : 'number';
+        val.inputMode = c === 'altro' ? 'text' : 'decimal';
+        unita.textContent = c === 'litri' ? 'L' : c === 'fio2' ? '%' : '';
+        val.value = c ? (respiro[c] || '') : '';
+        sel.classList.toggle('filled', !!sel.value); val.classList.toggle('filled', !!val.value);
+        // il menu largo quanto la sigla scelta (non quanto la più lunga)
+        sel.style.width = (sel.value ? sel.value.length * .72 + .1 : 1.1) + 'em';
+      };
+      sel.value = respiro.o2 || '';
+      mostraO2();
+      sel.addEventListener('change', () => { aggiornaVitaleLetto(nome, 'o2', sel.value); mostraO2(); });
+      val.addEventListener('input', () => {
+        const c = campoO2(sel.value); if(!c) return;
+        respiro[c] = val.value; val.classList.toggle('filled', !!val.value);
+        aggiornaVitaleLetto(nome, c, val.value);
+      });
+    }
+    [['pas','pas'], ['pad','pad'], ['sat','sat'], ['fc','fc'], ...(UI_MINIMAL ? [] : [['temp','tempValore']])].forEach(([suffix, campo]) => {
       const input = document.getElementById(`${idPrefix}-${suffix}`);
       input.value = respiro[campo] || '';
       input.classList.toggle('filled', !!respiro[campo]);
@@ -10888,7 +10921,7 @@ function renderVitaliSettore(){
 // ancora una scheda propria). Se è la scheda attualmente aperta nel form
 // clinico, aggiorna anche lo stato live invece di toccare solo il
 // localStorage, così un successivo autosave non lo sovrascrive per sbaglio.
-const CAMPO_VITALE_ID_CLASSICO = { sat:'v-sat', pas:'v-pas', pad:'v-pad', fc:'v-fc', tempValore:'temp-valore' };
+const CAMPO_VITALE_ID_CLASSICO = { sat:'v-sat', pas:'v-pas', pad:'v-pad', fc:'v-fc', tempValore:'temp-valore', litri:'respiro-litri', fio2:'respiro-fio2', altro:'respiro-altro' };
 function aggiornaVitaleLetto(nome, campo, valore){
   const patients = loadPatients();
   let entry = Object.entries(patients).find(([id,p]) => p.name === nome);
@@ -22987,12 +23020,27 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga:focus-within{ background:color-mix(in srgb, var(--m-notte) 7%, transparent); }
   html[data-ui="minimal"] #vitali-settore-view .riga-label{ display:none; }
   html[data-ui="minimal"] #vitali-settore-view .m-vit-letto .m-tl{ width:100%; animation:none; pointer-events:none; }
-  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ display:grid; grid-template-columns:1.5fr 1fr .9fr .9fr; gap:0; background:none; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip{ display:grid; grid-template-columns:1.3fr .9fr 1fr .8fr; gap:0; background:none; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v{ padding:0; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v label{ margin-bottom:4px; font-family:var(--m-sans); font-size:10px; font-weight:600; letter-spacing:.08em; color:var(--m-muted); }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input{ font-family:var(--m-sans); font-size:19px; font-weight:700; letter-spacing:-.01em; background:none; border:0; border-radius:0; box-shadow:none; padding:2px 0; color:var(--m-ink); width:34px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.pa input{ width:36px; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.tc input{ width:42px; }
+  /* ossigenoterapia: la modalità (menu del telefono) e il suo dato */
+  /* la modalità sopra (NC), il dato sotto (1 L) */
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-row{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-val{ display:flex; align-items:baseline; gap:2px; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 .o2-val:has(input[hidden]){ display:none; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input{ padding:0; text-align:center; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 select{ flex:none; width:auto; min-width:0; appearance:none; -webkit-appearance:none; border:0; background:none; padding:2px 0; margin:0; font-family:var(--m-sans); font-size:13px; font-weight:700; color:var(--m-line-forte); cursor:pointer; }
+  /* più piccola e in azzurro: è una correzione, non un parametro da leggere al volo */
+  html[data-ui="minimal"] #vitali-settore-view .v.o2{ --o2:#2f9bd6; }
+  html[data-ui="minimal"][data-m-tema="scuro"] #vitali-settore-view .v.o2{ --o2:#6cc0f0; }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 select.filled{ color:var(--o2); }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input{ width:22px; font-size:13px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input[type="text"]{ width:48px; font-size:12px; }
+  html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.o2 input.filled{ color:var(--o2); }
+  html[data-ui="minimal"] #vitali-settore-view .v.o2 [hidden]{ display:none; }
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v input:focus{ background:none; border:0; }
   /* valori scritti: gli stessi colori dell'app (SpO₂ blu, PA arancio, FC rosso, TC viola) */
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.spo2 input.filled{ color:var(--vs-spo2); }
