@@ -22705,6 +22705,12 @@ function editorLettereSvuota(){
   .m-bar .m-indietro{ border:0; background:none; width:44px; height:44px; display:grid; place-items:center; color:var(--m-muted); cursor:pointer; transition:transform .12s var(--m-molla), color .2s; }
   .m-bar .m-indietro svg{ width:22px; height:22px; }
   .m-bar .m-indietro:active{ transform:scale(.88); color:var(--m-ink); }
+  /* la freccia allineata al margine dei titoli (il tocco resta di 44px) */
+  .m-bar .m-indietro{ margin-left:-17px; }
+  /* la linea sotto la barra e il titolo piccolo al centro compaiono solo
+     quando il titolo grande della pagina è scorso sotto la barra */
+  .m-bar{ transition:box-shadow .2s; }
+  .m-bar.m-scorsa{ box-shadow:0 1px 0 var(--m-line); }
   .m-bar .m-azione{ justify-self:end; border:0; background:none; padding:6px 0; color:var(--m-notte); font-weight:600; font-size:15px; cursor:pointer; font-family:inherit; }
   .m-bar.m-home .m-bar-in{ grid-template-columns:1fr auto; }
   /* durante la visita la barra resta fissa sopra la schermata dei tag */
@@ -22786,6 +22792,9 @@ function editorLettereSvuota(){
   .m-lbl{ font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); margin:16px 0 -6px; }
   /* la prima sezione sotto il titolo: stessa distanza delle altre schermate */
   .m-h2 + .m-lbl{ margin-top:4px; }
+  /* sottotitolo: una riga grigia sotto il titolo, i numeri in nero */
+  .m-sub b{ color:var(--m-ink); font-weight:800; }
+  .m-h2 + .m-sub{ margin:-8px 0 6px; }
 
   .m-piede{ font-size:13px; color:var(--m-muted); text-align:center; margin-top:24px; }
   .m-piede a{ color:var(--m-notte); font-weight:600; text-decoration:none; }
@@ -23056,7 +23065,6 @@ function editorLettereSvuota(){
      identico a quello del settore, a destra PA, SpO₂, FC e TC. Niente
      "Aggiorna": i dati arrivano da soli (al rientro nell'app e ogni minuto) */
   html[data-ui="minimal"] #vitali-settore-view .group:has(#vitali-aggiorna-btn){ display:none; }
-  html[data-ui="minimal"] #vitali-settore-view .m-vit-sub{ margin:-12px 0 16px; }
   html[data-ui="minimal"] #vitali-settore-view #vitali-settore-lista{ display:block; margin:0; padding:0; background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga{ display:grid; grid-template-columns:64px minmax(0, 1fr); column-gap:12px; align-items:center; margin:0; padding:12px 14px 12px 14px; border:0; border-top:1px solid var(--m-line); border-radius:0; background:none; transition:background .2s; animation:m-compare .35s var(--m-molla) both; }
   html[data-ui="minimal"] #vitali-settore-view .vitali-riga:first-child{ border-top:0; }
@@ -23456,7 +23464,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-pagina :is(input[type=text], input[type=email], input[type=password], input[type=number], textarea, select){ font-family:var(--m-sans); background:var(--m-box); border:1px solid transparent; border-radius:10px; box-shadow:none; color:var(--m-ink); transition:border-color .2s, background .2s; }
   html[data-ui="minimal"] .m-pagina :is(input, textarea, select):focus{ background:var(--m-bg); border-color:var(--m-notte); outline:none; }
   html[data-ui="minimal"] .m-pagina .hicon{ stroke:var(--m-muted); }
-  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box){ display:none !important; }
+  html[data-ui="minimal"] #impostazioni-view.m-solo-account > :not(.sync-box, .m-pag-testa){ display:none !important; }
   /* l'accesso sta nella sua pagina, Account: in Impostazioni non si ripete */
   html[data-ui="minimal"] #impostazioni-view:not(.m-solo-account) > .sync-box{ display:none !important; }
   /* Account: sospesa a metà pagina, sotto il riquadro, una scena ordinata
@@ -23708,7 +23716,7 @@ function editorLettereSvuota(){
 
   /* REPARTO: la mappa di tutti i settori */
   .m-schede-una{ grid-template-columns:1fr; }
-  .m-mappa-sub{ margin:-6px 2px 12px; font-size:13px; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
+  .m-mappa-sub{ margin:-8px 0 6px; font-size:15px; line-height:1.45; color:var(--m-muted); } .m-mappa-sub b{ color:var(--m-ink); font-weight:800; }
   .m-mappa{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .m-mappa-rep{ grid-column:1 / -1; display:flex; align-items:baseline; gap:8px; margin:14px 2px 0; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
   .m-mappa-rep:first-child{ margin-top:0; }
@@ -23949,8 +23957,14 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
      Testo 12 · 13 · 15 · 22 · 30 px; angoli 6 · 10 · 16 px o pillola; blu notte
      per azioni e scelte, teal solo per tag e diario; card bianche con un filo,
      l'ombra solo a ciò che galleggia */
-  html:not([data-m-orig]) .m-bar-t{ visibility:hidden; }
-  html[data-ui="minimal"] .m-pagina[data-m-titolo]::before{ content:attr(data-m-titolo); display:block; margin:6px 0 18px; font-size:30px; line-height:1.05; font-weight:800; letter-spacing:-.02em; color:var(--m-ink); }
+  html:not([data-m-orig]) .m-bar-t{ opacity:0; transform:translateY(4px); transition:opacity .2s, transform .2s; }
+  html:not([data-m-orig]) .m-bar.m-scorsa .m-bar-t{ opacity:1; transform:none; }
+  html[data-m-orig] .m-bar-t{ visibility:hidden; }
+  /* titolo e sottotitolo delle pagine: come quelli delle viste di Pocket,
+     poi 20px fino al contenuto */
+  html[data-ui="minimal"] .m-pag-testa{ margin:0 0 20px; }
+  html[data-ui="minimal"] .m-pag-t{ margin:6px 0 0; font-size:30px; line-height:1.05; font-weight:800; letter-spacing:-.02em; color:var(--m-ink); }
+  html[data-ui="minimal"] .m-pag-testa .m-sub{ margin:6px 0 0; }
   /* elenchi: righe dentro un riquadro, come nella home */
   .m-righe{ border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   .m-righe .m-rigalink{ gap:12px; padding:12px 14px; background:#fff; font-size:15px; font-weight:500; border-bottom:1px solid var(--m-line); }
@@ -24246,6 +24260,7 @@ function disegna(verso){
 }
 function barra(titolo, azione){
   const bar = $m('#m-bar'); bar.classList.toggle('m-home', M.vista === 'home');
+  bar.classList.remove('m-scorsa'); requestAnimationFrame(barraScorsa);
   $m('#m-bar-in').innerHTML = M.vista === 'home'
     ? `<span class="m-marchio"><i>EO</i>EO Pocket</span><span class="m-data">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</span>`
     : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
@@ -24669,6 +24684,7 @@ function vStrumenti(){
   azioniApp = [];
   $m('#m-vista').innerHTML = `
     <h2 class="m-h2">Strumenti</h2>
+    <p class="m-sub">Calcolatori, score e riferimenti</p>
     <p class="m-lbl">Reparto</p>
     <div class="m-righe">${righeApp('Reparto', /consegne|dimissioni|apriRubrica|postdegenze/)}</div>
     <p class="m-lbl">Clinici</p>
@@ -25052,9 +25068,7 @@ window.renderVitaliSettore = function(){
   renderVitaliApp();
   const vista = document.getElementById('vitali-settore-view'), lista = document.getElementById('vitali-settore-lista');
   if(!vista || !lista) return;
-  let sub = vista.querySelector('.m-vit-sub');
-  if(!sub){ sub = document.createElement('p'); sub.className = 'm-sub m-vit-sub'; lista.before(sub); }
-  sub.textContent = nomeSettoreTitolo(settoreVitali || settoreAttivo) + ' · Invio passa al letto dopo';
+  testaPagina('vitali');
   lista.querySelectorAll('.vitali-riga').forEach((riga, k) => {
     riga.style.animationDelay = Math.min(k, 10) * 30 + 'ms';
     const nome = riga.querySelector('.riga-label span')?.textContent;
@@ -26709,6 +26723,50 @@ function animaStatistiche(st){
 
 // mostraVista in minimal: non cambia la pagina con cui riparte l'app
 // normale (LAST_VIEW_KEY) e tiene aggiornato il titolo della barra
+// titolo e sottotitolo in cima alle pagine dell'app: il sottotitolo dice il
+// dato utile della pagina (quanti, cosa), i numeri in nero
+function sottotitoloPagina(v){
+  const n = (k, uno, piu) => `<b>${k}</b> ${k === 1 ? uno : piu}`;
+  try{
+    if(v === 'ricoveri'){ const r = loadRicoveri(); const o = r.filter(x => isOggi(x.creatoIl)).length; return `${o ? n(o, 'oggi', 'oggi') + ' · ' : ''}${n(r.length, 'ricovero totale', 'ricoveri totali')}`; }
+    if(v === 'dimissioni'){
+      const d = calcolaCalendarioDimissioni(), oggi = chiaveGiorno(Date.now()), dom = chiaveGiorno(Date.now() + 864e5);
+      const o = d.filter(r => chiaveGiorno(r.data.getTime()) === oggi).length, k = d.filter(r => chiaveGiorno(r.data.getTime()) === dom).length;
+      return o || k ? [o && n(o, 'oggi', 'oggi'), k && n(k, 'domani', 'domani')].filter(Boolean).join(' · ') : d.length ? n(d.length, 'in programma', 'in programma') : 'Nessuna dimissione in programma';
+    }
+    if(v === 'postdegenze'){ const pd = caricaPostDegenze(), t = Object.keys(pd).length, s = Object.values(pd).filter(x => avvisoPostDegenza(x) <= Date.now()).length;
+      return !t ? 'Nessuna in sospeso' : n(t, 'in sospeso', 'in sospeso') + (s ? ` · ${n(s, 'da controllare', 'da controllare')}` : ''); }
+    if(v === 'account') return statoAccount();
+    if(v === 'consegne'){ const c = Object.keys(loadConsegne()).length; return c ? n(c, 'letto con consegne', 'letti con consegne') : 'Consegne del weekend da incollare'; }
+    if(v === 'vitali') return esc(nomeSettoreTitolo(settoreVitali || settoreAttivo)) + ' · Invio passa al letto dopo';
+    if(v === 'impostazioni') return 'Reparto, aspetto e dati';
+    if(v === 'editor') return 'Testo libero da copiare';
+    if(v === 'backup') return 'Copie di sicurezza dei dati';
+  } catch(e){}
+  return '';
+}
+function testaPagina(v){
+  const el = vistaPagina(v); if(!el) return;
+  let t = el.querySelector(':scope > .m-pag-testa');
+  if(!t){ t = document.createElement('div'); t.className = 'm-pag-testa'; el.prepend(t); }
+  const sotto = sottotitoloPagina(v);
+  t.innerHTML = `<h1 class="m-pag-t">${esc(titoloPagina(v))}</h1>${sotto ? `<p class="m-sub">${sotto}</p>` : ''}`;
+}
+// il dato del sottotitolo cambia mentre si usa la pagina (una post-degenza
+// aggiunta, un ricovero): si riscrive dopo ogni tocco
+document.addEventListener('click', () => setTimeout(() => { if(M.vista === 'app' && M.pag) testaPagina(M.pag); }, 300));
+// barra: titolo piccolo e linea quando il titolo grande è scorso per metà sotto
+function barraScorsa(){
+  const bar = $m('#m-bar'); if(!bar) return;
+  let t = null;
+  if(M.vista === 'app'){ const el = vistaPagina(M.pag); t = el && el.querySelector('.m-pag-t'); }
+  else if(M.vista !== 'home' && M.vista !== 'eo') t = $m('#m-vista .m-h2');
+  const sotto = !!(t && t.offsetParent) && (r => r.top + r.height / 2)(t.getBoundingClientRect()) < bar.getBoundingClientRect().bottom;
+  bar.classList.toggle('m-scorsa', sotto);
+  const bt = $m('#m-bar-t'); if(bt && t && M.vista !== 'app') bt.textContent = t.textContent;
+}
+let barraFrame = 0;
+document.addEventListener('scroll', () => { if(!barraFrame) barraFrame = requestAnimationFrame(() => { barraFrame = 0; barraScorsa(); }); }, { capture:true, passive:true });
 const mostraVistaApp = mostraVista;
 mostraVista = function(v){
   let ultima = null;
@@ -26721,7 +26779,7 @@ mostraVista = function(v){
     if(!(M.pag === 'account' && v === 'impostazioni')) M.pag = v;
     const t = $m('#m-bar-t'); if(t) t.textContent = titoloPagina(M.pag);
     const el = vistaPagina(v);
-    el.dataset.mTitolo = titoloPagina(M.pag);
+    testaPagina(M.pag);
     el.classList.toggle('m-quieta', !animaIngresso);
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     window.scrollTo(0, 0);
