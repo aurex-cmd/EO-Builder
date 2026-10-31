@@ -5896,7 +5896,7 @@ function loadPatients(){
 // aggiornaBackupLocale più sotto e la sezione "Backup" nella scheda App
 const BACKUP_KEY = 'eo_builder_backup_patients_v1';
 const BACKUP_INTERVALLO_MS = 15 * 60 * 1000; // una nuova copia al massimo ogni 15 minuti...
-const BACKUP_MAX = 3;                        // ...tenendo le ultime 3
+const BACKUP_MAX = 5;                        // ...tenendo le ultime 5
 
 function aggiornaBackupLocale(rawValue, forza){
   try{
@@ -5951,6 +5951,23 @@ function renderBackupLista(){
     vuoto.className = 'group-label';
     vuoto.textContent = 'Ancora nessun backup salvato (il primo compare 15 minuti dopo la prima modifica).';
     container.appendChild(vuoto);
+    return;
+  }
+  // EO Pocket: le copie in una scheda, ognuna con l'icona, quando (oggi,
+  // ieri o il giorno) e quante schede contiene; Ripristina chiede conferma
+  if(UI_MINIMAL){
+    const giorno = ts => { const d = new Date(ts), o = new Date(); o.setHours(0,0,0,0); const g = Math.round((o - new Date(d).setHours(0,0,0,0)) / 864e5);
+      const ora = d.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+      return (g === 0 ? 'Oggi' : g === 1 ? 'Ieri' : d.toLocaleDateString('it-IT', { day:'numeric', month:'long' })) + ' alle ' + ora; };
+    const schede = raw => { try{ return Object.values(JSON.parse(raw) || {}).filter(p => p && p.state && schedaHaDati(p.state)).length; } catch(e){ return 0; } };
+    const icona = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4.5H8"/><path d="M12 8v4.2l2.8 1.8"/></svg>';
+    const carta = document.createElement('div'); carta.className = 'm-bk-carta';
+    carta.innerHTML = backups.slice().reverse().map(b => {
+      const n = schede(b.data), armato = backupArmatoTs === b.ts;
+      return `<div class="m-bk-r">${icona}<span class="m-bk-t"><b>${giorno(b.ts)}</b><small>${n} sched${n === 1 ? 'a' : 'e'} pazienti</small></span><button type="button" data-ts="${b.ts}"${armato ? ' class="m-armato"' : ''}>${armato ? 'Conferma' : 'Ripristina'}</button></div>`;
+    }).join('');
+    carta.querySelectorAll('button').forEach(btn => { btn.onclick = e => { e.stopPropagation(); ripristinaBackup(Number(btn.dataset.ts)); }; });
+    container.appendChild(carta);
     return;
   }
   backups.slice().reverse().forEach(b => {
@@ -26743,7 +26760,8 @@ function sottotitoloPagina(v){
     if(v === 'vitali') return esc(nomeSettoreTitolo(settoreVitali || settoreAttivo)) + ' · Invio passa al letto dopo';
     if(v === 'impostazioni') return 'Reparto, aspetto e dati';
     if(v === 'editor') return 'Testo libero da copiare';
-    if(v === 'backup') return 'Copie di sicurezza dei dati';
+    if(v === 'backup'){ let k = 0; try{ k = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]').length; } catch(e){}
+      return `${k ? n(k, 'copia', 'copie') + ' di ' + BACKUP_MAX : 'Nessuna copia'} · solo su questo dispositivo`; }
   } catch(e){}
   return '';
 }
