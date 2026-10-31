@@ -22361,7 +22361,7 @@ function renderPostDegenze(){
     lista.innerHTML = [...gruppi.values()].map(g => {
       g.sort((a, b) => avvisoPostDegenza(voci[a]) - avvisoPostDegenza(voci[b]));
       const paz = voci[g[0]].paziente || '';
-      return `<div class="pd-gruppo"><div class="pd-gruppo-t">${pazienteConNascita(paz)}<button type="button" class="pd-altro" data-paz="${escapeHtml(paz)}" aria-label="Aggiungi un'altra voce per questo paziente">+</button></div>` +
+      return `<div class="pd-gruppo"><div class="pd-gruppo-t">${pazienteConNascita(paz)}<button type="button" class="pd-altro" data-paz="${escapeHtml(paz)}" aria-label="Aggiungi un'altra voce per questo paziente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 6.5v11M6.5 12h11"/></svg></button></div>` +
         g.map(id => {
           const v = voci[id], quando = avvisoPostDegenza(v);
           const data = v.dataScelta ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/></svg>${dataBreve(quando).slice(0, 5)}` : dataBreve(v.inseritoIl || v.savedAt || Date.now());
@@ -23102,7 +23102,10 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .pd-gruppo-t{ display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; padding:12px 12px 4px 14px; }
   html[data-ui="minimal"] .pd-nome{ font-size:16px; font-weight:700; color:var(--m-ink); overflow-wrap:anywhere; }
   html[data-ui="minimal"] .pd-nasc{ font-size:14px; color:var(--m-muted); font-variant-numeric:tabular-nums; }
-  html[data-ui="minimal"] .pd-altro{ margin-left:auto; align-self:center; width:30px; height:30px; flex:none; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font:inherit; font-size:18px; line-height:1; cursor:pointer; }
+  html[data-ui="minimal"] .pd-altro{ position:relative; margin-left:auto; align-self:center; width:22px; height:22px; flex:none; padding:0; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font:inherit; font-size:15px; font-weight:600; line-height:1; display:grid; place-items:center; cursor:pointer; }
+  /* piccolo a vedersi, ma il tocco resta di 40px */
+  html[data-ui="minimal"] .pd-altro::after{ content:""; position:absolute; inset:-9px; }
+  html[data-ui="minimal"] .pd-altro svg{ width:14px; height:14px; display:block; }
   html[data-ui="minimal"] #pd-lista .pd-riga{ align-items:center; gap:12px; padding:10px 14px; border:0; cursor:pointer; transition:background .2s; }
   html[data-ui="minimal"] #pd-lista .pd-riga + .pd-riga{ border-top:1px solid var(--m-line); }
   html[data-ui="minimal"] #pd-lista .pd-riga:last-child{ padding-bottom:12px; }
