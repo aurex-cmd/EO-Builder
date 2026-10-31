@@ -22356,7 +22356,7 @@ function renderPostDegenze(){
     const v = voci[id];
     return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}">` +
       `<button class="pd-pallino" aria-label="Risolta" title="Risolta">✓</button>` +
-      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
+      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">${UI_MINIMAL ? '' : '— '}${escapeHtml(v.manca)}</span>` : ''}</div>` +
       `<span class="pd-data${avvisoPostDegenza(v) <= Date.now() ? ' scaduta' : ''}" title="Inserita il">${dataBreve(v.inseritoIl || v.savedAt || Date.now())}</span></div>`;
   }).join('');
 }
@@ -23035,6 +23035,20 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-bk-r button:active{ transform:scale(.96); }
   html[data-ui="minimal"] .m-bk-r button.m-armato{ background:var(--m-atb2); color:#fff; }
   html[data-ui="minimal"] .m-bk-vuoto{ font-size:15px; color:var(--m-muted); margin:0 2px; }
+  /* POST-DEGENZE: l'elenco in una scheda come i Backup; a sinistra il
+     cerchio da spuntare, poi paziente e cosa manca su due righe, a destra
+     la data (in arancio dal 10° giorno) */
+  html[data-ui="minimal"] #pd-lista:not(:empty){ margin-top:16px; background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  html[data-ui="minimal"] #pd-lista .pd-riga{ align-items:center; gap:12px; padding:12px 14px; border:0; border-top:1px solid var(--m-line); cursor:pointer; transition:background .2s; }
+  html[data-ui="minimal"] #pd-lista .pd-riga:first-child{ border-top:0; }
+  html[data-ui="minimal"] #pd-lista .pd-riga:active{ background:var(--m-hover); }
+  html[data-ui="minimal"] #pd-lista .pd-pallino{ width:24px; height:24px; margin:0; border:1.5px solid var(--m-line-forte); color:transparent; font-size:13px; font-weight:700; display:grid; place-items:center; transition:background .2s, border-color .2s, color .2s; }
+  html[data-ui="minimal"] #pd-lista .pd-riga.risolta .pd-pallino{ background:var(--m-teal); border-color:var(--m-teal); color:#fff; }
+  html[data-ui="minimal"] #pd-lista .pd-testo{ flex:1 1 auto; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  html[data-ui="minimal"] #pd-lista .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
+  html[data-ui="minimal"] #pd-lista .pd-manca{ font-size:13px; color:var(--m-muted); overflow-wrap:anywhere; }
+  html[data-ui="minimal"] #pd-lista .pd-data{ margin:0; font-family:var(--m-sans); font-size:13px; font-weight:600; color:var(--m-muted); font-variant-numeric:tabular-nums; }
+  html[data-ui="minimal"] #pd-lista .pd-data.scaduta{ padding:2px 8px; border-radius:999px; background:color-mix(in srgb, var(--m-atb1) 15%, transparent); color:var(--m-atb1); }
   /* POST-DEGENZE: nell'avviso dal 10° giorno, paziente e cosa manca su due righe */
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
