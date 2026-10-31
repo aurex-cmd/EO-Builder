@@ -7786,8 +7786,9 @@ function renderCalendarioRicoveri(listCompleta){
   testataTitle.appendChild(iconCalendario);
   testataTitle.appendChild(testoData);
   // "N ricoveri totali": un tocco mostra le statistiche al posto del
-  // calendario, un altro tocco torna al calendario
-  if(totale){
+  // calendario, un altro tocco torna al calendario. In EO Pocket no: il
+  // totale è nel sottotitolo e c'è già Calendario | Statistiche
+  if(totale && !UI_MINIMAL){
     testataTitle.append(' · ');
     const linkTot = document.createElement('button');
     linkTot.type = 'button';
@@ -22332,7 +22333,8 @@ function renderPostDegenze(){
   const lista = document.getElementById('pd-lista');
   if(!lista) return;
   if(document.getElementById('pd-avviso-overlay')?.classList.contains('show') && typeof renderAvvisoPostDegenze === 'function') renderAvvisoPostDegenze();
-  if(!ids.length){ lista.innerHTML = '<div class="pd-vuota">Nessuna post-degenza in sospeso.</div>'; return; }
+  // in EO Pocket lo dice già il sottotitolo della pagina
+  if(!ids.length){ lista.innerHTML = UI_MINIMAL ? '' : '<div class="pd-vuota">Nessuna post-degenza in sospeso.</div>'; return; }
   lista.innerHTML = ids.map(id => {
     const v = voci[id];
     return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}">` +
