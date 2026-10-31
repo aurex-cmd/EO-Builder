@@ -22699,7 +22699,7 @@ function editorLettereSvuota(){
   #m-app{ display:none; }
   html[data-ui="minimal"] #m-app{ display:block; }
 
-  .m-bar{ position:sticky; top:0; z-index:30; background:var(--m-bg); padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px; }
+  .m-bar{ position:sticky; top:0; z-index:30; background:var(--m-bg); border-bottom:0 !important; padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px; }
   .m-bar-in{ max-width:560px; margin:0 auto; display:grid; grid-template-columns:44px 1fr 64px; align-items:center; height:44px; }
   .m-bar-t{ text-align:center; font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .m-bar .m-indietro{ border:0; background:none; width:44px; height:44px; display:grid; place-items:center; color:var(--m-muted); cursor:pointer; transition:transform .12s var(--m-molla), color .2s; }
@@ -22708,7 +22708,7 @@ function editorLettereSvuota(){
   .m-bar .m-azione{ justify-self:end; border:0; background:none; padding:6px 0; color:var(--m-notte); font-weight:600; font-size:15px; cursor:pointer; font-family:inherit; }
   .m-bar.m-home .m-bar-in{ grid-template-columns:1fr auto; }
   /* durante la visita la barra resta fissa sopra la schermata dei tag */
-  html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; box-shadow:0 1px 0 var(--m-line); }
+  html[data-m-eo] .m-bar{ position:fixed; left:0; right:0; }
   html[data-m-eo] #clinical-view{ padding-top:calc(64px + env(safe-area-inset-top,0px)); }
   /* esame obiettivo "notte": schede scure in blu notte, piatte, coi caratteri
      della minimal; i tag restano quelli dell'app (selezionati in teal) */
@@ -22760,7 +22760,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #clinical-view #reset-btn{ display:none; }
   /* nel ricovero chiude il Fatto dell'esame obiettivo: niente "Fatto: chiudi esame obiettivo" */
   html[data-ui="minimal"] #ricovero-eo-chiudi{ display:none !important; }
-  html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); box-shadow:0 1px 0 var(--page-line); }
+  html[data-m-orig] .m-bar{ background:var(--page); color:var(--page-ink); }
   html[data-m-orig] .m-bar .m-indietro{ color:var(--page-ink-dim); }
   html[data-m-orig] .m-bar .m-azione{ color:var(--signal); }
   html[data-m-orig] :is(.m-segue, .m-rilascia){ background:var(--page) !important; }
@@ -24028,13 +24028,12 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-iso-dpi{ background:var(--m-box); }
   html[data-m-tema="scuro"] .m-velo{ background:rgba(0,0,0,.35); box-shadow:0 0 0 100vh rgba(0,0,0,.35); }
   html[data-m-tema="scuro"] .m-aiuto{ border-color:#24384f; }
-  html[data-m-tema="scuro"] .m-bar{ border-bottom-color:var(--m-line); }
   html[data-m-tema="scuro"] #m-aggcons .note-box{ background:#16304d; color:#cfe2f7; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r{ background:#7a6300; color:#fff3c4; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-righe .r.m-copiata{ background:none; color:var(--m-teal); }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .ee{ background:#5b2f5c; color:#f6dcf6; }
   html[data-m-tema="scuro"] #m-aggcons table.agg-cons .agg-cons-etichetta .dim{ background:#1d4f50; color:#d3f4f4; }
-  html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); box-shadow:0 1px 0 #1e3047; }
+  html[data-m-tema="scuro"][data-m-orig] .m-bar{ background:#0c1622; color:var(--m-ink); }
   /* letti */
   html[data-m-tema="scuro"] :is(.m-tl, .m-mini, .m-leg-tl){ background-color:var(--m-l-base); }
   html[data-m-tema="scuro"] .m-leg-tl:not(.m-copiato, .m-consegnato, .m-critico, .m-vuoto){ box-shadow:inset 0 0 0 1px #24384f; }
