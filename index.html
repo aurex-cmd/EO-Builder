@@ -725,6 +725,10 @@
      testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
   .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
   .campo-x > input{ padding-right:34px; }
+  .campo-x > textarea{ padding-right:34px !important; }
+  /* su più righe la X resta in alto a destra, lontana dal testo */
+  .campo-x > textarea + .x-campo{ top:3px; transform:none; }
+  .campo-x > textarea:placeholder-shown + .x-campo{ display:none; }
   .campo-x > .x-campo{
     position:absolute; right:3px; top:50%; transform:translateY(-50%);
     width:30px; height:30px; padding:0; border:none; border-radius:50%;
@@ -1100,6 +1104,12 @@
   }
   input[type=number]{ width:70px; }
   input[type=text].wide{ width:100%; }
+  /* X disegnate: sempre al centro del loro pulsante, qualunque carattere */
+  button > svg.x-ico{ display:block; width:14px; height:14px; margin:auto; }
+  .x-campo > svg.x-ico{ width:12px; height:12px; }
+  /* note libere dell'esame obiettivo: vanno a capo e si allungano col testo */
+  #clinical-view textarea.nota-a-capo{ display:block; width:100%; box-sizing:border-box; min-height:0; margin:0; background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink); border-radius:10px; padding:8px 10px; font-size:13px; line-height:1.4; font-family:var(--font-body); box-shadow:var(--clay-in-sm); resize:none; overflow:hidden; }
+  #clinical-view textarea.nota-a-capo:focus{ outline:none; border-color:var(--signal); }
   /* bordo teal quando un campo di testo libero dell'esame obiettivo ha
      qualcosa scritto dentro — così il giorno dopo si vede subito, senza
      dover aprire ogni tendina, dove c'era una nota (es. Stato di
@@ -2773,6 +2783,10 @@
      testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
   .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
   .campo-x > input{ padding-right:34px; }
+  .campo-x > textarea{ padding-right:34px !important; }
+  /* su più righe la X resta in alto a destra, lontana dal testo */
+  .campo-x > textarea + .x-campo{ top:3px; transform:none; }
+  .campo-x > textarea:placeholder-shown + .x-campo{ display:none; }
   .campo-x > .x-campo{
     position:absolute; right:3px; top:50%; transform:translateY(-50%);
     width:30px; height:30px; padding:0; border:none; border-radius:50%;
@@ -3148,6 +3162,12 @@
   }
   input[type=number]{ width:70px; }
   input[type=text].wide{ width:100%; }
+  /* X disegnate: sempre al centro del loro pulsante, qualunque carattere */
+  button > svg.x-ico{ display:block; width:14px; height:14px; margin:auto; }
+  .x-campo > svg.x-ico{ width:12px; height:12px; }
+  /* note libere dell'esame obiettivo: vanno a capo e si allungano col testo */
+  #clinical-view textarea.nota-a-capo{ display:block; width:100%; box-sizing:border-box; min-height:0; margin:0; background:var(--panel-2); border:1px solid var(--clay-border); color:var(--ink); border-radius:10px; padding:8px 10px; font-size:13px; line-height:1.4; font-family:var(--font-body); box-shadow:var(--clay-in-sm); resize:none; overflow:hidden; }
+  #clinical-view textarea.nota-a-capo:focus{ outline:none; border-color:var(--signal); }
   /* bordo teal quando un campo di testo libero dell'esame obiettivo ha
      qualcosa scritto dentro — così il giorno dopo si vede subito, senza
      dover aprire ogni tendina, dove c'era una nota (es. Stato di
@@ -4519,7 +4539,7 @@ if(UI_MINIMAL){
       <input type="text" id="pd-manca" placeholder="Cosa manca (es. biopsia gastrica)" autocomplete="off" style="flex:1; min-width:0;">
       <button class="btn primary" id="pd-aggiungi-btn" onclick="postDegenzaSalva()">Aggiungi</button>
     </div>
-    <div class="pd-quando-riga" id="pd-quando-riga"><label class="pd-quando-chip"><span class="pd-quando-et">Promemoria il</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/></svg><span id="pd-quando-t">Promemoria dopo 10 giorni</span><input type="date" id="pd-quando" aria-label="Giorno del promemoria (vuoto: dopo 10 giorni)"></label><button type="button" id="pd-quando-x" aria-label="Togli la data del promemoria">×</button></div>
+    <div class="pd-quando-riga" id="pd-quando-riga"><label class="pd-quando-chip"><span class="pd-quando-et">Promemoria il</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/></svg><span id="pd-quando-t">Promemoria dopo 10 giorni</span><input type="date" id="pd-quando" aria-label="Giorno del promemoria (vuoto: dopo 10 giorni)"></label><button type="button" id="pd-quando-x" aria-label="Togli la data del promemoria"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button></div>
     <div id="pd-modifica-nota" class="group-label" style="display:none; margin-top:6px; opacity:.8;">Stai modificando una voce · <span style="color:var(--signal); cursor:pointer;" onclick="postDegenzaAnnullaModifica()">annulla</span></div>
   </div>
   <div class="group" id="pd-lista"></div>
@@ -5229,7 +5249,9 @@ function syncInputsToState(){
 }
 function populateInputsFromState(){
   TEXT_FIELD_MAP.forEach(([id, path]) => {
-    document.getElementById(id).value = state[path[0]][path[1]] || '';
+    const el = document.getElementById(id);
+    el.value = state[path[0]][path[1]] || '';
+    if(el.classList.contains('nota-a-capo') && typeof altezzaNota === 'function') altezzaNota(el);
   });
 }
 
@@ -18196,7 +18218,31 @@ const CAMPI_VITALI_IDS = ['v-sat','v-pas','v-pad','v-fc','temp-valore'];
 // (vedi renderIsolamentoToggle/renderAddomeAlvo)
 // X dentro le note libere (e il germe dell'isolamento): un tocco svuota il
 // campo, senza dover cancellare carattere per carattere sul telefono
-document.querySelectorAll('#clinical-view input[type=text].wide').forEach(el => {
+// le note libere diventano caselle che vanno a capo e si allungano col
+// testo: con un testo lungo su una riga sola, per leggerlo tutto si
+// toccava la fine del campo e si finiva sulla X. Invio non va a capo
+// (la nota è una riga del referto): chiude la tastiera
+function altezzaNota(t){ if(!t.offsetParent) return; t.style.height = 'auto'; t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px'; }
+const osservaNote = typeof ResizeObserver === 'function' ? new ResizeObserver(voci => voci.forEach(v => {
+  const t = v.target, w = Math.round(v.contentRect.width);
+  if(t._larghezza !== w){ t._larghezza = w; altezzaNota(t); }
+})) : null;
+document.querySelectorAll('#clinical-view input[type=text].wide:not(#isolamento-germe)').forEach(el => {
+  const t = document.createElement('textarea');
+  [...el.attributes].forEach(a => { if(a.name !== 'type') t.setAttribute(a.name, a.value); });
+  t.classList.add('nota-a-capo');
+  t.rows = 1;
+  t.value = el.value;
+  el.replaceWith(t);
+  t.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); t.blur(); } });
+  t.addEventListener('input', () => {
+    if(/[\r\n]/.test(t.value)){ const pos = t.selectionStart; t.value = t.value.replace(/\s*[\r\n]+\s*/g, ' '); t.setSelectionRange(pos, pos); }
+    altezzaNota(t);
+  });
+  t.addEventListener('focus', () => altezzaNota(t));
+  if(osservaNote) osservaNote.observe(t);
+});
+document.querySelectorAll('#clinical-view .wide:is(input[type=text], textarea)').forEach(el => {
   const box = document.createElement('span');
   box.className = 'campo-x';
   if(el.style.marginTop){ box.style.marginTop = el.style.marginTop; el.style.marginTop = ''; }
@@ -18205,7 +18251,7 @@ document.querySelectorAll('#clinical-view input[type=text].wide').forEach(el => 
   const x = document.createElement('button');
   x.type = 'button';
   x.className = 'x-campo';
-  x.textContent = '×';
+  x.innerHTML = '<svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
   x.title = 'Cancella';
   x.setAttribute('aria-label', 'Cancella la nota');
   // senza dare il focus al campo: niente tastiera
@@ -18218,7 +18264,7 @@ document.querySelectorAll('#clinical-view input[type=text].wide').forEach(el => 
   box.appendChild(x);
 });
 const CAMPI_CON_GESTORE_PROPRIO = ['isolamento-germe', 'addome-alvo-data'];
-document.querySelectorAll('#clinical-view input').forEach(el => {
+document.querySelectorAll('#clinical-view input, #clinical-view textarea.nota-a-capo').forEach(el => {
   if(CAMPI_VITALI_IDS.includes(el.id) || CAMPI_CON_GESTORE_PROPRIO.includes(el.id)) return;
   el.addEventListener('input', update);
 });
@@ -18483,7 +18529,7 @@ try{
         <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M12 3.2c3.4 4.1 6 7.6 6 10.8a6 6 0 01-12 0c0-3.2 2.6-6.7 6-10.8z"/><path d="M9.3 14.5a2.8 2.8 0 002.7 2.6"/></svg>EGA Analyzer</h2>
         <div class="sub">interpretazione equilibrio acido-base (EGA)</div>
       </div>
-      <button id="ega-chiudi-btn" onclick="chiudiEgaAnalyzer()">✕</button>
+      <button id="ega-chiudi-btn" onclick="chiudiEgaAnalyzer()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
 
     <div class="group-row">
@@ -18604,7 +18650,7 @@ try{
         <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M15.5 4.2c-3 0-5.5 2.6-5.5 6.2 0 1.5.9 2.2.9 3.4 0 1.5-1.6 2.3-1.6 3.9 0 1.7 1.4 2.8 3.4 2.8 4.2 0 6.8-4.4 6.8-9.4 0-4.2-1.4-6.9-4-6.9z"/><path d="M10 12H6.5a2 2 0 00-2 2v6"/></svg>VFG Calc</h2>
         <div class="sub">clearance creatinina — Cockcroft-Gault</div>
       </div>
-      <button id="vfg-chiudi-btn" onclick="chiudiVfgCalc()">✕</button>
+      <button id="vfg-chiudi-btn" onclick="chiudiVfgCalc()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
 
     <div class="group">
@@ -18657,7 +18703,7 @@ try{
         <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M2.5 12.5h4l2-5 3.5 10 2.5-7 1.5 2h5.5"/></svg>ECG Simulator</h2>
         <div class="sub">Simula in tempo reale l'effetto di elettroliti e farmaci sulla morfologia del battito.</div>
       </div>
-      <button id="ecgsim-chiudi-btn" onclick="chiudiAppEcg()">✕</button>
+      <button id="ecgsim-chiudi-btn" onclick="chiudiAppEcg()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
 
     <div class="ecgsim-monitor">
@@ -18725,7 +18771,7 @@ try{
   <div id="soffi-modal">
     <div class="soffi-modal-header">
       <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0112 7.3 4.3 4.3 0 0119.5 10c0 5.6-7.5 10-7.5 10z"/><path d="M8.5 12.2h2l1-2 1.5 4 1-2h1.5"/></svg>Soffi cardiaci</h2>
-      <button id="soffi-chiudi-btn" onclick="chiudiAppSoffi()">✕</button>
+      <button id="soffi-chiudi-btn" onclick="chiudiAppSoffi()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="soffi-info"></div>
 
@@ -18796,7 +18842,7 @@ try{
   <div id="farmaco-modal">
     <div class="farmaco-modal-header">
       <h2 id="farmaco-modal-titolo">Farmaco</h2>
-      <button id="farmaco-chiudi-btn" onclick="chiudiFarmaco()">✕</button>
+      <button id="farmaco-chiudi-btn" onclick="chiudiFarmaco()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="farmaco-vfg-info"></div>
     <div id="farmaco-corpo"></div>
@@ -18811,7 +18857,7 @@ try{
   <div id="strumento-box">
     <div class="farmaco-modal-header">
       <h2 class="tool-titolo" id="strumento-titolo"></h2>
-      <button id="strumento-chiudi" onclick="chiudiStrumentoDiario()">✕</button>
+      <button id="strumento-chiudi" onclick="chiudiStrumentoDiario()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="strumento-slot"></div>
   </div>
@@ -18821,7 +18867,7 @@ try{
   <div id="pd-avviso-box">
     <div class="farmaco-modal-header">
       <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="6" cy="17" r="2.2"/><path d="M11 7h9M11 17h9"/></svg>Post-degenze da controllare</h2>
-      <button id="pd-avviso-chiudi" onclick="chiudiAvvisoPostDegenze()" title="Chiudi (te lo ricorda domani)">✕</button>
+      <button id="pd-avviso-chiudi" onclick="chiudiAvvisoPostDegenze()" title="Chiudi (te lo ricorda domani)"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="pd-avviso-lista"></div>
   </div>
@@ -18830,7 +18876,7 @@ try{
   <div id="rubrica-box">
     <div class="farmaco-modal-header">
       <h2 class="tool-titolo"><svg class="hicon" viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4-2 1.4a12 12 0 006.5 6.5l1.4-2 4 1.4v2.6A2 2 0 0118.5 20 15.5 15.5 0 014 5.5a2 2 0 012-2z"/></svg>Rubrica</h2>
-      <button id="rubrica-chiudi-btn" onclick="chiudiRubrica()">✕</button>
+      <button id="rubrica-chiudi-btn" onclick="chiudiRubrica()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <input type="search" id="rubrica-cerca" placeholder="Cerca (es. cardio, TC, Zanella…)" autocomplete="off">
     <div id="rubrica-esterno" class="rubrica-esterno"></div>
@@ -18859,7 +18905,7 @@ try{
   <div id="mdc-modal">
     <div class="farmaco-modal-header">
       <h2 id="mdc-modal-titolo">TC con MdC e funzione renale</h2>
-      <button id="mdc-chiudi-btn" onclick="chiudiMdcInfo()">✕</button>
+      <button id="mdc-chiudi-btn" onclick="chiudiMdcInfo()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="mdc-corpo"></div>
   </div>
@@ -18870,7 +18916,7 @@ try{
   <div id="score-modal">
     <div class="farmaco-modal-header">
       <h2 id="score-modal-titolo">Score</h2>
-      <button id="score-chiudi-btn" onclick="chiudiScore()">✕</button>
+      <button id="score-chiudi-btn" onclick="chiudiScore()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="score-corpo"></div>
   </div>
@@ -18884,7 +18930,7 @@ try{
   <div id="svuota-settore-modal">
     <div class="isolamento-modal-header">
       <h2 style="color:#d9534f;">Svuota settore</h2>
-      <button class="svuota-settore-x" onclick="chiudiSvuotaSettore()">✕</button>
+      <button class="svuota-settore-x" onclick="chiudiSvuotaSettore()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="svuota-settore-corpo"></div>
     <div style="display:flex; gap:10px; margin-top:14px; justify-content:flex-end;">
@@ -18898,7 +18944,7 @@ try{
   <div id="isolamento-modal">
     <div class="isolamento-modal-header">
       <h2 id="isolamento-modal-titolo">Isolamento</h2>
-      <button id="isolamento-chiudi-btn" onclick="chiudiIsolamentoModal()">✕</button>
+      <button id="isolamento-chiudi-btn" onclick="chiudiIsolamentoModal()"><svg class="x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
     </div>
     <div id="isolamento-modal-corpo"></div>
   </div>
@@ -26095,12 +26141,9 @@ sc.addEventListener('paste', e => {
 const velo = $m('#m-velo');
 // a fine trascinamento lo sfocato torna alla sola striscia in alto (o se ne
 // va con la scheda), con l'oscurità di nuovo piena
-// lo sfocato resta quasi pieno nel primo tratto e cala solo quando la scheda
-// è ormai scesa: in proporzione all'altezza della scheda, non a 500px fissi
-function opacitaVelo(dy){
-  const f = Math.min(1, dy / (sc.offsetHeight || 700));
-  return 1 - f * f;
-}
+// lo sfocato resta pieno per tutto il trascinamento, come nella rubrica:
+// se ne va solo quando la scheda si chiude
+function opacitaVelo(){ return 1; }
 function lasciaVelo(){
   velo.classList.remove('m-velo-segue'); velo.style.opacity = '';
   setTimeout(() => velo.classList.remove('m-tutto'), 450);
@@ -26152,6 +26195,59 @@ function lasciaVelo(){
   };
   corpo.addEventListener('touchend', fine); corpo.addEventListener('touchcancel', fine);
 })();
+// STRUMENTI (EGA, VFG, ECG, soffi, farmaci, MdC, score, riquadro dei
+// diari): si chiudono trascinandoli giù come la rubrica, quando il loro
+// contenuto è già in cima; rilasciati prima, tornano al loro posto
+[['ega-modal-overlay', 'ega-modal'], ['vfg-modal-overlay', 'vfg-modal'], ['ecgsim-modal-overlay', 'ecgsim-modal'], ['soffi-modal-overlay', 'soffi-modal'],
+ ['farmaco-modal-overlay', 'farmaco-modal'], ['mdc-modal-overlay', 'mdc-modal'], ['score-modal-overlay', 'score-modal'], ['strumento-overlay', 'strumento-box']].forEach(([idOv, idBox]) => {
+  const ov = document.getElementById(idOv), box = document.getElementById(idBox);
+  if(!ov || !box) return;
+  const x = box.querySelector('[id$="chiudi-btn"], #strumento-chiudi');
+  if(!x) return;
+  let y0 = null, x0 = 0, dy = 0, attivo = false, frame = 0, vy = 0, tPrec = 0, yPrec = 0;
+  const sposta = () => { frame = 0; box.style.transform = `translateY(${dy}px)`; };
+  ov.addEventListener('touchstart', e => {
+    y0 = null;
+    const t0 = e.target;
+    if(e.touches.length !== 1 || !box.contains(t0) || t0.closest('input, textarea, select, button, canvas, label')) return;
+    // il riquadro (o una parte di lui) già scorsa: il dito la fa risalire
+    for(let el = t0; el && el !== ov; el = el.parentElement) if(el.scrollTop > 0) return;
+    const t = e.touches[0];
+    y0 = yPrec = t.clientY; x0 = t.clientX; dy = 0; vy = 0; tPrec = performance.now(); attivo = false;
+  }, { passive:true });
+  ov.addEventListener('touchmove', e => {
+    if(y0 === null) return;
+    const t = e.touches[0], ddy = t.clientY - y0, ddx = t.clientX - x0;
+    if(!attivo){
+      if(ddy < -4 || Math.abs(ddx) > Math.abs(ddy) + 4){ y0 = null; return; }
+      if(ddy < 8) return;
+      attivo = true; box.style.animation = 'none'; box.style.transition = 'none';
+      if(document.activeElement && box.contains(document.activeElement)) document.activeElement.blur();
+    }
+    const ora = performance.now();
+    vy = (t.clientY - yPrec) / Math.max(1, ora - tPrec); yPrec = t.clientY; tPrec = ora;
+    dy = Math.max(0, ddy - 8);
+    if(!frame) frame = requestAnimationFrame(sposta);
+    if(e.cancelable) e.preventDefault();
+  }, { passive:false });
+  const fine = () => {
+    if(y0 === null) return;
+    y0 = null;
+    if(!attivo) return;
+    attivo = false;
+    if(frame){ cancelAnimationFrame(frame); frame = 0; }
+    if(dy > 120 || (vy > .5 && dy > 40)){
+      box.style.transition = 'transform .24s ease-in';
+      box.style.transform = `translateY(${innerHeight}px)`;
+      setTimeout(() => { x.click(); box.style.transform = box.style.transition = box.style.animation = ''; }, 230);
+    } else {
+      box.style.transition = 'transform .4s var(--m-molla)';
+      box.style.transform = '';
+      setTimeout(() => { box.style.transition = box.style.animation = ''; }, 420);
+    }
+  };
+  ov.addEventListener('touchend', fine); ov.addEventListener('touchcancel', fine);
+});
 // RUBRICA: si chiude trascinandola giù come la scheda del diario, dalla
 // testa o dall'elenco quando è già in cima
 (() => {
