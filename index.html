@@ -4519,6 +4519,7 @@ if(UI_MINIMAL){
       <input type="text" id="pd-manca" placeholder="Cosa manca (es. biopsia gastrica)" autocomplete="off" style="flex:1; min-width:0;">
       <button class="btn primary" id="pd-aggiungi-btn" onclick="postDegenzaSalva()">Aggiungi</button>
     </div>
+    <label class="pd-quando-riga"><span>Promemoria il</span><input type="date" id="pd-quando" aria-label="Giorno del promemoria (vuoto: dopo 10 giorni)"></label>
     <div id="pd-modifica-nota" class="group-label" style="display:none; margin-top:6px; opacity:.8;">Stai modificando una voce · <span style="color:var(--signal); cursor:pointer;" onclick="postDegenzaAnnullaModifica()">annulla</span></div>
   </div>
   <div class="group" id="pd-lista"></div>
@@ -22352,17 +22353,42 @@ function renderPostDegenze(){
   if(document.getElementById('pd-avviso-overlay')?.classList.contains('show') && typeof renderAvvisoPostDegenze === 'function') renderAvvisoPostDegenze();
   // in EO Pocket lo dice già il sottotitolo della pagina
   if(!ids.length){ lista.innerHTML = UI_MINIMAL ? '' : '<div class="pd-vuota">Nessuna post-degenza in sospeso.</div>'; return; }
+  // EO Pocket: le voci dello stesso paziente sotto il suo nome (data di
+  // nascita in grigio), ognuna col suo promemoria; + aggiunge un'altra voce
+  if(UI_MINIMAL){
+    const gruppi = new Map();
+    ids.forEach(id => { const k = String(voci[id].paziente || '').toLowerCase().replace(/\s+/g, ' ').trim(); if(!gruppi.has(k)) gruppi.set(k, []); gruppi.get(k).push(id); });
+    lista.innerHTML = [...gruppi.values()].map(g => {
+      g.sort((a, b) => avvisoPostDegenza(voci[a]) - avvisoPostDegenza(voci[b]));
+      const paz = voci[g[0]].paziente || '';
+      return `<div class="pd-gruppo"><div class="pd-gruppo-t">${pazienteConNascita(paz)}<button type="button" class="pd-altro" data-paz="${escapeHtml(paz)}" aria-label="Aggiungi un'altra voce per questo paziente">+</button></div>` +
+        g.map(id => {
+          const v = voci[id], quando = avvisoPostDegenza(v);
+          const data = v.dataScelta ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 004 0"/></svg>${dataBreve(quando).slice(0, 5)}` : dataBreve(v.inseritoIl || v.savedAt || Date.now());
+          return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}"><button class="pd-pallino" aria-label="Risolta" title="Risolta">✓</button>` +
+            `<div class="pd-testo"><span class="pd-manca${v.manca ? '' : ' pd-vuota-voce'}">${v.manca ? escapeHtml(v.manca) : 'Da controllare'}</span></div>` +
+            `<span class="pd-data${quando <= Date.now() ? ' scaduta' : ''}${v.dataScelta ? ' pd-scelta' : ''}" title="${v.dataScelta ? 'Promemoria il' : 'Inserita il'}">${data}</span></div>`;
+        }).join('') + `</div>`;
+    }).join('');
+    return;
+  }
   lista.innerHTML = ids.map(id => {
     const v = voci[id];
     return `<div class="pd-riga${postDegenzeInUscita[id] ? ' risolta' : ''}" data-id="${escapeHtml(id)}">` +
       `<button class="pd-pallino" aria-label="Risolta" title="Risolta">✓</button>` +
-      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
+      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">${UI_MINIMAL ? '' : '— '}${escapeHtml(v.manca)}</span>` : ''}</div>` +
       `<span class="pd-data${avvisoPostDegenza(v) <= Date.now() ? ' scaduta' : ''}" title="Inserita il">${dataBreve(v.inseritoIl || v.savedAt || Date.now())}</span></div>`;
   }).join('');
+}
+// "Rossi Mario, 12/03/1941" → nome in nero, data di nascita in grigio
+function pazienteConNascita(s){
+  const m = String(s || '').match(/^(.*?)[,;\s]+((?:n\.?\s*)?(?:\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|(?:19|20)\d{2}))\s*$/);
+  return m && m[1].trim() ? `<span class="pd-nome">${escapeHtml(m[1].trim())}</span><span class="pd-nasc">${escapeHtml(m[2])}</span>` : `<span class="pd-nome">${escapeHtml(s)}</span>`;
 }
 function postDegenzaSalva(){
   const paz = document.getElementById('pd-paziente');
   const manca = document.getElementById('pd-manca');
+  const campoQuando = document.getElementById('pd-quando');
   const paziente = paz.value.trim().replace(/\s+/g, ' ');
   const cosa = manca.value.trim().replace(/\s+/g, ' ');
   if(!paziente){ paz.focus(); return; }
@@ -22370,6 +22396,12 @@ function postDegenzaSalva(){
   const ora = Date.now();
   const id = (postDegenzaInModifica && voci[postDegenzaInModifica]) ? postDegenzaInModifica : 'pd' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
   voci[id] = Object.assign({}, voci[id], { paziente, manca: cosa, inseritoIl: voci[id] ? voci[id].inseritoIl : ora, savedAt: ora });
+  // giorno del promemoria scelto: l'avviso arriva quel giorno (alle 14, come
+  // gli altri); vuoto: il solito, dal 10° giorno. Tolta la data scelta,
+  // si torna al solito
+  const giorno = campoQuando && campoQuando.value;
+  if(giorno){ const [a, m, g] = giorno.split('-').map(Number); voci[id].avvisoDal = mezzogiornoTra(new Date(a, m - 1, g).getTime(), 0); voci[id].dataScelta = true; }
+  else if(voci[id].dataScelta){ delete voci[id].avvisoDal; delete voci[id].dataScelta; }
   salvaPostDegenze(voci);
   postDegenzaAnnullaModifica();
   renderPostDegenze();
@@ -22378,10 +22410,18 @@ function postDegenzaAnnullaModifica(){
   postDegenzaInModifica = null;
   document.getElementById('pd-paziente').value = '';
   document.getElementById('pd-manca').value = '';
+  const q = document.getElementById('pd-quando'); if(q) q.value = '';
   document.getElementById('pd-aggiungi-btn').textContent = 'Aggiungi';
   document.getElementById('pd-modifica-nota').style.display = 'none';
 }
 document.getElementById('pd-lista').addEventListener('click', (e) => {
+  const altro = e.target.closest('.pd-altro');
+  if(altro){
+    postDegenzaAnnullaModifica();
+    document.getElementById('pd-paziente').value = altro.dataset.paz || '';
+    document.getElementById('pd-manca').focus();
+    return;
+  }
   const riga = e.target.closest('.pd-riga');
   if(!riga) return;
   const id = riga.dataset.id;
@@ -22408,6 +22448,8 @@ document.getElementById('pd-lista').addEventListener('click', (e) => {
     postDegenzaInModifica = id;
     document.getElementById('pd-paziente').value = v.paziente || '';
     document.getElementById('pd-manca').value = v.manca || '';
+    const q = document.getElementById('pd-quando');
+    if(q){ const d = v.dataScelta && v.avvisoDal ? new Date(v.avvisoDal) : null; q.value = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''; }
     document.getElementById('pd-aggiungi-btn').textContent = 'Salva';
     document.getElementById('pd-modifica-nota').style.display = '';
     document.getElementById('pd-manca').focus();
@@ -22464,7 +22506,7 @@ function renderAvvisoPostDegenze(){
     const v = voci[id];
     const g = giorni(v.inseritoIl || v.savedAt || Date.now());
     return `<div class="pd-avviso-voce" data-id="${escapeHtml(id)}">` +
-      `<div class="pd-testo"><span class="pd-paz">${escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">— ${escapeHtml(v.manca)}</span>` : ''}</div>` +
+      `<div class="pd-testo"><span class="pd-paz">${UI_MINIMAL ? pazienteConNascita(v.paziente) : escapeHtml(v.paziente)}</span>${v.manca ? ` <span class="pd-manca">${UI_MINIMAL ? '' : '— '}${escapeHtml(v.manca)}</span>` : ''}</div>` +
       `<div class="pd-avviso-quando">Inserita il ${dataBreve(v.inseritoIl || v.savedAt || Date.now())} · ${g === 1 ? '1 giorno fa' : g + ' giorni fa'}</div>` +
       `<div class="pd-avviso-tasti"><button class="btn" data-pd-posticipa="1">Domani</button><button class="btn" data-pd-posticipa="3">Fra 3 giorni</button>` +
       `<button class="btn" data-pd-posticipa="7">Fra una settimana</button><button class="btn primary" data-pd-risolta="1">✓ Risolta</button></div></div>`;
@@ -23035,10 +23077,39 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .m-bk-r button:active{ transform:scale(.96); }
   html[data-ui="minimal"] .m-bk-r button.m-armato{ background:var(--m-atb2); color:#fff; }
   html[data-ui="minimal"] .m-bk-vuoto{ font-size:15px; color:var(--m-muted); margin:0 2px; }
+  /* POST-DEGENZE: l'elenco in una scheda come i Backup; a sinistra il
+     cerchio da spuntare, poi paziente e cosa manca su due righe, a destra
+     la data (in arancio dal 10° giorno) */
+  html[data-ui="minimal"] #pd-lista:not(:empty){ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  html[data-ui="minimal"] .pd-gruppo{ background:var(--m-carta); border:1px solid var(--m-line); border-radius:16px; overflow:hidden; }
+  html[data-ui="minimal"] .pd-gruppo-t{ display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; padding:12px 12px 4px 14px; }
+  html[data-ui="minimal"] .pd-nome{ font-size:16px; font-weight:700; color:var(--m-ink); overflow-wrap:anywhere; }
+  html[data-ui="minimal"] .pd-nasc{ font-size:14px; color:var(--m-muted); font-variant-numeric:tabular-nums; }
+  html[data-ui="minimal"] .pd-altro{ margin-left:auto; align-self:center; width:30px; height:30px; flex:none; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-muted); font:inherit; font-size:18px; line-height:1; cursor:pointer; }
+  html[data-ui="minimal"] #pd-lista .pd-riga{ align-items:center; gap:12px; padding:10px 14px; border:0; cursor:pointer; transition:background .2s; }
+  html[data-ui="minimal"] #pd-lista .pd-riga + .pd-riga{ border-top:1px solid var(--m-line); }
+  html[data-ui="minimal"] #pd-lista .pd-riga:last-child{ padding-bottom:12px; }
+  html[data-ui="minimal"] #pd-lista .pd-riga:active{ background:var(--m-hover); }
+  html[data-ui="minimal"] #pd-lista .pd-pallino{ width:24px; height:24px; margin:0; border:1.5px solid var(--m-line-forte); color:transparent; font-size:13px; font-weight:700; display:grid; place-items:center; transition:background .2s, border-color .2s, color .2s; }
+  html[data-ui="minimal"] #pd-lista .pd-riga.risolta .pd-pallino{ background:var(--m-teal); border-color:var(--m-teal); color:#fff; }
+  html[data-ui="minimal"] #pd-lista .pd-testo{ flex:1 1 auto; min-width:0; }
+  html[data-ui="minimal"] #pd-lista .pd-manca{ font-size:15px; color:var(--m-ink); overflow-wrap:anywhere; }
+  html[data-ui="minimal"] #pd-lista .pd-manca.pd-vuota-voce{ color:var(--m-muted); }
+  html[data-ui="minimal"] #pd-lista .pd-data{ display:inline-flex; align-items:center; gap:4px; margin:0; font-family:var(--m-sans); font-size:13px; font-weight:600; color:var(--m-muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  html[data-ui="minimal"] #pd-lista .pd-data svg{ width:13px; height:13px; }
+  html[data-ui="minimal"] #pd-lista .pd-data.pd-scelta{ color:var(--m-teal); }
+  html[data-ui="minimal"] #pd-lista .pd-data.scaduta{ padding:2px 8px; border-radius:999px; background:color-mix(in srgb, var(--m-atb1) 15%, transparent); color:var(--m-atb1); }
+  /* giorno del promemoria: facoltativo, sotto i due campi */
+  .pd-quando-riga{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; font-size:13px; color:var(--ink-dim); }
+  .pd-quando-riga input{ width:auto; min-width:150px; }
+  html[data-ui="minimal"] .pd-quando-riga{ font-size:15px; color:var(--m-muted); }
+  html[data-ui="minimal"] .pd-quando-riga input{ height:44px; padding:0 12px; border:0; border-radius:12px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:15px; }
+  html[data-ui="minimal"] .pd-quando-riga input:invalid, html[data-ui="minimal"] .pd-quando-riga input:placeholder-shown{ color:var(--m-muted); }
   /* POST-DEGENZE: nell'avviso dal 10° giorno, paziente e cosa manca su due righe */
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-paz{ font-size:16px; font-weight:500; color:var(--m-ink); overflow-wrap:anywhere; }
   html[data-ui="minimal"] #pd-avviso-lista .pd-testo .pd-manca{ font-size:13px; color:var(--m-muted); }
+  html[data-ui="minimal"] #pd-avviso-lista .pd-paz{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; }
   /* l'avviso dal 10° giorno: resta la finestra in alto, con dentro lo stile dell'app */
   html[data-ui="minimal"] #pd-avviso-overlay{ background:rgba(15,20,28,.22); }
   html[data-ui="minimal"][data-m-tema="scuro"] #pd-avviso-overlay{ background:rgba(0,0,0,.35); }
