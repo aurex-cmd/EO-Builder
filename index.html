@@ -725,7 +725,7 @@
      testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
   .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
   .campo-x > input{ padding-right:34px; }
-  .campo-x > textarea{ padding-right:34px !important; }
+  .campo-x > textarea{ padding-right:38px !important; }
   /* su più righe la X resta in alto a destra, lontana dal testo */
   .campo-x > textarea + .x-campo{ top:3px; transform:none; }
   .campo-x > textarea:placeholder-shown + .x-campo{ display:none; }
@@ -737,6 +737,11 @@
     -webkit-tap-highlight-color:transparent;
   }
   .campo-x > .x-campo:hover{ opacity:.95; }
+  /* la X dentro un tondo, come le altre X dell'app */
+  .campo-x > .x-campo{ width:24px; height:24px; right:7px; display:grid; place-items:center; line-height:1; opacity:1; color:var(--ink-dim); background:color-mix(in srgb, currentColor 16%, transparent); }
+  .campo-x > .x-campo::after{ content:""; position:absolute; inset:-8px; }
+  .campo-x > textarea + .x-campo{ top:6px; }
+  .campo-x > .x-campo > svg.x-ico{ width:11px; height:11px; margin:0; }
   .campo-x > input:placeholder-shown + .x-campo{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
@@ -2783,7 +2788,7 @@
      testo rimasto da ieri non è detto valga oggi) — solo se c'è del testo */
   .campo-x{ position:relative; display:block; width:100%; flex:1 1 100%; }
   .campo-x > input{ padding-right:34px; }
-  .campo-x > textarea{ padding-right:34px !important; }
+  .campo-x > textarea{ padding-right:38px !important; }
   /* su più righe la X resta in alto a destra, lontana dal testo */
   .campo-x > textarea + .x-campo{ top:3px; transform:none; }
   .campo-x > textarea:placeholder-shown + .x-campo{ display:none; }
@@ -2795,6 +2800,11 @@
     -webkit-tap-highlight-color:transparent;
   }
   .campo-x > .x-campo:hover{ opacity:.95; }
+  /* la X dentro un tondo, come le altre X dell'app */
+  .campo-x > .x-campo{ width:24px; height:24px; right:7px; display:grid; place-items:center; line-height:1; opacity:1; color:var(--ink-dim); background:color-mix(in srgb, currentColor 16%, transparent); }
+  .campo-x > .x-campo::after{ content:""; position:absolute; inset:-8px; }
+  .campo-x > textarea + .x-campo{ top:6px; }
+  .campo-x > .x-campo > svg.x-ico{ width:11px; height:11px; margin:0; }
   .campo-x > input:placeholder-shown + .x-campo{ display:none; }
   /* ---------- RICOVERI (stesso stile dell'esame obiettivo: signal/panel) ---------- */
   #ricoveri-view .patient-tab.active{ color:var(--signal); }
