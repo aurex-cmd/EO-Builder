@@ -13575,6 +13575,8 @@ function renderRiepilogo(){
     // disegnato all'avvio, prima che sia caricato, lo collega lui stesso
     // alle caselle già presenti — vedi fondo di quel blocco)
     if(typeof attivaMenuComandi === 'function') attivaMenuComandi(body);
+    // unità di misura mentre si scrive, come nell'Editor di testo
+    if(typeof unitaMentreScrivi === 'function') unitaMentreScrivi(body);
     body.addEventListener('input', () => { clearTimeout(timerAiuti); timerAiuti = setTimeout(rinfrescaAiuti, 700); });
     body.addEventListener('input', () => {
       const t = body.value, k = t.indexOf('\n\n');
@@ -22650,6 +22652,26 @@ function editorLettereUnita(ta){
   ta.value = nuovoTutto;
   ta.setSelectionRange(pos + scarto, fine + scarto);
 }
+// unità di misura mentre si scrive (Editor, Diari, scheda di EO Pocket):
+// non a ogni tasto ("9," potrebbe diventare "9,5"), ma appena un valore è
+// chiuso da ", " / "; " / ". ", da un a capo o dopo aver incollato. Va
+// collegato prima degli altri "input" della casella, così salvano già il
+// testo con le unità
+function unitaMentreScrivi(ta){
+  if(ta._unita) return; ta._unita = true;
+  let lunghezzaPrima = ta.value.length;
+  ta.addEventListener('beforeinput', () => { lunghezzaPrima = ta.value.length; });
+  ta.addEventListener('input', e => {
+    if(!e.isTrusted) return;
+    const prima = ta.value.slice(0, ta.selectionStart);
+    const aCapo = e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph' || (e.inputType === 'insertText' && e.data == null && /\n$/.test(prima));
+    const chiuso = e.data === ' ' && /[,;.] $/.test(prima);
+    const incollato = ta.value.length - lunghezzaPrima > 3;
+    if(aCapo || chiuso || incollato) editorLettereUnita(ta);
+  });
+}
+// caselle di Diari già disegnate prima che questo blocco fosse caricato
+document.querySelectorAll('textarea.bed-text').forEach(unitaMentreScrivi);
 (function(){
   const ta = document.getElementById('editor-lettere-testo');
   let lunghezzaPrima = 0;
@@ -26017,6 +26039,9 @@ const apriEoInlineApp = apriEsameObiettivoInline;
 window.apriEsameObiettivoInline = function(){ modoEo(null); return apriEoInlineApp.apply(this, arguments); };
 
 const sc = $m('#m-scheda');
+// unità di misura mentre si scrive, come nell'Editor di testo: in cattura,
+// così chi salva subito dopo trova già il testo con le unità
+sc.addEventListener('focusin', e => { const t = e.target; if(t.matches('#m-s-corpo textarea') && t.id !== 'm-eo') unitaMentreScrivi(t); }, true);
 sc.addEventListener('input', e => {
   const t = e.target;
   if(t.matches('textarea')) alza(t);
