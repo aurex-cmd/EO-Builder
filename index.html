@@ -954,6 +954,9 @@
   /* 2. ricovero: il prestampato, foglio con bordo oro */
   .ric-doc{ background:var(--panel-2); border:1px solid var(--folder-dim); border-left:3px solid var(--folder); box-shadow:var(--clay-out-sm); }
   .ric-doc .ric-blocco-etichetta > span:first-child{ color:var(--folder); }
+  .ric-doc{ transition:border-color .4s; }
+  .ric-doc.tutto-copiato{ border-color:var(--signal-dim); border-left-color:var(--signal); }
+  .ric-doc.tutto-copiato .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   .ric-voce{ padding:12px 0 13px; border-top:1px solid var(--line-soft); position:relative; }
   .ric-blocco-etichetta + .ric-voce{ border-top:none; padding-top:2px; }
   .ric-voce .admit-sub-copiato-badge{ display:none; }
@@ -3017,6 +3020,9 @@
   /* 2. ricovero: il prestampato, foglio con bordo oro */
   .ric-doc{ background:var(--panel-2); border:1px solid var(--folder-dim); border-left:3px solid var(--folder); box-shadow:var(--clay-out-sm); }
   .ric-doc .ric-blocco-etichetta > span:first-child{ color:var(--folder); }
+  .ric-doc{ transition:border-color .4s; }
+  .ric-doc.tutto-copiato{ border-color:var(--signal-dim); border-left-color:var(--signal); }
+  .ric-doc.tutto-copiato .ric-blocco-etichetta > span:first-child{ color:var(--signal); }
   .ric-voce{ padding:12px 0 13px; border-top:1px solid var(--line-soft); position:relative; }
   .ric-blocco-etichetta + .ric-voce{ border-top:none; padding-top:2px; }
   .ric-voce .admit-sub-copiato-badge{ display:none; }
@@ -6137,6 +6143,15 @@ function saveRicoveri(list){
   try{ localStorage.setItem(RICOVERI_KEY, raw); }
   catch(e){ showToast('Salvataggio locale non disponibile'); }
   cloudPush(RICOVERI_KEY, raw);
+  if(typeof segnaRicoveroTuttoCopiato === 'function') segnaRicoveroTuttoCopiato(list);
+}
+// tutte e 7 le voci del ricovero copiate: la barra laterale del blocco
+// Ricovero passa dall'ambra al teal, così si vede che non manca niente
+function segnaRicoveroTuttoCopiato(list){
+  const sezione = document.querySelector('#ricovero-singolo-view .ric-doc');
+  if(!sezione) return;
+  const rec = currentRicoveroId ? (list || loadRicoveri()).find(r => r.id === currentRicoveroId) : null;
+  sezione.classList.toggle('tutto-copiato', !!(rec && rec.copiati && VOCI_RICOVERO.every(c => rec.copiati[c])));
 }
 
 // dizionario esami ematochimici: nome normalizzato -> etichetta + unità di misura.
@@ -8026,6 +8041,7 @@ function renderRicoveroSingoloBox(){
   document.getElementById('admit-form-title').textContent = rec ? `Ricovero ${rec.seq}` : 'Nuovo ricovero';
   renderAzioniRicovero(rec);
 
+  segnaRicoveroTuttoCopiato();
   VOCI_RICOVERO.forEach(campo => {
     const slot = view.querySelector(`.ric-anteprima[data-slot="${campo}"]`);
     if(!slot) return;
