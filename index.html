@@ -7381,6 +7381,30 @@ function apriEsameObiettivoInline(ricoveroId){
   contenitore.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// esame obiettivo aperto dentro un ricovero: la voce "Esame obiettivo" del
+// ricovero (qui sopra) segue i tag mentre si toccano, invece di restare
+// l'esame di partenza fino a Fatto
+let timerEoRicovero = null;
+function aggiornaEoRicoveroDalVivo(){
+  if(!esameObiettivoInlineAperto || !ricoveroIdEsameObiettivoInline) return;
+  clearTimeout(timerEoRicovero);
+  timerEoRicovero = setTimeout(() => {
+    if(!esameObiettivoInlineAperto) return;
+    const id = ricoveroIdEsameObiettivoInline;
+    const list = loadRicoveri(), idx = list.findIndex(r => r.id === id);
+    if(idx === -1 || list[idx].esameObiettivoPatientId !== currentPatientId) return;
+    const testo = getRefertoFor(state);
+    if(list[idx].esameObiettivo === testo) return;
+    list[idx].esameObiettivo = testo;
+    // copiato da dentro l'esame e non più cambiato: resta "copiato"
+    if(list[idx].copiati){ const c = eoCopiatoNelRicovero[id]; list[idx].copiati.esameObiettivo = c !== undefined && c === (testo || '').trim(); }
+    saveRicoveri(list);
+    // senza disturbare chi sta scrivendo in una voce del ricovero
+    const a = document.activeElement;
+    if(id === currentRicoveroId && !(a && a.closest && a.closest('#ricovero-singolo-view .ric-anteprima'))) renderRicoveroSingoloBox();
+  }, 250);
+}
+
 function chiudiEsameObiettivoInline(){
   if(!esameObiettivoInlineAperto) return;
   const clinical = document.getElementById('clinical-view');
@@ -9482,6 +9506,7 @@ function autosaveCurrentPatient(){
   patients[currentPatientId].tagIl = Date.now();
   if(primaVoltaOggi) patients[currentPatientId].esameIniziatoOggiIl = Date.now();
   savePatients(patients);
+  if(typeof aggiornaEoRicoveroDalVivo === 'function') aggiornaEoRicoveroDalVivo();
 }
 
 /* ------------------------------------------------------------
