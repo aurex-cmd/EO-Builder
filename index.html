@@ -7526,8 +7526,10 @@ function nomeTurnoGuardia(k){
 const GIORNI_SETTIMANA = ['L','M','M','G','V','S','D'];
 
 // DIAGNOSI PER SINONIMI: ogni voce raccoglie sigle e modi diversi di
-// scrivere la stessa diagnosi. Se una diagnosi ne nomina più d'una
-// ("IRA in scompenso cardiaco") conta quella scritta per prima
+// scrivere la stessa patologia. Una diagnosi può nominarne più d'una
+// ("IRA in scompenso cardiaco"): contano tutte, una volta ciascuna. Non
+// contano quelle negate ("no segni di polmonite", "sepsi da escludere");
+// le sospette sì
 const DIAGNOSI_SINONIMI = [
   ['Sindrome coronarica acuta', /\b(sca|nstemi|stemi|n-stemi|ima|infarto|angina instabile|sindrome coronarica)/],
   ['Insufficienza renale acuta', /\b(ira|aki|insufficienza renale acuta|danno renale acuto|irc riacutizzata|insufficienza renale cronica riacutizzata)\b/],
@@ -7539,20 +7541,30 @@ const DIAGNOSI_SINONIMI = [
   ['Sepsi', /\b(sepsi|shock settico|setticemia|batteriemia)\b/],
   ['Ictus', /\b(ictus|stroke|ischemia cerebrale|emorragia cerebrale|emorragia intraparenchimale|ischemico cerebrale)/],
   ['TIA', /\btia\b/],
-  ['Fibrillazione atriale', /\b(fa|fibrillazione atriale|flutter atriale)\b/],
+  // "FA" solo come sigla maiuscola (vedi diagnosiRiconosciute), così il "fa"
+  // di "tre giorni fa" non conta
+  ['Fibrillazione atriale', /\b(fibrillazione atriale|flutter atriale)\b/],
   ['Embolia polmonare', /\b(tep|ep|embolia polmonare|tromboembolia polmonare)\b/],
   ['Trombosi venosa profonda', /\b(tvp|trombosi venosa)/],
-  ['Emorragia digestiva', /\b(emorragia digestiva|sanguinamento (gastro)?intestinale|melena|ematemesi|rettorragia|ematochezia|eda|edb)\b/],
+  ['Emorragia digestiva', /\b(emorragia digestiva|sanguinamento (gastro)?intestinale|melena|ematemesi|rettorragia|ematochezia)\b/],
   ['Anemia', /\b(anemia|anemizzazione|anemizzato|anemizzata)\b/],
   ['Sincope', /\b(sincope|lipotimia|episodio sincopale)\b/],
   ['Caduta', /\b(caduta|cadute|trauma da caduta)\b/],
+  ['Frattura di femore', /\b(frattura (pertrocanterica |sottocapitata |mediale |laterale )?(del |di )?(collo (del |di )?)?femore|frattura (pertrocanterica|sottocapitata|femorale)|frattura del collo femorale)/],
+  ['Altre fratture', /\bfrattur[a-zàèéìòù]*(?![a-zàèéìòù])(?! (pertrocanterica|sottocapitata|femorale|(mediale |laterale )?(del |di )?(collo (del |di )?)?femore|del collo femorale))/],
+  ['Ematoma subdurale', /\b(ematoma (subdurale|sottodurale)|esd)\b/],
   ['Delirium', /\b(delirium|stato confusionale|confusione mentale)\b/],
   ['Disidratazione', /\b(disidratazione|disidratato|disidratata)\b/],
   ['Iponatriemia', /\b(iponatriemia|iposodiemia)\b/],
   ['Ipernatriemia', /\b(ipernatriemia|ipersodiemia)\b/],
   ['Iperkaliemia', /\b(iperkaliemia|iperpotassiemia)\b/],
   ['Ipokaliemia', /\b(ipokaliemia|ipopotassiemia)\b/],
-  ['Diabete scompensato', /\b(scompenso glicemico|diabete scompensato|chetoacidosi|dka|iperglicemia|ipoglicemia)\b/],
+  ['Diabete scompensato', /\b(scompenso glicemico|diabete scompensato|chetoacidosi|dka|iperglicemia)\b/],
+  ['Ipoglicemia', /\bipoglicemi\w*/],
+  ['Ritenzione urinaria', /\b(ritenzione (acuta )?(urinaria|d'urina)|rau|globo vescicale)\b/],
+  ['Stipsi / subocclusione', /\b(stipsi|fecaloma|coprostasi|sub-?occlusione|occlusione intestinale|ileo)\b/],
+  ['Malnutrizione', /\b(malnutrizione|cachessia|calo ponderale|iporessia)\b/],
+  ['Lesioni da pressione', /\b(lesion\w* da (pressione|decubito)|ldp|decubit\w*|piaga|piaghe)\b/],
   ['COVID-19', /\b(covid|sars-?cov-?2)/],
   ['Influenza', /\b(influenza|sindrome influenzale)\b/],
   ['Colecistite / colangite', /\b(colecistite|colangite)\b/],
@@ -7560,15 +7572,27 @@ const DIAGNOSI_SINONIMI = [
   ['Crisi ipertensiva', /\b(crisi ipertensiva|emergenza ipertensiva|urgenza ipertensiva)\b/],
   ['Deterioramento delle condizioni generali', /\b(decadimento|deterioramento) (delle )?condizioni generali\b|\bscadimento\b/]
 ];
-function diagnosiCanonica(testo){
-  const t = ' ' + String(testo || '').toLowerCase() + ' ';
-  let migliore = null, pos = Infinity;
-  DIAGNOSI_SINONIMI.forEach(([nome, re]) => {
-    const m = t.match(re);
-    if(m && m.index < pos){ pos = m.index; migliore = nome; }
-  });
-  return migliore;
+// una menzione è negata se poco prima c'è "no/non/assenza di/escluso" o
+// subito dopo "da escludere/esclusa"
+function diagnosiNegata(t, inizio, fine){
+  const prima = t.slice(Math.max(0, inizio - 22), inizio), dopo = t.slice(fine, fine + 18);
+  return /\b(no|non|né|nessun\w*|assenza di|senza|esclus[oaie]|escludendo)\b[^,;.\n]*$/.test(prima) || /^\s*(da escludere|esclus[oaie]|non confermat\w*)\b/.test(dopo);
 }
+// tutte le patologie riconosciute in una diagnosi, nell'ordine in cui sono
+// scritte, una volta ciascuna
+function diagnosiRiconosciute(testo){
+  const orig = ' ' + String(testo || '') + ' ', t = orig.toLowerCase();
+  const trovate = [];
+  const prova = (nome, re, su) => {
+    for(const m of su.matchAll(new RegExp(re.source, 'g'))){
+      if(!diagnosiNegata(t, m.index, m.index + m[0].length)){ trovate.push([m.index, nome]); return; }
+    }
+  };
+  DIAGNOSI_SINONIMI.forEach(([nome, re]) => prova(nome, re, t));
+  if(!trovate.some(([, n]) => n === 'Fibrillazione atriale')) prova('Fibrillazione atriale', /\bFA\b/, orig);
+  return trovate.sort((a, b) => a[0] - b[0]).map(([, n]) => n);
+}
+function diagnosiCanonica(testo){ return diagnosiRiconosciute(testo)[0] || null; }
 
 // STATISTICHE DEI RICOVERI (al posto del calendario, da "N ricoveri totali")
 let ricoveriStatistiche = false;
@@ -7630,17 +7654,27 @@ function renderStatisticheRicoveri(el, list){
   // reparto e diagnosi più frequenti
   const perReparto = {};
   list.forEach(r => { const k = (campi(r).reparto || '—').trim(); perReparto[k] = (perReparto[k] || 0) + 1; });
-  // diagnosi riconosciute per sinonimi (vedi diagnosiCanonica): "IRA su
-  // IRC" e "insufficienza renale acuta" contano insieme, così SCA e NSTEMI
-  const perDiagnosi = {};
+  // patologie riconosciute per sinonimi (vedi diagnosiRiconosciute): "IRA su
+  // IRC" e "insufficienza renale acuta" contano insieme, così SCA e NSTEMI.
+  // Ogni ricovero conta per tutte le patologie che nomina; la percentuale è
+  // sui ricoveri con una diagnosi scritta (quindi il totale supera il 100%).
+  // Il testo non riconosciuto conta per sé, così com'è scritto
+  const perDiagnosi = {}, testiDiagnosi = {};
+  let conDiagnosi = 0;
   list.forEach(r => {
     const d = (campi(r).diagnosi || '').trim().replace(/\s+/g, ' ').replace(/[.;]+$/, '');
     if(!d) return;
-    const canonica = diagnosiCanonica(d);
-    const k = canonica ? '#' + canonica : d.toLowerCase();
-    if(!perDiagnosi[k]) perDiagnosi[k] = { testo: canonica || d, n: 0, varianti: new Set() };
-    perDiagnosi[k].n++;
-    perDiagnosi[k].varianti.add(d);
+    conDiagnosi++;
+    const voci = diagnosiRiconosciute(d);
+    const kt = d.toLowerCase();
+    if(!testiDiagnosi[kt]) testiDiagnosi[kt] = { testo: d, n: 0, voci };
+    testiDiagnosi[kt].n++;
+    (voci.length ? voci : [null]).forEach(v => {
+      const k = v ? '#' + v : kt;
+      if(!perDiagnosi[k]) perDiagnosi[k] = { testo: v || d, n: 0, varianti: new Map() };
+      perDiagnosi[k].n++;
+      perDiagnosi[k].varianti.set(d, (perDiagnosi[k].varianti.get(d) || 0) + 1);
+    });
   });
   const diagnosi = Object.values(perDiagnosi).sort((a, b) => b.n - a.n).slice(0, 5);
 
@@ -7749,15 +7783,25 @@ function renderStatisticheRicoveri(el, list){
       const testo = crea('div', 'testo');
       // il conteggio in grassetto, la percentuale più tenue
       const val = crea('span', 'val');
-      val.append(crea('b', '', String(d.n)), ' · ' + pct(d.n, tot));
+      val.append(crea('b', '', String(d.n)), ' · ' + pct(d.n, conDiagnosi || tot));
       testo.append(crea('span', 'nome', d.testo), val);
-      if(d.varianti && d.varianti.size > 1) r.title = 'Comprende: ' + [...d.varianti].join('; ');
+      // un tocco apre i testi scritti che sono stati riuniti in questa voce
+      if(d.varianti && d.varianti.size){
+        r.classList.add('apribile');
+        const el2 = crea('div', 'ric-stat-varianti');
+        [...d.varianti].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0])).forEach(([t, n]) => {
+          const v = crea('div'); v.append(crea('span', '', t), crea('b', '', String(n))); el2.appendChild(v);
+        });
+        r.addEventListener('click', () => r.classList.toggle('aperta'));
+        r.append(testo); r._varianti = el2;
+      }
       const traccia = crea('div', 'traccia');
       const bar = crea('div', 'bar');
       bar.style.width = (d.n / max * 100) + '%';
       if(d.colore) bar.style.setProperty('--colore', d.colore);
       traccia.appendChild(bar);
       r.append(testo, traccia);
+      if(r._varianti) r.appendChild(r._varianti);
       dove.appendChild(r);
     });
   };
@@ -7845,11 +7889,28 @@ function renderStatisticheRicoveri(el, list){
     rep.forEach(r => voceLeg(legRep, r.colore, r.testo, `${r.n} · ${pct(r.n, tot)}`));
   }
 
-  // diagnosi più frequenti: la prima in teal
+  // patologie più frequenti: la prima in teal; sotto, l'elenco di tutte le
+  // diagnosi scritte (con la voce in cui sono state contate), da copiare
   if(diagnosi.length){
-    const cDia = card('Diagnosi più frequenti');
+    const cDia = card('Patologie più frequenti');
     cDia.classList.add('ric-stat-dia');
     righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
+    cDia.appendChild(crea('div', 'ric-stat-nota', `Su ${conDiagnosi} ricover${conDiagnosi === 1 ? 'o' : 'i'} con diagnosi: un ricovero conta per ogni patologia che nomina. Tocca una voce per vedere cosa raccoglie.`));
+    const tutte = Object.values(testiDiagnosi).sort((a, b) => b.n - a.n || a.testo.localeCompare(b.testo));
+    const apri = crea('button', 'ric-stat-tutte', `Tutte le diagnosi scritte (${tutte.length})`);
+    const box = crea('div', 'ric-stat-elenco');
+    const elencoTesto = () => tutte.map(x => `${x.testo} (${x.n}) → ${x.voci.length ? x.voci.join(' + ') : 'non riconosciuta'}`).join('\n');
+    const copia = crea('button', 'btn ric-stat-copia', 'Copia elenco');
+    copia.addEventListener('click', e => { e.stopPropagation(); copiaTesto(elencoTesto()); showToast('Elenco copiato'); });
+    box.appendChild(copia);
+    tutte.forEach(x => {
+      const v = crea('div', 'ric-stat-elenco-r' + (x.voci.length ? '' : ' nuova'));
+      const sx = crea('div'); sx.append(crea('span', 'testo-d', x.testo), crea('span', 'voci-d', x.voci.length ? x.voci.join(' · ') : 'non riconosciuta'));
+      v.append(sx, crea('b', '', String(x.n)));
+      box.appendChild(v);
+    });
+    apri.addEventListener('click', () => { cDia.classList.toggle('elenco-aperto'); apri.textContent = (cDia.classList.contains('elenco-aperto') ? 'Nascondi' : 'Tutte') + ` le diagnosi scritte (${tutte.length})`; });
+    cDia.append(apri, box);
   }
 }
 
@@ -24369,6 +24430,22 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar[style*="--colore"]{ background:var(--m-teal); }
   html[data-ui="minimal"] .ric-stat-riga .val{ font-family:var(--m-sans); color:var(--m-muted); }
   html[data-ui="minimal"] .ric-stat-riga .val b{ font-weight:700; color:var(--m-ink); }
+  /* Patologie: varianti al tocco ed elenco di tutte le diagnosi */
+  .ric-stat-riga.apribile{ cursor:pointer; }
+  .ric-stat-varianti{ display:none; margin:8px 0 2px; padding:8px 10px; border-radius:10px; background:var(--m-box, var(--panel)); font-size:13px; }
+  .ric-stat-riga.aperta .ric-stat-varianti{ display:block; }
+  .ric-stat-varianti > div, .ric-stat-elenco-r{ display:flex; justify-content:space-between; gap:10px; padding:3px 0; }
+  .ric-stat-varianti b, .ric-stat-elenco-r > b{ flex:none; font-weight:700; }
+  .ric-stat-nota{ font-size:12.5px; line-height:1.4; color:var(--m-muted, var(--ink-dim)); margin-top:2px; }
+  .ric-stat-tutte{ align-self:flex-start; padding:0; border:0; background:none; font:inherit; font-size:14px; font-weight:600; color:var(--m-link, var(--signal)); cursor:pointer; }
+  .ric-stat-elenco{ display:none; flex-direction:column; gap:2px; }
+  .ric-stat-dia.elenco-aperto .ric-stat-elenco{ display:flex; }
+  .ric-stat-copia{ align-self:flex-start; margin-bottom:8px; }
+  .ric-stat-elenco-r{ padding:8px 0; border-top:1px solid var(--m-riq-linea, var(--line-soft)); font-size:14px; }
+  .ric-stat-elenco-r > div{ display:flex; flex-direction:column; min-width:0; }
+  .ric-stat-elenco-r .testo-d{ color:var(--m-ink, var(--ink)); overflow-wrap:anywhere; }
+  .ric-stat-elenco-r .voci-d{ font-size:12.5px; color:var(--m-teal, var(--signal)); }
+  .ric-stat-elenco-r.nuova .voci-d{ color:var(--m-rame, #b65b33); }
   /* Calendario dimissioni vuoto */
   .m-dim-vuoto{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:8px; padding:30px 22px 24px; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); font-family:var(--m-sans); }
   .m-dim-vuoto-ico{ width:60px; height:60px; border-radius:50%; display:grid; place-items:center; background:var(--m-teal-box); color:var(--m-teal); margin-bottom:14px; }
