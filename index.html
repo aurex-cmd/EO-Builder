@@ -7690,7 +7690,22 @@ function renderStatisticheRicoveri(el, list){
       perDiagnosi[k].varianti.set(d, (perDiagnosi[k].varianti.get(d) || 0) + 1);
     });
   });
-  const diagnosi = Object.values(perDiagnosi).sort((a, b) => b.n - a.n).slice(0, 5);
+  const tutteVoci = Object.entries(perDiagnosi).sort((a, b) => b[1].n - a[1].n);
+  const diagnosi = tutteVoci.slice(0, 5).map(([, v]) => v);
+  // "Altre diagnosi": i ricoveri con almeno una diagnosi fuori dalle prime
+  // 5; un tocco mostra quali, con quante volte compaiono
+  const prime = new Set(tutteVoci.slice(0, 5).map(([k]) => k));
+  const altreVoci = tutteVoci.slice(5);
+  let altreN = 0;
+  if(altreVoci.length){
+    list.forEach(r => {
+      const d = (campi(r).diagnosi || '').trim().replace(/\s+/g, ' ').replace(/[.;]+$/, '');
+      if(!d) return;
+      const voci = diagnosiRiconosciute(d);
+      const chiavi = voci.length ? voci.map(v => '#' + v) : [d.toLowerCase()];
+      if(chiavi.some(k => !prime.has(k))) altreN++;
+    });
+  }
 
   el.innerHTML = '';
   el.className = 'ric-stat';
@@ -7813,6 +7828,7 @@ function renderStatisticheRicoveri(el, list){
       const bar = crea('div', 'bar');
       bar.style.width = (d.n / max * 100) + '%';
       if(d.colore) bar.style.setProperty('--colore', d.colore);
+      if(d.altre) r.classList.add('ric-stat-altre');
       traccia.appendChild(bar);
       r.append(testo, traccia);
       if(r._varianti) r.appendChild(r._varianti);
@@ -7908,7 +7924,9 @@ function renderStatisticheRicoveri(el, list){
   if(diagnosi.length){
     const cDia = card('Diagnosi più frequenti');
     cDia.classList.add('ric-stat-dia');
-    righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
+    const datiDia = diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d));
+    if(altreN) datiDia.push({ testo: 'Altre diagnosi', n: altreN, altre: true, varianti: new Map(altreVoci.map(([, v]) => [v.testo, v.n])) });
+    righe(cDia, datiDia);
     cDia.appendChild(crea('div', 'ric-stat-nota', `Su ${conDiagnosi} ricover${conDiagnosi === 1 ? 'o' : 'i'} con diagnosi: un ricovero conta per ogni diagnosi che nomina. Tocca una voce per vedere cosa raccoglie.`));
     const tutte = Object.values(testiDiagnosi).sort((a, b) => b.n - a.n || a.testo.localeCompare(b.testo));
     const apri = crea('button', 'ric-stat-tutte', `Tutte le diagnosi scritte (${tutte.length})`);
@@ -24435,13 +24453,16 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"] #ricoveri-tabs .admit-checkbox{ appearance:none; -webkit-appearance:none; width:24px; height:24px; margin:0; border:1.5px solid var(--m-line-forte); border-radius:50%; background:none; display:grid; place-items:center; cursor:pointer; transition:background .2s, border-color .2s; }
   html[data-ui="minimal"] #ricoveri-tabs .admit-checkbox:checked{ background:var(--m-teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/13px no-repeat; border-color:var(--m-teal); }
   html[data-ui="minimal"] #ricoveri-view .group > button[onclick^="generaTutteLeConsegneDocx"]{ margin-top:22px; }
-  html[data-ui="minimal"] #ricoveri-tabs > .group-label{ margin:0 !important; padding:18px 16px !important; text-align:center; font-family:var(--m-sans); font-size:15px; font-weight:400 !important; letter-spacing:0; text-transform:none; color:var(--m-muted) !important; }
+  html[data-ui="minimal"] #ricoveri-tabs:has(> .group-label){ background:none; box-shadow:none; border-radius:0; }
+  html[data-ui="minimal"] #ricoveri-tabs > .group-label{ margin:0 !important; padding:2px 4px !important; text-align:left; font-family:var(--m-sans); font-size:15px; font-weight:400 !important; letter-spacing:0; text-transform:none; color:var(--m-muted) !important; }
   /* Diagnosi più frequenti: una sola tinta, la prima in teal pieno e le
      altre in teal chiaro, su un binario leggibile; il numero in nero */
   html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .traccia{ background:var(--m-sec); }
   html[data-ui="minimal"][data-m-tema="scuro"] .ric-stat-dia .ric-stat-riga .traccia{ background:var(--m-box); }
   html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar{ background:color-mix(in srgb, var(--m-teal) 42%, var(--m-riq)); }
   html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar[style*="--colore"]{ background:var(--m-teal); }
+  html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga.ric-stat-altre .bar{ background:var(--m-line-forte); }
+  html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga.ric-stat-altre .nome{ color:var(--m-muted); }
   html[data-ui="minimal"] .ric-stat-riga .val{ font-family:var(--m-sans); color:var(--m-muted); }
   html[data-ui="minimal"] .ric-stat-riga .val b{ font-weight:700; color:var(--m-ink); }
   /* Patologie: varianti al tocco ed elenco di tutte le diagnosi */
