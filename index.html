@@ -12636,12 +12636,12 @@ function renderCalendarioDimissioni(){
   container.innerHTML = '';
   const righe = calcolaCalendarioDimissioni();
   if(!righe.length && UI_MINIMAL){
-    // Pocket: un riquadro che spiega come far comparire le dimissioni (il
-    // sottotitolo dice già che non ce ne sono)
+    // Pocket: un riquadro che dice che non ce ne sono e spiega come farle
+    // comparire
     container.innerHTML = `<div class="m-dim-vuoto">
       <span class="m-dim-vuoto-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m9 15 2 2 4-4"/></svg></span>
-      <p class="m-dim-vuoto-t">Le dimissioni si leggono dai diari</p>
-      <p class="m-dim-vuoto-d">Basta annotarle nei provvedimenti: compariranno qui, giorno per giorno. Per esempio:</p>
+      <p class="m-dim-vuoto-t">Nessuna dimissione in programma</p>
+      <p class="m-dim-vuoto-d">Quando ne annoti una nel diario, comparirà qui. Per esempio:</p>
       <div class="m-dim-vuoto-es"><span>dimesso domani</span><span>dimissione prevista lunedì</span><span>trasferito in RSA giovedì pv</span></div>
     </div>`;
     return;
@@ -27054,7 +27054,7 @@ function sottotitoloPagina(v){
     if(v === 'dimissioni'){
       const d = calcolaCalendarioDimissioni(), oggi = chiaveGiorno(Date.now()), dom = chiaveGiorno(Date.now() + 864e5);
       const o = d.filter(r => chiaveGiorno(r.data.getTime()) === oggi).length, k = d.filter(r => chiaveGiorno(r.data.getTime()) === dom).length;
-      return o || k ? [o && n(o, 'oggi', 'oggi'), k && n(k, 'domani', 'domani')].filter(Boolean).join(' · ') : d.length ? n(d.length, 'in programma', 'in programma') : 'Nessuna dimissione in programma';
+      return o || k ? [o && n(o, 'oggi', 'oggi'), k && n(k, 'domani', 'domani')].filter(Boolean).join(' · ') : d.length ? n(d.length, 'in programma', 'in programma') : 'Lette dai provvedimenti dei diari';
     }
     if(v === 'postdegenze'){ const pd = caricaPostDegenze(), t = Object.keys(pd).length, s = Object.values(pd).filter(x => avvisoPostDegenza(x) <= Date.now()).length;
       return !t ? 'Nessuna in sospeso' : n(t, 'in sospeso', 'in sospeso') + (s ? ` · ${n(s, 'da controllare', 'da controllare')}` : ''); }
