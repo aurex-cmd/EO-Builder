@@ -4079,7 +4079,7 @@ const MPULSANTE_KEY = 'eo_minimal_pulsante_v1';
 // colore d'accento (Impostazioni → Colore dell'app): il pulsante Reparto e
 // con lui tutti i pulsanti e i link. Ardesia, Indaco e Prugna (provati per
 // poco) tornano al più vicino
-const MPULSANTI = [['blu', 'Blu', '#1f4e79', '#2d6aa6'], ['teal', 'Verde acqua', '#0e7571', '#168a84'], ['rame', 'Rame', '#b0562f', '#c0683f'], ['viola', 'Viola', '#5b4a9e', '#6f5cc0'], ['bordeaux', 'Bordeaux', '#8a3550', '#a84866'], ['grafite', 'Grafite', '#36414f', '#56647a']];
+const MPULSANTI = [['blu', 'Blu', '#1f4e79', '#2d6aa6'], ['cobalto', 'Cobalto', '#09318d', '#2350c0'], ['teal', 'Verde acqua', '#0e7571', '#168a84'], ['rame', 'Rame', '#b0562f', '#c0683f'], ['viola', 'Viola', '#7e03fc', '#8a24ff'], ['bordeaux', 'Bordeaux', '#8a3550', '#a84866'], ['fucsia', 'Fucsia', '#c82f86', '#cc3590'], ['grafite', 'Grafite', '#36414f', '#56647a']];
 const MPULSANTI_VECCHI = { ardesia:'grafite', indaco:'viola', prugna:'bordeaux' };
 // Natale: dall'8 dicembre al 6 gennaio il colore Natale (rosso, con il
 // pulsante Reparto animato) si accende da solo per tutti. Chi sceglie un
@@ -23477,9 +23477,11 @@ function editorLettereSvuota(){
   /* l'accento scelto in Impostazioni: chiaro, scuro e link sul blu notte */
   html[data-m-pulsante="teal"]{ --m-acc-l:#0e7571; --m-acc-d:#168a84; --m-acc-link-d:#6fd3c4; }
   html[data-m-pulsante="rame"]{ --m-acc-l:#b0562f; --m-acc-d:#c0683f; --m-acc-link-d:#f0a77f; }
-  html[data-m-pulsante="viola"]{ --m-acc-l:#5b4a9e; --m-acc-d:#6f5cc0; --m-acc-link-d:#b9a9f0; }
+  html[data-m-pulsante="cobalto"]{ --m-acc-l:#09318d; --m-acc-d:#2350c0; --m-acc-link-d:#9db6f5; }
+  html[data-m-pulsante="viola"]{ --m-acc-l:#7e03fc; --m-acc-d:#8a24ff; --m-acc-link-d:#c6a2ff; }
   html[data-m-pulsante="bordeaux"]{ --m-acc-l:#8a3550; --m-acc-d:#a84866; --m-acc-link-d:#eba2b8; }
   html[data-m-pulsante="grafite"]{ --m-acc-l:#36414f; --m-acc-d:#56647a; --m-acc-link-d:#b3bfcf; }
+  html[data-m-pulsante="fucsia"]{ --m-acc-l:#c82f86; --m-acc-d:#cc3590; --m-acc-link-d:#f4a3cf; }
   /* accento rame o bordeaux: Diari passa all'ambra, così Visita e Diari
      restano due colori diversi */
   html[data-m-pulsante="rame"], html[data-m-pulsante="bordeaux"]{ --m-diari:#9a6a12; --m-diari-box:#fbf0d6; --m-l-dacop:#f1d48f; }
@@ -23536,7 +23538,8 @@ function editorLettereSvuota(){
     .m-festa > i{ top:calc(var(--d) * 9px); }
   }
   .m-ingr.m-anteprima{ margin:0 0 18px; cursor:default; pointer-events:none; transition:background .35s, border-color .35s; }
-  .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+  /* quattro colori per riga, così otto stanno in due righe pari */
+  .m-pulsanti{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px 16px; max-width:calc(4 * 40px + 3 * 16px); margin-inline:auto; }
   .m-pulsanti button{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:var(--c); cursor:pointer; box-shadow:0 0 0 2px var(--m-bg), 0 0 0 2px transparent; transition:box-shadow .2s, transform .12s var(--m-molla); display:grid; place-items:center; color:#fff; }
   .m-pulsanti button:active{ transform:scale(.9); }
   .m-pulsanti button[aria-pressed="true"]{ box-shadow:0 0 0 3px var(--m-bg), 0 0 0 5px var(--c); }
@@ -26996,7 +26999,7 @@ if(temaChiaro && temaScuro){
   const segnaPulsante = () => {
     const att = document.documentElement.dataset.mPulsante || 'teal';
     gruppo.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === att)));
-    gruppo.querySelector('.m-pulsante-nome').textContent = (pulsantiDisponibili().find(x => x[0] === att) || MPULSANTI[1])[1];
+    gruppo.querySelector('.m-pulsante-nome').textContent = (pulsantiDisponibili().find(x => x[0] === att) || MPULSANTI.find(x => x[0] === 'teal'))[1];
   };
   gruppo.addEventListener('click', e => {
     const b = e.target.closest('button[data-c]'); if(!b) return;
