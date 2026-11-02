@@ -7190,6 +7190,7 @@ function renderRicoveriLista(){
       }
       riga.appendChild(nome);
       riga.appendChild(data);
+      if(UI_MINIMAL) riga.insertAdjacentHTML('beforeend', '<svg class="m-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>');
       riga.onclick = () => apriRicoveroSingolo(rec.id);
       tabsEl.appendChild(riga);
     });
@@ -7201,7 +7202,9 @@ function renderRicoveriLista(){
   const list = listCompleta.filter(r => chiaveGiorno(r.creatoIl) === filtroGiornoRicoveri);
 
   const chiaveOggiLista = chiaveGiorno(Date.now());
-  label.innerHTML = '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="16.5" cy="8.5" r="2.5"/><path d="M15 13.6c2.7.4 4.5 2.4 4.5 5.4"/></svg>Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri)
+  label.innerHTML = UI_MINIMAL
+    ? `<span>Ricoveri del ${formattaGiornoEsteso(filtroGiornoRicoveri)}</span>` + (filtroGiornoRicoveri !== chiaveOggiLista ? '<span class="ric-torna-oggi" onclick="tornaAOggiRicoveri()">Torna a oggi</span>' : '')
+    : '<svg class="hicon" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="16.5" cy="8.5" r="2.5"/><path d="M15 13.6c2.7.4 4.5 2.4 4.5 5.4"/></svg>Ricoveri del ' + formattaGiornoEsteso(filtroGiornoRicoveri)
     + (filtroGiornoRicoveri !== chiaveOggiLista ? ' <span class="ric-torna-oggi" onclick="tornaAOggiRicoveri()">· torna a oggi</span>' : '');
   tabsEl.innerHTML = '';
 
@@ -7232,11 +7235,19 @@ function renderRicoveriLista(){
 
     const nome = document.createElement('span');
     nome.className = 'ric-lista-nome';
-    nome.textContent = `${i + 1}. ` + (rec.label || `Ricovero ${rec.seq}`);
+    nome.textContent = UI_MINIMAL ? (rec.label || `Ricovero ${rec.seq}`) : `${i + 1}. ` + (rec.label || `Ricovero ${rec.seq}`);
 
     sinistra.appendChild(checkbox);
+    if(UI_MINIMAL){
+      // Pocket: il numero d'ordine a parte, in grigio, e la freccia a destra
+      const num = document.createElement('span');
+      num.className = 'm-ric-n';
+      num.textContent = i + 1;
+      sinistra.appendChild(num);
+    }
     sinistra.appendChild(nome);
     riga.appendChild(sinistra);
+    if(UI_MINIMAL) riga.insertAdjacentHTML('beforeend', '<svg class="m-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>');
     riga.onclick = () => apriRicoveroSingolo(rec.id);
     tabsEl.appendChild(riga);
   });
@@ -24328,6 +24339,24 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .ric-stat-torta svg circle:first-of-type{ stroke:var(--m-box) !important; }
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-pagina #editor-lettere-testo{ background:var(--m-campo); border-color:transparent; }
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-pagina .inline-fields:has(> .chip:first-child + .chip:last-child){ background:var(--m-tasto); }
+  /* Ricoveri del giorno (e risultati della ricerca): righe Pocket in un riquadro */
+  html[data-ui="minimal"] #ricoveri-tabs-group{ margin:0; }
+  html[data-ui="minimal"] #ricoveri-tabs-label{ display:flex !important; align-items:baseline; justify-content:space-between; gap:10px; margin:24px 4px 8px !important; font-family:var(--m-sans); font-size:12px; font-weight:600 !important; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted) !important; }
+  html[data-ui="minimal"] #ricoveri-tabs-label .ric-torna-oggi{ text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--m-link); }
+  html[data-ui="minimal"] #ricoveri-tabs{ border:0; border-radius:18px; overflow:hidden; background:var(--m-riq); box-shadow:var(--m-riq-ombra); }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-riga{ min-height:54px; box-sizing:border-box; padding:8px 14px; gap:12px; border-bottom:1px solid var(--m-riq-linea); font-family:var(--m-sans); font-size:16px; color:var(--m-ink); }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-riga:last-child{ border-bottom:0; }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-riga:active{ background:var(--m-hover); }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-riga.attivo{ color:var(--m-ink); font-weight:600; }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-riga > div{ flex:1 1 auto; min-width:0; gap:12px !important; }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-lista-nome{ flex:1 1 auto; min-width:0; }
+  html[data-ui="minimal"] #ricoveri-tabs .m-ric-n{ min-width:12px; font-size:14px; font-weight:600; color:var(--m-faint); text-align:right; }
+  html[data-ui="minimal"] #ricoveri-tabs .ric-cerca-data{ font-size:14px; color:var(--m-muted); }
+  html[data-ui="minimal"] #ricoveri-tabs .m-chev{ width:14px; height:14px; flex:none; color:var(--m-faint); }
+  html[data-ui="minimal"] #ricoveri-tabs .admit-checkbox{ appearance:none; -webkit-appearance:none; width:24px; height:24px; margin:0; border:1.5px solid var(--m-line-forte); border-radius:50%; background:none; display:grid; place-items:center; cursor:pointer; transition:background .2s, border-color .2s; }
+  html[data-ui="minimal"] #ricoveri-tabs .admit-checkbox:checked{ background:var(--m-teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/13px no-repeat; border-color:var(--m-teal); }
+  html[data-ui="minimal"] #ricoveri-view .group > button[onclick^="generaTutteLeConsegneDocx"]{ margin-top:22px; }
+  html[data-ui="minimal"] #ricoveri-tabs > .group-label{ margin:0 !important; padding:18px 16px !important; text-align:center; font-family:var(--m-sans); font-size:15px; font-weight:400 !important; letter-spacing:0; text-transform:none; color:var(--m-muted) !important; }
   /* Calendario dimissioni vuoto */
   .m-dim-vuoto{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:8px; padding:30px 22px 24px; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); font-family:var(--m-sans); }
   .m-dim-vuoto-ico{ width:60px; height:60px; border-radius:50%; display:grid; place-items:center; background:var(--m-teal-box); color:var(--m-teal); margin-bottom:14px; }
