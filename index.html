@@ -24337,8 +24337,9 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .m-dim-vuoto-es{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
   .m-dim-vuoto-es span{ padding:6px 11px; border-radius:999px; background:var(--m-box); font-size:13px; color:var(--m-ink-2); font-style:italic; }
   html[data-m-tema="scuro"] .m-dim-vuoto-ico{ background:color-mix(in srgb, var(--m-teal) 18%, transparent); }
-  /* gesto indietro: la pagina che scorre porta con sé il fondo grigio */
-  html[data-ui="minimal"]:not(:has(.m-set.m-diari)) :is(#m-main, .m-pagina):is(.m-segue, .m-rilascia){ background:var(--m-fondo) !important; }
+  /* gesto indietro: scorrono solo gli elementi, il fondo grigio (e la
+     scena in fondo) resta fermo, senza il bordo d'ombra della pagina */
+  html[data-ui="minimal"]:not(:has(.m-set.m-diari)) :is(#m-main, .m-pagina):is(.m-segue, .m-rilascia){ background:transparent !important; box-shadow:none !important; }
   /* la scena in fondo ai Settori si fonde col grigio: il bianco del disegno sparisce */
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) #m-app:has(.m-mappa, .m-set:not(.m-diari))::before{ mix-blend-mode:multiply; }
 </style>
