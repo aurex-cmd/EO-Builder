@@ -24292,8 +24292,10 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
      bianco */
   html[data-ui="minimal"]{ --m-fondo:#f5f7f9; --m-riq:#ffffff; --m-riq-ombra:0 1px 2px rgba(20,40,70,.05); --m-riq-linea:#eef1f4; --m-campo:#ffffff; --m-tasto:#e8ecf0; }
   html[data-ui="minimal"][data-m-tema="scuro"]{ --m-fondo:var(--m-bg); --m-riq:var(--m-carta); --m-riq-ombra:none; --m-riq-linea:var(--m-line); --m-campo:var(--m-box); --m-tasto:var(--m-sec); }
-  html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set)) body, html[data-ui="minimal"]:not(:has(.m-set)) .m-bar{ background:var(--m-fondo); }
-  html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set)){ background:var(--m-fondo); }
+  html[data-ui="minimal"]:not(:has(.m-set.m-diari)) .m-bar{ background:var(--m-fondo); }
+  html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set.m-diari)) body{ background:transparent; }
+  html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set.m-diari)){ background:var(--m-fondo); }
+  .m-set:not(.m-diari) .m-set-fondo{ border:0; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); }
   .m-rep-home{ border-radius:20px !important; }
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-rep-home{ box-shadow:0 6px 18px rgba(14,90,100,.16); }
   :is(.m-fare, .m-elenco, .m-righe){ background:var(--m-riq); border:0 !important; border-radius:18px !important; overflow:hidden; box-shadow:var(--m-riq-ombra); }
@@ -24316,7 +24318,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-pagina #editor-lettere-testo{ background:var(--m-campo); border-color:transparent; }
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-pagina .inline-fields:has(> .chip:first-child + .chip:last-child){ background:var(--m-tasto); }
   /* la scena in fondo ai Settori si fonde col grigio: il bianco del disegno sparisce */
-  html[data-ui="minimal"]:not([data-m-tema="scuro"]) #m-app:has(.m-mappa)::before{ mix-blend-mode:multiply; }
+  html[data-ui="minimal"]:not([data-m-tema="scuro"]) #m-app:has(.m-mappa, .m-set:not(.m-diari))::before{ mix-blend-mode:multiply; }
 </style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
@@ -24781,7 +24783,7 @@ function bloccoFare(copiati, soloSettore){
     const cw = loadConsegne(); let n = 0, tot = 0;
     Object.entries(cw).forEach(([nome, v]) => { if(delSettore(nome)) ['V','E','S','C'].forEach(l => { if(v && v[l]){ tot++; if(!v['fatto' + l]) n++; } }); });
     const vuote = !Object.keys(cw).length;
-    righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne weekend',
+    righe.push({ k:'cons', fatta:!vuote && !n, attr:'data-m="pagina" data-p="consegne"', ic:ICON.consegne, nome:'Consegne WE',
       dato:vuote ? 'da allegare' : !n ? (tot ? 'fatte' : 'nessuna da fare') : '', conta:n ? `${n} da fare` : '' });
   } else if(copiati || lettere[kCons]){
     righe.push({ k:kCons, segna:true, fatta:!!lettere[kCons], attr:'data-m="aggcons"', ic:ICON.consegne, nome:'Aggiorna consegne',
