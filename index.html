@@ -7892,10 +7892,10 @@ function renderStatisticheRicoveri(el, list){
   // patologie più frequenti: la prima in teal; sotto, l'elenco di tutte le
   // diagnosi scritte (con la voce in cui sono state contate), da copiare
   if(diagnosi.length){
-    const cDia = card('Patologie più frequenti');
+    const cDia = card('Diagnosi più frequenti');
     cDia.classList.add('ric-stat-dia');
     righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
-    cDia.appendChild(crea('div', 'ric-stat-nota', `Su ${conDiagnosi} ricover${conDiagnosi === 1 ? 'o' : 'i'} con diagnosi: un ricovero conta per ogni patologia che nomina. Tocca una voce per vedere cosa raccoglie.`));
+    cDia.appendChild(crea('div', 'ric-stat-nota', `Su ${conDiagnosi} ricover${conDiagnosi === 1 ? 'o' : 'i'} con diagnosi: un ricovero conta per ogni diagnosi che nomina. Tocca una voce per vedere cosa raccoglie.`));
     const tutte = Object.values(testiDiagnosi).sort((a, b) => b.n - a.n || a.testo.localeCompare(b.testo));
     const apri = crea('button', 'ric-stat-tutte', `Tutte le diagnosi scritte (${tutte.length})`);
     const box = crea('div', 'ric-stat-elenco');
