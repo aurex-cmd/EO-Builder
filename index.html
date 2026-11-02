@@ -7927,7 +7927,7 @@ function renderStatisticheRicoveri(el, list){
     const datiDia = diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d));
     if(altreN) datiDia.push({ testo: 'Altre diagnosi', n: altreN, altre: true, varianti: new Map(altreVoci.map(([, v]) => [v.testo, v.n])) });
     righe(cDia, datiDia);
-    cDia.appendChild(crea('div', 'ric-stat-nota', `Percentuali calcolate su${conDiagnosi === 1 ? 'l ricovero' : ` ${conDiagnosi} ricoveri`} con diagnosi. Se un paziente ha più diagnosi viene contato in ciascuna, per cui la somma può superare il 100%. Tocca una voce per vedere quali diagnosi raccoglie.`));
+    cDia.appendChild(crea('div', 'ric-stat-nota', `Percentuali calcolate su${conDiagnosi === 1 ? 'l ricovero' : ` ${conDiagnosi} ricoveri`}. Se un paziente ha più diagnosi viene contato in ciascuna, per cui la somma può superare il 100%. Tocca una voce per vedere quali diagnosi raccoglie.`));
     const tutte = Object.values(testiDiagnosi).sort((a, b) => b.n - a.n || a.testo.localeCompare(b.testo));
     const apri = crea('button', 'ric-stat-tutte', `Tutte le diagnosi scritte (${tutte.length})`);
     const box = crea('div', 'ric-stat-elenco');
