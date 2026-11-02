@@ -7531,14 +7531,14 @@ const GIORNI_SETTIMANA = ['L','M','M','G','V','S','D'];
 // contano quelle negate ("no segni di polmonite", "sepsi da escludere");
 // le sospette sì
 const DIAGNOSI_SINONIMI = [
-  ['Sindrome coronarica acuta', /\b(sca|nstemi|stemi|n-stemi|ima|infarto|angina instabile|sindrome coronarica)/],
+  ['Sindrome coronarica acuta', /\b(sca|nstemi|stemi|n-stemi|ima)\b|\b(infarto|angina instabile|sindrome coronarica)/],
   ['Insufficienza renale acuta', /\b(ira|aki|insufficienza renale acuta|danno renale acuto|irc riacutizzata|insufficienza renale cronica riacutizzata)\b/],
-  ['Scompenso cardiaco', /\b(scompenso(?! glicemico| diabetico| metabolico| epatico)|scc|icc|insufficienza cardiaca|edema polmonare|epa|heart failure)\b/],
-  ['Polmonite', /\b(polmonite|broncopolmonite|pna|cap|hap|focolaio broncopneumonico|addensamento polmonare)/],
+  ['Scompenso cardiaco', /\b(scompenso(?! glicemico| diabetico| metabolico| epatico| ascitico| cirrotico| emodinamico| glicometabolico)|scc|icc|insufficienza cardiaca|edema polmonare|epa|heart failure)\b/],
+  ['Polmonite', /\b(polmonite|broncopolmonite|pna|cap|hap|focolai\w* broncopneumonic\w*|addensament\w* polmonar\w*|infezion\w* (polmonar\w*|respiratori\w*|delle basse vie)|(origine|partenza) polmonare)/],
   ['BPCO riacutizzata', /\b(bpco|aecopd|copd)\b/],
   ['Insufficienza respiratoria', /\binsufficienza respiratoria\b/],
-  ['Infezione delle vie urinarie', /\b(ivu|uti|infezion\w* (delle )?vie urinarie|pielonefrite|cistite|urosepsi)/],
-  ['Sepsi', /\b(sepsi|shock settico|setticemia|batteriemia)\b/],
+  ['Infezione delle vie urinarie', /\b(ivu|uti|infezion\w* (delle )?vie urinarie|vie urinarie|origine (\w+ )?urinaria|pielonefrite|cistite|urosepsi)/],
+  ['Sepsi', /\b(sepsi|urosepsi|shock settico|setticemia|batteriemia)\b/],
   ['Ictus', /\b(ictus|stroke|ischemia cerebrale|emorragia cerebrale|emorragia intraparenchimale|ischemico cerebrale)/],
   ['TIA', /\btia\b/],
   // "FA" solo come sigla maiuscola (vedi diagnosiRiconosciute), così il "fa"
@@ -7567,10 +7567,25 @@ const DIAGNOSI_SINONIMI = [
   ['Lesioni da pressione', /\b(lesion\w* da (pressione|decubito)|ldp|decubit\w*|piaga|piaghe)\b/],
   ['COVID-19', /\b(covid|sars-?cov-?2)/],
   ['Influenza', /\b(influenza|sindrome influenzale)\b/],
-  ['Colecistite / colangite', /\b(colecistite|colangite)\b/],
+  ['Patologia biliare', /\b(colecistite|colangite|colelitiasi|coledocolitiasi|litiasi (biliare|infundibolare|della colecisti|del coledoco))\b/],
   ['Cellulite / erisipela', /\b(cellulite|erisipela|fascite)\b/],
   ['Crisi ipertensiva', /\b(crisi ipertensiva|emergenza ipertensiva|urgenza ipertensiva)\b/],
-  ['Deterioramento delle condizioni generali', /\b(decadimento|deterioramento) (delle )?condizioni generali\b|\bscadimento\b/]
+  ['Scadimento delle condizioni generali', /\b(decadimento|deterioramento|scadimento) (delle |dello )?(condizioni |stato )?general[ei]\b|\bscadimento\b(?! cognitivo)/],
+  ['Demenza / decadimento cognitivo', /\b(demenza|alzheimer|(decadimento|deterioramento|declino) cognitivo|wandering)\b/],
+  ['Febbre', /\b(febbre|stato febbrile|iperpiressia|febbricola)\b/],
+  ['Versamento pleurico', /\bversamento pleurico\b/],
+  ['Pancreatite', /\bpancreatite\b/],
+  ['Cirrosi / scompenso epatico', /\b(cirrosi|scompenso (ascitico|epatico|cirrotico)|encefalopatia epatica|ascite)\b/],
+  ['Diverticolite', /\bdiverticolite\b/],
+  ['Disfagia', /\bdisfagia\b/],
+  ['Ipocalcemia', /\bipocalcemi\w*/],
+  ['Ipercalcemia', /\bipercalcemi\w*/],
+  ['Rabdomiolisi / crush syndrome', /\b(rabdomiolisi|crush syndrome|sindrome da schiacciamento)\b/],
+  ['Trauma cranico', /\b(trauma cranico|focolaio contusivo|contusion\w* cerebral\w*|emorragia subaracnoidea)\b/],
+  ['Bradiaritmia / blocco AV', /\b(bav|blocco (atrio-?ventricolare|av|trifascicolare|bifascicolare)|bradicardia|bradiaritmia)\b/],
+  ['Tachicardia ventricolare', /\b(tachicardia ventricolare|tvns|fibrillazione ventricolare)\b/],
+  ['Endocardite', /\b(endocardite|localizzazione valvolare)\b/],
+  ['Neoplasia', /\b(neoplasia|neoplasie|tumore|carcinoma|mesotelioma|linfoma|leucemia|mieloma|k (polmonare|gastrico|del colon|mammario|prostatico|pancreatico|vescicale)|metastasi)\b/]
 ];
 // una menzione è negata se poco prima c'è "no/non/assenza di/escluso" o
 // subito dopo "da escludere/esclusa"
@@ -7589,7 +7604,7 @@ function diagnosiRiconosciute(testo){
     }
   };
   DIAGNOSI_SINONIMI.forEach(([nome, re]) => prova(nome, re, t));
-  if(!trovate.some(([, n]) => n === 'Fibrillazione atriale')) prova('Fibrillazione atriale', /\bFA\b/, orig);
+  if(!trovate.some(([, n]) => n === 'Fibrillazione atriale')) prova('Fibrillazione atriale', /\b(?:bradi|tachi)?FA\b/, orig);
   return trovate.sort((a, b) => a[0] - b[0]).map(([, n]) => n);
 }
 function diagnosiCanonica(testo){ return diagnosiRiconosciute(testo)[0] || null; }
