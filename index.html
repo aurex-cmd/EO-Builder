@@ -7747,7 +7747,10 @@ function renderStatisticheRicoveri(el, list){
     dati.forEach(d => {
       const r = crea('div', 'ric-stat-riga');
       const testo = crea('div', 'testo');
-      testo.append(crea('span', 'nome', d.testo), crea('span', 'val', d.n + ' · ' + pct(d.n, tot)));
+      // il conteggio in grassetto, la percentuale più tenue
+      const val = crea('span', 'val');
+      val.append(crea('b', '', String(d.n)), ' · ' + pct(d.n, tot));
+      testo.append(crea('span', 'nome', d.testo), val);
       if(d.varianti && d.varianti.size > 1) r.title = 'Comprende: ' + [...d.varianti].join('; ');
       const traccia = crea('div', 'traccia');
       const bar = crea('div', 'bar');
@@ -7845,6 +7848,7 @@ function renderStatisticheRicoveri(el, list){
   // diagnosi più frequenti: la prima in teal
   if(diagnosi.length){
     const cDia = card('Diagnosi più frequenti');
+    cDia.classList.add('ric-stat-dia');
     righe(cDia, diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d)));
   }
 }
@@ -24357,6 +24361,14 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"] #ricoveri-tabs .admit-checkbox:checked{ background:var(--m-teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/13px no-repeat; border-color:var(--m-teal); }
   html[data-ui="minimal"] #ricoveri-view .group > button[onclick^="generaTutteLeConsegneDocx"]{ margin-top:22px; }
   html[data-ui="minimal"] #ricoveri-tabs > .group-label{ margin:0 !important; padding:18px 16px !important; text-align:center; font-family:var(--m-sans); font-size:15px; font-weight:400 !important; letter-spacing:0; text-transform:none; color:var(--m-muted) !important; }
+  /* Diagnosi più frequenti: una sola tinta, la prima in teal pieno e le
+     altre in teal chiaro, su un binario leggibile; il numero in nero */
+  html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .traccia{ background:var(--m-sec); }
+  html[data-ui="minimal"][data-m-tema="scuro"] .ric-stat-dia .ric-stat-riga .traccia{ background:var(--m-box); }
+  html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar{ background:color-mix(in srgb, var(--m-teal) 42%, var(--m-riq)); }
+  html[data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar[style*="--colore"]{ background:var(--m-teal); }
+  html[data-ui="minimal"] .ric-stat-riga .val{ font-family:var(--m-sans); color:var(--m-muted); }
+  html[data-ui="minimal"] .ric-stat-riga .val b{ font-weight:700; color:var(--m-ink); }
   /* Calendario dimissioni vuoto */
   .m-dim-vuoto{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:8px; padding:30px 22px 24px; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); font-family:var(--m-sans); }
   .m-dim-vuoto-ico{ width:60px; height:60px; border-radius:50%; display:grid; place-items:center; background:var(--m-teal-box); color:var(--m-teal); margin-bottom:14px; }
