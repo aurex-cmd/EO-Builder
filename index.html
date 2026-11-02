@@ -7927,7 +7927,7 @@ function renderStatisticheRicoveri(el, list){
     const datiDia = diagnosi.map((d, i) => Object.assign({ colore: i === 0 ? 'var(--signal)' : '' }, d));
     if(altreN) datiDia.push({ testo: 'Altre diagnosi', n: altreN, altre: true, varianti: new Map(altreVoci.map(([, v]) => [v.testo, v.n])) });
     righe(cDia, datiDia);
-    cDia.appendChild(crea('div', 'ric-stat-nota', `Su ${conDiagnosi} ricover${conDiagnosi === 1 ? 'o' : 'i'} con diagnosi: un ricovero conta per ogni diagnosi che nomina. Tocca una voce per vedere cosa raccoglie.`));
+    cDia.appendChild(crea('div', 'ric-stat-nota', `Percentuali calcolate su${conDiagnosi === 1 ? 'l ricovero' : ` ${conDiagnosi} ricoveri`} con diagnosi. Se un paziente ha più diagnosi viene contato in ciascuna, per cui la somma può superare il 100%. Tocca una voce per vedere quali diagnosi raccoglie.`));
     const tutte = Object.values(testiDiagnosi).sort((a, b) => b.n - a.n || a.testo.localeCompare(b.testo));
     const apri = crea('button', 'ric-stat-tutte', `Tutte le diagnosi scritte (${tutte.length})`);
     const box = crea('div', 'ric-stat-elenco');
@@ -24471,7 +24471,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .ric-stat-riga.aperta .ric-stat-varianti{ display:block; }
   .ric-stat-varianti > div, .ric-stat-elenco-r{ display:flex; justify-content:space-between; gap:10px; padding:3px 0; }
   .ric-stat-varianti b, .ric-stat-elenco-r > b{ flex:none; font-weight:700; }
-  .ric-stat-nota{ font-size:12.5px; line-height:1.4; color:var(--m-muted, var(--ink-dim)); margin-top:2px; }
+  .ric-stat-nota{ text-align:justify; hyphens:auto; -webkit-hyphens:auto; font-size:12.5px; line-height:1.4; color:var(--m-muted, var(--ink-dim)); margin-top:2px; }
   .ric-stat-tutte{ align-self:flex-start; padding:0; border:0; background:none; font:inherit; font-size:14px; font-weight:600; color:var(--m-link, var(--signal)); cursor:pointer; }
   .ric-stat-elenco{ display:none; flex-direction:column; gap:2px; }
   .ric-stat-dia.elenco-aperto .ric-stat-elenco{ display:flex; }
