@@ -11821,12 +11821,17 @@ const FRASI_DIMISSIONE_DOMANI = [
 // nella stessa frase ("si confermano dimissioni domani", "dimissione
 // prevista per domani", "dimesso in mattinata domani"), senza esami o un
 // altro giorno in mezzo
-const RE_DIMISSIONE_DOMANI = /\b(?:dimess[oa]|dimission[ei])\b(?:(?!esami|\bee\b|\beec\b|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,30}?\bdomani\b/;
+// Anche i trasferimenti ("trasferita in Hospice domani") e "domani" prima
+// della parola ("Domani trasferita in Hospice a Montagnana", "domani
+// dimesso a domicilio")
+const RE_DIMISSIONE_DOMANI = /\b(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)\b(?:(?!esami|\bee\b|\beec\b|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,30}?\bdomani\b/;
+const RE_DOMANI_DIMISSIONE = /\bdomani\b(?:(?!esami|\bee\b|\beec\b|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,30}?\b(?:dimess[oa]|dimission[ei]|trasferit[oa]|trasferimento)\b/;
 function haDimissioneDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
+  const righe = testoExtra.toLowerCase().replace(/[ \t]+/g, ' ');
   return FRASI_DIMISSIONE_DOMANI.some(frase => normalizzato.includes(frase))
-    || RE_DIMISSIONE_DOMANI.test(testoExtra.toLowerCase().replace(/[ \t]+/g, ' '));
+    || RE_DIMISSIONE_DOMANI.test(righe) || RE_DOMANI_DIMISSIONE.test(righe);
 }
 
 // variante per la dimissione di OGGI (non "programmata", già decisa/in
