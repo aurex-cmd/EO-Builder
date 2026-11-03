@@ -5467,10 +5467,7 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   // i letti 1.1-2.2 del Settore A già aggiunti alla mappa salvata (vedi conLettiA12)
   'eo_builder_ward_map_a12_v1',
   // EO Pocket: le pratiche dei pazienti (decesso, OdC, hospice...) e i loro moduli
-  'eo_minimal_pratiche_v1',
-  // EO Pocket: il settore scelto (quello della scheda Reparto in home), lo
-  // stesso su telefono e PC
-  'eo_minimal_settore_v1'];
+  'eo_minimal_pratiche_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -25235,9 +25232,8 @@ function vSettore(){
   disegnaLetti();
 }
 /* ---------- il settore scelto ---------- */
-// l'ultimo settore aperto dal Reparto si ricorda (anche chiudendo l'app) e
-// va sul cloud: scelto il C sul telefono, al PC si ritrova il C. La scheda
-// Reparto della home ne mostra i dati e il tondo
+// l'ultimo settore aperto dal Reparto si ricorda (anche chiudendo l'app):
+// la scheda Reparto della home ne mostra i dati e il tondo
 const SETT_KEY = 'eo_minimal_settore_v1';
 function settoreScelto(){
   let s = null; try{ s = localStorage.getItem(SETT_KEY); } catch(e){}
@@ -25245,10 +25241,7 @@ function settoreScelto(){
   if(s === RIC) return ricoveratiEO().length ? s : null;
   return settori().includes(s) ? s : null;
 }
-function ricordaSettore(s){
-  let prima = null; try{ prima = localStorage.getItem(SETT_KEY); } catch(e){}
-  if(prima !== s) setLocalAndCloud(SETT_KEY, s);
-}
+function ricordaSettore(s){ try{ localStorage.setItem(SETT_KEY, s); } catch(e){} }
 // le dimissioni (calendario e lettere in "Da fare oggi") seguono il settore
 // scelto: chi oggi è passato al B non ha più le lettere del C di ieri.
 // Senza un settore scelto restano tutte
