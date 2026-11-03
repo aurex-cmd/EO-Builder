@@ -25208,6 +25208,9 @@ function vSettore(){
   barra('');
   const ss = settori();
   const ricov = ricoveratiEO();
+  // sulla mappa dei settori il contorno va sull'ultimo settore scelto
+  // (anche da un altro dispositivo), non sul primo o su quello dell'app classica
+  if(!M.zoom){ const sc = settoreScelto(); if(sc) M.settore = sc; }
   if(!ss.includes(M.settore) && !(M.settore === RIC && ricov.length)) M.settore = ss.includes(settoreAttivo) ? settoreAttivo : ss[0];
   const modo = `<div class="m-settori m-modo" id="m-modo"><span class="m-pill"></span><button data-m="modo-rep" data-v="visita" aria-pressed="${!diari}">Visita</button><button data-m="modo-rep" data-v="diari" aria-pressed="${diari}">Diari</button></div>`;
   const titolo = `<h2 class="m-h2">${M.zoom ? esc(M.settore === RIC ? 'Ricoveri' : nomeSettoreTitolo(M.settore)) : 'Settori'}</h2>`;
@@ -26754,6 +26757,9 @@ renderWardMap = function(){
     disegnaLetti();
   }
   if(M.vista === 'home') vHome();
+  // mappa dei settori aperta e settore scelto cambiato da un altro
+  // dispositivo: il contorno si sposta sul nuovo
+  if($m('#m-mappa') && !M.zoom){ const sc = settoreScelto(); if(sc && sc !== M.settore){ M.settore = sc; disegnaMappa(); } }
   return r;
 };
 
