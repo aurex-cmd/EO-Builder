@@ -24633,7 +24633,7 @@ function htmlLegenda(){
   const v = (cl, t) => `<li><span class="m-leg-tl ${cl}"></span>${t}</li>`;
   const b = (cl, l, t) => `<li><i class="m-pal ${cl}">${l}</i>${t}</li>`;
   return `<ul>${v('', 'Da vedere oggi: apre i tag')}${v('m-oggi-l', 'Visto oggi: apre il diario')}${v('m-copiato', 'Diario copiato')}<li><span class="m-leg-gg">ieri</span>Giorni dall'ultima visita (fino a 3)</li>
-    ${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (pressione lunga)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
+    ${v('m-consegnato', 'Con consegne')}${v('m-critico', 'Critico')}${v('m-dimesso', 'Dimesso oggi')}${v('m-vuoto', 'Segnato vuoto (tenendo premuto)')}${b('e', 'E', 'Esami di controllo domani')}${b('d', 'D', 'Dimissione oggi o domani')}${b('arancione', 'i', 'Isolamento: il colore indica il germe')}
     <li><span class="m-leg-cons"><i class="m-pal v">V</i><i class="m-pal es">E</i><i class="m-pal s">S</i><i class="m-pal c">C</i></span>Consegne ancora da fare</li></ul>`;
 }
 function htmlPallini(i){
@@ -25131,7 +25131,7 @@ function vHome(){
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-schede m-schede-una">${reparto}</div>
       ${fare.html}
-      ${fare.html ? '<p class="m-lbl m-fare-t">Sempre a portata</p>' : ''}
+      ${fare.html ? '<p class="m-lbl m-fare-t">A portata di mano</p>' : ''}
       <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
       <div class="m-home-info"><p><b>EO Pocket</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
@@ -25583,7 +25583,7 @@ function vAggCons(){
   barra('Consegne');
   $m('#m-vista').innerHTML = `
     <h2 class="m-h2">Aggiorna consegne</h2>
-    <p class="m-sub">Le novità dei diari di oggi, già abbreviate. Doppio tocco su una consegna per modificarla.</p>
+    <p class="m-sub">Le novità dei diari di oggi, già abbreviate. Tocca due volte una consegna per modificarla.</p>
     <div id="m-aggcons"></div>`;
   const box = $m('#m-aggcons');
   conPazientiFermi(() => {
