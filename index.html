@@ -16693,7 +16693,7 @@ const OPT = {
     {value:'disartrico', m:'disartrico', f:'disartrica', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'confabulante', m:'confabulante', f:'confabulante', excludes:['mutacico'], gruppo:'linguaggio'},
     {value:'collaborante', label:'collaborante', excludes:['oppositivo','a_tratti_oppositivo','non_collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
-    {value:'non_collaborante', label:'non collaborante', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
+    {value:'non_collaborante', label:'non collaborante', fragM:'non collaborante alla visita', fragF:'non collaborante alla visita', excludes:['collaborante','parzialmente_collaborante'], gruppo:'atteggiamento'},
     {value:'parzialmente_collaborante', label:'parzialmente collaborante', excludes:['collaborante','non_collaborante'], gruppo:'atteggiamento'},
     {value:'tranquillo', m:'tranquillo', f:'tranquilla', excludes:['ansioso','oppositivo','affaccendato'], gruppo:'atteggiamento'},
     {value:'ansioso', m:'ansioso', f:'ansiosa', excludes:['tranquillo'], gruppo:'atteggiamento'},
@@ -17317,7 +17317,14 @@ function composeCoscienza(){
     fraseDopo = [joinIt(descLabels.slice(idxMut + 1)), clausolaMa].filter(Boolean).join(', ');
     clausolaMa = '';
   }
-  if(descPrima.length || clausolaMa) parts.push([descPrima.length ? joinIt(descPrima) : '', clausolaMa].filter(Boolean).join(', '));
+  // "non collaborante alla visita" non entra nell'elenco con la "e": va in
+  // fondo dopo la virgola ("Vigile, disorientata e confabulante, non
+  // collaborante alla visita")
+  const ncOpt = selected.find(o => o.value === 'non_collaborante');
+  const ncTesto = ncOpt ? etichetta(ncOpt) : '';
+  let ncCoda = '';
+  if(ncTesto && descPrima.includes(ncTesto)){ descPrima = descPrima.filter(t => t !== ncTesto); ncCoda = ncTesto; }
+  if(descPrima.length || clausolaMa || ncCoda) parts.push([descPrima.length ? joinIt(descPrima) : '', clausolaMa, ncCoda].filter(Boolean).join(', '));
   const corpo = parts.join(', ');
   let s = corpo ? cap(corpo) + '.' : '';
   [fraseMut, fraseDopo].filter(Boolean).forEach(f => { s += (s ? ' ' : '') + cap(f) + '.'; });
