@@ -13415,6 +13415,53 @@ function avvisoRimozioneCV(p, id){
   if(RE_CV_MANTENUTO.test(extra)) return false;
   return RE_CV.test(testo);
 }
+// ---------- avvisi clinici nella scheda (EO Pocket) ----------
+// il diario di oggi diviso in frasi; una frase "negata" ("nega episodi
+// sincopali", "non dispnoico") non conta
+const frasiDiario = t => (t || '').split(/\n|(?<=[.;])\s+/).map(f => f.trim()).filter(Boolean);
+const RE_NEGA = /\b(?:nega\w*|non|senza|nessun\w*|esclus\w*|assenz\w*|no)\b/i;
+function frasePresente(frasi, re){
+  return frasi.some(f => { const m = f.match(re); return m && !RE_NEGA.test(f.slice(0, m.index)); });
+}
+// 1. sospetta embolia polmonare: episodio sincopale + tachicardia + bisogno
+// di ossigeno o dispnea, tutti e tre nel diario di oggi
+const RE_EP_SINCOPE = /sincop\w*|lipotimi\w*|perdita\s+(?:transitoria\s+)?d[ie]\s+(?:coscienza|conoscenza)|\bt?pdc\b|\btloc\b/i;
+const RE_EP_TACHI = /tachicard\w*|toni\s+(?:cardiaci\s+)?concitat\w*|tachiaritm\w*|\btachi\s*fa\b/i;
+const RE_EP_O2 = /\bo2\b|ossigen\w*|occhialini|\bnc\b|nasocannul\w*|cannul\w*\s+nasal\w*|\bms\b|maschera|venturi|\bvm\s*\d|reservoir|\bhfnc\b|alti\s+flussi|\bcpap\b|\bniv\b|tachipno\w*|dispno\w*|dispnea|desatur\w*/i;
+function fcAlta(testo){
+  const re = /\b(?:fc|frequenza\s+cardiaca|hr)\s*[:=]?\s*(?:di\s+)?(\d{2,3})\b/gi; let m;
+  while((m = re.exec(testo || ''))) if(+m[1] > 100) return true;
+  return false;
+}
+function avvisoEmboliaPolmonare(st){
+  if(!st) return false;
+  const testo = getRefertoFor(st) || '';
+  const frasi = frasiDiario(testo);
+  return frasePresente(frasi, RE_EP_SINCOPE)
+    && (fcAlta(testo) || frasePresente(frasi, RE_EP_TACHI))
+    && frasePresente(frasi, RE_EP_O2);
+}
+// 2. procedure invasive richieste: prima servono emocromo, aPTT e PT-INR.
+// Si legge nelle aggiunte di oggi, in una frase di richiesta; sparisce se
+// aPTT e INR sono già scritti nel diario
+const PROCEDURE = [
+  ['EGDS', /\begds\b|gastroscopi\w*|esofagogastroduodenoscopi\w*/i], ['Colonscopia', /colonscopi\w*|pancolonscopi\w*/i],
+  ['Rettosigmoidoscopia', /rettosigmoidoscopi\w*|\brss\b/i], ['Broncoscopia', /broncoscopi\w*|\bfbs\b|\bebus\b/i],
+  ['ERCP', /\bercp\b|\bcpre\b|colangiopancreatografia\s+retrograd\w*/i], ['Biopsia', /biopsi\w*|agoaspirat\w*|\bbom\b/i],
+  ['Drenaggio', /drenaggi\w*|\bptbd\b|colecistostomi\w*/i], ['Toracentesi', /toracentesi/i], ['Paracentesi', /paracentesi/i],
+  ['Rachicentesi', /rachicentesi|puntura\s+lombare/i], ['PEG', /\bpeg\b|gastrostomi\w*/i], ['Artrocentesi', /artrocentesi/i],
+  ['Coronarografia', /coronarografi\w*/i], ['Angiografia', /angiografi\w*|arteriografi\w*/i]
+];
+const RE_RICHIESTA_PROC = /(?:^|[\s(])(?:-\s*)?r\b|richied\w*|richiest\w*|chied\w*|programmat\w*|prenotat\w*|in\s+attesa\s+d\w*|da\s+eseguire|candidat\w*|si\s+propone|proposta|pianificat\w*/i;
+function avvisoCoagulazione(st){
+  if(!st) return null;
+  const extra = st.outputExtra || '';
+  const testo = getRefertoFor(st) || '';
+  if(/\bi\.?n\.?r\b/i.test(testo) && /\ba?ptt\b/i.test(testo)) return null;
+  const frasi = frasiDiario(extra).filter(f => RE_RICHIESTA_PROC.test(f) && !/\beseguit\w*|\beffettuat\w*|\brefert\w*/i.test(f));
+  const nomi = PROCEDURE.filter(([, re]) => frasePresente(frasi, re)).map(([n]) => n);
+  return nomi.length ? nomi : null;
+}
 function rigaAiutiDiario(p, id){
   const atb = antibioticiInCorso(p, id), ric = richiesteInSospeso(p, id), ren = avvisiReneFarmaci(p, id);
   const cv = avvisoRimozioneCV(p, id);
@@ -23185,6 +23232,8 @@ function editorLettereSvuota(){
   .m-aiuto.atb{ --acc:var(--m-atb0); } .m-aiuto.atb.liv1{ --acc:var(--m-atb1); } .m-aiuto.atb.liv2{ --acc:var(--m-atb2); } .m-aiuto.atb.liv2 em{ color:var(--m-atb2); font-weight:500; }
   .m-aiuto.ric{ --acc:var(--m-viola); }
   .m-aiuto.cv{ --acc:var(--m-atb1); }
+  .m-aiuto.ep{ --acc:var(--m-rosso); border-color:color-mix(in srgb, var(--m-rosso) 45%, var(--m-line)); color:var(--m-rosso); }
+  .m-aiuto.coag{ --acc:var(--m-atb1); }
   .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 6px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-faint); font-weight:500; font-size:12px; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
   .m-aiuto .m-ok:active{ transform:scale(.85); color:var(--m-teal); }
   .m-aiuto.m-chiusa{ opacity:0; transform:scale(.85); max-width:0; padding-left:0; padding-right:0; margin-right:-6px; }
@@ -25870,8 +25919,12 @@ function disegnaAiuti(primaVolta, soloMemoria){
   // dimissione programmata con il catetere ancora scritto nel diario (come nell'app)
   let cv = false;
   try{ cv = avvisoRimozioneCV(p, M.id); } catch(e){}
+  let ep = false, coag = null;
+  try{ const stA = statoScheda(M.id, p); ep = avvisoEmboliaPolmonare(stA); coag = avvisoCoagulazione(stA); } catch(e){}
   const voci = [
     ...(cv ? [{ k:'cv', html:'<span class="m-aiuto cv" data-k="cv" title="Dimissione programmata con catetere vescicale in sede"><i></i>Valuta rimozione CV</span>' }] : []),
+    ...(ep ? [{ k:'ep', html:'<span class="m-aiuto ep" data-k="ep" title="Episodio sincopale con tachicardia e bisogno di ossigeno o dispnea: considera l\'embolia polmonare"><i></i>Sospetta embolia polmonare</span>' }] : []),
+    ...(coag ? [{ k:'coag:' + coag.join(','), html:`<span class="m-aiuto coag" data-k="coag:${esc(coag.join(','))}" title="Prima della procedura servono emocromo, aPTT e PT-INR"><i></i>${esc(coag.join(', '))}: emocromo, aPTT, PT-INR</span>` }] : []),
     ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
     ...ric.map((r, n) => ({ k:'r:' + r.chiave, html:`<span class="m-aiuto ric" data-k="r:${esc(r.chiave)}" title="Richiesta ancora senza esito"><i></i>${esc(r.testo)} <em>${r.giorni ? r.giorni + ' g' : 'oggi'}</em><button class="m-ok" data-m="chiudi-ric" data-r="${n}" aria-label="Fatta">✓</button></span>` }))
   ];
