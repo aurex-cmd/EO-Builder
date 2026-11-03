@@ -24908,6 +24908,15 @@ function segnaModulo(btn){
     b.classList.toggle('m-ok', v.moduli[m]); b.setAttribute('aria-pressed', v.moduli[m]);
     if(v.moduli[m]){ b.classList.remove('m-nuovo'); void b.offsetWidth; b.classList.add('m-nuovo'); }
   });
+  // nella scheda: pratica finita, l'etichetta si vede verde un attimo, poi
+  // se ne va e la riga si richiude
+  if(btn.closest('#m-pr-scheda') && praticaFinita(v)){
+    setTimeout(() => {
+      const w = leggiPratiche()[k]; if(!w || !praticaFinita(w)) return;
+      $m('#m-pr-scheda').querySelectorAll(`[data-k="${CSS.escape(k)}"]`).forEach(x => x.classList.add('m-chiusa'));
+      setTimeout(() => { try{ disegnaAiuti(false, true); } catch(e){ disegnaPraticheScheda(); } }, 380);
+    }, 450);
+  }
   // quanti ne mancano, sulla riga chiusa
   const conto = $m('.m-pr-riga .m-vc'), tutte = $m('.m-pr-tutte');
   if(conto && tutte){ const n = tutte.querySelectorAll('[data-m="pr-modulo"]:not(.m-ok)').length, nc = tutte.querySelectorAll('.m-pr-chiedi').length; conto.textContent = [n && `${n} da fare`, nc && `${nc} da confermare`].filter(Boolean).join(' · ') || 'fatte'; }
@@ -24960,11 +24969,25 @@ function chiediPraticheScheda(){
 }
 // nella scheda del diario: le pratiche del paziente sotto il titolo, accanto
 // alle altre etichette (niente se non ce ne sono)
+// una riga di etichette che si svuota si richiude piano: l'esame obiettivo
+// sotto risale invece di saltare su di colpo
+function richiudiEtichette(box, poi){
+  if(!box || box.hidden || !box.offsetHeight || matchMedia('(prefers-reduced-motion: reduce)').matches){ if(box) box.hidden = true; if(poi) poi(); return; }
+  clearTimeout(box._chiude);
+  box.classList.remove('m-apre');
+  box.style.height = box.offsetHeight + 'px'; box.style.overflow = 'hidden';
+  void box.offsetHeight;
+  box.style.transition = 'height .38s var(--m-molla), padding .38s var(--m-molla), opacity .22s';
+  box.style.height = '0px'; box.style.paddingTop = '0px'; box.style.opacity = '0';
+  box._chiude = setTimeout(() => { box.hidden = true; box.removeAttribute('style'); if(poi) poi(); }, 400);
+}
 function disegnaPraticheScheda(){
   const box = $m('#m-pr-scheda'); if(!box || !M.id) return;
   const pr = aggiornaPratiche();
   const sue = Object.entries(pr).filter(([, v]) => v.id === M.id && !v.tolta && !v.chiedi && !praticaFinita(v));
   const html = sue.map(([k, v]) => Object.entries(v.moduli).map(([m, ok]) => `<button class="m-aiuto m-pr-s${ok ? ' m-ok' : ''}" data-m="pr-modulo" data-k="${esc(k)}" data-mod="${esc(m)}" aria-pressed="${!!ok}" title="${esc(v.nome)}"><b></b>${esc(m)}</button>`).join('')).join('');
+  if(!html && !box.hidden){ box.dataset.html = ''; richiudiEtichette(box, () => { if(!box.dataset.html) box.innerHTML = ''; }); return; }
+  if(html){ clearTimeout(box._chiude); box.removeAttribute('style'); }
   if(box.dataset.html !== html){ box.dataset.html = html; box.innerHTML = html; }
   box.hidden = !html;
 }
@@ -25934,6 +25957,8 @@ function disegnaAiuti(primaVolta, soloMemoria){
   const prima = new Set([...box.children].map(x => x.dataset.k));
   const eraVuoto = box.hidden || !box.children.length;
   box.dataset.ora = ora;
+  if(!voci.length && !eraVuoto && !primaVolta){ richiudiEtichette(box, () => { if(!box.dataset.ora) box.innerHTML = ''; }); return true; }
+  clearTimeout(box._chiude); box.removeAttribute('style');
   box.innerHTML = voci.map(v => v.html).join('');
   box.hidden = !voci.length;
   // comparsi a scheda già aperta: la riga si apre piano invece di spingere giù il testo di colpo
