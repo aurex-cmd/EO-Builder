@@ -11785,10 +11785,15 @@ function formattaOrarioData(timestamp){
   return `${hh}:${mm}, ${d.getDate()} ${MESI_ITALIANI[d.getMonth()]}`;
 }
 
+// oltre alle frasi fisse, "domani" seguito da esami nella stessa frase
+// ("domani richiesto nuovo controllo esami ematochimici", "domani si
+// ripetono EE"), senza un altro giorno in mezzo
+const RE_ESAMI_DOMANI = /\bdomani\b(?:(?!dimess|dimission|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)[^.,;\n]){0,50}?\b(?:esami|eec?)\b/;
 function haFrasiEsamiDomani(testoExtra){
   if(!testoExtra) return false;
   const normalizzato = testoExtra.toLowerCase().replace(/\s+/g, ' ').trim();
-  return FRASI_ESAMI_DOMANI.some(frase => normalizzato.includes(frase));
+  return FRASI_ESAMI_DOMANI.some(frase => normalizzato.includes(frase))
+    || RE_ESAMI_DOMANI.test(testoExtra.toLowerCase().replace(/[ \t]+/g, ' '));
 }
 // pallino "E": le frasi esatte qui sopra OPPURE qualunque formulazione che
 // le consegne riconoscono come esami programmati per domani ("si
