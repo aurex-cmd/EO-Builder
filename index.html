@@ -27143,7 +27143,7 @@ function aggiornaAccount(){
   const testo = document.getElementById('sync-logged-in-text')?.textContent || '';
   const problema = dentro && testo.startsWith('⚠');
   statoAcc.querySelector('.m-acc-t').textContent = dentro ? 'Connesso' : 'Non connesso';
-  statoAcc.querySelector('.m-acc-d').textContent = dentro ? 'Schede, diari e ricoveri uguali su tutti i tuoi dispositivi.' : 'Senza account i dati restano solo su questo telefono.';
+  statoAcc.querySelector('.m-acc-d').textContent = dentro ? 'Schede, diari e ricoveri sincronizzati su tutti i tuoi dispositivi.' : 'Senza account i dati restano solo su questo telefono.';
   if(!dentro) return;
   righeAcc.querySelector('.m-acc-email').textContent = (testo.match(/Connesso come (\S+)/) || [])[1] || '';
   const sync = righeAcc.querySelector('.m-acc-sync');
