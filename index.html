@@ -25097,7 +25097,7 @@ function vHome(){
     const resto = st.n - st.visti, dc = st.visti - st.cop;
     const diari = dc ? `${dc} diar${dc === 1 ? 'io' : 'i'} da copiare` : 'nessun diario ancora';
     if(!st.n) return 'Nessun letto';
-    if(!resto) return dc ? `Tutti visti · ${diari}` : 'Tutti visti e copiati';
+    if(!resto) return dc ? `Tutti visti · ${diari}` : 'Tutti i pazienti visti, tutti i diari copiati';
     return `${resto} da vedere · ${st.visti && !dc ? 'diari copiati' : diari}`;
   };
   // una scheda sola, il Reparto: dentro Visita e Diari sono gli stessi letti
