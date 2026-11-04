@@ -11939,7 +11939,11 @@ function estraiDimissioniProgrammate(testoExtra){
     risultati.push(oggiRiferimento());
   }
 
-  if(haDimissioneDomani(normalizzato) || /\bdomani\s+dimess[oa]\b/.test(normalizzato) || /\bdimess[oa]\s+domani\b/.test(normalizzato)){
+  // righe diverse sono frasi diverse: "- esami domani" e sotto "- possibili
+  // dimissioni venerdì" non sono una dimissione domani (prima il testo
+  // arrivava qui con gli a capo già tolti)
+  const conRighe = testoExtra.toLowerCase().replace(/[ \t]+/g, ' ');
+  if(haDimissioneDomani(testoExtra) || /\bdomani[ \t]+dimess[oa]\b/.test(conRighe) || /\bdimess[oa][ \t]+domani\b/.test(conRighe)){
     const domani = oggiRiferimento();
     domani.setDate(domani.getDate() + 1);
     risultati.push(domani);
