@@ -23190,10 +23190,12 @@ function editorLettereSvuota(){
   /* sfocata solo la striscia visibile sopra la scheda (sotto basta l'ombra
      scura): sfocare tutto lo schermo a fine salita faceva scattare il telefono */
   .m-velo.m-su{ opacity:1; pointer-events:auto; }
-  .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .44s var(--m-molla); font-family:var(--m-scheda); font-size:15px; color:var(--m-ink); }
+  .m-scheda{ position:fixed; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 116px); z-index:61; max-width:600px; margin:0 auto; background:var(--m-bg); border-radius:16px 16px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.14); display:flex; flex-direction:column; transform:translateY(105%); visibility:hidden; transition:transform .44s var(--m-molla), visibility 0s linear .44s; font-family:var(--m-scheda); font-size:15px; color:var(--m-ink); }
   /* ferma, la scheda non resta trasformata: su iPhone una scheda fissa
      trasformata non faceva scorrere il diario (il dito non muoveva niente) */
-  .m-scheda.m-su{ transform:none; }
+  /* chiusa, a discesa finita la scheda sparisce del tutto: su iPhone,
+     scorrendo la pagina sotto (es. Cambia i tag), restava a metà schermo */
+  .m-scheda.m-su{ transform:none; visibility:visible; transition:transform .44s var(--m-molla), visibility 0s; }
   .m-scheda.m-trascina{ transition:none; }
   /* trascinandola giù si scopre la pagina: lì serve lo sfocato intero, e
      l'oscurità cala man mano che la scheda scende */
