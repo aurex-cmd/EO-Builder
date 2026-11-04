@@ -17953,8 +17953,9 @@ function composeDiuresi(){
     const pezzi = [cap(radice + (state.sesso === 'F' ? 'a' : 'o'))];
     if(d.volume) pezzi.push(`${senzaZeriIniziali(d.volume)} ml in sacca di CV`);
     if(urineOpt) pezzi.push(urineOpt.frag);
-    if(note) pezzi.push(note);
-    return pezzi.join(', ') + '.';
+    // la nota con la stessa regola degli altri box: maiuscola = nuova frase,
+    // minuscola = continua con la virgola
+    return conNotaLibera(pezzi.join(', ') + '.', note);
   }
 
   const parts = [];
@@ -17970,8 +17971,7 @@ function composeDiuresi(){
     if(!note) return '';
     return cap(note) + (/[.!?]$/.test(note) ? '' : '.');
   }
-  if(note) parts.push(note);
-  return 'Diuresi ' + parts.join(', ') + '.';
+  return conNotaLibera('Diuresi ' + parts.join(', ') + '.', note);
 }
 
 // costruisce la frase per un singolo tipo di ernia attivo, in base a
