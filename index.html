@@ -25987,10 +25987,13 @@ function disegnaAiuti(primaVolta, soloMemoria){
     ...(cv ? [{ k:'cv', html:'<span class="m-aiuto cv" data-k="cv" title="Dimissione programmata con catetere vescicale in sede"><i></i>Valuta rimozione CV</span>' }] : []),
     ...(ep ? [{ k:'ep', html:'<span class="m-aiuto ep" data-k="ep" title="Episodio sincopale con tachicardia e bisogno di ossigeno o dispnea: considera l\'embolia polmonare"><i></i>Sospetta embolia polmonare</span>' }] : []),
     ...(coag ? [{ k:'coag:' + coag.join(','), html:`<span class="m-aiuto coag" data-k="coag:${esc(coag.join(','))}" title="Prima della procedura servono emocromo, aPTT e PT-INR"><i></i>${esc(coag.join(', '))}: emocromo, aPTT, PT-INR</span>` }] : []),
-    ...atb.map(a => ({ k:'atb:' + a.nome, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
+    ...atb.map(a => ({ k:'atb:' + a.nome + ':' + a.giorni, html:`<span class="m-aiuto atb liv${a.livello || 0}" data-k="atb:${esc(a.nome)}" title="Giorni di antibiotico"><i></i>${esc(a.nome)} <em>${numeroRomano(a.giorni)} ${a.giorni === 1 ? 'g' : 'gg'}</em></span>` })),
     ...ric.map((r, n) => ({ k:'r:' + r.chiave, html:`<span class="m-aiuto ric" data-k="r:${esc(r.chiave)}" title="Richiesta ancora senza esito"><i></i>${esc(r.testo)} <em>${r.giorni ? r.giorni + ' g' : 'oggi'}</em><button class="m-ok" data-m="chiudi-ric" data-r="${n}" aria-label="Fatta">✓</button></span>` }))
   ];
   box._ric = ric;
+  // la chiave dell'antibiotico porta anche i giorni: "metronidazolo (III
+  // giornata)" aggiunto dopo deve correggere subito la I in III, non solo
+  // riaprendo la scheda
   const ora = voci.map(v => v.k).join('|');
   if(box.dataset.ora === ora) return true;
   const prima = new Set([...box.children].map(x => x.dataset.k));
