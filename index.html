@@ -13115,15 +13115,26 @@ function richiesteInSospeso(p, idPaziente){
   const giorni = diarioGiorniPaziente(p, idPaziente);
   const chiuse = new Set((p && p.richiesteChiuse) || []);
   const aperte = new Map(); // chiave → { testo, dal }
+  // i referti si ricopiano nel diario giorno dopo giorno: un esito conta
+  // solo nelle righe nuove di quel giorno, non in quelle già scritte il
+  // giorno prima ("TC cerebrale: ..." dell'ingresso non chiude la "TC
+  // cerebrale di controllo" chiesta oggi)
+  let righePrima = new Set();
   giorni.forEach(({ giorno, testo }) => {
+    const righe = testo.split('\n');
+    const nuove = righe.filter(r => !righePrima.has(r.trim())).join('\n');
+    righePrima = new Set(righe.map(r => r.trim()));
     // prima chi si chiude oggi (esito scritto), poi le richieste nuove
     [...aperte.keys()].forEach(k => {
-      const senzaRichiesta = testo.split('\n').filter(r => !/\b(?:R|richied\w*|richiest\w*|chiest\w*|si\s+chiede)\b/i.test(r) || esitoPresente(k, r.replace(/^.*?\bR\s+[^,;]*[,;]?/, ''))).join('\n');
+      const senzaRichiesta = nuove.split('\n').filter(r => !/\b(?:R|richied\w*|richiest\w*|chiest\w*|si\s+chiede)\b/i.test(r) || esitoPresente(k, r.replace(/^.*?\bR\s+[^,;]*[,;]?/, ''))).join('\n');
       if(esitoPresente(k, senzaRichiesta)) aperte.delete(k);
     });
     richiesteDelTesto(testo).forEach(t => {
       const k = chiaveRichiesta(t);
-      if(k && !aperte.has(k) && !esitoPresente(k, testo.replace(/[^\n]*\b(?:R|richied\w*|richiest\w*|chiest\w*)\b[^\n]*/gi, ''))) aperte.set(k, { testo: t, dal: giorno, chiave: k });
+      // un controllo, una ripetizione o un esame per un giorno a venire:
+      // l'esito arriva dopo, non può essere già nel diario di oggi
+      const futura = /\b(?:controllo|ctrl|ripet\w*|nuov[oa]|rivalut\w*|domani|dopodomani|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|pv|prossim\w*)\b/i.test(t);
+      if(k && !aperte.has(k) && (futura || !esitoPresente(k, nuove.replace(/[^\n]*\b(?:R|richied\w*|richiest\w*|chiest\w*)\b[^\n]*/gi, '')))) aperte.set(k, { testo: t, dal: giorno, chiave: k });
     });
   });
   const oggi = chiaveGiorno(Date.now());
