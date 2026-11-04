@@ -26424,6 +26424,12 @@ const apriEoInlineApp = apriEsameObiettivoInline;
 window.apriEsameObiettivoInline = function(){ modoEo(null); return apriEoInlineApp.apply(this, arguments); };
 
 const sc = $m('#m-scheda');
+// telefono spento, app chiusa o messa da parte mentre si scrive: il diario
+// si salva subito, senza aspettare il mezzo secondo di salvaPresto (che a
+// telefono spento poteva non arrivare mai)
+const salvaSeInSospeso = () => { if(sc.classList.contains('m-su') || timerSalva) salvaOra(); };
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') salvaSeInSospeso(); });
+window.addEventListener('pagehide', salvaSeInSospeso);
 sc.addEventListener('input', e => {
   const t = e.target;
   if(t.matches('textarea')) alza(t);
