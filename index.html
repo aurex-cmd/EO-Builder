@@ -17576,6 +17576,18 @@ function composeToraceClean(){
   const mvParti = mvItems.map((m, i) => {
     const frag = i === 0 ? m.opt.frag : m.opt.frag.replace(/^MV\s+/, '');
     if(m.opt.noLoc || !m.loc) return frag;
+    // MV su TAP e reperti "diffusi su TAP": una frase sola, la sede in fondo
+    // ("MV aspro con ronchi diffusi su TAP", non "MV aspro su TAP, ronchi
+    // diffusi su TAP")
+    if(m.loc === 'su TAP'){
+      const diff = repItems.map((r, j) => j).filter(j => !usati.has(j) && /^diffus[oi] su TAP$/.test(repItems[j].loc));
+      if(diff.length){
+        diff.forEach(j => usati.add(j));
+        const nomi = diff.flatMap(j => repItems[j].nomi);
+        const parola = diff.length === 1 ? repItems[diff[0]].loc.split(' ')[0] : 'diffusi';
+        return `${frag} con ${joinIt(nomi)} ${parola} su TAP`;
+      }
+    }
     const idx = repItems.findIndex((r, j) => !usati.has(j) && r.loc && r.loc === m.loc);
     if(idx === -1){
       // reperto nello STESSO emitorace del MV ma su una parte soltanto della
