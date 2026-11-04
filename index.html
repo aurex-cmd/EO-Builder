@@ -17311,7 +17311,7 @@ function composeCoscienza(){
   // "tranquillo" deve sempre venire prima di "collaborante" nella frase, anche
   // se in UI "collaborante" è il primo chip del gruppo Atteggiamento
   const idxTranquillo = selected.findIndex(o => o.value === 'tranquillo');
-  const idxCollaborante = selected.findIndex(o => o.value === 'collaborante');
+  const idxCollaborante = selected.findIndex(o => o.value === 'collaborante' || o.value === 'parzialmente_collaborante');
   if(idxTranquillo > -1 && idxCollaborante > -1 && idxTranquillo > idxCollaborante){
     const tmp = selected[idxTranquillo];
     selected.splice(idxTranquillo, 1);
@@ -17328,7 +17328,7 @@ function composeCoscienza(){
   // all'elenco — "rallentato ma tranquillo e collaborante", non
   // "collaborante e rallentato ma tranquillo". Vale anche col solo
   // collaborante: "rallentato ma collaborante"
-  const MA_POSITIVI = ['tranquillo', 'collaborante'];
+  const MA_POSITIVI = ['tranquillo', 'collaborante', 'parzialmente_collaborante'];
   const positivi = selected.filter(o => MA_POSITIVI.includes(o.value));
   const partners = selected.filter(o => TRANQUILLO_PARTNERS.includes(o.value));
   const partner = positivi.length ? partners[partners.length - 1] : null;
