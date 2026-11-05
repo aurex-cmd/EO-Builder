@@ -24593,6 +24593,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .m-dim-vuoto-ico svg{ width:32px; height:32px; }
   .m-dim-vuoto-t{ margin:0; font-size:17px; font-weight:700; color:var(--m-ink); letter-spacing:-.01em; }
   .m-dim-vuoto-d{ margin:6px 0 16px; max-width:260px; font-size:14.5px; line-height:1.45; color:var(--m-muted); }
+  .m-dim-vuoto-d:last-child{ margin-bottom:0; }
   .m-dim-vuoto-es{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
   .m-dim-vuoto-es span{ padding:6px 11px; border-radius:999px; background:var(--m-box); font-size:13px; color:var(--m-ink-2); font-style:italic; }
   html[data-m-tema="scuro"] .m-dim-vuoto-ico{ background:color-mix(in srgb, var(--m-teal) 18%, transparent); }
@@ -25490,10 +25491,12 @@ function disegnaMappa(){
 // vista finale e si parte dalle posizioni di prima)
 const VOLO = 'transform .5s cubic-bezier(.22,.8,.24,1), opacity .35s';
 function posizioni(sel){ const m = new Map(); document.querySelectorAll(sel).forEach(x => m.set(x.dataset.n, x.getBoundingClientRect())); return m; }
-function vola(el, da, a){
+// ritardo: i letti partono uno dopo l'altro (40 ms, fino al settimo), come
+// quando si entra nel settore direttamente dalla home
+function vola(el, da, a, ritardo = 0){
   el.style.transition = 'none'; el.style.transformOrigin = '0 0';
   el.style.transform = `translate(${da.left - a.left}px, ${da.top - a.top}px) scale(${da.width / a.width}, ${da.height / a.height})`;
-  return () => { el.style.transition = VOLO; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; el.style.transformOrigin = ''; }, 520); };
+  return () => { el.style.transition = VOLO; el.style.transitionDelay = ritardo + 'ms'; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; el.style.transformOrigin = ''; }, 520 + ritardo); };
 }
 function zoomSettore(s, blocco){
   const box = $m('#m-mappa'); if(!box || box.classList.contains('m-zoom')) return;
@@ -25504,7 +25507,8 @@ function zoomSettore(s, blocco){
     const v = $m('#m-vista'); v.classList.add('m-quieta');
     vSettore();
     const avvia = [];
-    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect())); });
+    let k = 0;
+    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect(), Math.min(k++, 7) * 40)); });
     // il fondo della scheda: dal riquadro del settore alla sua misura
     const c = $m('.m-set-carta');
     if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
@@ -25705,7 +25709,10 @@ function vAggCons(){
     // senza i ricoveri di oggi: hanno regole loro e non passano dalle consegne
     const ric = new Set(ricoveratiEO());
     const entries = ordinaPazientiPerLetto(schedeConDatiPerGiorno(false), true).filter(([, q]) => !ric.has(q.name));
-    if(!entries.length){ box.innerHTML = '<p class="m-aggcons-vuoto">Nessun diario scritto oggi: le consegne si aggiornano a fine giro.</p>'; return; }
+    // vuoto: lo stesso riquadro del Calendario dimissioni senza dimissioni
+    if(!entries.length){ box.innerHTML = `<div class="m-dim-vuoto"><span class="m-dim-vuoto-ico">${ICON.consegne}</span>
+      <p class="m-dim-vuoto-t">Nessun diario scritto oggi</p>
+      <p class="m-dim-vuoto-d">Le consegne si aggiornano a fine giro: quando scrivi i diari di oggi, qui trovi le novità già abbreviate.</p></div>`; return; }
     renderAggiornaConsegne(box, entries);
   });
   // un tocco sulla richiesta in giallo la copia (la stessa copia dell'icona,
