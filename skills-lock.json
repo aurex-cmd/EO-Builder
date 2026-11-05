@@ -6,6 +6,18 @@
       "sourceType": "github",
       "skillPath": "skills/taste-skill/SKILL.md",
       "computedHash": "69021ac7e671c0c0d85d65b570003cef360b1c296323fa28c042884e146478ca"
+    },
+    "transitions-dev": {
+      "source": "Jakubantalik/transitions.dev",
+      "sourceType": "github",
+      "skillPath": "skills/transitions-dev/SKILL.md",
+      "computedHash": "c7f9b40c6676ecc6d890db4ffecafa1ddebdb4ebaed3098521928e5115bd871f"
+    },
+    "transitions-polish": {
+      "source": "Jakubantalik/transitions.dev",
+      "sourceType": "github",
+      "skillPath": "skills/transitions-polish/SKILL.md",
+      "computedHash": "3f0630020cdfd0ea3d582ac45201c1ad4bced2ef7d0a0145d4cc81ad25f57ec3"
     }
   }
 }
