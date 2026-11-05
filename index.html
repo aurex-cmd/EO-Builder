@@ -24131,8 +24131,12 @@ function editorLettereSvuota(){
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
   #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) .48s both; }
   @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
-  .m-mappa.m-ritorno .m-zona{ animation:m-compare .35s ease-out both; }
-  .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
+  /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
+     volano), gli altri entrano a cascata come all'apertura della mappa */
+  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-zona-entra .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 60ms); }
+  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo) .m-mini{ animation:m-mini-entra .32s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 200ms + min(var(--j), 10) * 16ms); }
+  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo) .m-zona-t small{ animation:m-conto-entra .3s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 360ms); }
+  #m-vista .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
   .m-rep-home{ position:relative; }
   /* la scritta "Reparto · Settore" più grande; la scheda resta com'è */
@@ -25545,7 +25549,8 @@ function tornaMappa(){
   $m('#m-mappa').classList.add('m-ritorno');
   void document.body.offsetWidth;
   requestAnimationFrame(() => avvia.forEach(f => f()));
-  setTimeout(() => { const m = $m('#m-mappa'); if(m) m.classList.remove('m-ritorno'); }, 600);
+  // la cascata degli altri settori dura fino a un secondo
+  setTimeout(() => { const m = $m('#m-mappa'); if(m) m.classList.remove('m-ritorno'); }, 1100);
 }
 // subito: la pillola appare già al suo posto (un selettore appena
 // disegnato), senza scorrere da sinistra
