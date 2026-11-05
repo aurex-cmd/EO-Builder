@@ -24166,8 +24166,17 @@ function editorLettereSvuota(){
   .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .m-mappa.m-zoom :is(.m-mappa-rep, .m-mappa-togli){ opacity:0; transition:opacity .2s; }
   .m-zona{ position:relative; display:flex; flex-direction:column; gap:9px; padding:11px 10px 12px; border:1px solid var(--m-line); border-radius:16px; background:#fff; font:inherit; color:var(--m-ink); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 40ms + 80ms); }
+    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-zona-entra .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 60ms); }
   #m-vista.m-quieta .m-zona{ animation:none; }
+  /* entrata della mappa a cascata: ogni settore sale dal fondo sfocato, poi
+     si riempie dei suoi letti (uno dopo l'altro) e per ultimo il conteggio.
+     Riempimento "backwards": finita l'entrata non resta niente (né filtro né
+     transform), così il tocco, lo zoom e il ritorno lavorano come prima */
+  @keyframes m-zona-entra{ from{ opacity:0; transform:translateY(14px) scale(.96); filter:blur(3px); } to{ opacity:1; transform:none; filter:none; } }
+  @keyframes m-mini-entra{ from{ opacity:0; transform:scale(.6); } }
+  @keyframes m-conto-entra{ from{ opacity:0; transform:translateY(4px); } }
+  #m-vista:not(.m-quieta) .m-mappa:not(.m-ritorno) .m-zona .m-mini{ animation:m-mini-entra .32s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 200ms + min(var(--j), 10) * 16ms); }
+  #m-vista:not(.m-quieta) .m-mappa:not(.m-ritorno) .m-zona .m-zona-t small{ animation:m-conto-entra .3s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 360ms); }
   .m-zona:active{ transform:scale(.97); }
   .m-zona{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .m-zona.m-premuto{ border-color:var(--m-rosso); box-shadow:inset 0 0 0 1.5px var(--m-rosso); transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
@@ -25445,7 +25454,7 @@ function settoriMappa(){
 function htmlZona(g, k, azione){
   const diari = false, vu = lettiVuoti();
   let n = 0, f = 0, dc = 0;
-  const mini = g.letti.map(([nome, et, ap]) => {
+  const mini = g.letti.map(([nome, et, ap], j) => {
     const i = infoLetto(nome), vuoto = !ap && !i.occupato && vu[nome];
     if(diari){ if(i.diOggi){ n++; if(i.copiato) f++; } }
     else if(ap || i.occupato || !vuoto){ n++; if(i.vistoOggi){ f++; if(!i.copiato) dc++; } }
@@ -25454,7 +25463,7 @@ function htmlZona(g, k, azione){
     // in alto; solo nel settore selezionato
     const bas = g.s !== M.settore ? [] : [i.pall.esamiDomani && 'e', (i.pall.dimOggi || i.pall.dimDomani) && 'd'].filter(Boolean);
     const sotto = bas.length ? `<span class="m-mini-bas">${bas.map(c => `<i class="m-pal ${c}"></i>`).join('')}</span>` : '';
-    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" data-n="${esc(nome)}">${esc(et)}${cons}${sotto}</span>`;
+    return `<span class="m-mini ${classiLetto(i)}${i.copiato ? ' m-copiato' : ''}${vuoto ? ' m-vuoto' : ''}${ap ? ' m-mini-ap' : ''}" style="--j:${j}" data-n="${esc(nome)}">${esc(et)}${cons}${sotto}</span>`;
   }).join('');
   const conto = diari ? (n ? `${f}/${n} copiati` : 'nessun diario') : `${f}/${n} visti`;
   return { n, f, dc, html:`<button class="m-zona${g.s === RIC ? ' m-zona-ric' : ''}${g.s === M.settore ? ' m-ultimo' : ''}" style="--i:${k}" data-m="${azione}" data-s="${esc(g.s)}" aria-label="${esc(g.nome)}: ${conto}">
