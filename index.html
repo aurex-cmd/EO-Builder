@@ -23269,6 +23269,9 @@ function editorLettereSvuota(){
   .m-aiuto .m-ok{ border:0; background:none; padding:0 0 0 6px; margin-left:1px; border-left:1px solid var(--m-line); color:var(--m-faint); font-weight:500; font-size:12px; line-height:1; cursor:pointer; transition:color .2s, transform .15s var(--m-molla); }
   .m-aiuto .m-ok:active{ transform:scale(.85); color:var(--m-teal); }
   .m-aiuto.m-chiusa{ opacity:0; transform:scale(.85); max-width:0; padding-left:0; padding-right:0; margin-right:-6px; }
+  .m-aiuto em{ display:inline-block; }
+  .m-aiuto em.m-cambia{ animation:m-dato-cambia .3s ease-in-out backwards; }
+  @keyframes m-dato-cambia{ from{ opacity:0; transform:translateY(4px); filter:blur(2px); } to{ opacity:1; transform:none; filter:none; } }
   .m-aiuto.m-nuovo, .m-pal.m-nuovo{ animation:m-scelto .45s var(--m-molla); }
   textarea.m-testo{ display:block; width:100%; border:0; background:transparent; padding:0; margin:0; font:inherit; font-size:15px; line-height:1.6; color:var(--m-ink); resize:none; overflow:hidden; min-height:1.6em; box-shadow:none; }
   textarea.m-testo:focus{ outline:none; }
@@ -23574,6 +23577,11 @@ function editorLettereSvuota(){
   .m-ingr .m-sh{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:var(--m-ink-2); }
   .m-ingr svg{ width:20px; height:20px; flex:none; color:var(--m-muted); }
   .m-ingr .m-sn{ display:flex; align-items:baseline; gap:5px; margin-top:auto; padding-top:14px; font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .m-cifra{ display:inline-block; }
+  .m-cifra.m-cifra-sale{ animation:m-cifra-sale .5s var(--m-molla) .25s backwards; }
+  .m-cifra.m-cifra-scende{ animation:m-cifra-scende .5s var(--m-molla) .25s backwards; }
+  @keyframes m-cifra-sale{ from{ opacity:0; transform:translateY(.5em); filter:blur(2px); } to{ opacity:1; transform:none; filter:none; } }
+  @keyframes m-cifra-scende{ from{ opacity:0; transform:translateY(-.5em); filter:blur(2px); } to{ opacity:1; transform:none; filter:none; } }
   .m-ingr .m-sn small{ font-size:13px; font-weight:500; letter-spacing:0; color:var(--m-muted); }
   .m-ingr .m-ss{ margin-top:2px; font-size:13px; color:var(--m-muted); }
   .m-ingr:not(:has(.m-sn)) .m-ss{ margin-top:auto; }
@@ -25253,6 +25261,29 @@ function vHome(){
       <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
       <div class="m-home-info"><p><b>EO Pocket</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
+  animaNumeroHome(sett || '');
+}
+
+// NUMERO DELLA HOME CHE CAMBIA: tornando alla home dopo aver visto un
+// paziente, le cifre cambiate del numero grande escono e rientrano con un
+// piccolo scorrimento sfocato (dal basso se il numero sale, dall'alto se
+// scende), così si vede subito cos'è cambiato. Solo se lo stesso riquadro
+// (stesso settore) aveva un altro numero l'ultima volta
+let numeroHomePrima = null;
+function animaNumeroHome(chiave){
+  const sn = $m('#m-home-giu .m-sn'); if(!sn || !sn.firstChild || sn.firstChild.nodeType !== 3){ numeroHomePrima = null; return; }
+  const ora = sn.firstChild.nodeValue, prima = numeroHomePrima;
+  numeroHomePrima = { chiave, n:ora };
+  if(!prima || prima.chiave !== chiave || prima.n === ora) return;
+  const verso = Number(ora) >= Number(prima.n) ? 'm-cifra-sale' : 'm-cifra-scende';
+  // cifre allineate a destra: cambia solo chi è diverso (9 → 10: tutte e due)
+  const vecchie = prima.n.padStart(ora.length, ' ');
+  sn.firstChild.replaceWith(...[...ora].map((c, k) => {
+    const el = document.createElement('span');
+    el.className = 'm-cifra' + (c !== vecchie[k] ? ' ' + verso : '');
+    el.textContent = c;
+    return el;
+  }));
 }
 
 /* ---------- strumenti ---------- */
@@ -26022,6 +26053,9 @@ function disegnaAiuti(primaVolta, soloMemoria){
   const ora = voci.map(v => v.k).join('|');
   if(box.dataset.ora === ora) return true;
   const prima = new Set([...box.children].map(x => x.dataset.k));
+  // testo di prima di ogni etichetta: se cambia solo il dato ("I g" → "III
+  // gg", "oggi" → "1 g") il dato nuovo entra con una breve sfocatura
+  const testiPrima = new Map([...box.children].map(x => [x.dataset.k, (x.querySelector('em') || {}).textContent]));
   const eraVuoto = box.hidden || !box.children.length;
   box.dataset.ora = ora;
   if(!voci.length && !eraVuoto && !primaVolta){ richiudiEtichette(box, () => { if(!box.dataset.ora) box.innerHTML = ''; }); return true; }
@@ -26030,7 +26064,11 @@ function disegnaAiuti(primaVolta, soloMemoria){
   box.hidden = !voci.length;
   // comparsi a scheda già aperta: la riga si apre piano invece di spingere giù il testo di colpo
   if(eraVuoto && voci.length && !soloMemoria){ box.classList.remove('m-apre'); void box.offsetWidth; box.classList.add('m-apre'); }
-  else if(!primaVolta) [...box.children].forEach(x => { if(!prima.has(x.dataset.k)) x.classList.add('m-nuovo'); });
+  else if(!primaVolta) [...box.children].forEach(x => {
+    if(!prima.has(x.dataset.k)){ x.classList.add('m-nuovo'); return; }
+    const em = x.querySelector('em');
+    if(em && testiPrima.get(x.dataset.k) !== undefined && testiPrima.get(x.dataset.k) !== em.textContent) em.classList.add('m-cambia');
+  });
   return true;
 }
 function aggiornaCopia(copiato){
