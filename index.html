@@ -7303,6 +7303,15 @@ function segnaEoCopiatoNelRicovero(testo){
   if(esameObiettivoInlineAperto && ricoveroIdEsameObiettivoInline) eoCopiatoNelRicovero[ricoveroIdEsameObiettivoInline] = (testo || '').trim();
 }
 
+// l'esame obiettivo del ricovero è stato scritto a mano se è diverso
+// dall'ultimo testo messo lì dai tag (esameObiettivoDaiTag)
+function eoRicoveroScrittoAMano(rec){
+  const t = (rec.esameObiettivo || '').trim();
+  if(!t) return false;
+  // mai aperto dai tag ma già scritto: incollato a mano
+  if(rec.esameObiettivoDaiTag === undefined) return !rec.esameObiettivoPatientId;
+  return t !== (rec.esameObiettivoDaiTag || '').trim();
+}
 function collegaEsameObiettivo(id){
   const list = loadRicoveri();
   const idx = list.findIndex(r => r.id === id);
@@ -7343,8 +7352,21 @@ function collegaEsameObiettivo(id){
 
   const testo = getRefertoFor(patients[patientId].state);
   const esameObiettivoPrima = list[idx].esameObiettivo;
-  list[idx].esameObiettivo = testo;
+  const scrittoAMano = eoRicoveroScrittoAMano(list[idx]);
   list[idx].esameObiettivoPatientId = patientId;
+  // testo corretto o incollato a mano nel box del ricovero: resta quello
+  // (prima, chiudendo l'esame con Fatto, tornava il testo dei tag). I tag
+  // tornano a scriverlo solo se il box viene svuotato
+  if(scrittoAMano){
+    if(list[idx].esameObiettivoDaiTag === undefined) list[idx].esameObiettivoDaiTag = '';
+    saveRicoveri(list);
+    ricoveriAperti.add(id);
+    renderRicoveriLista();
+    renderWardMap();
+    return;
+  }
+  list[idx].esameObiettivo = testo;
+  list[idx].esameObiettivoDaiTag = testo;
   // copiato da dentro l'esame obiettivo (Copia referto) e non più cambiato:
   // la voce resta "copiata"; se invece il testo è cambiato, non lo è più
   const copiatoDentro = eoCopiatoNelRicovero[id];
@@ -7428,8 +7450,9 @@ function aggiornaEoRicoveroDalVivo(){
     const list = loadRicoveri(), idx = list.findIndex(r => r.id === id);
     if(idx === -1 || list[idx].esameObiettivoPatientId !== currentPatientId) return;
     const testo = getRefertoFor(state);
-    if(list[idx].esameObiettivo === testo) return;
+    if(list[idx].esameObiettivo === testo || eoRicoveroScrittoAMano(list[idx])) return;
     list[idx].esameObiettivo = testo;
+    list[idx].esameObiettivoDaiTag = testo;
     // copiato da dentro l'esame e non più cambiato: resta "copiato"
     if(list[idx].copiati){ const c = eoCopiatoNelRicovero[id]; list[idx].copiati.esameObiettivo = c !== undefined && c === (testo || '').trim(); }
     saveRicoveri(list);
