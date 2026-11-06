@@ -24294,8 +24294,7 @@ function editorLettereSvuota(){
   .m-rep-vitali{ display:flex; width:fit-content; margin:22px auto 0; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-notte); margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:11px 9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(min(var(--i), 7) * 40ms + 120ms); }
-  @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-raduna .6s cubic-bezier(.22,1,.36,1) .12s backwards; }
   .m-tl:active{ transform:scale(.94); }
   .m-tl.m-oggi-l{ background:var(--m-l-visto); }
   .m-tl.m-recente{ background:var(--m-l-recente); }
@@ -25528,8 +25527,9 @@ function disegnaMappa(){
 }
 // il centro verso cui si radunano i settori (quello della prima schermata
 // della mappa): per ogni riquadro, la distanza da lì
-function preparaMazzo(box){
-  const zone = [...box.querySelectorAll('.m-zona')]; if(!zone.length) return;
+// (anche i letti del settore verso il centro della loro griglia)
+function preparaMazzo(box, sel = '.m-zona'){
+  const zone = [...box.querySelectorAll(sel)]; if(!zone.length) return;
   const b = box.getBoundingClientRect();
   const cx = b.left + b.width / 2, cy = b.top + Math.min(b.height, 380) / 2;
   zone.forEach(z => {
@@ -25638,6 +25638,7 @@ function disegnaLetti(appena){
   if(ric){
     const nomi = ricoveratiEO();
     el.innerHTML = nomi.map((n, k) => tileLetto(n, inizialiLetto(n), k, appena)).join('');
+    preparaMazzo(el, '.m-tl');
     anelloGiro(nomi.map(n => infoLetto(n)), 'Nessun ricoverato');
     disegnaFareSettore();
     return;
@@ -25650,6 +25651,7 @@ function disegnaLetti(appena){
   el.innerHTML = letti.map((n, k) => tileLetto(bedName(n), etichettaLetto(n), k, appena)).join('')
     + app.map((nome, k) => tileLetto(nome, inizialiLetto(nome), letti.length + k, appena, true)).join('')
     + `<div class="m-tl m-tl-nuovo" style="--i:${Math.min(letti.length + app.length, 20)}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}<span class="m-gg">appoggio</span></div>`;
+  preparaMazzo(el, '.m-tl');
   // anello: i letti visti oggi tra tutti quelli del settore (appoggi
   // compresi), tolti quelli segnati vuoti
   const vu = lettiVuoti();
