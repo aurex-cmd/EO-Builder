@@ -24140,10 +24140,8 @@ function editorLettereSvuota(){
   #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) .48s both; }
   @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
-     volano), gli altri entrano a cascata come all'apertura della mappa */
-  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-zona-entra .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 60ms); }
-  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo) .m-mini{ animation:m-mini-entra .32s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 200ms + min(var(--j), 10) * 16ms); }
-  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo) .m-zona-t small{ animation:m-conto-entra .3s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 360ms); }
+     volano), gli altri vengono distribuiti dal mazzo come all'apertura */
+  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-mazzo .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 6) * 80ms + 140ms); }
   #m-vista .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
   .m-rep-home{ position:relative; }
@@ -24178,17 +24176,14 @@ function editorLettereSvuota(){
   .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .m-mappa.m-zoom :is(.m-mappa-rep, .m-mappa-togli){ opacity:0; transition:opacity .2s; }
   .m-zona{ position:relative; display:flex; flex-direction:column; gap:9px; padding:11px 10px 12px; border:1px solid var(--m-line); border-radius:16px; background:#fff; font:inherit; color:var(--m-ink); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-zona-entra .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 60ms); }
+    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-mazzo .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 6) * 80ms + 140ms); }
   #m-vista.m-quieta .m-zona{ animation:none; }
-  /* entrata della mappa a cascata: ogni settore sale dal fondo sfocato, poi
-     si riempie dei suoi letti (uno dopo l'altro) e per ultimo il conteggio.
-     Riempimento "backwards": finita l'entrata non resta niente (né filtro né
-     transform), così il tocco, lo zoom e il ritorno lavorano come prima */
-  @keyframes m-zona-entra{ from{ opacity:0; transform:translateY(14px) scale(.96); filter:blur(3px); } to{ opacity:1; transform:none; filter:none; } }
-  @keyframes m-mini-entra{ from{ opacity:0; transform:scale(.6); } }
-  @keyframes m-conto-entra{ from{ opacity:0; transform:translateY(4px); } }
-  #m-vista:not(.m-quieta) .m-mappa:not(.m-ritorno) .m-zona .m-mini{ animation:m-mini-entra .32s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 200ms + min(var(--j), 10) * 16ms); }
-  #m-vista:not(.m-quieta) .m-mappa:not(.m-ritorno) .m-zona .m-zona-t small{ animation:m-conto-entra .3s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 5) * 60ms + 360ms); }
+  /* entrata della mappa come un mazzo di carte: i settori partono tutti
+     impilati al centro (un po' ruotati, l'ultimo sotto) e vengono distribuiti
+     uno dopo l'altro al loro posto. --dx/--dy/--r li calcola preparaMazzo.
+     Riempimento "backwards": finita l'entrata non resta niente, così il
+     tocco, lo zoom e il ritorno lavorano come prima */
+  @keyframes m-mazzo{ from{ transform:translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--r, 0deg)) scale(.92); z-index:calc(20 - var(--i, 0)); } to{ transform:none; z-index:calc(20 - var(--i, 0)); } }
   .m-zona:active{ transform:scale(.97); }
   .m-zona{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .m-zona.m-premuto{ border-color:var(--m-rosso); box-shadow:inset 0 0 0 1.5px var(--m-rosso); transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
@@ -25528,6 +25523,20 @@ function disegnaMappa(){
   // il conto di ogni settore è già nel suo riquadro: qui solo i diari ancora da copiare
   const daCopiare = daCop;
   if(sub) sub.innerHTML = daCopiare ? `<b>${daCopiare}</b> diar${daCopiare === 1 ? 'io' : 'i'} da copiare · tocca un settore` : 'Tocca un settore';
+  preparaMazzo(box);
+}
+// il mazzo da cui escono i settori: al centro della prima schermata della
+// mappa; per ogni riquadro, la distanza dal mazzo e una piccola rotazione
+function preparaMazzo(box){
+  const zone = [...box.querySelectorAll('.m-zona')]; if(!zone.length) return;
+  const b = box.getBoundingClientRect();
+  const cx = b.left + b.width / 2, cy = b.top + Math.min(b.height, 380) / 2;
+  zone.forEach((z, k) => {
+    const r = z.getBoundingClientRect();
+    z.style.setProperty('--dx', Math.round(cx - (r.left + r.width / 2)) + 'px');
+    z.style.setProperty('--dy', Math.round(cy - (r.top + r.height / 2)) + 'px');
+    z.style.setProperty('--r', [-5, 4, -2, 6, -4, 3][k % 6] + 'deg');
+  });
 }
 // scelta del settore dalla mappa: gli altri settori svaniscono, poi ogni
 // letto piccolo vola e cresce fino al suo posto nel settore aperto, mentre
