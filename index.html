@@ -24140,8 +24140,8 @@ function editorLettereSvuota(){
   #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) .48s both; }
   @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
-     volano), gli altri vengono distribuiti dal mazzo come all'apertura */
-  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-mazzo .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 6) * 80ms + 140ms); }
+     volano), gli altri arrivano da fuori e si radunano come all'apertura */
+  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-raduna .6s cubic-bezier(.22,1,.36,1) .1s backwards; }
   #m-vista .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
   .m-rep-home{ position:relative; }
@@ -24176,14 +24176,15 @@ function editorLettereSvuota(){
   .m-mappa-togli button{ border:0; background:none; padding:10px; font:inherit; font-size:13px; color:var(--m-muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .m-mappa.m-zoom :is(.m-mappa-rep, .m-mappa-togli){ opacity:0; transition:opacity .2s; }
   .m-zona{ position:relative; display:flex; flex-direction:column; gap:9px; padding:11px 10px 12px; border:1px solid var(--m-line); border-radius:16px; background:#fff; font:inherit; color:var(--m-ink); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-mazzo .5s var(--m-molla) backwards; animation-delay:calc(min(var(--i), 6) * 80ms + 140ms); }
+    transition:transform .43s var(--m-molla), opacity .25s, box-shadow .3s, border-color .3s; animation:m-raduna .6s cubic-bezier(.22,1,.36,1) .1s backwards; }
   #m-vista.m-quieta .m-zona{ animation:none; }
-  /* entrata della mappa come un mazzo di carte: i settori partono tutti
-     impilati al centro (un po' ruotati, l'ultimo sotto) e vengono distribuiti
-     uno dopo l'altro al loro posto. --dx/--dy/--r li calcola preparaMazzo.
-     Riempimento "backwards": finita l'entrata non resta niente, così il
-     tocco, lo zoom e il ritorno lavorano come prima */
-  @keyframes m-mazzo{ from{ transform:translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--r, 0deg)) scale(.92); z-index:calc(20 - var(--i, 0)); } to{ transform:none; z-index:calc(20 - var(--i, 0)); } }
+  /* entrata della mappa come la schermata Home dei primi iPhone: i settori
+     arrivano tutti insieme da fuori, ciascuno dalla sua parte (sopra a
+     sinistra, sotto a destra...), un po' più grandi e trasparenti, e si
+     radunano verso il centro fino al loro posto. --dx/--dy (dal riquadro al
+     centro della mappa) li calcola preparaMazzo. Riempimento "backwards":
+     finita l'entrata non resta niente */
+  @keyframes m-raduna{ from{ opacity:0; transform:translate(calc(var(--dx, 0px) * -1.4), calc(var(--dy, 0px) * -1.4)) scale(1.25); } 40%{ opacity:1; } to{ opacity:1; transform:none; } }
   .m-zona:active{ transform:scale(.97); }
   .m-zona{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .m-zona.m-premuto{ border-color:var(--m-rosso); box-shadow:inset 0 0 0 1.5px var(--m-rosso); transition:border-color .55s linear .1s, box-shadow .55s linear .1s; }
@@ -25525,17 +25526,16 @@ function disegnaMappa(){
   if(sub) sub.innerHTML = daCopiare ? `<b>${daCopiare}</b> diar${daCopiare === 1 ? 'io' : 'i'} da copiare · tocca un settore` : 'Tocca un settore';
   preparaMazzo(box);
 }
-// il mazzo da cui escono i settori: al centro della prima schermata della
-// mappa; per ogni riquadro, la distanza dal mazzo e una piccola rotazione
+// il centro verso cui si radunano i settori (quello della prima schermata
+// della mappa): per ogni riquadro, la distanza da lì
 function preparaMazzo(box){
   const zone = [...box.querySelectorAll('.m-zona')]; if(!zone.length) return;
   const b = box.getBoundingClientRect();
   const cx = b.left + b.width / 2, cy = b.top + Math.min(b.height, 380) / 2;
-  zone.forEach((z, k) => {
+  zone.forEach(z => {
     const r = z.getBoundingClientRect();
     z.style.setProperty('--dx', Math.round(cx - (r.left + r.width / 2)) + 'px');
     z.style.setProperty('--dy', Math.round(cy - (r.top + r.height / 2)) + 'px');
-    z.style.setProperty('--r', [-5, 4, -2, 6, -4, 3][k % 6] + 'deg');
   });
 }
 // scelta del settore dalla mappa: gli altri settori svaniscono, poi ogni
