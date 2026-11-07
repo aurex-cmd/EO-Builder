@@ -7884,7 +7884,7 @@ function renderStatisticheRicoveri(el, list){
     [record ? fmt(record[1], 0) : '–', 'record in un turno', record ? nomeTurnoGuardia(record[0]) : '']
   ]);
 
-  // mesi: teal il mese in corso, più chiaro il mese record
+  // mesi: teal il mese in corso, più marcato il mese record (più scuro nel tema chiaro, più chiaro nello scuro)
   const cMesi = card('Ricoveri per mese');
   const maxPassati = Math.max(0, ...mesi.slice(0, -1).map(m => m.n));
   mesi.forEach((m, i) => {
@@ -7892,7 +7892,7 @@ function renderStatisticheRicoveri(el, list){
     else if(m.n && m.n === maxPassati) m.colore = 'var(--st-bar-hi)';
   });
   colonne(cMesi, mesi, ['ricovero', 'ricoveri']);
-  cMesi.appendChild(crea('div', 'ric-stat-nota', 'In teal il mese in corso; più chiaro il mese record.'));
+  cMesi.appendChild(crea('div', 'ric-stat-nota', 'In teal il mese in corso; più marcato il mese record.'));
 
   // giorni della settimana: il weekend più chiaro
   const cSett = card('Per giorno della settimana');
