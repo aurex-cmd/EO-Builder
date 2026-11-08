@@ -23192,7 +23192,6 @@ function editorLettereSvuota(){
   html[data-m-orig] :is(.m-segue, .m-rilascia){ background:var(--page) !important; }
   .m-marchio{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:15px; letter-spacing:-.01em; }
   .m-marchio i{ width:32px; height:32px; border-radius:10px; background:var(--m-notte); color:var(--m-bg); display:grid; place-items:center; font-style:normal; font-size:13px; font-weight:800; }
-  .m-data{ font-size:13px; color:var(--m-muted); }
 
   .m-main{ max-width:560px; margin:0 auto; padding:4px 16px 120px; }
   .m-vista{ display:flex; flex-direction:column; gap:14px; }
@@ -23598,10 +23597,8 @@ function editorLettereSvuota(){
   /* il nome del reparto alla stessa altezza dei titoli delle altre viste (Settori, …) */
   .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
   .m-home-su .m-sub{ margin-top:-10px; font-size:15px; }
-  /* omino della connessione, in alto a destra accanto al nome del reparto */
-  .m-home-su{ position:relative; }
-  .m-h1.m-h1-home{ padding-right:44px; }
-  .m-connessione{ position:absolute; top:6px; right:0; width:34px; height:34px; padding:0; border:0; border-radius:50%; display:grid; place-items:center; background:var(--m-riq); box-shadow:var(--m-riq-ombra); color:var(--m-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--m-molla); }
+  /* omino (o iniziali) dell'account, in alto a destra sulla riga del marchio */
+  .m-connessione{ position:relative; justify-self:end; width:34px; height:34px; padding:0; border:0; border-radius:50%; display:grid; place-items:center; background:var(--m-riq); box-shadow:var(--m-riq-ombra); color:var(--m-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--m-molla); }
   .m-connessione::after{ content:""; position:absolute; inset:-5px; }
   .m-connessione:active{ transform:scale(.92); }
   .m-connessione svg{ width:18px; height:18px; }
@@ -24852,7 +24849,7 @@ function barra(titolo, azione){
   const bar = $m('#m-bar'); bar.classList.toggle('m-home', M.vista === 'home');
   bar.classList.remove('m-scorsa'); requestAnimationFrame(barraScorsa);
   $m('#m-bar-in').innerHTML = M.vista === 'home'
-    ? `<span class="m-marchio"><i>EO</i>EO Pocket</span><span class="m-data">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</span>`
+    ? `<span class="m-marchio"><i>EO</i>EO Pocket</span>${htmlConnessione()}`
     : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
 }
 
@@ -24879,7 +24876,7 @@ function contiHome(){
   return { visti, copiati, copiatiCons, ricDa, ricCop };
 }
 // lo stato dell'accesso, letto dal riquadro della sincronizzazione dell'app
-// in alto a destra nella home: l'omino dell'account col pallino della
+// in alto a destra nella home, sulla riga del marchio: l'omino dell'account col pallino della
 // connessione (verde connesso, grigio no); tocca e apre Account, che non è
 // più tra le voci della home (sta in Strumenti)
 // da connessi, al posto dell'omino le iniziali, prese dall'email
@@ -25308,9 +25305,8 @@ function vHome(){
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
-      ${htmlConnessione()}
       <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
-      <p class="m-sub">Il giro di oggi</p>
+      <p class="m-sub">Il giro di oggi · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p>
     </div>
     <div class="m-home-giu" id="m-home-giu">
       <div class="m-schede m-schede-una">${reparto}</div>
