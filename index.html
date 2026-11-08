@@ -23605,8 +23605,9 @@ function editorLettereSvuota(){
   .m-connessione span{ font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--m-ink); }
   .m-connessione i{ position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:var(--m-faint); box-shadow:0 0 0 2px var(--m-fondo, var(--m-bg)); }
   .m-connessione.m-connesso i{ background:#3fae6a; }
-  .m-connessione.m-connesso{ background:var(--m-notte); box-shadow:none; color:#fff; }
-  .m-connessione.m-connesso span{ color:#fff; }
+  .m-connessione.m-connesso{ background:color-mix(in srgb, var(--m-notte) 16%, var(--m-fondo, var(--m-bg))); box-shadow:none; color:var(--m-link); }
+  .m-connessione.m-connesso span{ color:var(--m-link); }
+  html[data-m-tema="scuro"] .m-connessione.m-connesso{ background:color-mix(in srgb, var(--m-notte) 28%, var(--m-bg)); }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
   .m-ingr{ display:flex; flex-direction:column; min-height:140px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; }
   .m-ingr .m-sh{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:var(--m-ink-2); }
