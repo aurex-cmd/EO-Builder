@@ -23595,6 +23595,15 @@ function editorLettereSvuota(){
   /* il nome del reparto alla stessa altezza dei titoli delle altre viste (Settori, …) */
   .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
   .m-home-su .m-sub{ margin-top:-10px; font-size:15px; }
+  /* omino della connessione, in alto a destra accanto al nome del reparto */
+  .m-home-su{ position:relative; }
+  .m-h1.m-h1-home{ padding-right:44px; }
+  .m-connessione{ position:absolute; top:6px; right:0; width:34px; height:34px; padding:0; border:0; border-radius:50%; display:grid; place-items:center; background:var(--m-riq); box-shadow:var(--m-riq-ombra); color:var(--m-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--m-molla); }
+  .m-connessione::after{ content:""; position:absolute; inset:-5px; }
+  .m-connessione:active{ transform:scale(.92); }
+  .m-connessione svg{ width:18px; height:18px; }
+  .m-connessione i{ position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:var(--m-faint); box-shadow:0 0 0 2px var(--m-fondo, var(--m-bg)); }
+  .m-connessione.m-connesso i{ background:#3fae6a; }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
   .m-ingr{ display:flex; flex-direction:column; min-height:140px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; }
   .m-ingr .m-sh{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:var(--m-ink-2); }
@@ -24862,6 +24871,13 @@ function contiHome(){
   return { visti, copiati, copiatiCons, ricDa, ricCop };
 }
 // lo stato dell'accesso, letto dal riquadro della sincronizzazione dell'app
+// in alto a destra nella home: l'omino dell'account col pallino della
+// connessione (verde connesso, grigio no); tocca e apre Account, che non è
+// più tra le voci della home (sta in Strumenti)
+function htmlConnessione(){
+  const dentro = statoAccount() === 'Connesso';
+  return `<button class="m-connessione${dentro ? ' m-connesso' : ''}" data-m="pagina" data-p="account" aria-label="Account: ${dentro ? 'connesso' : 'non connesso'}">${ICON.account}<i></i></button>`;
+}
 function statoAccount(){
   const dentro = document.getElementById('sync-logged-in');
   return dentro && dentro.style.display !== 'none' ? 'Connesso' : 'Non connesso';
@@ -25266,10 +25282,10 @@ function vHome(){
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
-    + voce('data-m="pagina" data-p="account"', ICON.account, 'Account', statoAccount().toLowerCase())
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
+      ${htmlConnessione()}
       <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
       <p class="m-sub">Giro di oggi</p>
     </div>
@@ -25319,7 +25335,7 @@ function vStrumenti(){
     <p class="m-lbl">Clinici</p>
     <div class="m-righe">${righeApp('Clinici')}</div>
     <p class="m-lbl">Sistema</p>
-    <div class="m-righe">${rigaHome('impostazioni', 'Impostazioni', 'Tema, testo, esame e reparto')}${righeApp('Sistema', /impostazioni/)}</div>`;
+    <div class="m-righe">${rigaHome('account', 'Account', statoAccount() === 'Connesso' ? 'Connesso: dati sincronizzati' : 'Non connesso')}${rigaHome('impostazioni', 'Impostazioni', 'Tema, testo, esame e reparto')}${righeApp('Sistema', /impostazioni/)}</div>`;
   document.querySelectorAll('#m-vista .m-righe > .m-rigalink').forEach((el, k) => el.style.setProperty('--i', Math.min(k, 8)));
 }
 
@@ -27393,7 +27409,7 @@ new MutationObserver(() => {
 }).observe(document.getElementById('impostazioni-view'), { attributes:true, attributeFilter:['style', 'class'] });
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
-  const v = document.querySelector('.m-voce[data-p="account"] .m-vv'); if(v) v.textContent = statoAccount().toLowerCase();
+  const c = document.querySelector('.m-connessione'); if(c){ const dentro = statoAccount() === 'Connesso'; c.classList.toggle('m-connesso', dentro); c.setAttribute('aria-label', 'Account: ' + (dentro ? 'connesso' : 'non connesso')); }
   aggiornaScenaAccount(); aggiornaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
