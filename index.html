@@ -5473,7 +5473,10 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   'eo_minimal_settore_v1',
   // ...e il giorno in cui è stato scelto (Reparto va dritto al settore solo
   // se scelto oggi)
-  'eo_minimal_settore_il_v1'];
+  'eo_minimal_settore_il_v1',
+  // EO Pocket: il nome scritto in Account (le iniziali in alto nella home),
+  // lo stesso su tutti i dispositivi dell'account
+  'eo_minimal_nome_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -23987,6 +23990,10 @@ function editorLettereSvuota(){
   .m-acc-riga span{ color:var(--m-muted); flex:none; }
   .m-acc-riga b{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; color:var(--m-ink); }
   .m-acc-riga b.m-acc-errore{ color:var(--m-rosso); }
+  .m-acc-riga input{ flex:1; min-width:0; height:100%; border:0; background:none; padding:0; font:inherit; font-weight:600; color:var(--m-ink); text-align:right; }
+  .m-acc-riga input:focus{ outline:none; }
+  .m-acc-riga input::placeholder{ color:var(--m-faint); font-weight:500; }
+  label.m-acc-riga{ cursor:text; }
   html[data-ui="minimal"] .m-pagina .sync-box :is(#sync-logged-out .row, #sync-logged-in){ display:flex; flex-wrap:wrap; gap:8px; }
   html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-out .row{ margin-top:14px; }
   html[data-ui="minimal"] .m-pagina .sync-box #sync-logged-in[style*="none"]{ display:none !important; }
@@ -24877,8 +24884,14 @@ function contiHome(){
 // più tra le voci della home (sta in Strumenti)
 // da connessi, al posto dell'omino le iniziali, prese dall'email
 // dell'account: "au.guarnaccia@…" → AG, "mario@…" → M
+const MNOME_KEY = 'eo_minimal_nome_v1';
+function nomeAccount(){ try{ return (localStorage.getItem(MNOME_KEY) || '').trim(); } catch(e){ return ''; } }
 function inizialiAccount(){
   if(statoAccount() !== 'Connesso') return '';
+  // con il nome scritto in Account: la prima e l'ultima parola
+  // ("Maria Grazia Rossi" → MR); senza, dall'email
+  const nome = nomeAccount().split(/\s+/).map(x => x.replace(/[^a-zA-Zà-ùÀ-Ù']/g, '')).filter(Boolean);
+  if(nome.length) return (nome.length > 1 ? nome[0][0] + nome[nome.length - 1][0] : nome[0][0]).toUpperCase();
   const email = ((document.getElementById('sync-logged-in-text')?.textContent || '').match(/Connesso come (\S+)/) || [])[1] || '';
   const parti = email.split('@')[0].split(/[._\-+]+/).map(x => x.replace(/[^a-zA-Zà-ùÀ-Ù]/g, '')).filter(Boolean);
   return (parti.length > 1 ? parti[0][0] + parti[1][0] : (parti[0] || '').slice(0, 1)).toUpperCase();
@@ -27382,7 +27395,21 @@ statoAcc.innerHTML = '<b class="m-acc-t"></b><p class="m-acc-d"></p>';
 if(syncBox){ syncBox.prepend(scenaAccount, statoAcc); }
 const righeAcc = document.createElement('div');
 righeAcc.className = 'm-acc-righe';
-righeAcc.innerHTML = '<div class="m-acc-riga"><span>Account</span><b class="m-acc-email"></b></div><div class="m-acc-riga"><span>Sincronizzato</span><b class="m-acc-sync"></b></div>';
+righeAcc.innerHTML = '<label class="m-acc-riga"><span>Nome</span><input id="m-acc-nome" type="text" placeholder="Nome e cognome" autocomplete="name" autocapitalize="words" spellcheck="false"></label><div class="m-acc-riga"><span>Account</span><b class="m-acc-email"></b></div><div class="m-acc-riga"><span>Sincronizzato</span><b class="m-acc-sync"></b></div>';
+// il nome: le sue iniziali vanno nel tondo in alto nella home
+const campoNome = righeAcc.querySelector('#m-acc-nome');
+campoNome.value = nomeAccount();
+let timerNome = null;
+const salvaNome = () => {
+  clearTimeout(timerNome);
+  const v = campoNome.value.replace(/\s+/g, ' ').trim();
+  if(v === nomeAccount()) return;
+  setLocalAndCloud(MNOME_KEY, v);
+  const c = document.querySelector('.m-connessione'); if(c) c.innerHTML = dentroConnessione();
+};
+campoNome.addEventListener('input', () => { clearTimeout(timerNome); timerNome = setTimeout(salvaNome, 600); });
+campoNome.addEventListener('change', salvaNome);
+campoNome.addEventListener('keydown', e => { if(e.key === 'Enter') campoNome.blur(); });
 document.getElementById('sync-logged-in')?.prepend(righeAcc);
 const fa = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'adesso' : m < 60 ? `${m} min fa` : `${Math.floor(m / 60)} h fa`; };
 function aggiornaAccount(){
@@ -27392,6 +27419,7 @@ function aggiornaAccount(){
   statoAcc.querySelector('.m-acc-t').textContent = dentro ? 'Connesso' : 'Non connesso';
   statoAcc.querySelector('.m-acc-d').textContent = dentro ? 'Schede, diari e ricoveri sincronizzati su tutti i tuoi dispositivi.' : 'Senza account i dati restano solo su questo telefono.';
   if(!dentro) return;
+  if(document.activeElement !== campoNome) campoNome.value = nomeAccount();
   righeAcc.querySelector('.m-acc-email').textContent = (testo.match(/Connesso come (\S+)/) || [])[1] || '';
   const sync = righeAcc.querySelector('.m-acc-sync');
   sync.textContent = problema ? 'non riuscito, riprovo' : (typeof ultimoPullRiuscito !== 'undefined' && ultimoPullRiuscito ? fa(ultimoPullRiuscito) : 'in corso…');
