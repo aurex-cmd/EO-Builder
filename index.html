@@ -23602,6 +23602,7 @@ function editorLettereSvuota(){
   .m-connessione::after{ content:""; position:absolute; inset:-5px; }
   .m-connessione:active{ transform:scale(.92); }
   .m-connessione svg{ width:18px; height:18px; }
+  .m-connessione span{ font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--m-ink); }
   .m-connessione i{ position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:var(--m-faint); box-shadow:0 0 0 2px var(--m-fondo, var(--m-bg)); }
   .m-connessione.m-connesso i{ background:#3fae6a; }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
@@ -24874,9 +24875,18 @@ function contiHome(){
 // in alto a destra nella home: l'omino dell'account col pallino della
 // connessione (verde connesso, grigio no); tocca e apre Account, che non è
 // più tra le voci della home (sta in Strumenti)
+// da connessi, al posto dell'omino le iniziali, prese dall'email
+// dell'account: "au.guarnaccia@…" → AG, "mario@…" → M
+function inizialiAccount(){
+  if(statoAccount() !== 'Connesso') return '';
+  const email = ((document.getElementById('sync-logged-in-text')?.textContent || '').match(/Connesso come (\S+)/) || [])[1] || '';
+  const parti = email.split('@')[0].split(/[._\-+]+/).map(x => x.replace(/[^a-zA-Zà-ùÀ-Ù]/g, '')).filter(Boolean);
+  return (parti.length > 1 ? parti[0][0] + parti[1][0] : (parti[0] || '').slice(0, 1)).toUpperCase();
+}
+function dentroConnessione(){ const iz = inizialiAccount(); return (iz ? `<span>${esc(iz)}</span>` : ICON.account) + '<i></i>'; }
 function htmlConnessione(){
   const dentro = statoAccount() === 'Connesso';
-  return `<button class="m-connessione${dentro ? ' m-connesso' : ''}" data-m="pagina" data-p="account" aria-label="Account: ${dentro ? 'connesso' : 'non connesso'}">${ICON.account}<i></i></button>`;
+  return `<button class="m-connessione${dentro ? ' m-connesso' : ''}" data-m="pagina" data-p="account" aria-label="Account: ${dentro ? 'connesso' : 'non connesso'}">${dentroConnessione()}</button>`;
 }
 function statoAccount(){
   const dentro = document.getElementById('sync-logged-in');
@@ -27409,7 +27419,7 @@ new MutationObserver(() => {
 }).observe(document.getElementById('impostazioni-view'), { attributes:true, attributeFilter:['style', 'class'] });
 const syncDentro = document.getElementById('sync-logged-in');
 if(syncDentro) new MutationObserver(() => {
-  const c = document.querySelector('.m-connessione'); if(c){ const dentro = statoAccount() === 'Connesso'; c.classList.toggle('m-connesso', dentro); c.setAttribute('aria-label', 'Account: ' + (dentro ? 'connesso' : 'non connesso')); }
+  const c = document.querySelector('.m-connessione'); if(c){ const dentro = statoAccount() === 'Connesso'; c.classList.toggle('m-connesso', dentro); c.innerHTML = dentroConnessione(); c.setAttribute('aria-label', 'Account: ' + (dentro ? 'connesso' : 'non connesso')); }
   aggiornaScenaAccount(); aggiornaAccount();
 }).observe(syncDentro, { attributes:true, attributeFilter:['style'] });
 const impostazioniView = document.getElementById('impostazioni-view');
