@@ -23079,7 +23079,7 @@ function editorLettereSvuota(){
        visto/copiato teal, da copiare rame, consegnato azzurro, critico
        viola, allarme rosso), categorie (i pallini delle lettere) */
     --m-bg:#ffffff; --m-carta:#ffffff; --m-box:#f2f5f8; --m-hover:#f5f7fa; --m-line:#e1e7ee; --m-line-forte:#c9d3de;
-    --m-faint:#a7b3c2; --m-muted:#66778b; --m-ink-2:#45556a; --m-ink:#16243a; --m-sec:#e9edf2;
+    --m-faint:#a7b3c2; --m-muted:#58697d; --m-ink-2:#45556a; --m-ink:#16243a; --m-sec:#e9edf2;
     /* accento: i valori arrivano dal colore scelto (vedi data-m-pulsante) */
     --m-acc-l:#1f4e79; --m-acc-d:#2d6aa6; --m-acc-link-d:#8ab4e0;
     --m-notte:var(--m-acc-l); --m-notte-box:color-mix(in srgb, var(--m-notte) 10%, #fff); --m-link:var(--m-notte);
@@ -23097,7 +23097,7 @@ function editorLettereSvuota(){
        il viola resta solo ai critici */
     --m-l-base:#edf1f5; --m-l-visto:#9fd6cc; --m-l-recente:#bcd6f2; --m-l-vecchio:#d5dce5; --m-l-dacop:#f2b089; --m-l-cop:#a8d9cb; --m-l-critico:#e2d6f6;
     --m-home-a:#bcd2e8; --m-home-b:#f5cab0; --m-home-c:#cfe6df; --m-home-d:#e2d9f3; --m-home-e:#f3e2b0; --m-home-f:#e9edf2; --m-home-g:#f2cfd8; --m-home-sub:#3a4452;
-    --m-p-e:#d9695f; --m-p-d:#4a90d9; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
+    --m-p-e:#c0504a; --m-p-d:#3574bb; --m-p-v:#dba94a; --m-p-es:#b18cf0; --m-p-s:#3fb8c9; --m-p-c:#e08cc0;
     --m-atb0:#0e7571; --m-atb1:#e08a1e; --m-atb2:#d9534f;
     --m-sans:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --m-scheda:'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -23779,7 +23779,7 @@ function editorLettereSvuota(){
   .m-fare-r.m-fatta .m-voce > svg:first-child{ color:var(--m-teal); }
   .m-fare-r.m-fatta .m-voce .m-vv{ color:var(--m-teal); opacity:.8; }
   html[data-m-tema="scuro"] .m-fare-ok{ border-color:#3a4f6a; }
-  .m-voce{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s, transform .15s var(--m-molla); }
+  .m-voce{ display:flex; align-items:center; gap:12px; width:100%; min-height:44px; padding:12px 14px; border:0; border-top:1px solid var(--m-line); background:#fff; color:var(--m-ink); font:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; transition:background .15s, transform .15s var(--m-molla); }
   .m-voce:first-child{ border-top:0; }
   .m-voce > svg:first-child{ width:18px; height:18px; flex:none; color:var(--m-muted); }
   .m-voce .m-vn{ flex:none; }
@@ -23789,11 +23789,11 @@ function editorLettereSvuota(){
   .m-ingr:active{ transform:scale(.98); } .m-voce:active{ background:var(--m-hover); transform:scale(.99); }
   @media (hover:hover){ .m-voce:hover{ background:var(--m-hover); } }
   /* la nota sull'app, sempre in fondo alla home */
-  .m-home-info{ flex:none; margin-top:auto; padding-top:18px; font-size:9px; line-height:1.45; color:var(--m-muted); opacity:.85; }
+  .m-home-info{ flex:none; margin-top:auto; padding-top:18px; font-size:9px; line-height:1.45; color:var(--m-muted); }
   .m-home-info p{ margin:0; } .m-home-info b{ color:var(--m-ink-2); font-weight:700; }
   /* la nota giustificata; la sillabazione evita i buchi tra le parole */
   .m-home-info p:not(.m-firma){ text-align:justify; -webkit-hyphens:auto; hyphens:auto; }
-  .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-faint); }
+  .m-home-info .m-firma{ margin-top:6px; text-align:center; font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--m-muted); }
   #m-vista.m-ferma .m-rigalink{ animation:none; }
   .m-rigalink svg.m-ic-app{ width:24px; height:24px; color:var(--m-muted); flex:0 0 auto; margin:0 7px 0 1px; }
   .m-rigalink svg.m-ic-app .pieno{ fill:currentColor; stroke:none; opacity:.28; }
@@ -24251,7 +24251,7 @@ function editorLettereSvuota(){
   .m-mappa.m-diari .m-mini.m-copiato:not(.m-critico){ background:var(--m-l-cop); }
   .m-mappa.m-diari .m-mini:not(.m-oggi-l){ opacity:.4; }
   /* Visita: i letti coi loro colori; quelli senza niente da dire, tenui (come in Diari) */
-  .m-mappa:not(.m-diari) .m-mini:not(.m-oggi-l, .m-recente, .m-vecchio, .m-consegnato, .m-critico, .m-dimesso){ color:var(--m-muted); opacity:.55; }
+  .m-mappa:not(.m-diari) .m-mini:not(.m-oggi-l, .m-recente, .m-vecchio, .m-consegnato, .m-critico, .m-dimesso){ color:var(--m-muted); opacity:.8; }
   /* i settori ben visibili, in Visita e in Diari: bianchi, bordo appena
      accennato e un'ombra morbida che li stacca dal fondo (niente velo di
      colore: stonava col resto dell'app); lettera grande */
@@ -24277,11 +24277,11 @@ function editorLettereSvuota(){
   #m-rep-dx :is(.m-lbl-app, #m-appoggi){ display:none; }
   /* il "+" e "appoggio" uno sopra l'altro, centrati insieme nel riquadro */
   .m-tl-nuovo:not(.m-scrivi){ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
-  .m-tl.m-tl-nuovo .m-gg{ position:static; color:var(--m-faint); }
+  .m-tl.m-tl-nuovo .m-gg{ position:static; color:var(--m-muted); }
   .m-tl-nuovo.m-scrivi .m-gg{ display:none; }
   /* aree di tocco di almeno 44px dove l'aspetto resta piccolo */
   .m-rep-link{ position:relative; } .m-rep-link::after{ content:""; position:absolute; inset:-9px -4px; }
-  .m-togli::after{ content:""; position:absolute; inset:-10px; }
+  .m-togli::after{ content:""; position:absolute; inset:-13px; }
   .m-modifica, .m-aggiungi button{ position:relative; } :is(.m-modifica, .m-aggiungi button)::after{ content:""; position:absolute; inset:-10px -7px; }
   .m-chiudi{ position:relative; } .m-chiudi::after{ content:""; position:absolute; inset:-7px; }
   .m-leg-btn{ position:relative; display:inline-grid; place-items:center; width:18px; height:18px; margin-left:6px; border:0; border-radius:50%; background:var(--m-home-f); color:var(--m-muted); font:inherit; font-size:12px; font-weight:800; cursor:pointer; vertical-align:1px; }
@@ -24311,7 +24311,7 @@ function editorLettereSvuota(){
   .m-anello-mini .m-anello-b{ stroke-width:10; }
   html[data-m-tema="scuro"] .m-anello-b{ stroke:var(--m-link); opacity:.4; }
   /* da quanti giorni non si vede il letto: sotto il numero, che resta al centro */
-  .m-tl .m-gg{ position:absolute; left:0; right:0; bottom:5px; font-size:10px; font-weight:600; letter-spacing:0; line-height:1; color:color-mix(in srgb, var(--m-muted) 55%, var(--m-faint)); pointer-events:none; }
+  .m-tl .m-gg{ position:absolute; left:0; right:0; bottom:5px; font-size:10px; font-weight:600; letter-spacing:0; line-height:1; color:var(--m-muted); pointer-events:none; }
   .m-tl.m-critico .m-gg{ color:var(--m-critico); }
   .m-leg-gg{ flex:0 0 auto; width:22px; font-size:9px; font-weight:600; color:var(--m-muted); text-align:center; }
   /* sotto letti e appoggi, le due pagine del settore: le stesse righe
