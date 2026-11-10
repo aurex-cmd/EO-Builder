@@ -24194,8 +24194,7 @@ function editorLettereSvuota(){
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
-  #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) calc(var(--i) * 32ms + 200ms) both; }
-  @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
+  #m-vista.m-quieta #m-set.m-set-entra .m-tl{ animation:m-tl-entra .35s var(--m-molla) both; animation-delay:calc(var(--i) * 32ms + 160ms); }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
      volano), gli altri arrivano da fuori e si radunano come all'apertura */
   #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-raduna .6s cubic-bezier(.22,1,.36,1) .1s backwards; }
@@ -25633,13 +25632,13 @@ function zoomSettore(s, blocco){
   const box = $m('#m-mappa'); if(!box || box.classList.contains('m-zoom')) return;
   box.classList.add('m-zoom'); blocco.classList.add('m-scelto');
   setTimeout(() => {
-    const da = posizioni(`#m-mappa .m-zona[data-s="${CSS.escape(s)}"] .m-mini`), rb = blocco.getBoundingClientRect();
+    const rb = blocco.getBoundingClientRect();
     M.settore = s; M.zoom = true; ricordaSettore(s);
     const v = $m('#m-vista'); v.classList.add('m-quieta');
     vSettore();
     const avvia = [];
-    let k = 0;
-    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect(), k++ * 32)); });
+    // i letti non volano dalla mappa: compaiono sul posto in ordine di
+    // lettura, come entrando nel settore dalla home (regola .m-set-entra)
     // il fondo della scheda: dal riquadro del settore alla sua misura
     const c = $m('.m-set-carta');
     if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
