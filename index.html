@@ -24194,7 +24194,7 @@ function editorLettereSvuota(){
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
-  #m-vista.m-quieta #m-set.m-set-entra .m-tl{ animation:m-tl-entra .35s var(--m-molla) both; animation-delay:calc(var(--i) * 32ms + 160ms); }
+  #m-vista.m-quieta #m-set.m-set-entra .m-tl{ animation:m-tl-entra .28s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms + 100ms); }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
      volano), gli altri arrivano da fuori e si radunano come all'apertura */
   /* home: la scheda Reparto col settore scelto e il suo tondo */
@@ -24348,7 +24348,7 @@ function editorLettereSvuota(){
   .m-rep-vitali{ display:flex; width:fit-content; margin:22px auto 0; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-notte); margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:11px 9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .35s var(--m-molla) both; animation-delay:calc(var(--i) * 32ms + 120ms); }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .28s var(--m-molla) both; animation-delay:calc(var(--i) * 18ms + 60ms); }
   @keyframes m-tl-entra{ from{ opacity:0; transform:scale(.86); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); }
   .m-tl.m-oggi-l{ background:var(--m-l-visto); }
