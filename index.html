@@ -24197,8 +24197,6 @@ function editorLettereSvuota(){
   #m-vista.m-quieta #m-set.m-set-entra .m-tl{ animation:m-tl-entra .35s var(--m-molla) both; animation-delay:calc(var(--i) * 32ms + 160ms); }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
      volano), gli altri arrivano da fuori e si radunano come all'apertura */
-  #m-vista .m-mappa.m-ritorno .m-zona:not(.m-ultimo){ animation:m-raduna .6s cubic-bezier(.22,1,.36,1) .1s backwards; }
-  #m-vista .m-mappa.m-ritorno .m-zona.m-ultimo{ animation:none; }
   /* home: la scheda Reparto col settore scelto e il suo tondo */
   .m-rep-home{ position:relative; }
   /* la scritta "Reparto · Settore" più grande; la scheda resta com'è */
@@ -25650,24 +25648,14 @@ function zoomSettore(s, blocco){
     requestAnimationFrame(() => avvia.forEach(f => f()));
   }, 160);
 }
-// dal settore si torna alla mappa: i letti tornano piccoli al loro posto
-// nel riquadro del settore, gli altri settori ricompaiono
+// dal settore si torna alla mappa come quando ci si arriva dalla home: i
+// settori si radunano tutti insieme, senza far rientrare i letti nel riquadro
 function tornaMappa(){
-  const s = M.settore;
-  const da = posizioni('.m-set-carta .m-tl[data-n]'), c = $m('.m-set-carta'), rc = c && c.getBoundingClientRect();
   M.zoom = false;
-  const v = $m('#m-vista'); v.classList.add('m-quieta');
+  const v = $m('#m-vista');
+  clearTimeout(quietaTimer); v.classList.remove('m-quieta');
   vSettore();
-  const b = [...document.querySelectorAll('#m-mappa .m-zona')].find(x => x.dataset.s === s);
-  if(!b) return;
-  const avvia = [];
-  b.querySelectorAll('.m-mini[data-n]').forEach(m => { const r0 = da.get(m.dataset.n); if(r0) avvia.push(vola(m, r0, m.getBoundingClientRect())); });
-  if(rc) avvia.push(vola(b, rc, b.getBoundingClientRect()));
-  $m('#m-mappa').classList.add('m-ritorno');
-  void document.body.offsetWidth;
-  requestAnimationFrame(() => avvia.forEach(f => f()));
-  // la cascata degli altri settori dura fino a un secondo
-  setTimeout(() => { const m = $m('#m-mappa'); if(m) m.classList.remove('m-ritorno'); }, 1100);
+  quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
 }
 // subito: la pillola appare già al suo posto (un selettore appena
 // disegnato), senza scorrere da sinistra
