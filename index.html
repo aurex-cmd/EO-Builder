@@ -24939,18 +24939,24 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-progresso i{ display:block; height:4px; border-radius:2px; background:var(--mp-linea); transition:background .3s, transform .3s var(--mp-molla); }
   .mp-progresso .mp-fatto i{ background:var(--mp-ink); }
   .mp-progresso .mp-ora i{ background:var(--mp-accento); transform:scaleY(1.5); }
-  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view{ max-width:440px; margin:0 auto; padding:calc(70px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(250px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); font-family:var(--mp-font); color:var(--mp-ink);
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view{ max-width:440px; margin:0 auto; padding:calc(70px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(120px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); font-family:var(--mp-font); color:var(--mp-ink);
     --panel:var(--mp-carta); --panel-2:var(--mp-campo); --panel-3:var(--mp-campo); --line:var(--mp-linea); --line-soft:var(--mp-linea); --ink:var(--mp-ink); --ink-dim:var(--mp-muto); --ink-faint:var(--mp-tenue);
     --signal:var(--mp-accento); --signal-dark:var(--mp-accento); --signal-dim:color-mix(in srgb, var(--mp-accento) 14%, var(--mp-carta)); --signal-soft:color-mix(in srgb, var(--mp-accento) 12%, transparent); --on-signal:var(--mp-accento-ink); --glow-signal:none;
     --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none; --clay-border:var(--mp-linea); }
-  html[data-mp][data-mp-guida] #clinical-view.mp-anima > :is(#mp-domanda, .card.mp-passo-on){ animation:mp-domanda .4s var(--mp-molla) both; }
+  html[data-mp][data-mp-guida] #clinical-view.mp-anima > .card.mp-passo-on{ animation:mp-domanda .4s var(--mp-molla) both; }
+  html[data-mp][data-mp-guida] #clinical-view.mp-anima.mp-da-sx > .card.mp-passo-on{ animation-name:mp-domanda-sx; }
   @keyframes mp-domanda{ from{ opacity:0; transform:translateX(30px); } }
-  html[data-mp][data-mp-guida] #mp-domanda{ display:block; margin:14px 0 22px; }
+  @keyframes mp-domanda-sx{ from{ opacity:0; transform:translateX(-30px); } }
+  /* la card della domanda segue il dito e vola via in obliquo */
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view > .card.mp-passo-on{ touch-action:pan-y; transition:transform .5s var(--mp-molla), opacity .3s ease; }
+  html[data-mp][data-mp-guida] #clinical-view > .card.mp-trascina{ -webkit-user-select:none; user-select:none; animation:none; }
+  html[data-mp][data-mp-guida] #clinical-view > .card.mp-esce{ animation:none; pointer-events:none; transition:transform .32s ease-in, opacity .28s ease-in !important; }
+  html[data-mp][data-mp-guida] #mp-domanda{ display:block; margin:0 0 22px; }
   html[data-mp][data-mp-guida] #mp-domanda h2{ margin:0; font-size:36px; font-weight:500; letter-spacing:-.045em; line-height:1; color:var(--mp-ink); }
   html[data-mp][data-mp-guida] #mp-domanda p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
   html[data-mp][data-mp-guida] #mp-domanda .mp-g-letto{ margin:0 0 10px; font-size:13px; font-weight:500; color:var(--mp-muto); }
   html[data-mp][data-mp-guida] #clinical-view > .card{ display:none !important; }
-  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view > .card.mp-passo-on{ display:block !important; background:none; border:0; border-radius:0; box-shadow:none; margin:0; padding:0; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view > .card.mp-passo-on{ display:block !important; background:var(--mp-carta); border:0; border-radius:28px; box-shadow:var(--mp-ombra); margin:14px 0 0; padding:24px 22px; }
   html[data-mp][data-mp-guida] #clinical-view > .card.mp-passo-on > h2{ display:none; }
   html[data-mp][data-mp-guida] #clinical-view > .card.mp-passo-on > :not(h2){ display:revert; }
   html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .group-label{ font-family:var(--mp-font); font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
@@ -24965,8 +24971,6 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-guida-in{ max-width:400px; margin:0 auto; pointer-events:auto; }
   .mp-guida .mp-riga-btn{ margin-top:10px; grid-template-columns:1fr 1.8fr; }
   .mp-guida .mp-btn.mp-sec{ background:color-mix(in srgb, var(--mp-ink) 7%, var(--mp-fondo)); }
-  .mp-g-frase{ max-height:85px; overflow-y:auto; padding:11px 16px; border-radius:18px; background:var(--mp-carta); box-shadow:var(--mp-ombra); color:var(--mp-muto); font-size:14px; line-height:1.5; overscroll-behavior:contain; }
-  .mp-g-frase b{ color:var(--mp-ink); font-weight:500; }
   html[data-mp]:has(#clinical-view :is(input, textarea):focus) .mp-guida{ display:none; }
 
   /* RICOVERO */
@@ -28233,15 +28237,13 @@ const MP_DOMANDE = {
   'card-addome':['Addome?', 'Forma, trattabilità, alvo'], 'card-cute':['Cute?', 'Cicatrici, ernie, lesioni'], 'card-edemi':['Edemi?', 'Declivi, sede, qualità'],
   'card-lingua':['Lingua?', 'Com\'è alla vista'], 'card-neuro':['Neurologico?', 'Solo quello che c\'è da segnalare']
 };
-const mpG = { k:0, passi:[], base:null };
-const mpEoTesto = () => { const t = (document.getElementById('output') || {}).value || ''; const k = t.indexOf('\n\n'); return (k === -1 ? t : t.slice(0, k)).trim(); };
-const mpFrasi = t => t.split(/\.\s+/).map((f, k, a) => k < a.length - 1 ? f + '.' : f).filter(Boolean);
+const mpG = { k:0, passi:[], verso:1 };
 function mpGuidaInizio(){
   const nascoste = sezioniNascoste();
   mpG.passi = ['card-sesso', ...SEZIONI_ESAME.map(x => x[0]).filter(id => !nascoste.includes(id))].filter(id => document.getElementById(id));
   // il sesso si chiede solo la prima volta
   mpG.k = state.sesso && mpG.passi.length > 1 ? 1 : 0;
-  mpG.base = new Set(mpFrasi(mpEoTesto()));
+  mpG.verso = 1;
   mpGuida();
 }
 function mpGuida(){
@@ -28252,27 +28254,67 @@ function mpGuida(){
     <div class="mp-progresso" role="tablist" aria-label="Parti dell'esame">${mpG.passi.map((id, k) => `<button role="tab" data-mp="g-vai" data-k="${k}" aria-selected="${k === mpG.k}" aria-label="${esc((MP_DOMANDE[id] || [''])[0].replace('?', ''))}" class="${k < mpG.k ? 'mp-fatto' : k === mpG.k ? 'mp-ora' : ''}"><i></i></button>`).join('')}</div>
     <button class="m-azione" data-mp="g-fine">Fine</button>`;
   const id = mpG.passi[mpG.k], d = MP_DOMANDE[id] || ['', ''];
-  document.querySelectorAll('#clinical-view > .card').forEach(c => c.classList.toggle('mp-passo-on', c.id === id));
-  const dom = $m('#mp-domanda');
+  document.querySelectorAll('#clinical-view > .card').forEach(c => { c.classList.toggle('mp-passo-on', c.id === id); c.classList.remove('mp-trascina', 'mp-esce'); c.style.transform = c.style.opacity = c.style.transition = ''; });
+  // la domanda sta in cima alla sua card: si sposta insieme a lei
+  const dom = $m('#mp-domanda'), card = document.getElementById(id);
   dom.innerHTML = `<p class="mp-g-letto">${esc(M.letto || '')}</p><h2>${esc(d[0])}</h2><p>${esc(d[1])}</p>`;
+  if(card && dom.parentElement !== card) card.prepend(dom);
   const cv = document.getElementById('clinical-view');
-  cv.classList.remove('mp-anima'); void cv.offsetWidth; cv.classList.add('mp-anima');
+  cv.classList.remove('mp-anima', 'mp-da-sx'); void cv.offsetWidth; cv.classList.add('mp-anima'); cv.classList.toggle('mp-da-sx', mpG.verso < 0);
   const g = $m('#mp-guida'); g.hidden = false;
   $m('#mp-g-indietro').disabled = mpG.k === 0;
   $m('#mp-g-avanti').textContent = mpG.k === n - 1 ? (M.daScheda ? 'Fatto' : 'Fatto, apri il diario') : 'Avanti';
-  mpGuidaFrase();
   window.scrollTo(0, 0);
   requestAnimationFrame(() => { if(typeof ridimensionaTextareaVisibili === 'function') ridimensionaTextareaVisibili(); });
 }
-// la frase che si compone: in evidenza quello che è cambiato da quando si è
-// aperta la visita, il resto (com'era) in grigio
-function mpGuidaFrase(){
-  const box = $m('#mp-g-frase'); if(!box) return;
-  const frasi = mpFrasi(mpEoTesto());
-  box.innerHTML = frasi.length ? frasi.map(f => mpG.base && !mpG.base.has(f) ? `<b>${esc(f)}</b>` : esc(f)).join(' ') : 'Qui si compone la frase, man mano che rispondi.';
-  const b = box.querySelector('b:last-of-type'); if(b) box.scrollTop = Math.max(0, b.offsetTop - box.offsetTop - 8);
+function mpGuidaPasso(k){ if(k === mpG.k) return; mpG.verso = k > mpG.k ? 1 : -1; mpG.k = k; mpGuida(); }
+// SCORRERE LE CARD: da destra verso sinistra la domanda dopo, da sinistra
+// verso destra quella prima. La card segue il dito inclinandosi (come la
+// pila di Oggi) e, lasciata oltre la soglia, vola via in obliquo; la nuova
+// entra dal lato opposto. Ai due estremi la card resiste e torna al suo posto
+function mpGuidaGesto(){
+  const cv = document.getElementById('clinical-view');
+  let el = null, x0 = 0, y0 = 0, dx = 0, attivo = false, ignoraClick = false;
+  const fermo = () => { el = null; attivo = false; };
+  cv.addEventListener('pointerdown', e => {
+    if(M.vista !== 'eo' || !UI_MP || e.button > 0) return;
+    const c = e.target.closest('.card.mp-passo-on');
+    if(!c || c.classList.contains('mp-esce') || e.target.closest('input, textarea, select, [contenteditable]')) return;
+    el = c; x0 = e.clientX; y0 = e.clientY; dx = 0; attivo = false;
+  });
+  cv.addEventListener('pointermove', e => {
+    if(!el) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if(!attivo){
+      if(Math.abs(my) > 10 && Math.abs(my) > Math.abs(mx)) return fermo();     // sta scorrendo la pagina
+      if(Math.abs(mx) < 10 || Math.abs(mx) < Math.abs(my) * 1.3) return;
+      attivo = true; el.classList.add('mp-trascina'); el.style.transition = 'none';
+      try{ el.setPointerCapture(e.pointerId); } catch(err){}
+    }
+    // oltre la prima e l'ultima domanda la card resiste
+    const fuori = (mx > 0 && mpG.k === 0) || (mx < 0 && mpG.k >= mpG.passi.length - 1);
+    dx = fuori ? mx / 4 : mx;
+    el.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`;
+  });
+  const fine = () => {
+    if(!el) return;
+    const c = el, va = attivo && Math.abs(dx) > 90 && !((dx > 0 && mpG.k === 0) || (dx < 0 && mpG.k >= mpG.passi.length - 1));
+    if(attivo) ignoraClick = true;
+    fermo();
+    c.classList.remove('mp-trascina');
+    c.style.transition = '';
+    if(!va){ c.style.transform = ''; return; }
+    const dopo = dx < 0;
+    c.classList.add('mp-esce');
+    c.style.transform = `translateX(${dopo ? -120 : 120}%) rotate(${dopo ? -8 : 8}deg)`; c.style.opacity = '0';
+    try{ navigator.vibrate && navigator.vibrate(8); } catch(err){}
+    setTimeout(() => { if(M.vista === 'eo') mpGuidaPasso(mpG.k + (dopo ? 1 : -1)); }, mpFermo() ? 0 : 230);
+  };
+  cv.addEventListener('pointerup', fine); cv.addEventListener('pointercancel', fine);
+  // dopo uno scorrimento il dito non tocca il tag su cui si è fermato
+  cv.addEventListener('click', e => { if(ignoraClick){ ignoraClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  cv.addEventListener('pointerdown', () => { ignoraClick = false; }, true);
 }
-function mpGuidaPasso(k){ if(k === mpG.k) return; mpG.k = k; mpGuida(); }
 function mpGuidaFatto(){
   const nome = M.letto, daScheda = M.daScheda;
   fineVisita(true);
@@ -28281,6 +28323,9 @@ function mpGuidaFatto(){
 }
 function mpGuidaFine(){
   const g = $m('#mp-guida'); if(g) g.hidden = true;
+  // la domanda torna in cima alla vista (nascosta), fuori dalle card dell'app
+  const dom = $m('#mp-domanda'), cv = document.getElementById('clinical-view');
+  if(dom && cv && dom.parentElement !== cv) cv.prepend(dom);
   document.querySelectorAll('#clinical-view > .card.mp-passo-on').forEach(c => c.classList.remove('mp-passo-on'));
 }
 
@@ -28346,7 +28391,7 @@ if(UI_MP){
   app.insertAdjacentHTML('afterbegin', '<div class="mp-atm" aria-hidden="true"></div>');
   app.insertAdjacentHTML('beforeend', `<nav class="mp-barra" id="mp-barra" aria-label="Sezioni">
       <button data-mp="vai" data-v="home">${MP_ICO.oggi}Oggi</button><button data-mp="vai" data-v="visita">${MP_ICO.reparto}Reparto</button><button data-mp="vai" data-v="ricovero">${MP_ICO.piu}Ricovero</button></nav>
-    <div class="mp-guida" id="mp-guida" hidden><div class="mp-guida-in"><div class="mp-g-frase" id="mp-g-frase" aria-live="polite"></div>
+    <div class="mp-guida" id="mp-guida" hidden><div class="mp-guida-in">
       <div class="mp-riga-btn"><button class="mp-btn mp-sec" id="mp-g-indietro" data-mp="g-indietro">Indietro</button><button class="mp-btn" id="mp-g-avanti" data-mp="g-avanti">Avanti</button></div></div></div>`);
   document.getElementById('clinical-view').insertAdjacentHTML('afterbegin', '<div id="mp-domanda"></div>');
   // nella scheda del diario: a sinistra di "Copia il diario" il tasto con le altre azioni
@@ -28379,9 +28424,7 @@ if(UI_MP){
     else if(a === 'ric-apri'){ if(mpRic) apriRicoveroSingolo(mpRic); }
     else if(a === 'ric-nuovo'){ mpRic = null; mpRicCard(true); const c = $m('#mp-ric-cognome'); if(c) c.focus({ preventScroll:true }); }
   });
-  // la frase dell'esame guidato segue i tag toccati e i campi scritti
-  const cv = document.getElementById('clinical-view');
-  ['click', 'input', 'change'].forEach(ev => cv.addEventListener(ev, () => { if(M.vista === 'eo') setTimeout(mpGuidaFrase, 0); }));
+  mpGuidaGesto();
 }
 
 nascondiViste();
