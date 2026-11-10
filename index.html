@@ -24881,7 +24881,11 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .m-scheda.mp-esce{ opacity:1; visibility:visible; }
   html[data-mp] .m-scheda > *{ transition:opacity .25s ease; }
   html[data-mp] .m-scheda.mp-vuota > *{ opacity:0; }
-  html[data-mp] .m-scheda.mp-invito{ height:fit-content; max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 36px); }
+  /* l'invito alla visita è corto: alto quanto il suo contenuto. Niente
+     height:fit-content in una colonna flex (Safari su iPhone lasciava il
+     corpo a zero, si vedeva solo il titolo): blocco normale, ancorato in alto */
+  html[data-mp] .m-scheda.mp-invito{ display:block; height:auto; bottom:auto; top:calc(env(safe-area-inset-top,0px) + 18vh); max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 36px); overflow-y:auto; }
+  html[data-mp] .m-scheda.mp-invito .m-s-corpo{ display:block; overflow:visible; }
   html[data-mp] .m-scheda.mp-invito .m-s-piede{ display:none; }
   html[data-mp] .m-scheda.mp-invito .m-s-corpo::after{ display:none; }
   html[data-mp] .m-s-testa{ padding:30px 22px 6px; padding-right:120px; align-items:flex-start; }
