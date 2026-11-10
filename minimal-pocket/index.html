@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimal Pocket</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../minimal/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../minimal/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../minimal/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Minimal Pocket">
+<meta name="theme-color" content="#f7f6f8">
+<!-- MINIMAL POCKET: un ramo di EO Pocket, la stessa app (index.html) con
+     un'altra interfaccia (Oggi, Reparto, Ricovero); stessi dati e stessa
+     sincronizzazione, perché è la stessa pagina -->
+<script>location.replace('../?ui=minimal-pocket' + location.hash);</script>
+</head>
+<body>
+<p><a href="../?ui=minimal-pocket">Apri Minimal Pocket</a></p>
+</body>
+</html>
