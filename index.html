@@ -24194,7 +24194,7 @@ function editorLettereSvuota(){
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
-  #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) .48s both; }
+  #m-vista #m-set.m-set-entra .m-tl.m-tl-nuovo{ animation:m-nuovo-entra .3s var(--m-molla) calc(var(--i) * 32ms + 200ms) both; }
   @keyframes m-nuovo-entra{ from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:none; } }
   /* tornando da un settore: il proprio torna piccolo al suo posto (i letti
      volano), gli altri arrivano da fuori e si radunano come all'apertura */
@@ -24351,8 +24351,8 @@ function editorLettereSvuota(){
   .m-rep-vitali{ display:flex; width:fit-content; margin:22px auto 0; } .m-rep-vitali > svg:first-child{ width:15px; height:15px; color:var(--m-notte); margin-right:2px; }
   .m-griglia{ display:grid; grid-template-columns:repeat(3, 1fr); gap:11px 9px; }
   /* letto material */
-  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .45s var(--m-molla) both; animation-delay:calc(var(--i) * 26ms + 120ms); }
-  @keyframes m-tl-entra{ from{ opacity:0; transform:translateX(14px) scale(.92); } to{ opacity:1; transform:none; } }
+  .m-tl{ position:relative; height:50px; border:0; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font:inherit; font-size:15px; font-weight:800; letter-spacing:-.01em; cursor:pointer; overflow:visible; -webkit-tap-highlight-color:transparent; box-shadow:none; transition:transform .14s var(--m-molla), background .3s, color .3s, box-shadow .3s; animation:m-tl-entra .35s var(--m-molla) both; animation-delay:calc(var(--i) * 32ms + 120ms); }
+  @keyframes m-tl-entra{ from{ opacity:0; transform:scale(.86); } to{ opacity:1; transform:none; } }
   .m-tl:active{ transform:scale(.94); }
   .m-tl.m-oggi-l{ background:var(--m-l-visto); }
   .m-tl.m-recente{ background:var(--m-l-recente); }
@@ -25622,7 +25622,7 @@ function preparaMazzo(box){
 // vista finale e si parte dalle posizioni di prima)
 const VOLO = 'transform .5s cubic-bezier(.22,.8,.24,1), opacity .35s';
 function posizioni(sel){ const m = new Map(); document.querySelectorAll(sel).forEach(x => m.set(x.dataset.n, x.getBoundingClientRect())); return m; }
-// ritardo: i letti partono uno dopo l'altro (26 ms, dal primo all'ultimo), come
+// ritardo: i letti partono uno dopo l'altro (32 ms, dal primo all'ultimo), come
 // quando si entra nel settore direttamente dalla home
 function vola(el, da, a, ritardo = 0){
   el.style.transition = 'none'; el.style.transformOrigin = '0 0';
@@ -25639,14 +25639,14 @@ function zoomSettore(s, blocco){
     vSettore();
     const avvia = [];
     let k = 0;
-    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect(), k++ * 26)); });
+    document.querySelectorAll('.m-set-carta .m-tl[data-n]').forEach(t => { const r0 = da.get(t.dataset.n); if(r0) avvia.push(vola(t, r0, t.getBoundingClientRect(), k++ * 32)); });
     // il fondo della scheda: dal riquadro del settore alla sua misura
     const c = $m('.m-set-carta');
     if(c){ const k = c.getBoundingClientRect(); avvia.push(vola(c.querySelector('.m-set-fondo'), rb, k)); }
     const set = $m('#m-set'); set.classList.add('m-set-entra');
     // a entrata finita si toglie: i letti si ridisegnano (es. chiudendo un
     // diario) e il + appoggio spariva e ricompariva
-    setTimeout(() => set.classList.remove('m-set-entra'), 900);
+    setTimeout(() => set.classList.remove('m-set-entra'), 1400);
     void document.body.offsetWidth;
     requestAnimationFrame(() => avvia.forEach(f => f()));
   }, 160);
