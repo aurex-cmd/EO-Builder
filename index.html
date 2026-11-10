@@ -4061,12 +4061,26 @@ applicaTema(temaAttuale());
 const UI_PARAMS = new URLSearchParams(location.search);
 // la finestrella dell'editor di testo (?editor) resta quella dell'app
 const UI_MINIMAL = UI_PARAMS.get('ui') !== 'classic' && !UI_PARAMS.has('editor');
+// MINIMAL POCKET (?ui=minimal-pocket, da .../minimal-pocket/): un ramo di EO
+// Pocket, non un tema. Stesso motore e stessi dati di Pocket, ma un'altra
+// app da usare: Oggi (una pila di card, il prossimo passo in cima), Reparto
+// (una griglia sola, il letto che si allarga fino a diventare la scheda),
+// l'esame obiettivo una domanda alla volta e il ricovero in un minuto.
+// Vedi il blocco "MINIMAL POCKET" in fondo allo script di Pocket
+const UI_MP = UI_MINIMAL && ['minimal-pocket', 'mp'].includes(UI_PARAMS.get('ui'));
 // tema di EO Minimal (Impostazioni → Tema), separato da quello dell'app:
 // "chiaro" (tutto chiaro, anche l'esame obiettivo), "scuro" (tutto in blu
 // notte) o "aurex" (pagine chiare, esame obiettivo scuro: il predefinito).
 // La v1 aveva solo chiaro (che era l'attuale aurex) e scuro
 const MTEMA_KEY = 'eo_minimal_tema_v2', MTEMA_KEY_V1 = 'eo_minimal_tema_v1';
+// Minimal Pocket ha il suo tema (chiaro o scuro), che senza una scelta
+// segue quello del telefono: non tocca il tema di Pocket
+const MPTEMA_KEY = 'eo_mp_tema_v1';
 function temaMinimal(){
+  if(UI_MP){
+    try{ const t = localStorage.getItem(MPTEMA_KEY); if(t === 'chiaro' || t === 'scuro') return t; } catch(e){}
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'scuro' : 'chiaro';
+  }
   try{
     const t = localStorage.getItem(MTEMA_KEY);
     if(t === 'chiaro' || t === 'scuro' || t === 'aurex') return t;
@@ -4134,6 +4148,17 @@ if(UI_MINIMAL){
   testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'EO Pocket';
   testa.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = 'default';
   testa.querySelector('meta[name="theme-color"]').content = '#ffffff';
+  if(UI_MP){
+    document.documentElement.dataset.mp = '';
+    // un accento solo, il suo: il colore scelto per Pocket qui non vale
+    document.documentElement.dataset.mPulsante = 'mp';
+    const geist = document.createElement('link'); geist.rel = 'stylesheet';
+    geist.href = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap';
+    testa.appendChild(geist);
+    testa.querySelector('link[rel="manifest"]').href = 'minimal-pocket/manifest.webmanifest';
+    testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Minimal Pocket';
+    testa.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#0e0f14' : '#f7f6f8';
+  }
 }
 </script>
 </head>
@@ -24674,6 +24699,298 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   /* la scena in fondo ai Settori si fonde col grigio: il bianco del disegno sparisce */
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) #m-app:has(.m-mappa, .m-set:not(.m-diari))::before{ mix-blend-mode:multiply; }
 </style>
+<!-- ===================== MINIMAL POCKET =====================
+     Lo stile del ramo "Minimal Pocket" (?ui=minimal-pocket, vedi UI_MP
+     nell'<head> e il blocco MINIMAL POCKET nello script di Pocket). Una
+     colonna da telefono; ogni schermata è un titolo-frase e una card bianca
+     che galleggia su un fondo d'atmosfera; le card si trasformano (letto →
+     scheda, domanda → domanda) invece di cambiare pagina. Tutto sotto
+     html[data-mp]: senza, niente di questo si vede. Le pagine di Pocket
+     (dimissioni, consegne, strumenti...) prendono gli stessi colori dai
+     suoi stessi nomi (--m-*) -->
+<style id="stile-mp">
+  html[data-mp]{
+    --mp-fondo:#f7f6f8; --mp-carta:#ffffff; --mp-ink:#16181f; --mp-muto:#6b6f7b; --mp-tenue:#a7aab3;
+    --mp-linea:#ecebef; --mp-campo:#f2f1f4; --mp-accento:#5b53e6; --mp-accento-ink:#ffffff;
+    --mp-ombra:0 1px 2px rgba(40,30,60,.05), 0 18px 44px rgba(40,30,60,.10);
+    --mp-ombra-scheda:0 2px 4px rgba(40,30,60,.06), 0 30px 70px rgba(40,30,60,.22);
+    --mp-atm-1:rgba(240,158,110,.55); --mp-atm-2:rgba(222,120,172,.42); --mp-atm-3:rgba(190,170,245,.45); --mp-atm-4:rgba(246,210,110,.32);
+    --mp-l-base:#eef0f3; --mp-l-dacop:#ffd9c2; --mp-l-dacop-f:#f0a577; --mp-l-cop:#bfe8d6; --mp-l-cop-f:#58b88f; --mp-l-crit:#ece2ff; --mp-l-crit-ink:#6b3fd1;
+    --mp-ok:#2f9e63; --mp-ok-box:#cdeee1; --mp-allerta:#e0685d;
+    --mp-font:'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mp-mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --mp-molla:cubic-bezier(.22,1,.36,1);
+  }
+  html[data-mp][data-m-tema="scuro"]{
+    --mp-fondo:#0e0f14; --mp-carta:#191a22; --mp-ink:#f1f1f5; --mp-muto:#9a9caa; --mp-tenue:#5d6070;
+    --mp-linea:#262833; --mp-campo:#22232d; --mp-accento:#8b84ff; --mp-accento-ink:#0e0f14;
+    --mp-ombra:0 1px 2px rgba(0,0,0,.4), 0 18px 44px rgba(0,0,0,.45);
+    --mp-ombra-scheda:0 2px 4px rgba(0,0,0,.4), 0 30px 70px rgba(0,0,0,.6);
+    --mp-atm-1:rgba(200,110,70,.30); --mp-atm-2:rgba(170,70,130,.30); --mp-atm-3:rgba(110,90,210,.32); --mp-atm-4:rgba(180,150,60,.16);
+    --mp-l-base:#252733; --mp-l-dacop:#5a3a28; --mp-l-dacop-f:#c2794c; --mp-l-cop:#1d4a3b; --mp-l-cop-f:#3f9c79; --mp-l-crit:#352a55; --mp-l-crit-ink:#c4a8ff;
+    --mp-ok:#4cc38a; --mp-ok-box:#1f4d3f; --mp-allerta:#ef8479;
+    color-scheme:dark;
+  }
+  /* i nomi di Pocket con i colori di qui: le sue pagine seguono da sole */
+  html[data-mp][data-ui="minimal"], html[data-mp][data-ui="minimal"][data-m-tema="scuro"]{
+    --m-bg:var(--mp-fondo); --m-carta:var(--mp-carta); --m-box:var(--mp-campo); --m-hover:var(--mp-campo); --m-line:var(--mp-linea); --m-line-forte:color-mix(in srgb, var(--mp-tenue) 45%, var(--mp-linea));
+    --m-faint:var(--mp-tenue); --m-muted:var(--mp-muto); --m-ink-2:color-mix(in srgb, var(--mp-ink) 78%, var(--mp-muto)); --m-ink:var(--mp-ink); --m-sec:color-mix(in srgb, var(--mp-ink) 7%, var(--mp-fondo));
+    --m-acc-l:var(--mp-accento); --m-acc-d:var(--mp-accento); --m-acc-link-d:var(--mp-accento); --m-notte:var(--mp-accento); --m-link:var(--mp-accento);
+    --m-notte-box:color-mix(in srgb, var(--mp-accento) 12%, var(--mp-carta));
+    --m-teal:var(--mp-ok); --m-teal-box:var(--mp-ok-box); --m-critico:var(--mp-l-crit-ink); --m-rosso:var(--mp-allerta);
+    --m-sans:var(--mp-font); --m-scheda:var(--mp-font);
+  }
+  html[data-mp][data-ui="minimal"]:not(.m-pronto){ background:var(--mp-fondo); }
+  html[data-mp][data-ui="minimal"]:not([data-m-orig]){ --page:var(--mp-fondo); --font-body:var(--mp-font); --font-display:var(--mp-font); --font-mono:var(--mp-font); --signal:var(--mp-accento); --on-signal:var(--mp-accento-ink); }
+  html[data-mp] body{ -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  html[data-mp] :is(#m-app, .mp-guida) :is(button, [role="button"], a):focus-visible{ outline:2px solid var(--mp-accento); outline-offset:3px; }
+
+  /* atmosfera: solo nelle schermate che respirano (Oggi, Ricovero) */
+  .mp-atm{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0; transition:opacity .6s ease;
+    background:
+      radial-gradient(70% 40% at 0% 100%, var(--mp-atm-1), transparent 70%),
+      radial-gradient(60% 42% at 100% 85%, var(--mp-atm-2), transparent 70%),
+      radial-gradient(55% 34% at 95% 35%, var(--mp-atm-3), transparent 72%),
+      radial-gradient(45% 24% at 8% 72%, var(--mp-atm-4), transparent 70%); }
+  html[data-mp-v="home"] .mp-atm, html[data-mp-v="ricovero"] .mp-atm{ opacity:1; }
+  /* su uno schermo largo sfuma verso i lati, senza un bordo netto */
+  @media (min-width:700px){ .mp-atm{ -webkit-mask-image:linear-gradient(to right, transparent, #000 18%, #000 82%, transparent); mask-image:linear-gradient(to right, transparent, #000 18%, #000 82%, transparent); } }
+
+  /* testata: marchio piccolo e iniziali col pallino della sincronizzazione */
+  html[data-mp] .m-bar{ background:var(--mp-fondo); padding-left:max(20px, env(safe-area-inset-left,0px)); padding-right:max(20px, env(safe-area-inset-right,0px)); }
+  html[data-mp] .m-bar.m-home{ background:transparent; position:relative; }
+  html[data-mp] .m-bar-in{ max-width:400px; }
+  .mp-marchio{ font-size:13px; font-weight:500; color:var(--mp-muto); letter-spacing:.01em; }
+  .mp-marchio b{ color:var(--mp-ink); font-weight:600; }
+  html[data-mp] .m-connessione{ width:40px; height:40px; background:linear-gradient(140deg, #cbbaf7, #a8c2f5); box-shadow:none; color:#1c2140; }
+  html[data-mp] .m-connessione span, html[data-mp] .m-connessione.m-connesso span{ color:#1c2140; font-size:14px; font-weight:600; letter-spacing:.03em; }
+  html[data-mp] .m-connessione i{ right:0; bottom:0; width:11px; height:11px; background:var(--mp-tenue); box-shadow:0 0 0 2.5px var(--mp-fondo); }
+  html[data-mp] .m-connessione.m-connesso i{ background:var(--mp-ok); }
+
+  html[data-mp] .m-main{ position:relative; z-index:1; max-width:440px; padding:0 max(20px, env(safe-area-inset-right,0px)) 130px max(20px, env(safe-area-inset-left,0px)); }
+  html[data-mp] .m-vista.mp-entra{ animation:mp-entra .45s var(--mp-molla) both; }
+  @keyframes mp-entra{ from{ opacity:0; transform:translateY(10px); } }
+  html[data-mp] :is(.mp-oggi, .mp-reparto, .mp-ricovero){ font-size:16px; line-height:1.45; color:var(--mp-ink); }
+
+  /* il titolo è una frase */
+  .mp-frase{ font-weight:500; font-size:clamp(32px, 9vw, 40px); line-height:1.04; letter-spacing:-.045em; margin:18px 0 0; text-wrap:balance; }
+  .mp-frase em{ font-style:normal; color:var(--mp-muto); }
+  .mp-sotto{ margin:10px 0 0; color:var(--mp-muto); font-size:15px; }
+  .mp-lbl{ margin:26px 2px 8px; font-size:13px; color:var(--mp-muto); }
+  .mp-nota{ margin:14px 0 0; font-size:13px; color:var(--mp-tenue); text-align:center; }
+
+  .mp-card{ background:var(--mp-carta); border-radius:28px; box-shadow:var(--mp-ombra); padding:24px; }
+  .mp-btn{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; height:56px; padding:0 14px; border:0; border-radius:16px; background:var(--mp-accento); color:var(--mp-accento-ink); font:inherit; font-size:17px; font-weight:500; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--mp-molla), opacity .2s; }
+  .mp-btn:active{ transform:scale(.98); }
+  .mp-btn.mp-sec{ background:var(--mp-campo); color:var(--mp-ink); }
+  .mp-btn:disabled{ opacity:.4; }
+  .mp-btn svg{ width:20px; height:20px; flex:none; }
+  .mp-btn-su{ margin-top:12px; }
+  .mp-riga-btn{ display:grid; grid-template-columns:1fr 1.5fr; gap:10px; margin-top:20px; }
+  .mp-tondo{ width:54px; height:54px; border-radius:16px; border:0; background:var(--mp-campo); color:var(--mp-ink); display:grid; place-items:center; cursor:pointer; flex:none; transition:transform .12s var(--mp-molla); }
+  .mp-tondo:active{ transform:scale(.94); }
+  .mp-tondo svg{ width:20px; height:20px; }
+  .mp-altro{ display:flex; flex-wrap:wrap; gap:8px; }
+  .mp-altro.mp-centro{ justify-content:center; margin-top:22px; }
+  .mp-chip{ height:38px; padding:0 15px; border-radius:999px; border:0; background:color-mix(in srgb, var(--mp-carta) 70%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); color:var(--mp-ink); font:inherit; font-size:14px; font-weight:500; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--mp-molla); }
+  .mp-chip:active{ transform:scale(.96); }
+
+  /* OGGI: una pila di card, il prossimo passo in cima */
+  .mp-pila{ display:grid; margin-top:30px; padding-bottom:34px; }
+  .mp-passo{ grid-area:1 / 1; align-self:start; transition:transform .5s var(--mp-molla), opacity .4s ease; touch-action:pan-y; -webkit-user-select:none; user-select:none; }
+  .mp-passo[data-pos="1"]{ transform:translateY(16px) scale(.95); opacity:.7; }
+  .mp-passo[data-pos="2"]{ transform:translateY(30px) scale(.9); opacity:.4; }
+  .mp-passo[data-pos="3"]{ transform:translateY(40px) scale(.86); opacity:0; }
+  .mp-passo.mp-via{ transform:translateX(120%) rotate(8deg) !important; opacity:0; }
+  .mp-chi{ display:flex; align-items:center; gap:14px; }
+  .mp-tessera{ width:64px; height:64px; border-radius:18px; display:grid; place-items:center; flex:none; background:var(--mp-campo); font-size:19px; font-weight:600; letter-spacing:-.02em; }
+  .mp-tessera svg{ width:28px; height:28px; }
+  .mp-t-dacop, .mp-t-lettera{ background:var(--mp-l-dacop); }
+  .mp-t-critico{ background:var(--mp-l-crit); color:var(--mp-l-crit-ink); }
+  .mp-passo h3, .mp-finito h3, .mp-ric-creato h3{ margin:0; font-size:22px; font-weight:500; letter-spacing:-.03em; line-height:1.15; }
+  .mp-passo p, .mp-ric-creato p{ margin:4px 0 0; color:var(--mp-muto); font-size:15px; }
+  .mp-pallini{ display:flex; justify-content:center; gap:6px; min-height:6px; }
+  .mp-pallini i{ width:6px; height:6px; border-radius:50%; background:var(--mp-tenue); opacity:.5; }
+  .mp-pallini i.on{ width:18px; border-radius:3px; background:var(--mp-ink); opacity:1; }
+  .mp-finito{ text-align:center; padding:40px 24px; }
+  .mp-finito h3{ margin:12px 0 4px; }
+  .mp-finito p{ margin:0; color:var(--mp-muto); }
+  .mp-spunta{ width:64px; height:64px; margin:0 auto; border-radius:50%; display:grid; place-items:center; background:var(--mp-ok-box); color:var(--mp-ok); }
+  .mp-spunta svg{ width:30px; height:30px; }
+  .mp-spunta path{ stroke-dasharray:30; stroke-dashoffset:30; animation:mp-traccia .5s .15s var(--mp-molla) forwards; }
+  @keyframes mp-traccia{ to{ stroke-dashoffset:0; } }
+  .mp-sugg{ text-align:center; color:var(--mp-tenue); font-size:13px; margin:14px 0 0; }
+
+  /* barra in basso a pillola */
+  .mp-barra{ position:fixed; z-index:40; left:50%; bottom:calc(16px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); display:flex; gap:4px; padding:6px; border-radius:999px; background:color-mix(in srgb, var(--mp-carta) 82%, transparent); -webkit-backdrop-filter:blur(18px) saturate(1.3); backdrop-filter:blur(18px) saturate(1.3); box-shadow:var(--mp-ombra); transition:transform .35s var(--mp-molla); }
+  .mp-barra button{ display:flex; align-items:center; gap:7px; height:46px; padding:0 18px; border:0; border-radius:999px; background:none; color:var(--mp-muto); font:inherit; font-family:var(--mp-font); font-size:15px; font-weight:500; cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent; transition:background .25s, color .25s; }
+  .mp-barra button svg{ width:20px; height:20px; }
+  .mp-barra button[aria-current="page"]{ background:var(--mp-ink); color:var(--mp-fondo); }
+  html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+  html[data-mp].mp-scheda-aperta .mp-barra,
+  html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:translateX(-50%) translateY(170%); }
+
+  /* REPARTO: la griglia resta, ma è un oggetto solo */
+  .mp-settori{ display:flex; gap:6px; margin:22px -20px 0; padding:0 20px 2px; overflow-x:auto; scrollbar-width:none; }
+  .mp-settori::-webkit-scrollbar{ display:none; }
+  .mp-settori button{ flex:none; height:36px; padding:0 14px; border-radius:999px; border:0; background:var(--mp-campo); color:var(--mp-muto); font:inherit; font-weight:500; font-size:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background .25s, color .25s; }
+  .mp-settori button[aria-pressed="true"]{ background:var(--mp-ink); color:var(--mp-fondo); }
+  .mp-card-letti{ margin-top:16px; padding:18px; }
+  .mp-griglia{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
+  html[data-mp] .mp-griglia .m-tl{ height:auto; aspect-ratio:1; min-width:0; border-radius:20px; background:var(--mp-l-base); background-image:none; color:var(--mp-ink); box-shadow:none; font-family:var(--mp-font); font-size:17px; font-weight:600; letter-spacing:-.02em; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding:0 4px; animation:none; transition:transform .15s var(--mp-molla), background .3s; }
+  html[data-mp] :is(.mp-entra, .mp-cambia) .m-tl, html[data-mp] .mp-griglia.mp-cambia .m-tl{ animation:mp-entra .45s var(--mp-molla) both; animation-delay:calc(var(--i) * 30ms); }
+  html[data-mp] .mp-griglia .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
+  html[data-mp] .mp-griglia .m-tl.m-oggi-l{ background:var(--mp-l-dacop); }
+  html[data-mp] .mp-griglia .m-tl.m-oggi-l.m-copiato{ background:var(--mp-l-cop); }
+  html[data-mp] .mp-griglia .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2px var(--m-blu); }
+  html[data-mp] .mp-griglia .m-tl.m-critico{ background:var(--mp-l-crit); color:var(--mp-l-crit-ink); box-shadow:none; }
+  /* un critico già visto: il bordo dice del diario (da copiare, copiato) */
+  html[data-mp] .mp-griglia .m-tl.m-critico.m-oggi-l{ box-shadow:inset 0 0 0 2.5px var(--mp-l-dacop-f); }
+  html[data-mp] .mp-griglia .m-tl.m-critico.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--mp-l-cop-f); }
+  html[data-mp] .mp-griglia .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--m-p-d) 26%, transparent) 0 3px, transparent 3px 9px); }
+  html[data-mp] .mp-griglia .m-tl.m-vuoto{ background:transparent; box-shadow:inset 0 0 0 1.5px var(--mp-linea); color:var(--mp-tenue); }
+  html[data-mp] .mp-griglia .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
+  html[data-mp] .mp-griglia .m-tl .m-spunta{ display:none; }
+  html[data-mp] .mp-griglia .m-tl .m-gg{ bottom:9px; font-size:10px; font-weight:500; color:var(--mp-muto); }
+  html[data-mp] .mp-griglia .m-tl .m-pallini.m-basso{ right:8px; bottom:8px; gap:3px; }
+  html[data-mp] .mp-griglia .m-tl .m-pallini.m-alto{ left:8px; top:8px; gap:3px; }
+  html[data-mp] .mp-griglia .m-tl .m-pal, html[data-mp] .mp-griglia .m-tl .m-pallini.m-alto .m-pal{ width:8px; height:8px; font-size:0; box-shadow:none; }
+  html[data-mp] .mp-griglia .m-tl .m-togli{ top:4px; right:4px; background:var(--mp-carta); }
+  html[data-mp] .mp-griglia .m-tl-nuovo{ background:transparent; border:1.5px dashed color-mix(in srgb, var(--mp-tenue) 60%, transparent); color:var(--mp-tenue); }
+  html[data-mp] .mp-griglia .m-tl-nuovo.m-scrivi{ background:var(--mp-campo); border-style:solid; border-color:var(--mp-accento); box-shadow:none; }
+  html[data-mp] .mp-griglia .m-tl-nuovo input{ color:var(--mp-ink); font-family:var(--mp-font); }
+  html[data-mp] .mp-griglia .m-tl-nuovo input::placeholder{ color:var(--mp-muto); opacity:.8; }
+  .mp-legenda{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:18px; font-size:13px; color:var(--mp-muto); }
+  .mp-legenda span{ display:inline-flex; align-items:center; gap:6px; }
+  .mp-legenda i{ width:12px; height:12px; border-radius:4px; }
+  .mp-lg-base{ background:var(--mp-l-base); } .mp-lg-dacop{ background:var(--mp-l-dacop); } .mp-lg-cop{ background:var(--mp-l-cop); } .mp-lg-crit{ background:var(--mp-l-crit); }
+
+  /* SCHEDA: il letto si allarga fino a diventare la scheda */
+  html[data-mp] .m-velo{ inset:0; height:auto; clip-path:none; box-shadow:none; transition:opacity .4s ease;
+    background:
+      radial-gradient(70% 40% at 0% 100%, var(--mp-atm-1), transparent 70%),
+      radial-gradient(60% 42% at 100% 85%, var(--mp-atm-2), transparent 70%),
+      radial-gradient(55% 34% at 95% 20%, var(--mp-atm-3), transparent 72%),
+      color-mix(in srgb, var(--mp-fondo) 55%, transparent);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2); backdrop-filter:blur(14px) saturate(1.2); }
+  html[data-mp] .m-scheda{ --m-bg:var(--mp-carta); left:max(14px, env(safe-area-inset-left,0px)); right:max(14px, env(safe-area-inset-right,0px)); top:calc(env(safe-area-inset-top,0px) + 18px); bottom:calc(env(safe-area-inset-bottom,0px) + 18px); max-width:440px; margin:auto; background:var(--mp-carta); border-radius:30px; box-shadow:var(--mp-ombra-scheda); overflow:hidden; transform:none; transform-origin:0 0; opacity:0; visibility:hidden; transition:opacity .15s, visibility 0s linear .15s; font-family:var(--mp-font); will-change:transform; }
+  html[data-mp] .m-scheda.m-su{ opacity:1; visibility:visible; transition:opacity .12s, visibility 0s; }
+  html[data-mp] .m-scheda.mp-esce{ opacity:1; visibility:visible; }
+  html[data-mp] .m-scheda > *{ transition:opacity .25s ease; }
+  html[data-mp] .m-scheda.mp-vuota > *{ opacity:0; }
+  html[data-mp] .m-scheda.mp-invito{ height:fit-content; max-height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 36px); }
+  html[data-mp] .m-scheda.mp-invito .m-s-piede{ display:none; }
+  html[data-mp] .m-scheda.mp-invito .m-s-corpo::after{ display:none; }
+  html[data-mp] .m-s-testa{ padding:30px 22px 6px; padding-right:120px; align-items:flex-start; }
+  html[data-mp] .m-s-testa::before{ top:10px; width:38px; height:5px; margin-left:-19px; border-radius:3px; background:var(--mp-linea); }
+  html[data-mp] .m-s-testa h2{ font-size:34px; font-weight:500; letter-spacing:-.045em; line-height:1; }
+  html[data-mp] .m-stato{ display:block; margin-top:6px; font-size:15px; font-weight:400; color:var(--mp-muto); }
+  html[data-mp] .m-stato.m-ok{ color:var(--mp-ok); }
+  html[data-mp] .m-s-testa :is(.m-chiudi, .m-s-pratica){ top:24px; width:40px; height:40px; background:var(--mp-campo); color:var(--mp-ink); }
+  html[data-mp] .m-s-testa .m-chiudi{ right:20px; }
+  html[data-mp] .m-s-testa .m-s-pratica{ right:68px; }
+  html[data-mp] .m-s-testa .m-chiudi svg{ width:18px; height:18px; }
+  html[data-mp] .m-s-corpo{ padding:0 22px; }
+  html[data-mp] .m-s-corpo::after{ height:calc(110px + var(--m-tastiera, 0px)); }
+  html[data-mp] .m-aiuti{ gap:8px; padding-top:12px; }
+  html[data-mp] .m-aiuto{ height:32px; padding:0 13px; gap:7px; border:0; border-radius:999px; background:var(--mp-campo); font-size:14px; line-height:32px; font-weight:500; color:var(--mp-ink); }
+  html[data-mp] .m-aiuto i{ width:7px; height:7px; }
+  html[data-mp] .m-aiuto em{ color:var(--mp-muto); font-weight:400; }
+  html[data-mp] .m-aiuto.ep{ background:color-mix(in srgb, var(--mp-allerta) 14%, var(--mp-carta)); color:color-mix(in srgb, var(--mp-allerta) 80%, var(--mp-ink)); }
+  html[data-mp] .m-aiuto .m-ok{ font-size:14px; padding-left:9px; }
+  html[data-mp] .m-scheda .m-lbl{ margin-top:18px; font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
+  html[data-mp] .m-scheda .m-modifica{ display:none; }
+  html[data-mp] .m-scheda textarea.m-testo{ font-family:var(--mp-font); color:var(--mp-ink); }
+  html[data-mp] #m-eo{ font-size:17px; line-height:1.6; letter-spacing:-.005em; }
+  html[data-mp] #m-provv{ font-size:17px; line-height:1.6; color:var(--mp-muto); }
+  html[data-mp] #m-provv:focus{ color:var(--mp-ink); }
+  html[data-mp] .m-riga-nome{ font-weight:500; }
+  html[data-mp] .m-aggiungi button{ font-size:14px; }
+  html[data-mp] .m-s-piede{ display:grid; grid-template-columns:56px 1fr; gap:10px; padding:18px 22px calc(18px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--mp-carta) 76%, transparent); }
+  html[data-mp] .m-s-piede .mp-menu-btn{ width:56px; height:56px; }
+  html[data-mp] .m-copia{ height:56px; border-radius:16px; background:var(--mp-accento); color:var(--mp-accento-ink); font-size:17px; font-weight:500; }
+  html[data-mp] .m-copia::before{ background:var(--mp-ok); }
+  html[data-mp] .m-copia.m-fatto{ color:#fff; }
+  html[data-mp] .m-copia .m-et svg{ width:20px; height:20px; }
+  .mp-menu{ grid-column:1 / -1; border-radius:18px; background:var(--mp-campo); overflow:hidden; animation:mp-entra .3s var(--mp-molla); }
+  .mp-menu[hidden]{ display:none; }
+  .mp-menu button{ display:block; width:100%; text-align:left; padding:15px 18px; border:0; background:none; color:var(--mp-ink); font:inherit; font-size:16px; cursor:pointer; }
+  .mp-menu button + button{ border-top:1px solid var(--mp-linea); }
+  .mp-invito-in{ padding:22px 0 24px; }
+  .mp-invito-in .mp-lbl{ margin-top:22px; }
+  .mp-ultimo{ margin:0; font-size:16px; line-height:1.6; color:var(--mp-muto); }
+
+  /* ESAME GUIDATO: una domanda alla volta */
+  #mp-domanda{ display:none; }
+  html[data-mp][data-mp-guida] body{ background:var(--mp-fondo); }
+  html[data-mp][data-mp-guida] .m-bar-in{ grid-template-columns:44px 1fr auto; gap:6px; }
+  html[data-mp][data-mp-guida] .m-bar .m-indietro{ margin-left:-12px; color:var(--mp-ink); }
+  html[data-mp][data-mp-guida] .m-bar .m-indietro svg{ width:20px; height:20px; }
+  html[data-mp][data-mp-guida] .m-bar .m-azione{ padding:8px 0 8px 12px; color:var(--mp-accento); font-family:var(--mp-font); font-weight:500; }
+  .mp-progresso{ display:flex; gap:4px; align-items:center; min-width:0; }
+  .mp-progresso button{ flex:1 1 0; max-width:26px; height:30px; padding:0; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .mp-progresso i{ display:block; height:4px; border-radius:2px; background:var(--mp-linea); transition:background .3s, transform .3s var(--mp-molla); }
+  .mp-progresso .mp-fatto i{ background:var(--mp-ink); }
+  .mp-progresso .mp-ora i{ background:var(--mp-accento); transform:scaleY(1.5); }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view{ max-width:440px; margin:0 auto; padding:calc(70px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(250px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); font-family:var(--mp-font); color:var(--mp-ink);
+    --panel:var(--mp-carta); --panel-2:var(--mp-campo); --panel-3:var(--mp-campo); --line:var(--mp-linea); --line-soft:var(--mp-linea); --ink:var(--mp-ink); --ink-dim:var(--mp-muto); --ink-faint:var(--mp-tenue);
+    --signal:var(--mp-accento); --signal-dark:var(--mp-accento); --signal-dim:color-mix(in srgb, var(--mp-accento) 14%, var(--mp-carta)); --signal-soft:color-mix(in srgb, var(--mp-accento) 12%, transparent); --on-signal:var(--mp-accento-ink); --glow-signal:none;
+    --clay-out:none; --clay-out-sm:none; --clay-in:none; --clay-in-sm:none; --clay-border:var(--mp-linea); }
+  html[data-mp][data-mp-guida] #clinical-view.mp-anima > :is(#mp-domanda, .card.mp-passo-on){ animation:mp-domanda .4s var(--mp-molla) both; }
+  @keyframes mp-domanda{ from{ opacity:0; transform:translateX(30px); } }
+  html[data-mp][data-mp-guida] #mp-domanda{ display:block; margin:14px 0 22px; }
+  html[data-mp][data-mp-guida] #mp-domanda h2{ margin:0; font-size:36px; font-weight:500; letter-spacing:-.045em; line-height:1; color:var(--mp-ink); }
+  html[data-mp][data-mp-guida] #mp-domanda p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
+  html[data-mp][data-mp-guida] #mp-domanda .mp-g-letto{ margin:0 0 10px; font-size:13px; font-weight:500; color:var(--mp-muto); }
+  html[data-mp][data-mp-guida] #clinical-view > .card{ display:none !important; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view > .card.mp-passo-on{ display:block !important; background:none; border:0; border-radius:0; box-shadow:none; margin:0; padding:0; }
+  html[data-mp][data-mp-guida] #clinical-view > .card.mp-passo-on > h2{ display:none; }
+  html[data-mp][data-mp-guida] #clinical-view > .card.mp-passo-on > :not(h2){ display:revert; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .group-label{ font-family:var(--mp-font); font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip{ min-height:46px; display:inline-flex; align-items:center; padding:8px 16px; border:0; border-radius:15px; background:var(--mp-campo); box-shadow:none; font-family:var(--mp-font); font-size:16px; font-weight:500; color:var(--mp-ink); transition:transform .12s var(--mp-molla), background .2s, color .2s; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip:active{ transform:scale(.96); }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip.active{ background:var(--mp-ink); border:0; box-shadow:none; color:var(--mp-fondo); font-weight:500; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view :is(input:not([type=checkbox], [type=radio]), textarea, select){ background:var(--mp-campo); border:0; border-radius:14px; box-shadow:none; color:var(--mp-ink); font-family:var(--mp-font); font-size:16px; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view :is(input, textarea, select):focus{ outline:2px solid var(--mp-accento); outline-offset:0; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view :is(input, textarea)::placeholder{ color:var(--mp-tenue); }
+  .mp-guida{ position:fixed; z-index:35; left:0; right:0; bottom:0; padding:26px max(20px, env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); background:linear-gradient(to top, var(--mp-fondo) 78%, transparent); font-family:var(--mp-font); pointer-events:none; }
+  .mp-guida[hidden]{ display:none; }
+  .mp-guida-in{ max-width:400px; margin:0 auto; pointer-events:auto; }
+  .mp-guida .mp-riga-btn{ margin-top:10px; grid-template-columns:1fr 1.8fr; }
+  .mp-guida .mp-btn.mp-sec{ background:color-mix(in srgb, var(--mp-ink) 7%, var(--mp-fondo)); }
+  .mp-g-frase{ max-height:85px; overflow-y:auto; padding:11px 16px; border-radius:18px; background:var(--mp-carta); box-shadow:var(--mp-ombra); color:var(--mp-muto); font-size:14px; line-height:1.5; overscroll-behavior:contain; }
+  .mp-g-frase b{ color:var(--mp-ink); font-weight:500; }
+  html[data-mp]:has(#clinical-view :is(input, textarea):focus) .mp-guida{ display:none; }
+
+  /* RICOVERO */
+  .mp-ricovero .mp-card{ margin-top:28px; }
+  .mp-campo{ display:block; margin-top:14px; min-width:0; }
+  .mp-campo:first-child, .mp-due:first-child .mp-campo{ margin-top:0; }
+  .mp-campo > span{ display:block; font-size:13px; color:var(--mp-muto); margin:0 0 6px 4px; }
+  .mp-campo input{ width:100%; height:54px; border:0; border-radius:16px; background:var(--mp-campo); padding:0 16px; font:inherit; font-size:17px; color:var(--mp-ink); box-sizing:border-box; }
+  .mp-campo input::placeholder{ color:var(--mp-tenue); }
+  .mp-campo input:focus{ outline:2px solid var(--mp-accento); outline-offset:0; }
+  .mp-due{ display:grid; grid-template-columns:1fr 1.6fr; gap:10px; margin-top:14px; }
+  .mp-due.mp-pari{ grid-template-columns:1fr 1fr; margin-top:0; }
+  .mp-due .mp-campo{ margin-top:0; }
+  .mp-sesso{ display:grid; grid-template-columns:1fr 1fr; gap:4px; height:54px; padding:4px; border-radius:16px; background:var(--mp-campo); box-sizing:border-box; }
+  .mp-sesso button{ border:0; border-radius:12px; background:none; color:var(--mp-muto); font:inherit; font-size:16px; font-weight:500; cursor:pointer; transition:background .2s, color .2s; }
+  .mp-sesso button[aria-pressed="true"]{ background:var(--mp-carta); color:var(--mp-ink); box-shadow:0 1px 3px rgba(40,30,60,.12); }
+  .mp-ricovero .mp-btn-su{ margin-top:22px; }
+  .mp-ricovero .mp-btn-su + .mp-btn-su{ margin-top:12px; }
+  .mp-scorre{ animation:mp-domanda .4s var(--mp-molla); }
+  .mp-ric-creato{ display:flex; gap:16px; align-items:center; }
+  .mp-ric-creato > div{ min-width:0; }
+  .mp-ric-iniz{ width:72px; height:72px; border-radius:22px; display:grid; place-items:center; background:linear-gradient(140deg, #ffd3bd, #f2b6d4); color:#3a1d2c; font-size:24px; font-weight:600; letter-spacing:-.02em; flex:none; }
+  .mp-codice{ display:flex; gap:10px; margin-top:20px; }
+  .mp-codice code{ flex:1; min-width:0; height:54px; line-height:54px; padding:0 16px; border-radius:16px; background:var(--mp-campo); font-family:var(--mp-mono); font-size:14px; color:var(--mp-muto); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; box-shadow:inset 0 0 0 1px var(--mp-linea); }
+
+  /* le pagine di Pocket: stessi titoli leggeri, stesso avviso */
+  html[data-mp] :is(.m-h2, .m-pag-t, .m-h1){ font-weight:500; letter-spacing:-.04em; text-transform:none; }
+  html[data-mp] #toast{ background:var(--mp-ink); border-color:var(--mp-ink); color:var(--mp-fondo); border-radius:999px; font-family:var(--mp-font); font-weight:500; box-shadow:none; }
+
+  @media (prefers-reduced-motion: reduce){ html[data-mp] :is(#m-app, .mp-guida, #clinical-view) :is(*, *::before, *::after){ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+</style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
   <main class="m-main" id="m-main"><div class="m-vista" id="m-vista"></div></main>
@@ -24687,9 +25004,11 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
 <script>
 (function(){
 if(!UI_MINIMAL) return;
-document.title = 'EO Pocket';
+document.title = UI_MP ? 'Minimal Pocket' : 'EO Pocket';
 
 const M = { vista:'home', pila:[], settore:null, letto:null, id:null, daScheda:false, pag:null };
+// Minimal Pocket: le tre sezioni della barra in basso (Oggi, Reparto, Ricovero)
+const MP_TAB = ['home', 'visita', 'ricovero'];
 // pagine dell'app aperte da minimal (sotto la barra minimal)
 const PAGINE = { consegne:'Consegne weekend', ricoveri:'Ricoveri', 'ricovero-singolo':'Ricovero', impostazioni:'Impostazioni', account:'Account',
   dimissioni:'Calendario dimissioni', postdegenze:'Post-degenze', editor:'Editor di testo', backup:'Backup', vitali:'Parametri vitali' };
@@ -24806,6 +25125,8 @@ function indietro(){ const p = M.pila.pop(); if(!p) return; Object.assign(M, p);
 let animaIngresso = true, gestoIndietro = false, quietaTimer = 0;
 // indietro dal pulsante della barra o dal gesto (dal bordo sinistro verso destra)
 function tornaIndietro(gesto){
+  // Minimal Pocket: Oggi, Reparto e Ricovero sono le tre sezioni, senza un "indietro"
+  if(UI_MP && MP_TAB.includes(M.vista)) return;
   animaIngresso = false; gestoIndietro = !!gesto;
   try{
     if(M.vista === 'eo') fineVisita();
@@ -24830,10 +25151,10 @@ function coloreTema(visita){
   applicaTema(f);
   // la barra del telefono come la barra in alto: scura solo col tema Scuro
   // (con Aurex l'esame obiettivo è scuro ma la barra resta chiara)
-  document.querySelector('meta[name="theme-color"]').content = t === 'scuro' ? '#0c1622' : visita ? (t === 'aurex' ? '#eef1f3' : '#eef2f6') : '#f5f7f9';
+  document.querySelector('meta[name="theme-color"]').content = UI_MP ? (t === 'scuro' ? '#0e0f14' : '#f7f6f8') : t === 'scuro' ? '#0c1622' : visita ? (t === 'aurex' ? '#eef1f3' : '#eef2f6') : '#f5f7f9';
 }
 function impostaTemaMinimal(t){
-  try{ localStorage.setItem(MTEMA_KEY, t); } catch(e){}
+  try{ localStorage.setItem(UI_MP ? MPTEMA_KEY : MTEMA_KEY, t); } catch(e){}
   document.documentElement.dataset.mTema = t;
   coloreTema(document.documentElement.hasAttribute('data-m-orig'));
   renderImpostazioniTema();
@@ -24841,9 +25162,12 @@ function impostaTemaMinimal(t){
 function disegna(verso){
   const v = $m('#m-vista');
   document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
-  temaVisita(M.vista === 'eo');
-  if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; return; }
-  $m('#m-main').classList.toggle('m-main-home', M.vista === 'home');
+  // Minimal Pocket: l'esame obiettivo resta nello stile delle pagine (niente
+  // schermata dei tag col tema dell'app), una domanda alla volta
+  temaVisita(M.vista === 'eo' && !UI_MP);
+  if(UI_MP) mpPrima();
+  if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; if(UI_MP) mpGuida(); return; }
+  $m('#m-main').classList.toggle('m-main-home', M.vista === 'home' && !UI_MP);
   if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); document.getElementById('impostazioni-view').classList.toggle('m-solo-account', M.pag === 'account'); mostraVista(M.pag === 'account' ? 'impostazioni' : M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
@@ -24860,13 +25184,15 @@ function disegna(verso){
   v.classList.toggle('m-quieta', !cascata);
   if(cascata) quietaTimer = setTimeout(() => v.classList.add('m-quieta'), 1000);
   window.scrollTo(0, 0);
+  if(UI_MP && mpVista()) return;
   M.vista === 'home' ? vHome() : M.vista === 'strumenti' ? vStrumenti() : M.vista === 'aggcons' ? vAggCons() : vSettore();
 }
 function barra(titolo, azione){
-  const bar = $m('#m-bar'); bar.classList.toggle('m-home', M.vista === 'home');
+  const casa = M.vista === 'home' || (UI_MP && MP_TAB.includes(M.vista));
+  const bar = $m('#m-bar'); bar.classList.toggle('m-home', casa);
   bar.classList.remove('m-scorsa'); requestAnimationFrame(barraScorsa);
-  $m('#m-bar-in').innerHTML = M.vista === 'home'
-    ? `<span class="m-marchio"><i>EO</i>EO Pocket</span>${htmlConnessione()}`
+  $m('#m-bar-in').innerHTML = casa
+    ? `${UI_MP ? '<span class="mp-marchio"><b>EO Pocket</b> · minimal</span>' : '<span class="m-marchio"><i>EO</i>EO Pocket</span>'}${htmlConnessione()}`
     : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
 }
 
@@ -25050,7 +25376,7 @@ function segnaModulo(btn){
 // dopo una conferma: la riga Pratiche del settore o della home
 function ridisegnaPratiche(){
   if($m('#m-set-fare')) disegnaFareSettore();
-  else if($m('#m-vista .m-fare, #m-vista .m-home-giu')) disegna();
+  else if($m('#m-vista .m-fare, #m-vista .m-home-giu, #m-vista .mp-oggi')) disegna();
 }
 // il box della conferma: la domanda, i moduli da compilare (spuntati; quelli
 // già scritti come fatti lo dicono) e No / Sì
@@ -25694,6 +26020,7 @@ function tileLetto(nome, etichetta, k, appena, appoggio){
 }
 function disegnaLetti(appena){
   appena = appena || appoggioNuovo; appoggioNuovo = null;
+  if(UI_MP){ mpLetti(appena); return; }
   if($m('#m-mappa')){ disegnaMappa(); return; }
   const el = $m('#m-letti'); if(!el || !M.settore) return;
   // Ricoveri: solo i ricoverati, niente appoggi né parametri vitali
@@ -25863,6 +26190,7 @@ function apriVisita(nome, daScheda){
     const iso = isolamentoPerLetto(nome, state.isolamento);
     if(coloreIsolamento(iso)) setTimeout(() => { if(M.vista === 'eo' && M.letto === nome) apriIsolamento(iso); }, 350);
   }
+  if(UI_MP) mpGuidaInizio();
 }
 function fineVisita(conferma){
   const nome = M.letto, torna = M.daScheda;
@@ -25969,12 +26297,14 @@ function apriScheda(nome){
   // già in memoria: niente da ricalcolare; altrimenti a scheda ben ferma,
   // non proprio a fine salita (lì il lavoro si vedeva come uno scatto)
   clearTimeout(sh._t); if(!M.aiutiPronti) sh._t = setTimeout(() => pianificaAiuti(true), 750);
+  if(UI_MP) mpSchedaApre(nome);
   // su iPhone basta il body bloccato solo a metà: si blocca anche html
   document.documentElement.style.overflow = document.body.style.overflow = 'hidden';
 }
 function chiudiScheda(){
   document.activeElement && document.activeElement.blur && document.activeElement.blur();
   salvaOra();
+  if(UI_MP) mpSchedaChiude();
   $m('#m-scheda').classList.remove('m-su'); $m('#m-velo').classList.remove('m-su');
   document.documentElement.style.overflow = document.body.style.overflow = '';
   clearTimeout($m('#m-scheda')._t);
@@ -26492,7 +26822,9 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'letto'){
     const nome = el.dataset.n;
     // visto oggi: il diario; altrimenti la visita coi tag
-    if(infoLetto(nome).vistoOggi) apriScheda(nome);
+    // (Minimal Pocket: il letto si allarga nella sua scheda, vedi mpLetto)
+    if(UI_MP) mpLetto(nome, el);
+    else if(infoLetto(nome).vistoOggi) apriScheda(nome);
     else apriVisita(nome);
   }
   else if(a === 'chiudi') chiudiScheda();
@@ -27057,7 +27389,7 @@ renderWardMap = function(){
     if(v){ clearTimeout(quietaTimer); v.classList.add('m-quieta'); }
     disegnaLetti();
   }
-  if(M.vista === 'home') vHome();
+  if(M.vista === 'home'){ if(UI_MP) mpOggi(); else vHome(); }
   // mappa dei settori aperta e settore scelto cambiato da un altro
   // dispositivo: il contorno si sposta sul nuovo
   if($m('#m-mappa') && !M.zoom){ const sc = settoreScelto(); if(sc && sc !== M.settore){ M.settore = sc; disegnaMappa(); } }
@@ -27309,6 +27641,8 @@ if(temaChiaro && temaScuro){
       <span class="m-ss">5 da vedere · 3 diari da copiare</span>${FESTA_HTML}</div>`;
   gruppo.innerHTML = `<div class="group-label" style="text-align:center;">Colore dell'app</div>${anteprima}<div class="m-pulsanti">${pulsantiDisponibili().map(([k, n, c, d]) => `<button type="button" data-c="${k}" style="--c-l:${c}; --c-d:${d}" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join('')}</div><div class="m-pulsante-nome"></div>`;
   temaChiaro.closest('.group').after(gruppo);
+  // Minimal Pocket: chiaro o scuro, e un accento solo (niente Aurex né colori)
+  if(UI_MP){ temaAurex.style.display = 'none'; gruppo.style.display = 'none'; }
   const segnaPulsante = () => {
     const att = document.documentElement.dataset.mPulsante || 'teal';
     gruppo.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === att)));
@@ -27581,7 +27915,7 @@ mostraVista = function(v){
   try{ ultima = localStorage.getItem(LAST_VIEW_KEY); } catch(e){}
   const r = mostraVistaApp.apply(this, arguments);
   try{ if(ultima === null) localStorage.removeItem(LAST_VIEW_KEY); else localStorage.setItem(LAST_VIEW_KEY, ultima); } catch(e){}
-  if((M.vista === 'home' || M.vista === 'strumenti') && PAGINE[v]){ vai('app', { pag:v }); return r; }
+  if((M.vista === 'home' || M.vista === 'strumenti' || (UI_MP && MP_TAB.includes(M.vista))) && PAGINE[v]){ vai('app', { pag:v }); return r; }
   if(M.vista === 'app' && PAGINE[v]){
     // Account è Impostazioni col solo accesso: resta Account
     if(!(M.pag === 'account' && v === 'impostazioni')) M.pag = v;
@@ -27594,6 +27928,454 @@ mostraVista = function(v){
   }
   return r;
 };
+
+/* ===================== MINIMAL POCKET =====================
+   Un ramo di EO Pocket (?ui=minimal-pocket), non un tema: stesso motore e
+   stessi dati (letti, diari, consegne, ricoveri, sincronizzazione), ma tre
+   sezioni sole, in una barra a pillola in basso:
+   - Oggi: il titolo è una frase (quanti pazienti da vedere, quanti diari
+     da copiare) e sotto una pila di card, il prossimo passo in cima; fatta
+     o rimandata, la card scivola via verso destra
+   - Reparto: una griglia sola per settore; toccato, il letto si allarga
+     fino a diventare la sua scheda (il diario, o l'invito a visitarlo)
+   - Ricovero: nome, età e diagnosi, e il ricovero c'è; il resto dopo
+   L'esame obiettivo è quello di sempre (gli stessi tag, lo stesso testo),
+   ma una domanda alla volta, con la frase che si compone in basso.
+   Tutto il resto (dimissioni, consegne, strumenti, account) sono le pagine
+   di Pocket, con questi colori. Stile: <style id="stile-mp"> */
+const MP_ICO = {
+  oggi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  reparto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>',
+  piu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  altro:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
+  giro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0010 0V3"/><path d="M11 14v2a5 5 0 0010 0v-2"/><circle cx="21" cy="11" r="1.5"/></svg>'
+};
+const mpFermo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mpTile = nome => document.querySelector(`#mp-letti [data-n="${CSS.escape(nome)}"]`);
+// "Letto 4.1" → "letto 4.1"; gli appoggi (iniziali) restano come sono
+const mpMinuscolo = n => /^Letto\s/i.test(n) ? 'l' + n.slice(1) : n;
+
+/* ---------- le tre sezioni ---------- */
+function mpPrima(){
+  const h = document.documentElement;
+  h.dataset.mpV = M.vista;
+  h.toggleAttribute('data-mp-guida', M.vista === 'eo');
+  document.querySelectorAll('#mp-barra [data-v]').forEach(b => { if(b.dataset.v === M.vista) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  if(M.vista !== 'eo') mpGuidaFine();
+}
+function mpVista(){
+  if(!MP_TAB.includes(M.vista)) return false;   // Strumenti e Aggiorna consegne: quelle di Pocket
+  barra();
+  const v = $m('#m-vista');
+  v.classList.remove('m-avanti', 'm-indietro-anim', 'm-ferma', 'mp-entra'); void v.offsetWidth; v.classList.add('mp-entra');
+  if(M.vista === 'home') mpOggi(); else if(M.vista === 'visita') mpReparto(); else mpRicovero();
+  return true;
+}
+function mpVai(v){
+  if($m('#m-scheda').classList.contains('m-su')) chiudiScheda();
+  if(M.vista === v){ window.scrollTo({ top:0, behavior:mpFermo() ? 'auto' : 'smooth' }); return; }
+  M.pila = []; M.vista = v;
+  // il settore scelto (anche da un altro dispositivo) vale all'ingresso
+  if(v === 'visita'){ const s = settoreScelto(); if(s) M.settore = s; }
+  disegna();
+}
+// i letti di un settore: [nome, etichetta, appoggio]
+function mpNomi(s){
+  if(s === RIC) return ricoveratiEO().map(n => [n, inizialiLetto(n), false]);
+  return [...(getWardMap()[s] || []).map(n => [bedName(n), etichettaLetto(n), false]), ...(loadAppoggi()[s] || []).map(n => [n, inizialiLetto(n), true])];
+}
+function mpSettoreDi(nome){
+  if(M.settore && nomiDelSettore(M.settore).has(nome)) return M.settore;
+  return settori().find(s => nomiDelSettore(s).has(nome)) || (ricoveratiEO().includes(nome) ? RIC : null);
+}
+
+/* ---------- OGGI ---------- */
+// i passi di oggi, dai dati veri: i critici ancora da vedere, i diari da
+// copiare, le lettere di dimissione di oggi e domani, le consegne, le
+// post-degenze e, finché resta qualcuno, il giro. Del settore scelto, o di
+// tutti se non se n'è scelto uno
+let mpDopo = [];     // le card rimandate vanno in fondo alla pila (finché l'app resta aperta)
+let mpPila = [];
+function mpPassi(){
+  const sett = settoreScelto(), ss = sett ? [sett] : settori();
+  const vu = lettiVuoti(), contati = new Set();
+  const critici = [], diari = [], resto = [];
+  let tot = 0, daVedere = 0, daCopiare = 0, copiati = 0;
+  ss.forEach(s => mpNomi(s).forEach(([n, et, ap]) => {
+    if(contati.has(n)) return; contati.add(n);
+    const i = infoLetto(n);
+    if(!ap && !i.occupato && vu[n]) return;
+    tot++;
+    if(!i.vistoOggi){
+      daVedere++;
+      if(i.critico) critici.push({ k:'vis|' + n, letto:n, s, et, stato:'critico', titolo:`${n}, critico`, sotto:'Ancora da vedere oggi', azione:'Fai la visita' });
+    } else if(!i.copiato){
+      daCopiare++;
+      diari.push({ k:'dia|' + n, letto:n, s, et, stato:i.critico ? 'critico' : 'dacop', titolo:n,
+        sotto:['Diario da copiare', i.pall.esamiDomani && 'esami domani', i.pall.dimOggi ? 'dimissione oggi' : i.pall.dimDomani && 'dimissione domani'].filter(Boolean).join(' · '), azione:'Apri il diario' });
+    } else if(s !== RIC) copiati++;
+  }));
+  const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
+  const nomiSett = sett ? nomiDelSettore(sett) : null;
+  const delSettore = n => !nomiSett || nomiSett.has(n);
+  // lettere di dimissione: si segnano fatte dalla card (lo stesso segno di Dimissioni)
+  let dim = []; try{ dim = calcolaCalendarioDimissioni(); } catch(e){}
+  dim.forEach(r => {
+    const g = chiaveGiorno(r.data.getTime());
+    if((g !== oggi && g !== domani) || !delSettore(r.nome) || letteraScritta(r.id, g)) return;
+    resto.push({ k:`let|${r.id}|${g}`, letto:r.nome, s:mpSettoreDi(r.nome), et:(/^(?:C[12] · )?Letto\s+(.+)$/i.exec(r.nome) || [])[1] || inizialiLetto(r.nome), stato:'lettera',
+      titolo:/^Letto\s/i.test(r.nome) ? `Lettera del ${mpMinuscolo(r.nome)}` : `Lettera · ${r.nome}`, sotto:`Dimissione ${g === oggi ? 'oggi' : 'domani'}`, azione:'Apri il letto',
+      fatto:() => { if(!letteraScritta(r.id, g)) segnaLettera(r.id, g); } });
+  });
+  // consegne: nei feriali da aggiornare dopo il primo diario copiato (si
+  // segnano a mano, come in Pocket); nel weekend e nei festivi quelle del giorno
+  const kCons = sett ? `cons|${sett}|${oggi}` : `cons|${oggi}`;
+  if(sett === RIC){
+    // i ricoveri non passano dalle consegne
+  } else if(eFestivo(new Date())){
+    const cw = loadConsegne(); let n = 0;
+    Object.entries(cw).forEach(([nome, v]) => { if(delSettore(nome)) ['V','E','S','C'].forEach(l => { if(v && v[l] && !v['fatto' + l]) n++; }); });
+    if(!Object.keys(cw).length) resto.push({ k:'consw', ico:ICON.consegne, titolo:'Consegne del weekend', sotto:'Ancora da allegare', azione:'Apri le consegne', vai:() => vai('app', { pag:'consegne' }) });
+    else if(n) resto.push({ k:'consw', ico:ICON.consegne, titolo:'Consegne del weekend', sotto:`${n} da fare`, azione:'Apri le consegne', vai:() => vai('app', { pag:'consegne' }) });
+  } else if(copiati && !(f.lettere || {})[kCons]){
+    resto.push({ k:kCons, ico:ICON.consegne, titolo:'Consegne da aggiornare', sotto:`Dai diari di oggi · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}`, azione:'Apri le consegne', vai:() => vai('aggcons'),
+      fatto:() => { const x = leggiFare(); x.lettere = x.lettere || {}; x.lettere[kCons] = true; scriviFare(x); } });
+  }
+  // post-degenze dal 10° giorno
+  const voci = caricaPostDegenze();
+  const pd = Object.keys(voci).filter(id => avvisoPostDegenza(voci[id]) <= Date.now()).length;
+  if(pd && sett !== RIC) resto.push({ k:'pd', ico:ICON.postdegenze, titolo:pd === 1 ? 'Una post-degenza' : `${pd} post-degenze`, sotto:'Da controllare oggi', azione:'Apri le post-degenze', vai:() => vai('app', { pag:'postdegenze' }) });
+  // il giro: chi resta da vedere (i critici hanno già la loro card)
+  const altri = daVedere - critici.length;
+  if(altri > 0) resto.push({ k:'giro', ico:MP_ICO.giro, titolo:sett ? `Il giro · ${sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)}` : 'Il giro di oggi',
+    sotto:`${altri} ${altri === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Apri il reparto', vai:() => mpVai('visita') });
+  const passi = [...critici, ...diari, ...resto];
+  mpDopo = mpDopo.filter(k => passi.some(p => p.k === k));
+  passi.sort((a, b) => mpDopo.indexOf(a.k) - mpDopo.indexOf(b.k));
+  return { passi, tot, daVedere, daCopiare, sett };
+}
+function mpOggi(){
+  const { passi, tot, daVedere, daCopiare, sett } = mpPassi();
+  mpPila = passi;
+  const ora = new Date().getHours();
+  const saluto = ora < 5 ? 'Buonanotte.' : ora < 13 ? 'Buongiorno.' : ora < 18 ? 'Buon pomeriggio.' : 'Buonasera.';
+  const diari = `${daCopiare} ${daCopiare === 1 ? 'diario' : 'diari'} da copiare`;
+  const frase = !tot ? 'Nessun paziente in reparto.'
+    : daVedere ? `${daVedere} ${daVedere === 1 ? 'paziente' : 'pazienti'} da vedere${daCopiare ? ', ' + diari : ''}.`
+    : daCopiare ? `Tutti i pazienti visti, ${diari}.` : 'Tutti i pazienti visti, tutti i diari copiati.';
+  const festivo = eFestivo(new Date());
+  const chip = (attr, t) => `<button class="mp-chip" ${attr}>${t}</button>`;
+  $m('#m-vista').innerHTML = `<div class="mp-oggi">
+    <h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
+    <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p>
+    <div class="mp-pila" id="mp-pila"></div>
+    <div class="mp-pallini" id="mp-pallini" aria-hidden="true"></div>
+    <p class="mp-sugg" id="mp-sugg"></p>
+    <p class="mp-lbl">Tutto il resto</p>
+    <div class="mp-altro">${chip('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? chip('data-m="pagina" data-p="consegne"', 'Consegne weekend') : chip('data-m="aggcons"', 'Consegne')}${chip('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${chip('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${chip('data-m="rubrica"', 'Rubrica')}${chip('data-m="strumenti-home"', 'Strumenti')}</div>
+  </div>`;
+  mpDisegnaPila();
+}
+function mpDisegnaPila(){
+  const pila = $m('#mp-pila'); if(!pila) return;
+  const sugg = $m('#mp-sugg'), pall = $m('#mp-pallini');
+  if(!mpPila.length){
+    pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Giro finito</h3><p>Niente altro da fare per oggi.</p></div>`;
+    pall.innerHTML = ''; sugg.hidden = true; return;
+  }
+  pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
+      <div class="mp-chi"><span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span><div><h3>${esc(p.titolo)}</h3><p>${esc(p.sotto)}</p></div></div>
+      <div class="mp-riga-btn"><button class="mp-btn mp-sec" data-mp="passo-via">${p.fatto ? 'Fatto' : 'Dopo'}</button><button class="mp-btn" data-mp="passo-apri">${esc(p.azione)}</button></div>
+    </div>`).join('');
+  pall.innerHTML = mpPila.length > 1 ? mpPila.slice(0, 8).map((_, k) => `<i${k ? '' : ' class="on"'}></i>`).join('') : '';
+  const p = mpPila[0];
+  sugg.hidden = !p.fatto && mpPila.length < 2;
+  sugg.textContent = p.fatto ? 'Scorri la card verso destra quando è fatto' : 'Scorri la card verso destra per passare alla prossima';
+  mpTrascina(pila.firstElementChild);
+}
+function mpPassoVia(){
+  const p = mpPila[0], el = $m('#mp-pila .mp-passo[data-pos="0"]'); if(!p || !el || el.classList.contains('mp-via')) return;
+  el.classList.add('mp-via');
+  if(p.fatto){ try{ p.fatto(); } catch(e){} showToast('Fatto'); try{ navigator.vibrate && navigator.vibrate(10); } catch(e){} }
+  else { mpDopo = mpDopo.filter(k => k !== p.k); mpDopo.push(p.k); }
+  setTimeout(() => { if(M.vista === 'home') mpOggi(); }, mpFermo() ? 0 : 260);
+}
+function mpPassoApri(){
+  const p = mpPila[0]; if(!p) return;
+  if(p.vai) return p.vai();
+  // un letto: si passa al Reparto e il letto si apre da lì
+  if(p.s) M.settore = p.s;
+  M.pila = []; M.vista = 'visita'; disegna();
+  setTimeout(() => { const t = mpTile(p.letto); if(M.vista === 'visita') mpLetto(p.letto, t); }, mpFermo() ? 0 : 380);
+}
+function mpTrascina(el){
+  let x0 = null, dx = 0;
+  el.addEventListener('pointerdown', e => { if(e.target.closest('button') || el.classList.contains('mp-via')) return; x0 = e.clientX; dx = 0; el.style.transition = 'none'; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointermove', e => { if(x0 === null) return; dx = Math.max(0, e.clientX - x0); el.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`; });
+  const fine = () => { if(x0 === null) return; x0 = null; el.style.transition = ''; el.style.transform = ''; if(dx > 110) mpPassoVia(); dx = 0; };
+  el.addEventListener('pointerup', fine); el.addEventListener('pointercancel', fine);
+}
+
+/* ---------- REPARTO ---------- */
+function mpReparto(){
+  M.zoom = true;
+  const ss = settori(), ric = ricoveratiEO();
+  const tutti = ric.length ? [...ss, RIC] : ss;
+  if(!tutti.includes(M.settore)) M.settore = settoreScelto() || (ss.includes(settoreAttivo) ? settoreAttivo : ss[0]);
+  $m('#m-vista').innerHTML = `<div class="mp-reparto">
+    <h1 class="mp-frase" id="mp-frase-rep"></h1>
+    <div class="mp-settori" id="mp-settori">${tutti.map(s => `<button data-mp="settore" data-s="${esc(s)}" aria-pressed="${s === M.settore}">${esc(s === RIC ? 'Ricoveri' : nomeSettoreTitolo(s))}</button>`).join('')}</div>
+    <div class="mp-card mp-card-letti">
+      <div class="mp-griglia" id="mp-letti"></div>
+      <div class="mp-legenda" aria-hidden="true"><span><i class="mp-lg-base"></i>da vedere</span><span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-cop"></i>copiato</span><span><i class="mp-lg-crit"></i>critico</span></div>
+    </div>
+    <p class="mp-lbl">Del settore</p>
+    <div class="mp-altro" id="mp-del-settore"><button class="mp-chip" data-m="vitali">Parametri vitali</button><button class="mp-chip" data-m="aggcons">Consegne</button><button class="mp-chip" data-m="pagina" data-p="dimissioni">Dimissioni</button></div>
+  </div>`;
+  mpLetti();
+}
+function mpLetti(appena){
+  const el = $m('#mp-letti'); if(!el || !M.settore) return;
+  const ric = M.settore === RIC, nomi = mpNomi(M.settore);
+  el.innerHTML = nomi.map(([n, et, ap], k) => tileLetto(n, et, k, appena, ap)).join('')
+    + (ric ? '' : `<div class="m-tl m-tl-nuovo" style="--i:${Math.min(nomi.length, 20)}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}<span class="m-gg">appoggio</span></div>`);
+  const ds = $m('#mp-del-settore'); if(ds) ds.hidden = ric;
+  const st = statoSettore(M.settore), resto = st.n - st.visti, dc = st.visti - st.cop;
+  $m('#mp-frase-rep').innerHTML = `${esc(ric ? 'Ricoveri' : nomeSettoreTitolo(M.settore))}<br><em>${!st.n ? 'nessun letto occupato' : resto ? `${resto} da vedere` : dc ? `${dc} ${dc === 1 ? 'diario' : 'diari'} da copiare` : 'giro finito'}</em>`;
+  if(!ric) preparaAiuti();
+}
+// il letto toccato: visto oggi apre il diario; altrimenti la scheda che
+// invita alla visita, con l'ultimo esame obiettivo scritto sotto gli occhi
+let mpDa = null;
+function mpLetto(nome, el){
+  mpDa = el || mpTile(nome);
+  // aperto un letto, il settore è quello di oggi (anche per Oggi e per gli altri dispositivi)
+  if(M.settore && nomiDelSettore(M.settore).has(nome)) ricordaSettore(M.settore);
+  if(infoLetto(nome).vistoOggi) return apriScheda(nome);
+  const i = infoLetto(nome), sh = $m('#m-scheda');
+  salvaOra();
+  M.letto = nome; M.id = null; D = null;
+  let ultimo = '';
+  if(i.occupato){ try{ ultimo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){} }
+  const quando = !i.occupato ? (lettiVuoti()[nome] ? 'Letto segnato vuoto' : 'Da vedere oggi') : i.giorniVisita === 1 ? 'Da vedere · visto ieri' : i.giorniVisita > 1 ? `Da vedere · visto ${i.giorniVisita} giorni fa` : 'Da vedere oggi';
+  sh.classList.add('mp-invito');
+  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(nome)}</h2><span class="m-pallini">${palliniBasso(i)}</span></div><span class="m-stato mp-stato-da">${i.critico ? 'Critico · ' + quando.charAt(0).toLowerCase() + quando.slice(1) : quando}</span></div>
+    <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
+  $m('#m-s-corpo').innerHTML = `<div class="mp-invito-in">
+      <button class="mp-btn" data-mp="visita">${i.occupato ? 'Inizia la visita' : "Inizia l'esame obiettivo"}</button>
+      <p class="mp-nota">Una domanda alla volta: coscienza, respiro, cuore, torace, addome…</p>
+      ${ultimo ? `<p class="mp-lbl">L'ultimo esame obiettivo</p><p class="mp-ultimo">${esc(ultimo)}</p>` : ''}
+    </div>`;
+  $m('#m-s-corpo').scrollTop = 0;
+  void sh.offsetHeight;
+  $m('#m-velo').classList.add('m-su'); sh.classList.add('m-su');
+  document.documentElement.style.overflow = document.body.style.overflow = 'hidden';
+  mpSchedaApre();
+}
+
+/* ---------- la scheda: il letto si allarga fino a diventarla ---------- */
+function mpSchedaApre(){
+  const s = $m('#m-scheda');
+  if(M.id) s.classList.remove('mp-invito');
+  document.documentElement.classList.add('mp-scheda-aperta');
+  mpMenu(false);
+  clearTimeout(s._mp); clearTimeout(s._mp2); s.classList.remove('mp-esce');
+  const bed = mpDa && mpDa.isConnected ? mpDa : mpTile(M.letto);
+  mpDa = null;
+  if(!bed || mpFermo()){ s.classList.remove('mp-vuota'); s.style.transition = s.style.transform = s.style.borderRadius = ''; return; }
+  s.style.transition = 'none'; s.style.transform = 'none'; s.style.borderRadius = '';
+  const fine = s.getBoundingClientRect(), da = bed.getBoundingClientRect();
+  s.classList.add('mp-vuota');
+  s.style.borderRadius = '20px';
+  s.style.transform = `translate(${da.left - fine.left}px, ${da.top - fine.top}px) scale(${da.width / fine.width}, ${da.height / fine.height})`;
+  void s.offsetWidth;
+  s.style.transition = 'transform .52s var(--mp-molla), border-radius .52s var(--mp-molla), opacity .12s';
+  s.style.transform = 'none'; s.style.borderRadius = '';
+  s._mp2 = setTimeout(() => s.classList.remove('mp-vuota'), 230);
+  s._mp = setTimeout(() => { s.style.transition = ''; s.style.transform = ''; }, 560);
+}
+function mpSchedaChiude(){
+  const s = $m('#m-scheda');
+  document.documentElement.classList.remove('mp-scheda-aperta');
+  mpMenu(false);
+  clearTimeout(s._mp); clearTimeout(s._mp2);
+  const bed = M.vista === 'visita' && s.classList.contains('m-su') ? mpTile(M.letto) : null;
+  if(!bed || mpFermo()){ s.classList.remove('mp-vuota', 'mp-esce'); s.style.transition = s.style.transform = s.style.borderRadius = ''; return; }
+  s.style.transition = 'none'; s.style.transform = 'none';
+  const fine = s.getBoundingClientRect(), da = bed.getBoundingClientRect();
+  s.classList.add('mp-vuota', 'mp-esce');
+  void s.offsetWidth;
+  s.style.transition = 'transform .42s var(--mp-molla), border-radius .42s var(--mp-molla)';
+  s.style.borderRadius = '20px';
+  s.style.transform = `translate(${da.left - fine.left}px, ${da.top - fine.top}px) scale(${da.width / fine.width}, ${da.height / fine.height})`;
+  s._mp = setTimeout(() => { s.classList.remove('mp-vuota', 'mp-esce'); s.style.transition = 'none'; s.style.transform = ''; s.style.borderRadius = ''; void s.offsetWidth; s.style.transition = ''; }, 430);
+}
+function mpMenu(apri){
+  const m = $m('#mp-menu'), b = $m('#mp-menu-btn'); if(!m) return;
+  m.hidden = !apri; if(b) b.setAttribute('aria-expanded', String(!!apri));
+}
+
+/* ---------- ESAME OBIETTIVO GUIDATO: una domanda alla volta ---------- */
+// le schede dell'esame obiettivo dell'app (gli stessi tag, lo stesso testo
+// generato), mostrate una per volta: in alto l'avanzamento, in basso la
+// frase che si compone e Avanti. Le parti nascoste in Impostazioni non si
+// chiedono. "Fine" in ogni momento: il resto resta com'è (nella norma)
+const MP_DOMANDE = {
+  'card-sesso':['Paziente?', 'Sesso e isolamento'], 'card-coscienza':['Coscienza?', "Com'era alla visita"], 'card-respiro':['Respiro?', 'In aria ambiente o con ossigeno, e i parametri'],
+  'card-diuresi':['Diuresi?', 'Come urina e quanto'], 'card-cuore':['Cuore?', 'Toni, frequenza, soffi'], 'card-torace':['Torace?', 'Murmure vescicolare e rumori'],
+  'card-addome':['Addome?', 'Forma, trattabilità, alvo'], 'card-cute':['Cute?', 'Cicatrici, ernie, lesioni'], 'card-edemi':['Edemi?', 'Declivi, sede, qualità'],
+  'card-lingua':['Lingua?', 'Com\'è alla vista'], 'card-neuro':['Neurologico?', 'Solo quello che c\'è da segnalare']
+};
+const mpG = { k:0, passi:[], base:null };
+const mpEoTesto = () => { const t = (document.getElementById('output') || {}).value || ''; const k = t.indexOf('\n\n'); return (k === -1 ? t : t.slice(0, k)).trim(); };
+const mpFrasi = t => t.split(/\.\s+/).map((f, k, a) => k < a.length - 1 ? f + '.' : f).filter(Boolean);
+function mpGuidaInizio(){
+  const nascoste = sezioniNascoste();
+  mpG.passi = ['card-sesso', ...SEZIONI_ESAME.map(x => x[0]).filter(id => !nascoste.includes(id))].filter(id => document.getElementById(id));
+  // il sesso si chiede solo la prima volta
+  mpG.k = state.sesso && mpG.passi.length > 1 ? 1 : 0;
+  mpG.base = new Set(mpFrasi(mpEoTesto()));
+  mpGuida();
+}
+function mpGuida(){
+  if(M.vista !== 'eo') return;
+  if(!mpG.passi.length){ mpG.passi = ['card-sesso', ...SEZIONI_ESAME.map(x => x[0])]; mpG.k = 0; }
+  const n = mpG.passi.length; mpG.k = Math.max(0, Math.min(n - 1, mpG.k));
+  $m('#m-bar-in').innerHTML = `<button class="m-indietro" data-m="indietro" aria-label="Chiudi la visita">${ICON.x}</button>
+    <div class="mp-progresso" role="tablist" aria-label="Parti dell'esame">${mpG.passi.map((id, k) => `<button role="tab" data-mp="g-vai" data-k="${k}" aria-selected="${k === mpG.k}" aria-label="${esc((MP_DOMANDE[id] || [''])[0].replace('?', ''))}" class="${k < mpG.k ? 'mp-fatto' : k === mpG.k ? 'mp-ora' : ''}"><i></i></button>`).join('')}</div>
+    <button class="m-azione" data-mp="g-fine">Fine</button>`;
+  const id = mpG.passi[mpG.k], d = MP_DOMANDE[id] || ['', ''];
+  document.querySelectorAll('#clinical-view > .card').forEach(c => c.classList.toggle('mp-passo-on', c.id === id));
+  const dom = $m('#mp-domanda');
+  dom.innerHTML = `<p class="mp-g-letto">${esc(M.letto || '')}</p><h2>${esc(d[0])}</h2><p>${esc(d[1])}</p>`;
+  const cv = document.getElementById('clinical-view');
+  cv.classList.remove('mp-anima'); void cv.offsetWidth; cv.classList.add('mp-anima');
+  const g = $m('#mp-guida'); g.hidden = false;
+  $m('#mp-g-indietro').disabled = mpG.k === 0;
+  $m('#mp-g-avanti').textContent = mpG.k === n - 1 ? (M.daScheda ? 'Fatto' : 'Fatto, apri il diario') : 'Avanti';
+  mpGuidaFrase();
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => { if(typeof ridimensionaTextareaVisibili === 'function') ridimensionaTextareaVisibili(); });
+}
+// la frase che si compone: in evidenza quello che è cambiato da quando si è
+// aperta la visita, il resto (com'era) in grigio
+function mpGuidaFrase(){
+  const box = $m('#mp-g-frase'); if(!box) return;
+  const frasi = mpFrasi(mpEoTesto());
+  box.innerHTML = frasi.length ? frasi.map(f => mpG.base && !mpG.base.has(f) ? `<b>${esc(f)}</b>` : esc(f)).join(' ') : 'Qui si compone la frase, man mano che rispondi.';
+  const b = box.querySelector('b:last-of-type'); if(b) box.scrollTop = Math.max(0, b.offsetTop - box.offsetTop - 8);
+}
+function mpGuidaPasso(k){ if(k === mpG.k) return; mpG.k = k; mpGuida(); }
+function mpGuidaFatto(){
+  const nome = M.letto, daScheda = M.daScheda;
+  fineVisita(true);
+  // dalla visita al suo diario, pronto da copiare (aperta dalla scheda, ci torna da sola)
+  if(!daScheda) setTimeout(() => { if(M.vista === 'visita' && voce(nome) && infoLetto(nome).vistoOggi) apriScheda(nome); }, mpFermo() ? 0 : 260);
+}
+function mpGuidaFine(){
+  const g = $m('#mp-guida'); if(g) g.hidden = true;
+  document.querySelectorAll('#clinical-view > .card.mp-passo-on').forEach(c => c.classList.remove('mp-passo-on'));
+}
+
+/* ---------- RICOVERO: nome, età e diagnosi ---------- */
+let mpRic = null;      // il ricovero appena creato da qui
+let mpRicSesso = 'F';
+function mpRicovero(){
+  let ric = []; try{ ric = loadRicoveri(); } catch(e){}
+  const oggi = ric.filter(r => isOggi(r.creatoIl)).length;
+  $m('#m-vista').innerHTML = `<div class="mp-ricovero">
+    <h1 class="mp-frase">Crea un ricovero in un minuto</h1>
+    <p class="mp-sotto">Nome, età e diagnosi. Il resto lo scrivi dopo, con calma.</p>
+    <div class="mp-card" id="mp-ric-card"></div>
+    <div class="mp-altro mp-centro"><button class="mp-chip" data-m="pagina" data-p="ricoveri">Tutti i ricoveri${ric.length ? ` · ${oggi ? oggi + ' oggi, ' : ''}${ric.length} in tutto` : ''}</button></div>
+  </div>`;
+  mpRicCard();
+}
+function mpRicCard(anima){
+  const c = $m('#mp-ric-card'); if(!c) return;
+  let rec = null; try{ rec = mpRic && loadRicoveri().find(r => r.id === mpRic); } catch(e){}
+  if(!rec){
+    mpRic = null;
+    c.innerHTML = `<form id="mp-f-ric" novalidate${anima ? ' class="mp-scorre"' : ''}>
+      <div class="mp-due mp-pari"><label class="mp-campo"><span>Cognome</span><input id="mp-ric-cognome" autocomplete="off" autocapitalize="words" placeholder="Rossi"></label>
+        <label class="mp-campo"><span>Nome</span><input id="mp-ric-nome" autocomplete="off" autocapitalize="words" placeholder="Maria"></label></div>
+      <div class="mp-due"><label class="mp-campo"><span>Età</span><input id="mp-ric-eta" inputmode="numeric" autocomplete="off" placeholder="anni"></label>
+        <div class="mp-campo"><span id="mp-ric-sesso-l">Sesso</span><div class="mp-sesso" role="group" aria-labelledby="mp-ric-sesso-l"><button type="button" data-mp="ric-sesso" data-s="F" aria-pressed="${mpRicSesso === 'F'}">Donna</button><button type="button" data-mp="ric-sesso" data-s="M" aria-pressed="${mpRicSesso === 'M'}">Uomo</button></div></div></div>
+      <label class="mp-campo"><span>Diagnosi</span><input id="mp-ric-diag" autocomplete="off" autocapitalize="sentences" placeholder="Polmonite ab ingestis"></label>
+      <button class="mp-btn mp-btn-su" type="submit">${MP_ICO.piu}Crea ricovero</button></form>`;
+    $m('#mp-f-ric').addEventListener('submit', e => { e.preventDefault(); mpCreaRicovero(); });
+    return;
+  }
+  const k = rec.campi || {};
+  const nome = [k.cognome, k.nome].map(x => (x || '').trim()).filter(Boolean).join(' ') || rec.label || 'Ricovero';
+  const iniz = nome.split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase();
+  const diario = (rec.diario || '').trim();
+  c.innerHTML = `<div class="mp-scorre">
+    <div class="mp-ric-creato"><span class="mp-ric-iniz">${esc(iniz)}</span><div><h3>${esc(nome)}</h3><p>${esc([k.eta && `${k.eta} anni`, (k.diagnosi || '').trim()].filter(Boolean).join(' · ') || 'Ricovero creato')}</p></div></div>
+    ${diario ? `<div class="mp-codice"><code id="mp-ric-diario">${esc(diario)}</code><button class="mp-tondo" data-mp="ric-copia" aria-label="Copia il diario d'ingresso">${ICON.copia}</button></div>` : ''}
+    <button class="mp-btn mp-btn-su" data-mp="ric-apri">Completa anamnesi e diario</button>
+    <button class="mp-btn mp-sec mp-btn-su" data-mp="ric-nuovo">Nuovo ricovero</button></div>`;
+}
+function mpCreaRicovero(){
+  const val = id => ($m('#' + id).value || '').trim();
+  const cognome = val('mp-ric-cognome'), nome = val('mp-ric-nome'), eta = val('mp-ric-eta').replace(/[^\d]/g, ''), diag = val('mp-ric-diag');
+  if(!cognome && !nome){ $m('#mp-ric-cognome').focus(); showToast('Scrivi almeno il cognome'); return; }
+  // lo stesso ricovero dell'app: il modulo di Ricovero riempito e salvato come bozza
+  nuovoRicovero();
+  document.getElementById('admit-cognome').value = cognome;
+  document.getElementById('admit-nome').value = nome;
+  document.getElementById('admit-eta').value = eta;
+  document.getElementById('admit-diagnosi').value = diag;
+  document.querySelectorAll('#admit-sesso-chips .chip').forEach(ch => ch.classList.toggle('active', ch.dataset.val === mpRicSesso));
+  creaBozzaRicovero();
+  mpRic = currentRicoveroId;
+  mpRicCard();
+  showToast('Ricovero creato');
+}
+
+/* ---------- avvio: gli elementi propri e i tocchi ---------- */
+if(UI_MP){
+  const app = document.getElementById('m-app');
+  app.insertAdjacentHTML('afterbegin', '<div class="mp-atm" aria-hidden="true"></div>');
+  app.insertAdjacentHTML('beforeend', `<nav class="mp-barra" id="mp-barra" aria-label="Sezioni">
+      <button data-mp="vai" data-v="home">${MP_ICO.oggi}Oggi</button><button data-mp="vai" data-v="visita">${MP_ICO.reparto}Reparto</button><button data-mp="vai" data-v="ricovero">${MP_ICO.piu}Ricovero</button></nav>
+    <div class="mp-guida" id="mp-guida" hidden><div class="mp-guida-in"><div class="mp-g-frase" id="mp-g-frase" aria-live="polite"></div>
+      <div class="mp-riga-btn"><button class="mp-btn mp-sec" id="mp-g-indietro" data-mp="g-indietro">Indietro</button><button class="mp-btn" id="mp-g-avanti" data-mp="g-avanti">Avanti</button></div></div></div>`);
+  document.getElementById('clinical-view').insertAdjacentHTML('afterbegin', '<div id="mp-domanda"></div>');
+  // nella scheda del diario: a sinistra di "Copia il diario" il tasto con le altre azioni
+  $m('.m-s-piede').insertAdjacentHTML('afterbegin', `<div class="mp-menu" id="mp-menu" hidden><button data-m="modifica">Rifai l'esame obiettivo, una domanda alla volta</button><button data-m="strumenti">Strumenti: EGA, VFG, farmaci</button><button data-m="pr-menu">Pratiche: aggiungi o togli</button></div>
+    <button class="mp-tondo mp-menu-btn" id="mp-menu-btn" data-mp="menu" aria-label="Altre azioni" aria-expanded="false">${MP_ICO.altro}</button>`);
+  $m('#m-scheda').setAttribute('aria-label', 'Scheda del letto');
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-mp]');
+    if(!el || el.dataset.mp !== 'menu') mpMenu(false);
+    if(!el) return;
+    const a = el.dataset.mp;
+    if(a === 'vai') mpVai(el.dataset.v);
+    else if(a === 'passo-via') mpPassoVia();
+    else if(a === 'passo-apri') mpPassoApri();
+    else if(a === 'settore'){
+      if(el.dataset.s === M.settore) return;
+      M.settore = el.dataset.s; ricordaSettore(M.settore);
+      document.querySelectorAll('#mp-settori button').forEach(b => b.setAttribute('aria-pressed', String(b === el)));
+      const g = $m('#mp-letti'); g.classList.remove('mp-cambia'); void g.offsetWidth; g.classList.add('mp-cambia');
+      mpLetti();
+    }
+    else if(a === 'menu') mpMenu($m('#mp-menu').hidden);
+    else if(a === 'visita'){ const nome = M.letto; chiudiScheda(); setTimeout(() => apriVisita(nome), mpFermo() ? 0 : 200); }
+    else if(a === 'g-vai') mpGuidaPasso(+el.dataset.k);
+    else if(a === 'g-indietro') mpGuidaPasso(mpG.k - 1);
+    else if(a === 'g-avanti'){ if(mpG.k >= mpG.passi.length - 1) mpGuidaFatto(); else mpGuidaPasso(mpG.k + 1); }
+    else if(a === 'g-fine') mpGuidaFatto();
+    else if(a === 'ric-sesso'){ mpRicSesso = el.dataset.s; el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === el))); }
+    else if(a === 'ric-copia'){ copiaTesto($m('#mp-ric-diario').textContent); showToast("Diario d'ingresso copiato"); }
+    else if(a === 'ric-apri'){ if(mpRic) apriRicoveroSingolo(mpRic); }
+    else if(a === 'ric-nuovo'){ mpRic = null; mpRicCard(true); const c = $m('#mp-ric-cognome'); if(c) c.focus({ preventScroll:true }); }
+  });
+  // la frase dell'esame guidato segue i tag toccati e i campi scritti
+  const cv = document.getElementById('clinical-view');
+  ['click', 'input', 'change'].forEach(ev => cv.addEventListener(ev, () => { if(M.vista === 'eo') setTimeout(mpGuidaFrase, 0); }));
+}
 
 nascondiViste();
 disegna();
