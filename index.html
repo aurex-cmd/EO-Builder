@@ -6301,6 +6301,22 @@ const DIZ_EMATOCHIMICI = {
   'digossina':{label:'digossina', unit:'ug/L'}
 };
 
+// globuli bianchi e formula scritti per microlitro ("Gb 12500", "N 8000")
+// invece che in x 10^9/L: un valore così alto non è plausibile nell'unità
+// che si sta per aggiungere, quindi si divide per 1000 (12500 -> 12.5).
+// Le piastrine restano escluse (200-400 x 10^9/L sono valori normali)
+function scalaContaLeucociti(voce, numero){
+  if(!voce || voce.unit !== 'x 10^9/L' || voce.label === 'PLTs') return numero;
+  const t = String(numero).trim();
+  if(!/^\d+(?:\.\d+)?$/.test(t)) return numero;
+  const v = parseFloat(t);
+  if(!(v >= 200)) return numero;
+  return String(Number((v / 1000).toFixed(2)));
+}
+function scalaCatenaLeucociti(voce, catena){
+  return catena.replace(/-?\d+(?:\.\d+)?/g, n => scalaContaLeucociti(voce, n));
+}
+
 // converte l'elenco grezzo di esami (es. "Hb 90, Na 127, creatinina 1.28")
 // aggiungendo l'unità di misura corretta a ogni esame riconosciuto
 function formattaEsamiEmatochimici(raw){
@@ -6320,7 +6336,7 @@ function formattaEsamiEmatochimici(raw){
         const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
         const voce = DIZ_EMATOCHIMICI[chiave];
         if(voce){
-          const catena = mTrend[2].trim().replace(/(\d),(\d)/g, '$1.$2');
+          const catena = scalaCatenaLeucociti(voce, mTrend[2].trim().replace(/(\d),(\d)/g, '$1.$2'));
           return voce.unit ? `${voce.label} ${catena} ${voce.unit}` : `${voce.label} ${catena}`;
         }
       }
@@ -6331,7 +6347,8 @@ function formattaEsamiEmatochimici(raw){
       const chiave = nomeGrezzo.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
       const voce = DIZ_EMATOCHIMICI[chiave];
       if(!voce) return seg;
-      return voce.unit ? `${voce.label} ${valore} ${voce.unit}` : `${voce.label} ${valore}`;
+      const valoreOk = scalaContaLeucociti(voce, valore);
+      return voce.unit ? `${voce.label} ${valoreOk} ${voce.unit}` : `${voce.label} ${valore}`;
     })
     .join(', ');
 }
@@ -6364,11 +6381,11 @@ function aggiungiUnitaMancantiTesto(testo){
     // arrivare a riconoscere l'andamento nel suo insieme
     const reTrend = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, catena) => {
-      return `${nomeMatch}${spazio}${catena} ${voce.unit}`;
+      return `${nomeMatch}${spazio}${scalaCatenaLeucociti(voce, catena.replace(/(\d),(\d)/g, '$1.$2'))} ${voce.unit}`;
     });
     const re = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
-      return `${nomeMatch}${spazio}${numero.trim().replace(',', '.')} ${voce.unit}`;
+      return `${nomeMatch}${spazio}${scalaContaLeucociti(voce, numero.trim().replace(',', '.'))} ${voce.unit}`;
     });
   });
   return risultato;
