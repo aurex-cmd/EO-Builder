@@ -24996,6 +24996,74 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-codice{ display:flex; gap:10px; margin-top:20px; }
   .mp-codice code{ flex:1; min-width:0; height:54px; line-height:54px; padding:0 16px; border-radius:16px; background:var(--mp-campo); font-family:var(--mp-mono); font-size:14px; color:var(--mp-muto); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; box-shadow:inset 0 0 0 1px var(--mp-linea); }
 
+  /* OGGI AL PC: una scrivania. In alto la frase e i numeri del giorno,
+     sotto l'elenco del lavoro e, accanto, il passo scelto per intero */
+  html[data-mp].mp-pc .m-main{ max-width:1180px; padding-left:40px; padding-right:40px; }
+  .mpd{ display:flex; flex-direction:column; min-height:calc(100dvh - 160px); }
+  .mpd-testa{ display:flex; align-items:flex-end; justify-content:space-between; gap:40px; }
+  .mpd-testa .mp-frase{ font-size:44px; max-width:16em; }
+  .mpd-numeri{ display:flex; gap:10px; margin:0; flex:none; }
+  .mpd-num{ min-width:116px; padding:16px 18px; border-radius:20px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); }
+  .mpd-num dd{ margin:0; font-size:34px; font-weight:500; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
+  .mpd-num dt{ margin-top:6px; font-size:13px; color:var(--mp-muto); }
+  .mpd-num.mpd-acc{ background:var(--mp-accento); box-shadow:none; color:var(--mp-accento-ink); }
+  .mpd-num.mpd-acc dt{ color:color-mix(in srgb, var(--mp-accento-ink) 75%, transparent); }
+  .mpd-corpo{ display:grid; grid-template-columns:minmax(300px, 380px) 1fr; gap:24px; margin-top:32px; align-items:start; }
+  .mpd-lista{ position:sticky; top:84px; max-height:calc(100dvh - 210px); overflow-y:auto; padding:8px; border-radius:28px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); scrollbar-width:thin; }
+  .mpd-gr{ display:flex; justify-content:space-between; margin:14px 14px 6px; font-size:13px; color:var(--mp-muto); }
+  .mpd-gr:first-child{ margin-top:8px; }
+  .mpd-gr span{ font-variant-numeric:tabular-nums; }
+  .mpd-r{ display:flex; align-items:center; gap:12px; width:100%; padding:8px; border:0; border-radius:18px; background:none; color:var(--mp-ink); font:inherit; text-align:left; cursor:pointer; transition:background .2s; }
+  .mpd-r:hover{ background:color-mix(in srgb, var(--mp-ink) 5%, transparent); }
+  .mpd-r[aria-current="true"]{ background:var(--mp-carta); box-shadow:var(--mp-ombra); }
+  .mpd-r .mp-tessera{ width:44px; height:44px; border-radius:13px; font-size:15px; }
+  .mpd-r .mp-tessera svg{ width:22px; height:22px; }
+  .mp-t-cop{ background:var(--mp-l-cop); }
+  .mpd-rt{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .mpd-rt b{ font-size:16px; font-weight:500; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mpd-rt small{ font-size:13px; color:var(--mp-muto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mpd-fatto .mpd-rt b{ color:var(--mp-muto); }
+  .mpd-ok{ width:22px; height:22px; margin-right:6px; color:var(--mp-ok); flex:none; }
+  .mpd-ok svg{ width:100%; height:100%; }
+  .mpd-vuoto{ margin:22px; color:var(--mp-muto); }
+  .mpd-dett{ min-height:420px; padding:34px 38px; border-radius:30px; display:flex; flex-direction:column; }
+  .mpd-dett.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
+  .mpd-dtesta h2{ margin:0; font-size:40px; font-weight:500; letter-spacing:-.045em; line-height:1; }
+  .mpd-dtesta p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
+  .mpd-dtesta p.mpd-st-ok{ color:var(--mp-ok); }
+  .mpd-lbl{ margin:28px 0 8px; font-size:13px; color:var(--mp-muto); }
+  .mpd-testo{ margin-top:26px; font-size:18px; line-height:1.65; letter-spacing:-.005em; max-width:68ch; -webkit-user-select:text; user-select:text; }
+  .mpd-lbl + .mpd-testo{ margin-top:0; }
+  .mpd-muto{ color:var(--mp-muto); }
+  .mpd-letti{ display:flex; flex-wrap:wrap; gap:10px; }
+  .mpd-letti .mp-tessera{ width:64px; height:64px; border:0; color:var(--mp-ink); font:inherit; font-size:17px; font-weight:600; cursor:pointer; transition:transform .12s var(--mp-molla); }
+  .mpd-letti .mp-tessera.mp-t-critico{ color:var(--mp-l-crit-ink); }
+  .mpd-letti .mp-tessera:hover{ transform:translateY(-2px); }
+  .mpd-azioni{ display:grid; grid-template-columns:220px 1fr; gap:10px; margin-top:auto; padding-top:30px; max-width:620px; }
+  .mpd-azioni.mpd-una{ grid-template-columns:1fr; max-width:360px; }
+  .mpd-azioni .mp-btn{ position:relative; }
+  .mpd-azioni kbd{ position:absolute; right:14px; top:50%; transform:translateY(-50%); }
+  .mp-btn.mpd-copiato{ background:var(--mp-ok); color:#fff; }
+  .mpd kbd{ display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:7px; font:500 12px var(--mp-mono); background:color-mix(in srgb, currentColor 14%, transparent); color:inherit; opacity:.8; }
+  .mpd-piede{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:28px; }
+  .mpd-links{ display:flex; flex-wrap:wrap; gap:4px 18px; }
+  .mpd-link{ border:0; background:none; padding:6px 0; color:var(--mp-muto); font:inherit; font-size:14px; cursor:pointer; }
+  .mpd-link:hover{ color:var(--mp-ink); }
+  .mpd-tasti{ margin:0; font-size:13px; color:var(--mp-tenue); white-space:nowrap; }
+  .mpd-tasti kbd{ margin-right:2px; color:var(--mp-muto); }
+  @media (max-width:1100px){ .mpd-testa{ flex-direction:column; align-items:flex-start; gap:22px; } }
+  /* al PC la barra delle sezioni sta in alto, al centro della testata */
+  @media (min-width:900px){
+    html[data-mp] .m-bar-in{ max-width:1100px; }
+    html[data-mp] .mp-barra{ top:calc(8px + env(safe-area-inset-top,0px)); bottom:auto; padding:4px; box-shadow:none; background:color-mix(in srgb, var(--mp-ink) 6%, transparent); }
+    html[data-mp] .mp-barra button{ height:38px; padding:0 16px; font-size:14px; }
+    html[data-mp] .mp-barra button svg{ width:17px; height:17px; }
+    html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:translateX(-50%); }
+    html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+    html[data-mp].mp-scheda-aperta .mp-barra{ transform:translateX(-50%) translateY(-170%); }
+    html[data-mp] .m-main{ padding-bottom:60px; }
+  }
+
   /* le pagine di Pocket: stessi titoli leggeri, stesso avviso */
   html[data-mp] :is(.m-h2, .m-pag-t, .m-h1){ font-weight:500; letter-spacing:-.04em; text-transform:none; }
   html[data-mp] #toast{ background:var(--mp-ink); border-color:var(--mp-ink); color:var(--mp-fondo); border-radius:999px; font-family:var(--mp-font); font-weight:500; box-shadow:none; }
@@ -27970,6 +28038,7 @@ const mpMinuscolo = n => /^Letto\s/i.test(n) ? 'l' + n.slice(1) : n;
 function mpPrima(){
   const h = document.documentElement;
   h.dataset.mpV = M.vista;
+  if(M.vista !== 'home') h.classList.remove('mp-pc');
   h.toggleAttribute('data-mp-guida', M.vista === 'eo');
   document.querySelectorAll('#mp-barra [data-v]').forEach(b => { if(b.dataset.v === M.vista) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   if(M.vista !== 'eo') mpGuidaFine();
@@ -28010,7 +28079,7 @@ let mpPila = [];
 function mpPassi(){
   const sett = settoreScelto(), ss = sett ? [sett] : settori();
   const vu = lettiVuoti(), contati = new Set();
-  const critici = [], diari = [], resto = [];
+  const critici = [], diari = [], resto = [], fatti = [];
   let tot = 0, daVedere = 0, daCopiare = 0, copiati = 0;
   ss.forEach(s => mpNomi(s).forEach(([n, et, ap]) => {
     if(contati.has(n)) return; contati.add(n);
@@ -28022,9 +28091,12 @@ function mpPassi(){
       if(i.critico) critici.push({ k:'vis|' + n, letto:n, s, et, stato:'critico', titolo:`${n}, critico`, sotto:'Ancora da vedere oggi', azione:'Fai la visita' });
     } else if(!i.copiato){
       daCopiare++;
-      diari.push({ k:'dia|' + n, letto:n, s, et, stato:i.critico ? 'critico' : 'dacop', titolo:n,
+      diari.push({ k:'dia|' + n, id:i.id, letto:n, s, et, stato:i.critico ? 'critico' : 'dacop', titolo:n,
         sotto:['Diario da copiare', i.pall.esamiDomani && 'esami domani', i.pall.dimOggi ? 'dimissione oggi' : i.pall.dimDomani && 'dimissione domani'].filter(Boolean).join(' · '), azione:'Apri il diario' });
-    } else if(s !== RIC) copiati++;
+    } else {
+      if(s !== RIC) copiati++;
+      fatti.push({ k:'cop|' + n, id:i.id, letto:n, s, et, copiato:true, stato:'cop', titolo:n, sotto:'Diario copiato', azione:'Apri il diario' });
+    }
   }));
   const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
   const nomiSett = sett ? nomiDelSettore(sett) : null;
@@ -28063,10 +28135,10 @@ function mpPassi(){
   const passi = [...critici, ...diari, ...resto];
   mpDopo = mpDopo.filter(k => passi.some(p => p.k === k));
   passi.sort((a, b) => mpDopo.indexOf(a.k) - mpDopo.indexOf(b.k));
-  return { passi, tot, daVedere, daCopiare, sett };
+  return { passi, fatti, tot, daVedere, daCopiare, sett };
 }
 function mpOggi(){
-  const { passi, tot, daVedere, daCopiare, sett } = mpPassi();
+  const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett } = dati;
   mpPila = passi;
   const ora = new Date().getHours();
   const saluto = ora < 5 ? 'Buonanotte.' : ora < 13 ? 'Buongiorno.' : ora < 18 ? 'Buon pomeriggio.' : 'Buonasera.';
@@ -28074,6 +28146,8 @@ function mpOggi(){
   const frase = !tot ? 'Nessun paziente in reparto.'
     : daVedere ? `${daVedere} ${daVedere === 1 ? 'paziente' : 'pazienti'} da vedere${daCopiare ? ', ' + diari : ''}.`
     : daCopiare ? `Tutti i pazienti visti, ${diari}.` : 'Tutti i pazienti visti, tutti i diari copiati.';
+  document.documentElement.classList.toggle('mp-pc', MP_PC.matches);
+  if(MP_PC.matches) return mpOggiPC(dati, saluto, frase);
   const festivo = eFestivo(new Date());
   const chip = (attr, t) => `<button class="mp-chip" ${attr}>${t}</button>`;
   $m('#m-vista').innerHTML = `<div class="mp-oggi">
@@ -28087,6 +28161,123 @@ function mpOggi(){
   </div>`;
   mpDisegnaPila();
 }
+/* ---------- OGGI AL PC ----------
+   Sullo schermo largo Oggi è una scrivania, non una pila: a sinistra
+   l'elenco di tutto il lavoro del giorno (diari da copiare, critici da
+   vedere, lettere, consegne, post-degenze, il giro e, in fondo, i diari già
+   copiati), a destra il passo scelto per intero: il diario si legge tutto e
+   si copia, poi si passa da soli al prossimo. Si va avanti con la tastiera:
+   ↑ ↓ (o J K) per scegliere, Invio per l'azione, C per copiare */
+const MP_PC = matchMedia('(min-width: 900px)');
+let mpSel = null;           // la voce scelta (la sua chiave)
+let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
+const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
+function mpOggiPC(dati, saluto, frase){
+  const { passi, fatti, tot, daVedere, daCopiare, sett } = dati;
+  const lettere = passi.filter(p => p.stato === 'lettera').length;
+  const gruppi = [
+    ['Diari da copiare', passi.filter(p => p.k.startsWith('dia|'))],
+    ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro')],
+    ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro')],
+    ['Copiati oggi', fatti]
+  ].filter(g => g[1].length);
+  mpVoci = gruppi.flatMap(g => g[1]);
+  if(!mpVoci.some(v => v.k === mpSel)) mpSel = (mpVoci.find(v => !v.copiato) || mpVoci[0] || {}).k || null;
+  const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
+  const festivo = eFestivo(new Date());
+  const link = (attr, t) => `<button class="mpd-link" ${attr}>${t}</button>`;
+  $m('#m-vista').innerHTML = `<div class="mpd">
+    <div class="mpd-testa">
+      <div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
+        <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
+      <dl class="mpd-numeri">${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>
+    </div>
+    <div class="mpd-corpo">
+      <nav class="mpd-lista" id="mpd-lista" aria-label="Il lavoro di oggi">${!mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>` : gruppi.map(([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(p => `
+        <button class="mpd-r${p.copiato ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
+          <span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}${p.copiato ? ' mp-t-cop' : ''}">${p.ico || esc(p.et || '')}</span>
+          <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
+        </button>`).join('')}`).join('')}</nav>
+      <section class="mpd-dett mp-card" id="mpd-dett" aria-live="polite"></section>
+    </div>
+    <div class="mpd-piede">
+      <div class="mpd-links">${link('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? link('data-m="pagina" data-p="consegne"', 'Consegne weekend') : link('data-m="aggcons"', 'Aggiorna consegne')}${link('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${link('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${link('data-m="rubrica"', 'Rubrica')}${link('data-m="strumenti-home"', 'Strumenti')}</div>
+      <p class="mpd-tasti"><kbd>↑</kbd><kbd>↓</kbd> scegli · <kbd>Invio</kbd> apri · <kbd>C</kbd> copia</p>
+    </div>
+  </div>`;
+  mpDett();
+}
+function mpDett(){
+  const box = $m('#mpd-dett'); if(!box) return;
+  const p = mpVoci.find(v => v.k === mpSel);
+  document.querySelectorAll('#mpd-lista .mpd-r').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
+  if(!p){ box.innerHTML = `<div class="mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Giro finito</h3><p>Niente altro da fare per oggi.</p></div>`; return; }
+  const testa = (stato) => `<div class="mpd-dtesta"><div><h2>${esc(p.letto || p.titolo)}</h2><p class="${p.copiato ? 'mpd-st-ok' : ''}">${esc(stato)}</p></div></div>`;
+  const diario = p.k.startsWith('dia|') || p.copiato;
+  if(diario){
+    const testo = mpTestoDiario(p.id).trim();
+    box.innerHTML = `${testa(p.copiato ? 'Diario copiato oggi' : p.sotto)}
+      <div class="mpd-testo" id="mpd-testo">${testo ? esc(testo).replace(/\n/g, '<br>') : '<span class="mpd-muto">Diario vuoto.</span>'}</div>
+      <div class="mpd-azioni"><button class="mp-btn mp-sec" data-mp="pc-apri">Modifica il diario</button><button class="mp-btn${p.copiato ? ' mpd-copiato' : ''}" data-mp="pc-copia">${p.copiato ? ICON.ok + 'Copia di nuovo' : ICON.copia + 'Copia il diario'}<kbd>C</kbd></button></div>`;
+  } else {
+    let corpo = '';
+    if(p.k.startsWith('vis|')){
+      let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
+      corpo = eo ? `<p class="mpd-lbl">L'ultimo esame obiettivo</p><div class="mpd-testo mpd-muto">${esc(eo)}</div>` : '';
+    } else if(p.k === 'giro'){
+      // i letti ancora da vedere: toccato, il letto si apre nel Reparto
+      const sett = settoreScelto(), vu = lettiVuoti(), visti = new Set();
+      const letti = (sett ? [sett] : settori()).flatMap(s => mpNomi(s).map(x => [s, ...x])).filter(([s, n, et, ap]) => {
+        if(visti.has(n)) return false; visti.add(n);
+        const i = infoLetto(n); return !i.vistoOggi && (ap || i.occupato || !vu[n]);
+      });
+      corpo = `<p class="mpd-lbl">Ancora da vedere</p><div class="mpd-letti">${letti.map(([s, n, et]) => `<button class="mp-tessera${infoLetto(n).critico ? ' mp-t-critico' : ''}" data-mp="pc-letto" data-s="${esc(s)}" data-n="${esc(n)}" aria-label="${esc(n)}">${esc(et)}</button>`).join('')}</div>`;
+    }
+    const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>` : '';
+    box.innerHTML = `${testa(p.sotto)}${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
+  }
+  box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
+}
+function mpPcScegli(k, scorri){
+  if(!mpVoci.some(v => v.k === k)) return;
+  mpSel = k; mpDett();
+  if(scorri){ const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(k)}"]`); if(r) r.scrollIntoView({ block:'nearest' }); }
+}
+function mpPcApri(){
+  const p = mpVoci.find(v => v.k === mpSel); if(!p) return;
+  if(p.k.startsWith('dia|') || p.copiato) return apriScheda(p.letto);
+  mpPila = [p, ...mpPila.filter(x => x !== p)];
+  mpPassoApri();
+}
+function mpPcCopia(){
+  const p = mpVoci.find(v => v.k === mpSel); if(!p || !(p.k.startsWith('dia|') || p.copiato)) return;
+  copiaTesto(mpTestoDiario(p.id));
+  segnaRefertoCopiato(p.id);
+  const b = $m('#mpd-dett [data-mp="pc-copia"]'); if(b){ b.classList.add('mpd-copiato'); b.innerHTML = ICON.ok + 'Copiato'; }
+  showToast(`${p.letto}: diario copiato`);
+  // il prossimo diario da copiare, subito dopo
+  const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.k !== p.k);
+  const dopo = resto.find(v => mpVoci.indexOf(v) > mpVoci.indexOf(p)) || resto[0];
+  setTimeout(() => { if(M.vista !== 'home') return; if(dopo) mpSel = dopo.k; mpOggi(); }, mpFermo() ? 0 : 650);
+}
+function mpPcFatto(){
+  const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.fatto) return;
+  try{ p.fatto(); } catch(e){}
+  showToast('Fatto');
+  const k = mpVoci.indexOf(p), dopo = mpVoci[k + 1] || mpVoci[k - 1];
+  mpSel = dopo ? dopo.k : null; mpOggi();
+}
+document.addEventListener('keydown', e => {
+  if(!UI_MP || M.vista !== 'home' || !$m('.mpd') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if($m('#m-scheda').classList.contains('m-su') || document.querySelector('[id$="-overlay"].show') || e.target.closest('input, textarea, select, [contenteditable]')) return;
+  const i = mpVoci.findIndex(v => v.k === mpSel);
+  if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); const v = mpVoci[Math.min(mpVoci.length - 1, i + 1)]; if(v) mpPcScegli(v.k, true); }
+  else if(e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); const v = mpVoci[Math.max(0, i - 1)]; if(v) mpPcScegli(v.k, true); }
+  else if(e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); mpPcApri(); }
+  else if(e.key === 'c' || e.key === 'C'){ e.preventDefault(); mpPcCopia(); }
+});
+// passando dal telefono al PC (o allargando la finestra) Oggi cambia forma
+MP_PC.addEventListener('change', () => { if(UI_MP && M.vista === 'home') mpOggi(); });
 function mpDisegnaPila(){
   const pila = $m('#mp-pila'); if(!pila) return;
   const sugg = $m('#mp-sugg'), pall = $m('#mp-pallini');
@@ -28405,6 +28596,11 @@ if(UI_MP){
     const a = el.dataset.mp;
     if(a === 'vai') mpVai(el.dataset.v);
     else if(a === 'passo-via') mpPassoVia();
+    else if(a === 'pc-sel') mpPcScegli(el.dataset.k);
+    else if(a === 'pc-apri') mpPcApri();
+    else if(a === 'pc-copia') mpPcCopia();
+    else if(a === 'pc-fatto') mpPcFatto();
+    else if(a === 'pc-letto'){ const n = el.dataset.n; M.settore = el.dataset.s; M.pila = []; M.vista = 'visita'; disegna(); setTimeout(() => { if(M.vista === 'visita') mpLetto(n, mpTile(n)); }, mpFermo() ? 0 : 380); }
     else if(a === 'passo-apri') mpPassoApri();
     else if(a === 'settore'){
       if(el.dataset.s === M.settore) return;
