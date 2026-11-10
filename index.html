@@ -4061,13 +4061,6 @@ applicaTema(temaAttuale());
 const UI_PARAMS = new URLSearchParams(location.search);
 // la finestrella dell'editor di testo (?editor) resta quella dell'app
 const UI_MINIMAL = UI_PARAMS.get('ui') !== 'classic' && !UI_PARAMS.has('editor');
-// MINIMAL POCKET (?ui=minimal-pocket, da .../minimal-pocket/): un ramo di EO
-// Pocket, non un tema. Stesso motore e stessi dati di Pocket, ma un'altra
-// app da usare: Oggi (una pila di card, il prossimo passo in cima), Reparto
-// (una griglia sola, il letto che si allarga fino a diventare la scheda),
-// l'esame obiettivo una domanda alla volta e il ricovero in un minuto.
-// Vedi il blocco "MINIMAL POCKET" in fondo allo script di Pocket
-const UI_MP = UI_MINIMAL && ['minimal-pocket', 'mp'].includes(UI_PARAMS.get('ui'));
 // tema di EO Minimal (Impostazioni → Tema), separato da quello dell'app:
 // "chiaro" (tutto chiaro, anche l'esame obiettivo), "scuro" (tutto in blu
 // notte) o "aurex" (pagine chiare, esame obiettivo scuro: il predefinito).
@@ -4116,6 +4109,16 @@ async function segnaCreatore(user){
     if(h === MCREATORE_HASH) localStorage.setItem(MCREATORE_KEY, '1'); else localStorage.removeItem(MCREATORE_KEY);
   } catch(e){}
 }
+// MINIMAL POCKET (?ui=minimal-pocket, da .../minimal-pocket/): un ramo di EO
+// Pocket, non un tema. Stesso motore e stessi dati di Pocket, ma un'altra
+// app da usare: Oggi (una pila di card, il prossimo passo in cima), Reparto
+// (una griglia sola, il letto che si allarga fino a diventare la scheda),
+// l'esame obiettivo una domanda alla volta e il ricovero in un minuto.
+// Vedi il blocco "MINIMAL POCKET" in fondo allo script di Pocket
+// PER ORA SOLO PER IL CREATORE DELL'APP: si apre soltanto sul dispositivo dove
+// ha fatto l'accesso col suo account (creatoreApp, qui sopra). Per chiunque
+// altro lo stesso indirizzo apre EO Pocket, che non cambia
+const UI_MP = UI_MINIMAL && ['minimal-pocket', 'mp'].includes(UI_PARAMS.get('ui')) && creatoreApp();
 const pulsantiDisponibili = () => festeNatale() || creatoreApp() ? [...MPULSANTI, ['natale', 'Natale', '#b3232c', '#c8323b']] : MPULSANTI;
 const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
 const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';

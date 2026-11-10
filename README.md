@@ -21,7 +21,7 @@ App a pagina singola (nessuna dipendenza da server per il funzionamento di base)
 
 ## Minimal Pocket
 
-**Indirizzo.** `.../minimal-pocket/` (cioè `?ui=minimal-pocket`). È un ramo di EO Pocket, non un tema: la stessa pagina, gli stessi dati e la stessa sincronizzazione, ma un'altra app da usare. Pocket e l'app originale non cambiano.
+**Indirizzo.** `.../minimal-pocket/` (cioè `?ui=minimal-pocket`). **Per ora è riservato al creatore dell'app**: si apre solo sul dispositivo dove ha fatto l'accesso col suo account (dopo l'accesso, ricaricare la pagina); per chiunque altro lo stesso indirizzo apre EO Pocket. È un ramo di EO Pocket, non un tema: la stessa pagina, gli stessi dati e la stessa sincronizzazione, ma un'altra app da usare. Pocket e l'app originale non cambiano.
 
 Tre sezioni sole, in una barra a pillola in basso:
 
