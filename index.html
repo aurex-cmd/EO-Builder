@@ -24833,6 +24833,8 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-spunta svg{ width:30px; height:30px; }
   .mp-spunta path{ stroke-dasharray:30; stroke-dashoffset:30; animation:mp-traccia .5s .15s var(--mp-molla) forwards; }
   @keyframes mp-traccia{ to{ stroke-dashoffset:0; } }
+  .mp-finito-tempo{ margin-top:14px !important; color:var(--mp-muto); font-size:14px; }
+  .mp-finito-tempo b{ color:var(--mp-accento); font-weight:500; }
   .mp-sugg{ text-align:center; color:var(--mp-tenue); font-size:13px; margin:14px 0 0; }
 
   /* barra in basso a pillola */
@@ -25073,6 +25075,9 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-fine-ok path{ stroke-dasharray:30; stroke-dashoffset:30; animation:mp-traccia .5s .15s var(--mp-molla) forwards; }
   .mpd-fine .mpd-dtesta p{ max-width:46ch; line-height:1.45; }
   .mpd .mpd-fine-num{ display:flex; flex-wrap:wrap; margin-top:30px; }
+  .mpd-num dd{ display:flex; align-items:center; height:28px; }
+  .mpd-num-ok dd svg{ width:24px; height:24px; color:var(--mp-ok); }
+  .mpd-num-tempo dd{ color:var(--mp-accento); }
   .mpd-fine-nota{ margin:auto 0 0; padding-top:26px; font-size:13px; color:var(--mp-tenue); }
   .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
   /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
@@ -28292,6 +28297,7 @@ function mpPassi(){
 }
 function mpOggi(){
   const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett } = dati;
+  mpDatiPC = dati;
   mpPila = passi;
   const ora = new Date().getHours();
   // col nome scritto in Account ("Aurelio Rossi" → "Buongiorno, Aurelio."), se c'è
@@ -28333,7 +28339,8 @@ const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefert
 let mpSelLetto = null, mpDettK = null;
 let mpCopAperti = false;
 let mpDatiPC = null;      // i conti di Oggi al PC, per il riepilogo di "Tutto fatto"
-let mpScelto = false;      // una riga scelta a mano (col clic o coi tasti): resta quella   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
+let mpScelto = false;
+let mpTieni = null;        // il diario appena copiato, tenuto in vista un attimo      // una riga scelta a mano (col clic o coi tasti): resta quella   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
 const mpDocked = () => { const s = $m('#m-scheda'); return !!s && s.classList.contains('mp-dock'); };
 const mpEDiario = p => !!p && (p.k.startsWith('dia|') || !!p.copiato);
 // l'editor del diario (la scheda di Pocket, con tutte le sue funzioni) si
@@ -28369,8 +28376,11 @@ function mpOggiPC(dati, saluto, frase){
   ].filter(g => g[1].length || (g[0] === 'Fatto oggi' && fatti.length));
   mpVoci = gruppi.flatMap(g => g[1]);
   // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
+  // il diario appena copiato resta dov'è finché non si passa al prossimo
+  const tieni = mpTieni && mpTieni.fino > Date.now() && mpDocked() && M.letto === mpTieni.letto;
   // tutto fatto: a destra "Tutto fatto per oggi", finché non si sceglie una riga
-  if(!passi.length && !mpScelto) mpSel = null;
+  if(tieni){}
+  else if(!passi.length && !mpScelto) mpSel = null;
   else if(!mpVoci.some(v => v.k === mpSel)){
     const stessa = mpSelLetto && mpVoci.find(v => v.letto === mpSelLetto && mpEDiario(v));
     mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk) || (passi.length ? mpVoci[0] : null) || {}).k || null;
@@ -28419,6 +28429,7 @@ function mpOggiPC(dati, saluto, frase){
           <span class="mpd-rt"><b>${fatti.length} ${fatti.length === 1 ? 'diario copiato' : 'diari copiati'}</b><small>${mpCopAperti ? 'Tocca per chiudere' : 'Tocca per vederli'}</small></span>${ICON.giu}
         </button>${mpCopAperti ? `<div class="mpd-copiati-in">${fatti.map(riga).join('')}</div>` : ''}` : ''}</div>` : gruppo(g)).join('')}</div>` : '');
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
+  if(tieni) return;
   mpDett();
 }
 function mpDett(){
@@ -28434,18 +28445,28 @@ function mpDett(){
   mpUndock(); mpDettK = chiave;
   if(!p){
     // TUTTO FATTO: come gli altri dettagli (titolo grande in alto a sinistra),
-    // col riepilogo della giornata in numeri, come in testata
-    const d = mpDatiPC || { fatti:[], fattiAltri:[] };
+    // con tutto quello che si è fatto oggi e il tempo risparmiato con l'app
+    // (stima: circa 3 minuti a paziente)
+    const d = mpDatiPC || { fatti:[], fattiAltri:[], tot:0, daVedere:0 };
+    const pazienti = Math.max(0, (d.tot || 0) - (d.daVedere || 0));
     const lett = d.fattiAltri.filter(v => v.k.startsWith('f-let')).length;
     const cons = d.fattiAltri.some(v => v.k.startsWith('f-cons'));
     const pd = d.fattiAltri.some(v => v.k === 'f-pd');
     const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
-    const num = (n, t) => `<div class="mpd-num"><dd>${n}</dd><dt>${t}</dt></div>`;
+    const min = pazienti * 3, tempo = min < 60 ? `${min} minuti` : `${Math.floor(min / 60)} ${min < 120 ? 'ora' : 'ore'}${min % 60 ? ` e ${min % 60} minuti` : ''}`;
+    const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
     box.innerHTML = `<div class="mpd-fine">
       <span class="mpd-fine-ok">${ICON.ok}</span>
-      <div class="mpd-dtesta"><div><h2>Tutto fatto per oggi.</h2><p>${primo ? `Buon lavoro, ${esc(primo)}: ` : ''}diari copiati${lett ? ', lettere scritte' : ''}${cons ? ', consegne aggiornate' : ''}${pd ? ', post-degenze controllate' : ''}.</p></div></div>
-      <dl class="mpd-numeri mpd-fine-num">${num(d.fatti.length, d.fatti.length === 1 ? 'diario copiato' : 'diari copiati')}${lett ? num(lett, lett === 1 ? 'lettera scritta' : 'lettere scritte') : ''}${num(cons ? '✓' : '–', 'consegne')}</dl>
-      <p class="mpd-fine-nota">Scegli una riga a sinistra per riaprire un diario o una lettera.</p>
+      <div class="mpd-dtesta"><div><h2>Tutto fatto per oggi.</h2><p>Ottimo lavoro${primo ? ', ' + esc(primo) : ''}.</p></div></div>
+      <dl class="mpd-numeri mpd-fine-num">
+        ${num(pazienti, pazienti === 1 ? 'paziente visitato' : 'pazienti visitati')}
+        ${num(d.fatti.length, d.fatti.length === 1 ? 'diario copiato' : 'diari copiati')}
+        ${num(lett, lett === 1 ? 'lettera scritta' : 'lettere scritte')}
+        ${num(cons ? ICON.ok : '–', cons ? 'consegne aggiornate' : 'consegne', cons ? 'mpd-num-ok' : '')}
+        ${pd ? num(ICON.ok, 'post-degenze controllate', 'mpd-num-ok') : ''}
+        ${pazienti ? num('≈ ' + (min < 60 ? min + ' min' : tempo.replace(' minuti', ' min')), 'risparmiati con l\'app', 'mpd-num-tempo') : ''}
+      </dl>
+      <p class="mpd-fine-nota">${pazienti ? 'Tempo risparmiato: stima di circa 3 minuti a paziente. ' : ''}Scegli una riga a sinistra per riaprire un diario o una lettera.</p>
     </div>`;
     return;
   }
@@ -28520,7 +28541,10 @@ function mpDisegnaPila(){
   const pila = $m('#mp-pila'); if(!pila) return;
   const sugg = $m('#mp-sugg'), pall = $m('#mp-pallini');
   if(!mpPila.length){
-    pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Niente altro da fare.</p></div>`;
+    const d = mpDatiPC || {}, paz = Math.max(0, (d.tot || 0) - (d.daVedere || 0)), min = paz * 3;
+    const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
+    const tempo = min < 60 ? `${min} minuti` : `${Math.floor(min / 60)} ${min < 120 ? 'ora' : 'ore'}${min % 60 ? ` e ${min % 60} minuti` : ''}`;
+    pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Ottimo lavoro${primo ? ', ' + esc(primo) : ''}.</p>${paz ? `<p class="mp-finito-tempo"><b>≈ ${tempo}</b> risparmiati oggi con l'app</p>` : ''}</div>`;
     pall.innerHTML = ''; sugg.hidden = true; return;
   }
   pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
@@ -28838,15 +28862,21 @@ if(UI_MP){
   // l'editor del diario agganciato in Oggi al PC non si trascina
   ['pointerdown', 'touchstart'].forEach(ev => $m('#m-scheda').addEventListener(ev, e => { if(mpDocked()) e.stopPropagation(); }, true));
   // copiato un diario agganciato: si passa da soli al prossimo, e dopo l'ultimo alle consegne
+  // (in cattura: prima che la copia ridisegni l'elenco). Il diario copiato
+  // resta in vista un attimo, col verde di "Copiato", poi si passa al prossimo
   $m('#m-copia').addEventListener('click', () => {
     if(!mpDocked() || M.vista !== 'home') return;
-    // il prossimo nell'ordine dei letti (l'elenco intanto si è già ridisegnato)
     const letto = M.letto, ss = settoreScelto();
     const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
-    const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
-    const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0] || mpVoci.find(v => v.k.startsWith('cons'));
-    setTimeout(() => { if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return; mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi(); }, mpFermo() ? 0 : 700);
-  });
+    mpTieni = { letto, fino:Date.now() + 1500 };
+    setTimeout(() => {
+      mpTieni = null;
+      if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return;
+      const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
+      const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0];
+      mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
+    }, mpFermo() ? 0 : 700);
+  }, true);
   // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
   $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
   // nella scheda del diario: a sinistra di "Copia il diario" il tasto con le altre azioni
