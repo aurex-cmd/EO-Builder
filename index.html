@@ -25026,8 +25026,22 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-corpo{ display:grid; grid-template-columns:clamp(200px, 21vw, 250px) minmax(0, 1fr); gap:16px; margin-top:20px; min-height:0; }
   .mpd-lista{ display:flex; flex-direction:column; min-height:0; padding:4px; border-radius:24px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); overflow:hidden; }
   .mpd-scorre{ overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
-  .mpd-su{ flex:1 1 auto; min-height:90px; }
-  .mpd-giu{ flex:0 1 auto; display:flex; flex-direction:column; min-height:0; max-height:44%; margin:0 -4px -4px; padding:0 4px 4px; border-top:1px solid var(--mp-linea); background:color-mix(in srgb, var(--mp-carta) 55%, transparent); }
+  /* la colonna è alta quanto quello che contiene (fino all'altezza dello
+     schermo): senza diari da copiare si accorcia, e il resto scorre */
+  .mpd-lista{ align-self:start; max-height:100%; }
+  /* le cose da fare hanno la precedenza: interi fino a più di metà colonna;
+     le fatte prendono quel che resta e scorrono */
+  .mpd-su{ flex:0 0 auto; max-height:58%; }
+  .mpd-giu{ flex:0 1 auto; display:flex; flex-direction:column; min-height:0; margin:0 -4px -4px; padding:0 4px 4px; border-top:1px solid var(--mp-linea); background:color-mix(in srgb, var(--mp-carta) 55%, transparent); }
+  .mpd-lista > .mpd-giu:first-child{ border-top:0; margin-top:-4px; }
+  .mpd-tuttofatto{ display:flex; align-items:center; gap:8px; margin:0; padding:14px 12px; font-size:15px; font-weight:500; color:var(--mp-ok); }
+  .mpd-tuttofatto svg{ width:20px; height:20px; flex:none; }
+  .mpd-tuttofatto + .mpd-giu{ border-top:1px solid var(--mp-linea); }
+  .mp-fatti{ display:flex; flex-direction:column; gap:2px; padding:6px; border-radius:22px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); }
+  .mp-fatto-r{ display:flex; align-items:center; gap:12px; width:100%; padding:8px; border:0; border-radius:16px; background:none; color:var(--mp-ink); font:inherit; text-align:left; cursor:pointer; }
+  .mp-fatto-r .mp-tessera{ width:40px; height:40px; border-radius:12px; font-size:14px; }
+  .mp-fatto-r .mp-tessera svg{ width:20px; height:20px; }
+  .mp-fatto-r .mpd-rt b{ font-size:15px; font-weight:500; color:var(--mp-muto); }
   .mpd-giu > .mpd-gr{ flex:none; }
   .mpd-cop{ flex:0 1 auto; min-height:52px; }
   .mpd-gr{ display:flex; justify-content:space-between; margin:12px 10px 4px; font-size:12px; color:var(--mp-muto); }
@@ -28205,9 +28219,18 @@ function mpPassi(){
   const delSettore = n => !nomiSett || nomiSett.has(n);
   // lettere di dimissione: si segnano fatte dalla card (lo stesso segno di Dimissioni)
   let dim = []; try{ dim = calcolaCalendarioDimissioni(); } catch(e){}
+  // le cose già fatte oggi (come in Pocket): restano in vista, col baffo
+  const fattiAltri = [];
+  const etLetto = n => (/^(?:C[12] · )?Letto\s+(.+)$/i.exec(n) || [])[1] || inizialiLetto(n);
+  const nomeLettera = n => /^Letto\s/i.test(n) ? `Lettera del ${mpMinuscolo(n)}` : `Lettera · ${n}`;
   dim.forEach(r => {
     const g = chiaveGiorno(r.data.getTime());
-    if((g !== oggi && g !== domani) || !delSettore(r.nome) || letteraScritta(r.id, g)) return;
+    if((g !== oggi && g !== domani) || !delSettore(r.nome)) return;
+    if(letteraScritta(r.id, g)){
+      fattiAltri.push({ k:`f-let|${r.id}|${g}`, fattoOk:true, letto:r.nome, et:etLetto(r.nome), titolo:nomeLettera(r.nome), sotto:`Scritta · dimissione ${g === oggi ? 'oggi' : 'domani'}`,
+        azione:'Apri le dimissioni', vai:() => vai('app', { pag:'dimissioni' }), disfa:() => { if(letteraScritta(r.id, g)) segnaLettera(r.id, g); } });
+      return;
+    }
     resto.push({ k:`let|${r.id}|${g}`, letto:r.nome, s:mpSettoreDi(r.nome), et:(/^(?:C[12] · )?Letto\s+(.+)$/i.exec(r.nome) || [])[1] || inizialiLetto(r.nome), stato:'lettera',
       titolo:/^Letto\s/i.test(r.nome) ? `Lettera del ${mpMinuscolo(r.nome)}` : `Lettera · ${r.nome}`, sotto:`Dimissione ${g === oggi ? 'oggi' : 'domani'}`, azione:'Apri il letto',
       fatto:() => { if(!letteraScritta(r.id, g)) segnaLettera(r.id, g); } });
@@ -28220,15 +28243,26 @@ function mpPassi(){
   } else if(eFestivo(new Date())){
     const cw = loadConsegne(); let n = 0;
     Object.entries(cw).forEach(([nome, v]) => { if(delSettore(nome)) ['V','E','S','C'].forEach(l => { if(v && v[l] && !v['fatto' + l]) n++; }); });
+    if(Object.keys(cw).length && !n) fattiAltri.push({ k:'f-consw', fattoOk:true, ico:ICON.consegne, titolo:'Consegne del weekend', sotto:'Tutte fatte', azione:'Apri le consegne', vai:() => vai('app', { pag:'consegne' }) });
     if(!Object.keys(cw).length) resto.push({ k:'consw', ico:ICON.consegne, titolo:'Consegne del weekend', sotto:'Ancora da allegare', azione:'Apri le consegne', vai:() => vai('app', { pag:'consegne' }) });
     else if(n) resto.push({ k:'consw', ico:ICON.consegne, titolo:'Consegne del weekend', sotto:`${n} da fare`, azione:'Apri le consegne', vai:() => vai('app', { pag:'consegne' }) });
-  } else if(copiati && !(f.lettere || {})[kCons]){
+  } else if((f.lettere || {})[kCons]){
+    fattiAltri.push({ k:'f-' + kCons, fattoOk:true, ico:ICON.consegne, titolo:'Consegne aggiornate', sotto:'Dai diari di oggi', azione:'Apri le consegne', vai:() => vai('aggcons'),
+      disfa:() => { const x = leggiFare(); if(x.lettere){ delete x.lettere[kCons]; scriviFare(x); } } });
+  } else if(copiati){
     resto.push({ k:kCons, ico:ICON.consegne, titolo:'Consegne da aggiornare', sotto:`Dai diari di oggi · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}`, azione:'Apri le consegne', vai:() => vai('aggcons'),
       fatto:() => { const x = leggiFare(); x.lettere = x.lettere || {}; x.lettere[kCons] = true; scriviFare(x); } });
   }
   // post-degenze dal 10° giorno
   const voci = caricaPostDegenze();
-  const pd = Object.keys(voci).filter(id => avvisoPostDegenza(voci[id]) <= Date.now()).length;
+  const pdIds = Object.keys(voci).filter(id => avvisoPostDegenza(voci[id]) <= Date.now()), pd = pdIds.length;
+  // come in Pocket: si ricordano quelle da controllare oggi, per dire poi "controllate"
+  let fCambiato = false;
+  if(pd && f.pdGiorno !== oggi){ f.pdGiorno = oggi; f.pdIds = []; fCambiato = true; }
+  if(f.pdGiorno === oggi){ const viste = f.pdIds || [], nuove = pdIds.filter(id => !viste.includes(id)); if(nuove.length){ f.pdIds = viste.concat(nuove); fCambiato = true; } }
+  if(fCambiato) scriviFare(f);
+  if(!pd && f.pdGiorno === oggi && (f.pdIds || []).length && sett !== RIC)
+    fattiAltri.push({ k:'f-pd', fattoOk:true, ico:ICON.postdegenze, titolo:'Post-degenze', sotto:esitoPostDegenze(f.pdIds, voci, domani).replace(/^./, c => c.toUpperCase()), azione:'Apri le post-degenze', vai:() => vai('app', { pag:'postdegenze' }) });
   if(pd && sett !== RIC) resto.push({ k:'pd', ico:ICON.postdegenze, titolo:pd === 1 ? 'Una post-degenza' : `${pd} post-degenze`, sotto:'Da controllare oggi', azione:'Apri le post-degenze', vai:() => vai('app', { pag:'postdegenze' }) });
   // il giro: chi resta da vedere (i critici hanno già la loro card)
   const altri = daVedere - critici.length;
@@ -28237,7 +28271,7 @@ function mpPassi(){
   const passi = [...critici, ...diari, ...resto];
   mpDopo = mpDopo.filter(k => passi.some(p => p.k === k));
   passi.sort((a, b) => mpDopo.indexOf(a.k) - mpDopo.indexOf(b.k));
-  return { passi, fatti, tot, daVedere, daCopiare, sett };
+  return { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett };
 }
 function mpOggi(){
   const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett } = dati;
@@ -28247,7 +28281,7 @@ function mpOggi(){
   const diari = `${daCopiare} ${daCopiare === 1 ? 'diario' : 'diari'} da copiare`;
   const frase = !tot ? 'Nessun paziente in reparto.'
     : daVedere ? `${daVedere} ${daVedere === 1 ? 'paziente' : 'pazienti'} da vedere${daCopiare ? ', ' + diari : ''}.`
-    : daCopiare ? `Tutti i pazienti visti, ${diari}.` : 'Tutti i pazienti visti, tutti i diari copiati.';
+    : daCopiare ? `Tutti i pazienti visti, ${diari}.` : !passi.length ? 'Tutto fatto per oggi.' : 'Tutti i pazienti visti, tutti i diari copiati.';
   document.documentElement.classList.toggle('mp-pc', MP_PC.matches);
   if(MP_PC.matches) return mpOggiPC(dati, saluto, frase);
   mpUndock();
@@ -28259,6 +28293,7 @@ function mpOggi(){
     <div class="mp-pila" id="mp-pila"></div>
     <div class="mp-pallini" id="mp-pallini" aria-hidden="true"></div>
     <p class="mp-sugg" id="mp-sugg"></p>
+    ${mpHtmlFatti(dati)}
     <p class="mp-lbl">Tutto il resto</p>
     <div class="mp-altro">${chip('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? chip('data-m="pagina" data-p="consegne"', 'Consegne weekend') : chip('data-m="aggcons"', 'Consegne')}${chip('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${chip('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${chip('data-m="rubrica"', 'Rubrica')}${chip('data-m="strumenti-home"', 'Strumenti')}</div>
   </div>`;
@@ -28300,19 +28335,19 @@ function mpUndock(){
   mpDettK = null;
 }
 function mpOggiPC(dati, saluto, frase){
-  const { passi, fatti, tot, daVedere, daCopiare, sett } = dati;
+  const { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett } = dati;
   const lettere = passi.filter(p => p.stato === 'lettera').length;
   const gruppi = [
     ['Diari da completare e copiare', passi.filter(p => p.k.startsWith('dia|'))],
     ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro')],
     ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro')],
-    ['Copiati oggi', fatti]
+    ['Fatto oggi', [...fattiAltri, ...fatti]]
   ].filter(g => g[1].length);
   mpVoci = gruppi.flatMap(g => g[1]);
   // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
   if(!mpVoci.some(v => v.k === mpSel)){
     const stessa = mpSelLetto && mpVoci.find(v => v.letto === mpSelLetto && mpEDiario(v));
-    mpSel = (stessa || mpVoci.find(v => !v.copiato) || mpVoci[0] || {}).k || null;
+    mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk) || mpVoci[0] || {}).k || null;
   }
   const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
   const link = (attr, t) => `<button class="mpd-link" ${attr}>${t}</button>`;
@@ -28338,18 +28373,21 @@ function mpOggiPC(dati, saluto, frase){
   // resta da vedere; in fondo, sempre in vista, lettere e consegne e i copiati
   // di oggi (scorrevoli anche loro)
   const riga = p => `
-    <button class="mpd-r${p.copiato ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
-      <span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span>
-      <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
+    <button class="mpd-r${p.copiato || p.fattoOk ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
+      <span class="mp-tessera${p.fattoOk ? ' mp-t-cop' : p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span>
+      <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato || p.fattoOk ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
     </button>`;
   const gruppo = ([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(riga).join('')}`;
-  const giu = gruppi.filter(g => g[0] === 'Lettere e consegne' || g[0] === 'Copiati oggi');
+  const giu = gruppi.filter(g => g[0] === 'Lettere e consegne' || g[0] === 'Fatto oggi');
   const su = gruppi.filter(g => !giu.includes(g));
+  // niente più da fare: al posto dell'elenco, "Tutto fatto per oggi"
+  const tutto = !passi.length && tot;
   const lista = $m('#mpd-lista');
   const pos = [...lista.querySelectorAll('.mpd-scorre')].map(x => x.scrollTop);
-  lista.innerHTML = !mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>`
-    : `<div class="mpd-su mpd-scorre">${su.length ? su.map(gruppo).join('') : '<p class="mpd-gr">Diari da completare e copiare<span>0</span></p><p class="mpd-vuoto">Tutti copiati.</p>'}</div>`
-      + (giu.length ? `<div class="mpd-giu">${giu.map(g => g[0] === 'Copiati oggi' ? `<p class="mpd-gr">${g[0]}<span>${g[1].length}</span></p><div class="mpd-cop mpd-scorre">${g[1].map(riga).join('')}</div>` : gruppo(g)).join('')}</div>` : '');
+  lista.classList.toggle('mpd-tutto', !!tutto);
+  lista.innerHTML = !mpVoci.length && !tutto ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>`
+    : (tutto ? `<p class="mpd-tuttofatto">${ICON.ok}Tutto fatto per oggi</p>` : su.length ? `<div class="mpd-su mpd-scorre">${su.map(gruppo).join('')}</div>` : '')
+      + (giu.length ? `<div class="mpd-giu">${giu.map(g => g[0] === 'Fatto oggi' ? `<p class="mpd-gr">${g[0]}<span>${g[1].length}</span></p><div class="mpd-cop mpd-scorre">${g[1].map(riga).join('')}</div>` : gruppo(g)).join('')}</div>` : '');
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   mpDett();
 }
@@ -28364,7 +28402,7 @@ function mpDett(){
   // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
   if(diario){ mpDock(p); mpDettK = chiave; return; }
   mpUndock(); mpDettK = chiave;
-  if(!p){ box.innerHTML = `<div class="mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Giro finito</h3><p>Niente altro da fare per oggi.</p></div>`; return; }
+  if(!p){ box.innerHTML = `<div class="mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Niente altro da fare.</p></div>`; return; }
   let corpo = '';
   if(p.k.startsWith('vis|')){
     let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
@@ -28378,8 +28416,9 @@ function mpDett(){
     });
     corpo = `<p class="mpd-lbl">Ancora da vedere: sul telefono, dal Reparto. Oppure da qui</p><div class="mpd-letti">${letti.map(([s, n, et]) => `<button class="mp-tessera${infoLetto(n).critico ? ' mp-t-critico' : ''}" data-mp="pc-letto" data-s="${esc(s)}" data-n="${esc(n)}" aria-label="${esc(n)}">${esc(et)}</button>`).join('')}</div>`;
   }
-  const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>` : '';
-  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${esc(p.letto || p.titolo)}</h2><p>${esc(p.sotto)}</p></div></div>${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
+  const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>`
+    : p.disfa ? `<button class="mp-btn mp-sec" data-mp="pc-disfa">Segna da fare</button>` : '';
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${esc(p.fattoOk ? p.titolo : p.letto || p.titolo)}</h2><p class="${p.fattoOk ? 'mpd-st-ok' : ''}">${p.fattoOk ? esc('Fatto · ' + p.sotto.replace(/^./, c => c.toLowerCase())) : esc(p.sotto)}</p></div></div>${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
 function mpPcScegli(k, scorri){
@@ -28395,6 +28434,11 @@ function mpPcApri(){
   mpPassoApri();
 }
 function mpPcCopia(){ if(mpDocked()) $m('#m-copia').click(); }
+function mpPcDisfa(){
+  const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.disfa) return;
+  try{ p.disfa(); } catch(e){}
+  mpSel = null; mpOggi();
+}
 function mpPcFatto(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.fatto) return;
   try{ p.fatto(); } catch(e){}
@@ -28416,11 +28460,21 @@ document.addEventListener('keydown', e => {
 });
 // passando dal telefono al PC (o allargando la finestra) Oggi cambia forma
 MP_PC.addEventListener('change', () => { if(UI_MP && M.vista === 'home') mpOggi(); });
+// TELEFONO: sotto la pila, le cose già fatte oggi (come in Pocket), col baffo
+let mpFattiTel = [];
+function mpHtmlFatti(dati){
+  const cop = dati.fatti.length;
+  mpFattiTel = [...dati.fattiAltri];
+  if(cop) mpFattiTel.push({ ico:ICON.diario, titolo:`${cop} ${cop === 1 ? 'diario copiato' : 'diari copiati'}`, sotto:'Oggi', vai:() => mpVai('visita') });
+  if(!mpFattiTel.length) return '';
+  return `<p class="mp-lbl">Fatto oggi</p><div class="mp-fatti">${mpFattiTel.map((v, k) => `<button class="mp-fatto-r" data-mp="fatto-apri" data-i="${k}">
+      <span class="mp-tessera mp-t-cop">${v.ico || esc(v.et || '')}</span><span class="mpd-rt"><b>${esc(v.titolo)}</b><small>${esc(v.sotto)}</small></span><i class="mpd-ok">${ICON.ok}</i></button>`).join('')}</div>`;
+}
 function mpDisegnaPila(){
   const pila = $m('#mp-pila'); if(!pila) return;
   const sugg = $m('#mp-sugg'), pall = $m('#mp-pallini');
   if(!mpPila.length){
-    pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Giro finito</h3><p>Niente altro da fare per oggi.</p></div>`;
+    pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Niente altro da fare.</p></div>`;
     pall.innerHTML = ''; sugg.hidden = true; return;
   }
   pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
@@ -28764,6 +28818,8 @@ if(UI_MP){
     else if(a === 'pc-apri') mpPcApri();
     else if(a === 'pc-copia') mpPcCopia();
     else if(a === 'pc-fatto') mpPcFatto();
+    else if(a === 'pc-disfa') mpPcDisfa();
+    else if(a === 'fatto-apri'){ const v = (mpFattiTel || [])[+el.dataset.i]; if(v && v.vai) v.vai(); }
     else if(a === 'pc-letto'){ const n = el.dataset.n; M.settore = el.dataset.s; M.pila = []; M.vista = 'visita'; disegna(); setTimeout(() => { if(M.vista === 'visita') mpLetto(n, mpTile(n)); }, mpFermo() ? 0 : 380); }
     else if(a === 'passo-apri') mpPassoApri();
     else if(a === 'settore'){
