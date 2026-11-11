@@ -24856,17 +24856,22 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .mp-griglia .m-tl{ height:auto; aspect-ratio:1; min-width:0; border-radius:20px; background:var(--mp-l-base); background-image:none; color:var(--mp-ink); box-shadow:none; font-family:var(--mp-font); font-size:17px; font-weight:600; letter-spacing:-.02em; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding:0 4px; animation:none; transition:transform .15s var(--mp-molla), background .3s; }
   html[data-mp] :is(.mp-entra, .mp-cambia) .m-tl, html[data-mp] .mp-griglia.mp-cambia .m-tl{ animation:mp-entra .45s var(--mp-molla) both; animation-delay:calc(var(--i) * 30ms); }
   html[data-mp] .mp-griglia .m-tl.m-appena{ animation:m-pop .5s var(--m-molla); }
+  /* visto oggi col diario ancora da copiare: pesca; copiato: come in
+     Aggiorna consegne (teal, col bordo e il baffo che sporge dall'angolo) */
+  html[data-mp] .mp-griglia .m-tl{ overflow:visible; }
   html[data-mp] .mp-griglia .m-tl.m-oggi-l{ background:var(--mp-l-dacop); }
-  html[data-mp] .mp-griglia .m-tl.m-oggi-l.m-copiato{ background:var(--mp-l-cop); }
+  html[data-mp] .mp-griglia .m-tl.m-oggi-l.m-copiato{ background:var(--m-l-visto); box-shadow:inset 0 0 0 2.5px var(--m-teal); }
   html[data-mp] .mp-griglia .m-tl.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 2px var(--m-blu); }
   html[data-mp] .mp-griglia .m-tl.m-critico{ background:var(--mp-l-crit); color:var(--mp-l-crit-ink); box-shadow:none; }
   /* un critico già visto: il bordo dice del diario (da copiare, copiato) */
   html[data-mp] .mp-griglia .m-tl.m-critico.m-oggi-l{ box-shadow:inset 0 0 0 2.5px var(--mp-l-dacop-f); }
-  html[data-mp] .mp-griglia .m-tl.m-critico.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--mp-l-cop-f); }
+  html[data-mp] .mp-griglia .m-tl.m-critico.m-copiato{ box-shadow:inset 0 0 0 2.5px var(--m-teal); }
   html[data-mp] .mp-griglia .m-tl.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--m-p-d) 26%, transparent) 0 3px, transparent 3px 9px); }
   html[data-mp] .mp-griglia .m-tl.m-vuoto{ background:transparent; box-shadow:inset 0 0 0 1.5px var(--mp-linea); color:var(--mp-tenue); }
   html[data-mp] .mp-griglia .m-tl.m-armato{ box-shadow:inset 0 0 0 2.5px var(--m-p-e); color:var(--m-p-e); }
-  html[data-mp] .mp-griglia .m-tl .m-spunta{ display:none; }
+  html[data-mp] .mp-griglia .m-tl .m-spunta{ top:-4px; right:-6px; }
+  /* Aggiorna consegne (solo qui, non in Pocket): stessi colori del settore */
+  html[data-mp] #m-aggcons .m-tl.m-oggi-l:not(.m-copiato, .m-critico){ background:var(--mp-l-dacop); }
   html[data-mp] .mp-griglia .m-tl .m-gg{ bottom:9px; font-size:10px; font-weight:500; color:var(--mp-muto); }
   html[data-mp] .mp-griglia .m-tl .m-pallini.m-basso{ right:8px; bottom:8px; gap:3px; }
   html[data-mp] .mp-griglia .m-tl .m-pallini.m-alto{ left:8px; top:8px; gap:3px; }
@@ -24880,6 +24885,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-legenda span{ display:inline-flex; align-items:center; gap:6px; }
   .mp-legenda i{ width:12px; height:12px; border-radius:4px; }
   .mp-lg-base{ background:var(--mp-l-base); } .mp-lg-dacop{ background:var(--mp-l-dacop); } .mp-lg-cop{ background:var(--mp-l-cop); } .mp-lg-crit{ background:var(--mp-l-crit); }
+  .mp-lg-visto{ background:var(--m-l-visto); } .mp-lg-copiato{ background:var(--m-l-visto); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
   .mp-lg-cons{ background:var(--mp-l-base); box-shadow:inset 0 0 0 1.5px var(--m-blu); }
   /* TUTTI I SETTORI (weekend e festivi): i riquadri della mappa di Pocket
      come card di qui, coi letti negli stessi colori della griglia */
@@ -24892,7 +24898,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .mp-mappa .m-zona-t small{ font-size:12px; font-weight:500; color:var(--mp-muto); }
   html[data-mp] .mp-mappa .m-mini{ height:26px; border-radius:7px; background:var(--mp-l-base); background-image:none; box-shadow:none; color:var(--mp-ink); opacity:1; font-family:var(--mp-font); font-weight:600; }
   html[data-mp] .mp-mappa .m-mini.m-oggi-l{ background:var(--mp-l-dacop); }
-  html[data-mp] .mp-mappa .m-mini.m-oggi-l.m-copiato{ background:var(--mp-l-cop); }
+  html[data-mp] .mp-mappa .m-mini.m-oggi-l.m-copiato{ background:var(--m-l-visto); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
   html[data-mp] .mp-mappa .m-mini.m-consegnato:not(.m-oggi-l){ box-shadow:inset 0 0 0 1.5px var(--m-blu); }
   html[data-mp] .mp-mappa .m-mini.m-critico{ background:var(--mp-l-crit); color:var(--mp-l-crit-ink); box-shadow:inset 0 0 0 1.5px var(--mp-l-crit-ink); }
   html[data-mp] .mp-mappa .m-mini.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--m-p-d) 26%, transparent) 0 2px, transparent 2px 6px); }
@@ -28657,7 +28663,7 @@ const mpVediTutti = () => mpGuardia() && (mpTutti === null ? true : mpTutti);
 // altri letti restano tenui (senza consegna); nei feriali "da vedere" è il grigio
 function mpLegenda(mappa){
   const g = mpGuardia();
-  return `<div class="mp-legenda${mappa ? ' mp-legenda-mappa' : ''}" aria-hidden="true">${g ? '<span><i class="mp-lg-cons"></i>consegnato, da vedere</span>' : '<span><i class="mp-lg-base"></i>da vedere</span>'}<span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-cop"></i>copiato</span><span><i class="mp-lg-crit"></i>critico</span>${g ? '<span><i class="mp-lg-base mp-lg-tenue"></i>senza consegna</span>' : ''}</div>`;
+  return `<div class="mp-legenda${mappa ? ' mp-legenda-mappa' : ''}" aria-hidden="true">${g ? '<span><i class="mp-lg-cons"></i>consegnato, da vedere</span>' : '<span><i class="mp-lg-base"></i>da vedere</span>'}<span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-copiato"></i>diario copiato</span><span><i class="mp-lg-crit"></i>critico</span>${g ? '<span><i class="mp-lg-base mp-lg-tenue"></i>senza consegna</span>' : ''}</div>`;
 }
 function mpReparto(){
   M.zoom = true;
