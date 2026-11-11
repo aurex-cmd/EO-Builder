@@ -27082,11 +27082,21 @@ window.apriVfgCalc = function(testo, area, id){
   }
   return r;
 };
+// passando a un'altra finestra: la riga aperta (Agli EE, un referto) si
+// chiude come cliccando altrove, così le unità di misura si aggiungono subito
+window.addEventListener('blur', () => {
+  const a = document.activeElement;
+  if(!a || !sc.contains(a) || !a.matches('[data-campo]')) return;
+  const r = a.closest('.m-riga');
+  setTimeout(() => { if(r && r.isConnected && !document.hasFocus()) chiudiRiga(r); }, 120);
+});
 sc.addEventListener('focusout', e => {
   const t = e.target;
   if(t.matches('[data-campo]')){
     const r = t.closest('.m-riga');
-    setTimeout(() => { if(r.isConnected && !r.contains(document.activeElement)) chiudiRiga(r); }, 120);
+    // anche quando si passa a un altro programma (il gestionale dell'ospedale):
+    // la casella resta "attiva" nella pagina, ma la finestra non ha più il fuoco
+    setTimeout(() => { if(r.isConnected && (!r.contains(document.activeElement) || !document.hasFocus())) chiudiRiga(r); }, 120);
   }
   if(t.id === 'm-provv'){
     let v = t.value.replace(/\n-\s*$/, '').replace(/^-\s*$/, '');
