@@ -23319,7 +23319,7 @@ function editorLettereSvuota(){
   /* spazio in fondo per far salire l'ultima riga sopra "Copia": su iPhone il
      padding in fondo di un contenitore flex che scorre non conta, e il diario
      sembrava finire dietro il pulsante senza poter scorrere */
-  .m-s-corpo::after{ content:""; flex:0 0 auto; height:calc(114px + var(--m-tastiera, 0px)); }
+  .m-s-corpo::after{ content:""; flex:0 0 auto; height:calc(14px + var(--m-tastiera, 0px)); }
   .m-scheda .m-lbl{ margin-bottom:0; }
   .m-lbl-riga{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .m-modifica{ border:0; background:none; padding:4px 0; font:inherit; font-size:13px; font-weight:600; color:var(--m-link); cursor:pointer; transition:transform .14s var(--m-molla), opacity .2s; }
@@ -23328,11 +23328,14 @@ function editorLettereSvuota(){
   /* senza etichette il riquadro sparisce davvero: display:flex vinceva su hidden e lasciava
      uno spazio vuoto tra il titolo e l'esame obiettivo */
   .m-aiuti[hidden]{ display:none; }
-  /* le etichette (antibiotici, richieste, avvisi) restano ferme in cima mentre
-     si scorre e si scrive più in basso: si aggiornano mentre si scrive, e così
-     si vedono. Il fondo copre il testo che ci passa sotto (anche ai lati) */
-  #m-s-corpo > #m-aiuti{ flex:none; position:sticky; top:0; z-index:3; background:var(--m-bg); box-shadow:0 0 0 60px var(--m-bg); clip-path:inset(-60px -60px 0 -60px); padding-bottom:8px; max-height:84px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
-  #m-s-corpo > #m-aiuti::-webkit-scrollbar{ display:none; }
+  /* le etichette (antibiotici, richieste, avvisi) stanno sotto il titolo,
+     fuori dal testo che scorre: sempre in vista mentre si scrive, senza
+     coprire righe. Se sono tante si scorrono nel loro spazio */
+  .m-scheda > #m-aiuti{ flex:none; padding:2px 18px 8px; max-height:84px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .m-scheda > #m-aiuti::-webkit-scrollbar{ display:none; }
+  html[data-mp] .m-scheda > #m-aiuti{ padding:8px 22px 10px; }
+  html[data-mp] .m-scheda.mp-dock > #m-aiuti{ padding:8px 38px 10px; }
+  @media (max-width:1100px){ html[data-mp] .m-scheda.mp-dock > #m-aiuti{ padding:8px 26px 10px; } }
   .m-aiuto{ display:inline-flex; align-items:center; gap:5px; max-width:100%; background:none; border:1px solid var(--m-line); border-radius:6px; padding:0 7px 0 6px; font-size:12px; line-height:20px; font-weight:500; color:var(--m-muted); overflow:hidden; white-space:nowrap; transition:opacity .3s, transform .35s var(--m-molla), max-width .4s var(--m-molla), padding .4s var(--m-molla), margin .4s; }
   .m-aiuto i{ width:5px; height:5px; border-radius:50%; flex:0 0 auto; background:var(--acc); }
   .m-aiuto em{ font-style:normal; font-weight:400; color:var(--m-faint); }
@@ -23393,7 +23396,10 @@ function editorLettereSvuota(){
   .m-aggiungi button.m-chiudi-el{ color:var(--m-faint); font-weight:400; }
   .m-aggiungi:not(:has([data-x])) .m-chiudi-el{ display:none; }
   .m-riga.m-via{ opacity:0; transition:opacity .2s; }
-  .m-s-piede{ position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--m-bg) 72%, transparent); }
+  /* il fondo con Copia il diario sta sotto il testo, non sopra: prima copriva
+     (sfumando) le ultime righe scritte. Resta solo una breve sfumatura sopra */
+  .m-s-piede{ position:relative; flex:none; padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px)); background:var(--m-bg); }
+  .m-s-piede::before{ content:""; position:absolute; left:0; right:0; top:-12px; height:12px; background:linear-gradient(to top, var(--m-bg), transparent); pointer-events:none; }
   .m-copia{ position:relative; overflow:hidden; width:100%; border:0; border-radius:10px; height:52px; background:var(--m-notte); color:#fff; font:inherit; font-weight:600; font-size:15px; cursor:pointer; transition:transform .16s var(--m-molla); }
   .m-copia:active{ transform:scale(.97); }
   .m-copia::before{ content:""; position:absolute; inset:0; background:var(--m-teal); transform:scaleX(0); transform-origin:left; transition:transform .55s var(--m-molla); }
@@ -24903,7 +24909,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .m-s-testa .m-s-pratica{ right:68px; }
   html[data-mp] .m-s-testa .m-chiudi svg{ width:18px; height:18px; }
   html[data-mp] .m-s-corpo{ padding:0 22px; }
-  html[data-mp] .m-s-corpo::after{ height:calc(110px + var(--m-tastiera, 0px)); }
+  html[data-mp] .m-s-corpo::after{ height:calc(14px + var(--m-tastiera, 0px)); }
   html[data-mp] .m-aiuti{ gap:8px; padding-top:12px; }
   html[data-mp] .m-aiuto{ height:32px; padding:0 13px; gap:7px; border:0; border-radius:999px; background:var(--mp-campo); font-size:14px; line-height:32px; font-weight:500; color:var(--mp-ink); }
   html[data-mp] .m-aiuto i{ width:7px; height:7px; }
@@ -24918,7 +24924,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] #m-provv{ font-size:17px; line-height:1.6; color:var(--mp-ink); }
   html[data-mp] .m-riga-nome{ font-weight:500; }
   html[data-mp] .m-aggiungi button{ font-size:14px; }
-  html[data-mp] .m-s-piede{ display:grid; grid-template-columns:56px 1fr; gap:10px; padding:18px 22px calc(18px + env(safe-area-inset-bottom,0px)); background:linear-gradient(to top, var(--mp-carta) 76%, transparent); }
+  html[data-mp] .m-s-piede{ display:grid; grid-template-columns:56px 1fr; gap:10px; padding:14px 22px calc(18px + env(safe-area-inset-bottom,0px)); background:var(--m-bg); }
   html[data-mp] .m-s-piede .mp-menu-btn{ width:56px; height:56px; }
   html[data-mp] .m-copia{ height:56px; border-radius:16px; background:var(--mp-accento); color:var(--mp-accento-ink); font-size:17px; font-weight:500; }
   html[data-mp] .m-copia::before{ background:var(--mp-ok); }
@@ -26453,6 +26459,8 @@ function disegnaScheda(){
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
   const presenti = D.ordine;
+  // le etichette della scheda di prima (spostate sotto il titolo, vedi più giù)
+  $m('#m-scheda').querySelectorAll(':scope > #m-aiuti').forEach(x => x.remove());
   $m('#m-s-corpo').innerHTML = `
     <div class="m-aiuti" id="m-aiuti"></div>
     <div class="m-aiuti m-pr-scheda" id="m-pr-scheda" hidden></div>
@@ -26470,6 +26478,9 @@ function disegnaScheda(){
   provv.dataset.vfgN = String(triggerOccorrenze(VFG_TRIGGER_RE, provv.value).length);
   if(typeof attivaMenuComandi === 'function') attivaMenuComandi(provv);
   aggiornaCopia(i.copiato);
+  // le etichette (antibiotici, richieste, avvisi) sotto il titolo, fuori dal
+  // testo che scorre: restano in vista mentre si scrive senza coprire righe
+  const et = $m('#m-aiuti'); if(et) $m('#m-scheda').insertBefore(et, $m('#m-s-corpo'));
   M.aiutiPronti = disegnaAiuti(true, true);
   $m('#m-s-corpo').scrollTop = 0;
   // altezze delle caselle subito (prima tutte le letture, poi le scritture)
@@ -27041,6 +27052,23 @@ if(window.ResizeObserver){
   }).observe($m('#m-s-corpo'));
 }
 if(document.fonts){ document.fonts.ready.then(rialzaTutte); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', rialzaTutte); }
+// IL CURSORE SEMPRE IN VISTA mentre si scrive: la riga su cui si scrive non
+// finisce sotto le etichette ferme in alto né sotto il fondo con Copia
+function cursoreInVista(t){
+  if(!t || !t.matches('textarea') || !sc.contains(t) || t.selectionStart !== t.selectionEnd) return;
+  const c = $m('#m-s-corpo'); if(!c) return;
+  const cr = c.getBoundingClientRect(), riga = parseFloat(getComputedStyle(t).lineHeight) || 24;
+  const et = $m('#m-aiuti'), alto = et && !et.hidden && et.offsetHeight ? Math.max(cr.top, et.getBoundingClientRect().bottom) : cr.top;
+  let y; try{ y = comandiPosizioneCursore(t, t.selectionEnd).y; } catch(e){ return; }
+  // sopra la sfumatura del fondo (12px), con un po' d'aria
+  const fondo = cr.bottom - 20;
+  if(y > fondo) c.scrollTop += y - fondo;
+  else if(y - riga < alto + 4) c.scrollTop -= (alto + 4) - (y - riga);
+}
+['input', 'click', 'keyup'].forEach(ev => sc.addEventListener(ev, e => {
+  if(ev === 'keyup' && !/^(Arrow|Page|Home|End|Enter)/.test(e.key)) return;
+  requestAnimationFrame(() => cursoreInVista(e.target));
+}));
 // PROVVEDIMENTI: andando a capo il trattino c'è già; un secondo trattino
 // scritto per abitudine ("- -") si toglie da solo
 function unTrattino(t){
