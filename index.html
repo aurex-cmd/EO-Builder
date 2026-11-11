@@ -24929,6 +24929,8 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
 
   /* ESAME GUIDATO: una domanda alla volta */
   #mp-domanda{ display:none; }
+  html:not([data-mp-guida]) #mp-card-appunti{ display:none !important; }
+  #mp-appunti{ width:100%; min-height:150px; padding:14px 16px; box-sizing:border-box; resize:vertical; line-height:1.5; }
   html[data-mp][data-mp-guida] body{ background:var(--mp-fondo); }
   html[data-mp][data-mp-guida] .m-bar-in{ grid-template-columns:44px 1fr auto; gap:6px; }
   html[data-mp][data-mp-guida] .m-bar .m-indietro{ margin-left:-12px; color:var(--mp-ink); }
@@ -25026,8 +25028,20 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-ok{ width:22px; height:22px; margin-right:6px; color:var(--mp-ok); flex:none; }
   .mpd-ok svg{ width:100%; height:100%; }
   .mpd-vuoto{ margin:22px; color:var(--mp-muto); }
-  .mpd-dett{ min-height:420px; padding:34px 38px; border-radius:30px; display:flex; flex-direction:column; }
-  .mpd-dett.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
+  .mpd-dett{ min-width:0; }
+  .mpd-info{ min-height:420px; padding:34px 38px; border-radius:30px; display:flex; flex-direction:column; }
+  .mpd-info.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
+  .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
+  /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
+  html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; height:calc(100dvh - 290px); min-height:500px; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
+  html[data-mp] .m-scheda.mp-dock .m-s-testa{ padding:32px 38px 6px; cursor:default; touch-action:auto; }
+  html[data-mp] .m-scheda.mp-dock .m-s-testa::before, html[data-mp] .m-scheda.mp-dock .m-chiudi{ display:none; }
+  html[data-mp] .m-scheda.mp-dock .m-s-testa h2{ font-size:40px; }
+  html[data-mp] .m-scheda.mp-dock .m-s-testa .m-s-pratica{ top:30px; right:36px; }
+  html[data-mp] .m-scheda.mp-dock .m-s-corpo{ padding:0 38px; }
+  html[data-mp] .m-scheda.mp-dock :is(#m-eo, #m-provv){ font-size:18px; line-height:1.65; }
+  html[data-mp] .m-scheda.mp-dock .m-s-piede{ padding:18px 38px 26px; grid-template-columns:56px minmax(0, 420px); }
+  html[data-mp].mp-pc .m-velo{ display:none; }
   .mpd-dtesta h2{ margin:0; font-size:40px; font-weight:500; letter-spacing:-.045em; line-height:1; }
   .mpd-dtesta p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
   .mpd-dtesta p.mpd-st-ok{ color:var(--mp-ok); }
@@ -28038,7 +28052,7 @@ const mpMinuscolo = n => /^Letto\s/i.test(n) ? 'l' + n.slice(1) : n;
 function mpPrima(){
   const h = document.documentElement;
   h.dataset.mpV = M.vista;
-  if(M.vista !== 'home') h.classList.remove('mp-pc');
+  if(M.vista !== 'home'){ h.classList.remove('mp-pc'); mpUndock(); }
   h.toggleAttribute('data-mp-guida', M.vista === 'eo');
   document.querySelectorAll('#mp-barra [data-v]').forEach(b => { if(b.dataset.v === M.vista) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   if(M.vista !== 'eo') mpGuidaFine();
@@ -28148,6 +28162,7 @@ function mpOggi(){
     : daCopiare ? `Tutti i pazienti visti, ${diari}.` : 'Tutti i pazienti visti, tutti i diari copiati.';
   document.documentElement.classList.toggle('mp-pc', MP_PC.matches);
   if(MP_PC.matches) return mpOggiPC(dati, saluto, frase);
+  mpUndock();
   const festivo = eFestivo(new Date());
   const chip = (attr, t) => `<button class="mp-chip" ${attr}>${t}</button>`;
   $m('#m-vista').innerHTML = `<div class="mp-oggi">
@@ -28172,70 +28187,100 @@ const MP_PC = matchMedia('(min-width: 900px)');
 let mpSel = null;           // la voce scelta (la sua chiave)
 let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
 const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
+let mpSelLetto = null, mpDettK = null;
+const mpDocked = () => { const s = $m('#m-scheda'); return !!s && s.classList.contains('mp-dock'); };
+const mpEDiario = p => !!p && (p.k.startsWith('dia|') || !!p.copiato);
+// l'editor del diario (la scheda di Pocket, con tutte le sue funzioni) si
+// aggancia nel riquadro di destra: niente finestra da aprire e chiudere
+function mpDock(p){
+  const s = $m('#m-scheda'), box = $m('#mpd-dett'); if(!box) return;
+  salvaOra();
+  clearTimeout(s._mp); clearTimeout(s._mp2);
+  s.classList.remove('mp-invito', 'mp-vuota', 'mp-esce'); s.style.transform = s.style.transition = s.style.borderRadius = '';
+  s.classList.add('mp-dock');
+  if(s.parentElement !== box) box.appendChild(s);
+  apriScheda(p.letto);
+  document.documentElement.style.overflow = document.body.style.overflow = '';
+}
+function mpUndock(){
+  const s = $m('#m-scheda'); if(!s || !s.classList.contains('mp-dock')) return;
+  salvaOra();
+  clearTimeout(s._t);
+  s.classList.remove('mp-dock', 'm-su'); $m('#m-velo').classList.remove('m-su');
+  $m('#m-velo').after(s);
+  mpDettK = null;
+}
 function mpOggiPC(dati, saluto, frase){
   const { passi, fatti, tot, daVedere, daCopiare, sett } = dati;
   const lettere = passi.filter(p => p.stato === 'lettera').length;
   const gruppi = [
-    ['Diari da copiare', passi.filter(p => p.k.startsWith('dia|'))],
+    ['Diari da completare e copiare', passi.filter(p => p.k.startsWith('dia|'))],
     ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro')],
     ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro')],
     ['Copiati oggi', fatti]
   ].filter(g => g[1].length);
   mpVoci = gruppi.flatMap(g => g[1]);
-  if(!mpVoci.some(v => v.k === mpSel)) mpSel = (mpVoci.find(v => !v.copiato) || mpVoci[0] || {}).k || null;
+  // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
+  if(!mpVoci.some(v => v.k === mpSel)){
+    const stessa = mpSelLetto && mpVoci.find(v => v.letto === mpSelLetto && mpEDiario(v));
+    mpSel = (stessa || mpVoci.find(v => !v.copiato) || mpVoci[0] || {}).k || null;
+  }
   const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
-  const festivo = eFestivo(new Date());
   const link = (attr, t) => `<button class="mpd-link" ${attr}>${t}</button>`;
-  $m('#m-vista').innerHTML = `<div class="mpd">
-    <div class="mpd-testa">
-      <div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
-        <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
-      <dl class="mpd-numeri">${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>
-    </div>
-    <div class="mpd-corpo">
-      <nav class="mpd-lista" id="mpd-lista" aria-label="Il lavoro di oggi">${!mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>` : gruppi.map(([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(p => `
-        <button class="mpd-r${p.copiato ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
-          <span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}${p.copiato ? ' mp-t-cop' : ''}">${p.ico || esc(p.et || '')}</span>
-          <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
-        </button>`).join('')}`).join('')}</nav>
-      <section class="mpd-dett mp-card" id="mpd-dett" aria-live="polite"></section>
-    </div>
-    <div class="mpd-piede">
-      <div class="mpd-links">${link('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? link('data-m="pagina" data-p="consegne"', 'Consegne weekend') : link('data-m="aggcons"', 'Aggiorna consegne')}${link('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${link('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${link('data-m="rubrica"', 'Rubrica')}${link('data-m="strumenti-home"', 'Strumenti')}</div>
-      <p class="mpd-tasti"><kbd>↑</kbd><kbd>↓</kbd> scegli · <kbd>Invio</kbd> apri · <kbd>C</kbd> copia</p>
-    </div>
-  </div>`;
+  if(!$m('#m-vista > .mpd')){
+    mpUndock(); mpDettK = null;
+    const festivo = eFestivo(new Date());
+    $m('#m-vista').innerHTML = `<div class="mpd">
+      <div class="mpd-testa" id="mpd-testa"></div>
+      <div class="mpd-corpo">
+        <nav class="mpd-lista" id="mpd-lista" aria-label="Il lavoro di oggi"></nav>
+        <section class="mpd-dett" id="mpd-dett"><div class="mp-card mpd-info" id="mpd-info" aria-live="polite"></div></section>
+      </div>
+      <div class="mpd-piede">
+        <div class="mpd-links">${link('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? link('data-m="pagina" data-p="consegne"', 'Consegne weekend') : link('data-m="aggcons"', 'Aggiorna consegne')}${link('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${link('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${link('data-m="rubrica"', 'Rubrica')}${link('data-m="strumenti-home"', 'Strumenti')}</div>
+        <p class="mpd-tasti"><kbd>↑</kbd><kbd>↓</kbd> scegli · <kbd>Invio</kbd> scrivi · <kbd>C</kbd> copia · <kbd>Ctrl</kbd><kbd>Invio</kbd> copia mentre scrivi</p>
+      </div>
+    </div>`;
+  }
+  $m('#mpd-testa').innerHTML = `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
+      <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
+    <dl class="mpd-numeri">${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
+  const lista = $m('#mpd-lista'), su = lista.scrollTop;
+  lista.innerHTML = !mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>` : gruppi.map(([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(p => `
+    <button class="mpd-r${p.copiato ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
+      <span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span>
+      <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
+    </button>`).join('')}`).join('');
+  lista.scrollTop = su;
   mpDett();
 }
 function mpDett(){
-  const box = $m('#mpd-dett'); if(!box) return;
+  const box = $m('#mpd-info'); if(!box) return;
   const p = mpVoci.find(v => v.k === mpSel);
+  mpSelLetto = p && p.letto || null;
   document.querySelectorAll('#mpd-lista .mpd-r').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
+  const diario = mpEDiario(p);
+  const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto;
+  if(chiave === mpDettK && (!diario || mpDocked())) return;
+  // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
+  if(diario){ mpDock(p); mpDettK = chiave; return; }
+  mpUndock(); mpDettK = chiave;
   if(!p){ box.innerHTML = `<div class="mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Giro finito</h3><p>Niente altro da fare per oggi.</p></div>`; return; }
-  const testa = (stato) => `<div class="mpd-dtesta"><div><h2>${esc(p.letto || p.titolo)}</h2><p class="${p.copiato ? 'mpd-st-ok' : ''}">${esc(stato)}</p></div></div>`;
-  const diario = p.k.startsWith('dia|') || p.copiato;
-  if(diario){
-    const testo = mpTestoDiario(p.id).trim();
-    box.innerHTML = `${testa(p.copiato ? 'Diario copiato oggi' : p.sotto)}
-      <div class="mpd-testo" id="mpd-testo">${testo ? esc(testo).replace(/\n/g, '<br>') : '<span class="mpd-muto">Diario vuoto.</span>'}</div>
-      <div class="mpd-azioni"><button class="mp-btn mp-sec" data-mp="pc-apri">Modifica il diario</button><button class="mp-btn${p.copiato ? ' mpd-copiato' : ''}" data-mp="pc-copia">${p.copiato ? ICON.ok + 'Copia di nuovo' : ICON.copia + 'Copia il diario'}<kbd>C</kbd></button></div>`;
-  } else {
-    let corpo = '';
-    if(p.k.startsWith('vis|')){
-      let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
-      corpo = eo ? `<p class="mpd-lbl">L'ultimo esame obiettivo</p><div class="mpd-testo mpd-muto">${esc(eo)}</div>` : '';
-    } else if(p.k === 'giro'){
-      // i letti ancora da vedere: toccato, il letto si apre nel Reparto
-      const sett = settoreScelto(), vu = lettiVuoti(), visti = new Set();
-      const letti = (sett ? [sett] : settori()).flatMap(s => mpNomi(s).map(x => [s, ...x])).filter(([s, n, et, ap]) => {
-        if(visti.has(n)) return false; visti.add(n);
-        const i = infoLetto(n); return !i.vistoOggi && (ap || i.occupato || !vu[n]);
-      });
-      corpo = `<p class="mpd-lbl">Ancora da vedere</p><div class="mpd-letti">${letti.map(([s, n, et]) => `<button class="mp-tessera${infoLetto(n).critico ? ' mp-t-critico' : ''}" data-mp="pc-letto" data-s="${esc(s)}" data-n="${esc(n)}" aria-label="${esc(n)}">${esc(et)}</button>`).join('')}</div>`;
-    }
-    const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>` : '';
-    box.innerHTML = `${testa(p.sotto)}${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
+  let corpo = '';
+  if(p.k.startsWith('vis|')){
+    let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
+    corpo = eo ? `<p class="mpd-lbl">L'ultimo esame obiettivo</p><div class="mpd-testo mpd-muto">${esc(eo)}</div>` : '';
+  } else if(p.k === 'giro'){
+    // i letti ancora da vedere: toccato, il letto si apre nel Reparto
+    const sett = settoreScelto(), vu = lettiVuoti(), visti = new Set();
+    const letti = (sett ? [sett] : settori()).flatMap(s => mpNomi(s).map(x => [s, ...x])).filter(([s, n, et, ap]) => {
+      if(visti.has(n)) return false; visti.add(n);
+      const i = infoLetto(n); return !i.vistoOggi && (ap || i.occupato || !vu[n]);
+    });
+    corpo = `<p class="mpd-lbl">Ancora da vedere: sul telefono, dal Reparto. Oppure da qui</p><div class="mpd-letti">${letti.map(([s, n, et]) => `<button class="mp-tessera${infoLetto(n).critico ? ' mp-t-critico' : ''}" data-mp="pc-letto" data-s="${esc(s)}" data-n="${esc(n)}" aria-label="${esc(n)}">${esc(et)}</button>`).join('')}</div>`;
   }
+  const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>` : '';
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${esc(p.letto || p.titolo)}</h2><p>${esc(p.sotto)}</p></div></div>${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
 function mpPcScegli(k, scorri){
@@ -28245,21 +28290,12 @@ function mpPcScegli(k, scorri){
 }
 function mpPcApri(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p) return;
-  if(p.k.startsWith('dia|') || p.copiato) return apriScheda(p.letto);
+  // un diario: si scrive subito nei provvedimenti
+  if(mpEDiario(p)){ const t = $m('#m-provv'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } return; }
   mpPila = [p, ...mpPila.filter(x => x !== p)];
   mpPassoApri();
 }
-function mpPcCopia(){
-  const p = mpVoci.find(v => v.k === mpSel); if(!p || !(p.k.startsWith('dia|') || p.copiato)) return;
-  copiaTesto(mpTestoDiario(p.id));
-  segnaRefertoCopiato(p.id);
-  const b = $m('#mpd-dett [data-mp="pc-copia"]'); if(b){ b.classList.add('mpd-copiato'); b.innerHTML = ICON.ok + 'Copiato'; }
-  showToast(`${p.letto}: diario copiato`);
-  // il prossimo diario da copiare, subito dopo
-  const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.k !== p.k);
-  const dopo = resto.find(v => mpVoci.indexOf(v) > mpVoci.indexOf(p)) || resto[0];
-  setTimeout(() => { if(M.vista !== 'home') return; if(dopo) mpSel = dopo.k; mpOggi(); }, mpFermo() ? 0 : 650);
-}
+function mpPcCopia(){ if(mpDocked()) $m('#m-copia').click(); }
 function mpPcFatto(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.fatto) return;
   try{ p.fatto(); } catch(e){}
@@ -28268,8 +28304,11 @@ function mpPcFatto(){
   mpSel = dopo ? dopo.k : null; mpOggi();
 }
 document.addEventListener('keydown', e => {
-  if(!UI_MP || M.vista !== 'home' || !$m('.mpd') || e.metaKey || e.ctrlKey || e.altKey) return;
-  if($m('#m-scheda').classList.contains('m-su') || document.querySelector('[id$="-overlay"].show') || e.target.closest('input, textarea, select, [contenteditable]')) return;
+  if(!UI_MP || M.vista !== 'home' || !$m('.mpd') || document.querySelector('[id$="-overlay"].show')) return;
+  // mentre si scrive nel diario: Ctrl (o ⌘) + Invio copia e passa al prossimo, Esc lascia la casella
+  if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ if(mpDocked()){ e.preventDefault(); mpPcCopia(); } return; }
+  if(e.key === 'Escape' && e.target.closest && e.target.closest('#m-scheda') && e.target.matches('textarea, input')){ e.target.blur(); return; }
+  if(e.metaKey || e.ctrlKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]')) return;
   const i = mpVoci.findIndex(v => v.k === mpSel);
   if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); const v = mpVoci[Math.min(mpVoci.length - 1, i + 1)]; if(v) mpPcScegli(v.k, true); }
   else if(e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); const v = mpVoci[Math.max(0, i - 1)]; if(v) mpPcScegli(v.k, true); }
@@ -28354,30 +28393,14 @@ function mpLetto(nome, el){
   // aperto un letto, il settore è quello di oggi (anche per Oggi e per gli altri dispositivi)
   if(M.settore && nomiDelSettore(M.settore).has(nome)) ricordaSettore(M.settore);
   if(infoLetto(nome).vistoOggi) return apriScheda(nome);
-  const i = infoLetto(nome), sh = $m('#m-scheda');
-  salvaOra();
-  M.letto = nome; M.id = null; D = null;
-  let ultimo = '';
-  if(i.occupato){ try{ ultimo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){} }
-  const quando = !i.occupato ? (lettiVuoti()[nome] ? 'Letto segnato vuoto' : 'Da vedere oggi') : i.giorniVisita === 1 ? 'Da vedere · visto ieri' : i.giorniVisita > 1 ? `Da vedere · visto ${i.giorniVisita} giorni fa` : 'Da vedere oggi';
-  sh.classList.add('mp-invito');
-  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(nome)}</h2><span class="m-pallini">${palliniBasso(i)}</span></div><span class="m-stato mp-stato-da">${i.critico ? 'Critico · ' + quando.charAt(0).toLowerCase() + quando.slice(1) : quando}</span></div>
-    <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
-  $m('#m-s-corpo').innerHTML = `<div class="mp-invito-in">
-      <button class="mp-btn" data-mp="visita">${i.occupato ? 'Inizia la visita' : "Inizia l'esame obiettivo"}</button>
-      <p class="mp-nota">Una domanda alla volta: coscienza, respiro, cuore, torace, addome…</p>
-      ${ultimo ? `<p class="mp-lbl">L'ultimo esame obiettivo</p><p class="mp-ultimo">${esc(ultimo)}</p>` : ''}
-    </div>`;
-  $m('#m-s-corpo').scrollTop = 0;
-  void sh.offsetHeight;
-  $m('#m-velo').classList.add('m-su'); sh.classList.add('m-su');
-  document.documentElement.style.overflow = document.body.style.overflow = 'hidden';
-  mpSchedaApre();
+  // da vedere: dritti all'esame obiettivo (in corsia ogni tocco in più pesa)
+  apriVisita(nome);
 }
 
 /* ---------- la scheda: il letto si allarga fino a diventarla ---------- */
 function mpSchedaApre(){
   const s = $m('#m-scheda');
+  if(mpDocked()){ mpMenu(false); return; }
   if(M.id) s.classList.remove('mp-invito');
   document.documentElement.classList.add('mp-scheda-aperta');
   mpMenu(false);
@@ -28398,6 +28421,7 @@ function mpSchedaApre(){
 }
 function mpSchedaChiude(){
   const s = $m('#m-scheda');
+  if(mpDocked()){ mpMenu(false); return; }
   document.documentElement.classList.remove('mp-scheda-aperta');
   mpMenu(false);
   clearTimeout(s._mp); clearTimeout(s._mp2);
@@ -28426,7 +28450,8 @@ const MP_DOMANDE = {
   'card-sesso':['Paziente?', 'Sesso e isolamento'], 'card-coscienza':['Coscienza?', "Com'era alla visita"], 'card-respiro':['Respiro?', 'In aria ambiente o con ossigeno, e i parametri'],
   'card-diuresi':['Diuresi?', 'Come urina e quanto'], 'card-cuore':['Cuore?', 'Toni, frequenza, soffi'], 'card-torace':['Torace?', 'Murmure vescicolare e rumori'],
   'card-addome':['Addome?', 'Forma, trattabilità, alvo'], 'card-cute':['Cute?', 'Cicatrici, ernie, lesioni'], 'card-edemi':['Edemi?', 'Declivi, sede, qualità'],
-  'card-lingua':['Lingua?', 'Com\'è alla vista'], 'card-neuro':['Neurologico?', 'Solo quello che c\'è da segnalare']
+  'card-lingua':['Lingua?', 'Com\'è alla vista'], 'card-neuro':['Neurologico?', 'Solo quello che c\'è da segnalare'],
+  'mp-card-appunti':['Da fare?', 'Appunti presi al letto: li ritrovi al PC tra i provvedimenti del diario']
 };
 const mpG = { k:0, passi:[], verso:1 };
 function mpGuidaInizio(){
@@ -28434,6 +28459,11 @@ function mpGuidaInizio(){
   mpG.passi = ['card-sesso', ...SEZIONI_ESAME.map(x => x[0]).filter(id => !nascoste.includes(id))].filter(id => document.getElementById(id));
   // il sesso si chiede solo la prima volta
   mpG.k = state.sesso && mpG.passi.length > 1 ? 1 : 0;
+  // in coda, gli appunti per il diario (richieste, cose da fare): scritti al
+  // letto, al PC stanno già tra i provvedimenti
+  if(document.getElementById('mp-card-appunti')) mpG.passi.push('mp-card-appunti');
+  mpG.letto = M.letto;
+  const ap = $m('#mp-appunti'); if(ap) ap.value = '';
   mpG.verso = 1;
   mpGuida();
 }
@@ -28454,7 +28484,7 @@ function mpGuida(){
   cv.classList.remove('mp-anima', 'mp-da-sx'); void cv.offsetWidth; cv.classList.add('mp-anima'); cv.classList.toggle('mp-da-sx', mpG.verso < 0);
   const g = $m('#mp-guida'); g.hidden = false;
   $m('#mp-g-indietro').disabled = mpG.k === 0;
-  $m('#mp-g-avanti').textContent = mpG.k === n - 1 ? (M.daScheda ? 'Fatto' : 'Fatto, apri il diario') : 'Avanti';
+  $m('#mp-g-avanti').textContent = mpG.k === n - 1 ? (M.daScheda || !MP_PC.matches ? 'Fatto' : 'Fatto, apri il diario') : 'Avanti';
   window.scrollTo(0, 0);
   requestAnimationFrame(() => { if(typeof ridimensionaTextareaVisibili === 'function') ridimensionaTextareaVisibili(); });
 }
@@ -28509,11 +28539,25 @@ function mpGuidaGesto(){
 function mpGuidaFatto(){
   const nome = M.letto, daScheda = M.daScheda;
   fineVisita(true);
-  // dalla visita al suo diario, pronto da copiare (aperta dalla scheda, ci torna da sola)
-  if(!daScheda) setTimeout(() => { if(M.vista === 'visita' && voce(nome) && infoLetto(nome).vistoOggi) apriScheda(nome); }, mpFermo() ? 0 : 260);
+  // sul telefono si torna ai letti, pronti per il prossimo: il diario si
+  // completa al PC. Al PC si apre subito il diario (aperta dalla scheda, ci torna da sola)
+  if(!daScheda && MP_PC.matches) setTimeout(() => { if(M.vista === 'visita' && voce(nome) && infoLetto(nome).vistoOggi) apriScheda(nome); }, mpFermo() ? 0 : 260);
+}
+function mpAppuntiSalva(){
+  const t = $m('#mp-appunti'); if(!t) return;
+  const v = t.value.trim(); t.value = '';
+  if(!v || !mpG.letto) return;
+  const e = voce(mpG.letto); if(!e) return;
+  const d = leggiDiario(e[0]); if(!d) return;
+  const righe = v.split('\n').map(r => r.trim()).filter(Boolean).map(r => '- ' + r.replace(/^[-–•*]\s*/, ''));
+  d.provv = (d.provv ? d.provv.replace(/\s+$/, '') + '\n' : '') + righe.join('\n');
+  aggiornaDiarioTesto(e[0], componi(d));
+  const ps = loadPatients();
+  if(ps[e[0]] && ps[e[0]].refertoCopiato){ ps[e[0]].refertoCopiato = false; savePatients(ps); }
 }
 function mpGuidaFine(){
   const g = $m('#mp-guida'); if(g) g.hidden = true;
+  try{ mpAppuntiSalva(); } catch(e){}
   // la domanda torna in cima alla vista (nascosta), fuori dalle card dell'app
   const dom = $m('#mp-domanda'), cv = document.getElementById('clinical-view');
   if(dom && cv && dom.parentElement !== cv) cv.prepend(dom);
@@ -28585,6 +28629,23 @@ if(UI_MP){
     <div class="mp-guida" id="mp-guida" hidden><div class="mp-guida-in">
       <div class="mp-riga-btn"><button class="mp-btn mp-sec" id="mp-g-indietro" data-mp="g-indietro">Indietro</button><button class="mp-btn" id="mp-g-avanti" data-mp="g-avanti">Avanti</button></div></div></div>`);
   document.getElementById('clinical-view').insertAdjacentHTML('afterbegin', '<div id="mp-domanda"></div>');
+  document.getElementById('output-card').insertAdjacentHTML('beforebegin', '<div class="card" id="mp-card-appunti"><textarea id="mp-appunti" rows="5" placeholder="richiedere Rx torace&#10;sentire i familiari&#10;esami di controllo domani" aria-label="Appunti per il diario" autocapitalize="sentences"></textarea><p class="mp-nota">Una riga per ogni cosa. Puoi anche lasciare vuoto.</p></div>');
+  // sul telefono, col settore già scelto oggi, si apre sui letti: è lì che si lavora in corsia
+  if(!MP_PC.matches){ const so = settoreDiOggi(); if(so){ M.vista = 'visita'; M.settore = so; } }
+  // l'editor del diario agganciato in Oggi al PC non si trascina
+  ['pointerdown', 'touchstart'].forEach(ev => $m('#m-scheda').addEventListener(ev, e => { if(mpDocked()) e.stopPropagation(); }, true));
+  // copiato un diario agganciato: si passa da soli al prossimo, e dopo l'ultimo alle consegne
+  $m('#m-copia').addEventListener('click', () => {
+    if(!mpDocked() || M.vista !== 'home') return;
+    // il prossimo nell'ordine dei letti (l'elenco intanto si è già ridisegnato)
+    const letto = M.letto, ss = settoreScelto();
+    const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
+    const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
+    const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0] || mpVoci.find(v => v.k.startsWith('cons'));
+    setTimeout(() => { if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return; mpSel = dopo ? dopo.k : 'cop|' + letto; mpOggi(); }, mpFermo() ? 0 : 700);
+  });
+  // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
+  $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
   // nella scheda del diario: a sinistra di "Copia il diario" il tasto con le altre azioni
   $m('.m-s-piede').insertAdjacentHTML('afterbegin', `<div class="mp-menu" id="mp-menu" hidden><button data-m="modifica">Rifai l'esame obiettivo, una domanda alla volta</button><button data-m="strumenti">Strumenti: EGA, VFG, farmaci</button><button data-m="pr-menu">Pratiche: aggiungi o togli</button></div>
     <button class="mp-tondo mp-menu-btn" id="mp-menu-btn" data-mp="menu" aria-label="Altre azioni" aria-expanded="false">${MP_ICO.altro}</button>`);
