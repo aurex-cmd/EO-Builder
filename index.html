@@ -25034,6 +25034,9 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-su{ flex:0 0 auto; max-height:58%; }
   .mpd-giu{ flex:0 1 auto; display:flex; flex-direction:column; min-height:0; margin:0 -4px -4px; padding:0 4px 4px; border-top:1px solid var(--mp-linea); background:color-mix(in srgb, var(--mp-carta) 55%, transparent); }
   .mpd-lista > .mpd-giu:first-child{ border-top:0; margin-top:-4px; }
+  .mpd-copiati svg:last-child{ width:18px; height:18px; margin-right:4px; flex:none; color:var(--mp-muto); transition:transform .3s var(--mp-molla); }
+  .mpd-copiati[aria-expanded="true"] svg:last-child{ transform:rotate(180deg); }
+  .mpd-copiati-in{ margin-left:14px; padding-left:6px; border-left:1.5px solid var(--mp-linea); animation:mp-entra .3s var(--mp-molla) both; }
   .mpd-tuttofatto{ display:flex; align-items:center; gap:8px; margin:0; padding:14px 12px; font-size:15px; font-weight:500; color:var(--mp-ok); }
   .mpd-tuttofatto svg{ width:20px; height:20px; flex:none; }
   .mpd-tuttofatto + .mpd-giu{ border-top:1px solid var(--mp-linea); }
@@ -28312,6 +28315,7 @@ let mpSel = null;           // la voce scelta (la sua chiave)
 let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
 const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
 let mpSelLetto = null, mpDettK = null;
+let mpCopAperti = false;   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
 const mpDocked = () => { const s = $m('#m-scheda'); return !!s && s.classList.contains('mp-dock'); };
 const mpEDiario = p => !!p && (p.k.startsWith('dia|') || !!p.copiato);
 // l'editor del diario (la scheda di Pocket, con tutte le sue funzioni) si
@@ -28341,8 +28345,9 @@ function mpOggiPC(dati, saluto, frase){
     ['Diari da completare e copiare', passi.filter(p => p.k.startsWith('dia|'))],
     ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro')],
     ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro')],
-    ['Fatto oggi', [...fattiAltri, ...fatti]]
-  ].filter(g => g[1].length);
+    // i diari copiati in una riga sola, che si apre col clic (mpCopAperti)
+    ['Fatto oggi', [...fattiAltri, ...(mpCopAperti ? fatti : [])]]
+  ].filter(g => g[1].length || (g[0] === 'Fatto oggi' && fatti.length));
   mpVoci = gruppi.flatMap(g => g[1]);
   // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
   if(!mpVoci.some(v => v.k === mpSel)){
@@ -28387,7 +28392,11 @@ function mpOggiPC(dati, saluto, frase){
   lista.classList.toggle('mpd-tutto', !!tutto);
   lista.innerHTML = !mpVoci.length && !tutto ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>`
     : (tutto ? `<p class="mpd-tuttofatto">${ICON.ok}Tutto fatto per oggi</p>` : su.length ? `<div class="mpd-su mpd-scorre">${su.map(gruppo).join('')}</div>` : '')
-      + (giu.length ? `<div class="mpd-giu">${giu.map(g => g[0] === 'Fatto oggi' ? `<p class="mpd-gr">${g[0]}<span>${g[1].length}</span></p><div class="mpd-cop mpd-scorre">${g[1].map(riga).join('')}</div>` : gruppo(g)).join('')}</div>` : '');
+      + (giu.length ? `<div class="mpd-giu">${giu.map(g => g[0] === 'Fatto oggi' ? `<p class="mpd-gr">${g[0]}<span>${fattiAltri.length + fatti.length}</span></p><div class="mpd-cop mpd-scorre">${fattiAltri.map(riga).join('')}${fatti.length ? `
+        <button class="mpd-r mpd-fatto mpd-copiati" data-mp="pc-copiati" aria-expanded="${mpCopAperti}">
+          <span class="mp-tessera mp-t-cop">${ICON.diario}</span>
+          <span class="mpd-rt"><b>${fatti.length} ${fatti.length === 1 ? 'diario copiato' : 'diari copiati'}</b><small>${mpCopAperti ? 'Tocca per chiudere' : 'Tocca per vederli'}</small></span>${ICON.giu}
+        </button>${mpCopAperti ? `<div class="mpd-copiati-in">${fatti.map(riga).join('')}</div>` : ''}` : ''}</div>` : gruppo(g)).join('')}</div>` : '');
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   mpDett();
 }
@@ -28819,6 +28828,7 @@ if(UI_MP){
     else if(a === 'pc-copia') mpPcCopia();
     else if(a === 'pc-fatto') mpPcFatto();
     else if(a === 'pc-disfa') mpPcDisfa();
+    else if(a === 'pc-copiati'){ mpCopAperti = !mpCopAperti; if(!mpCopAperti && String(mpSel).startsWith('cop|')) mpSel = null; mpOggi(); }
     else if(a === 'fatto-apri'){ const v = (mpFattiTel || [])[+el.dataset.i]; if(v && v.vai) v.vai(); }
     else if(a === 'pc-letto'){ const n = el.dataset.n; M.settore = el.dataset.s; M.pila = []; M.vista = 'visita'; disegna(); setTimeout(() => { if(M.vista === 'visita') mpLetto(n, mpTile(n)); }, mpFermo() ? 0 : 380); }
     else if(a === 'passo-apri') mpPassoApri();
