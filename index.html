@@ -25002,39 +25002,45 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   /* OGGI AL PC: una scrivania. In alto la frase e i numeri del giorno,
      sotto l'elenco del lavoro e, accanto, il passo scelto per intero */
   html[data-mp].mp-pc .m-main{ max-width:1180px; padding-left:40px; padding-right:40px; }
-  .mpd{ display:flex; flex-direction:column; min-height:calc(100dvh - 160px); }
+  .mpd{ display:grid; grid-template-rows:auto minmax(0, 1fr) auto; height:calc(100dvh - 74px - env(safe-area-inset-top,0px)); min-height:520px; }
   .mpd-testa{ display:flex; align-items:flex-end; justify-content:space-between; gap:40px; }
-  .mpd-testa .mp-frase{ font-size:44px; max-width:16em; }
+  .mpd-testa .mp-frase{ font-size:clamp(26px, 3vw, 40px); max-width:18em; margin-top:4px; }
+  .mpd-testa .mp-sotto{ margin-top:6px; font-size:14px; }
   .mpd-numeri{ display:flex; gap:10px; margin:0; flex:none; }
-  .mpd-num{ min-width:116px; padding:16px 18px; border-radius:20px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); }
-  .mpd-num dd{ margin:0; font-size:34px; font-weight:500; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
+  .mpd-num{ min-width:96px; padding:12px 14px; border-radius:18px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); }
+  .mpd-num dd{ margin:0; font-size:28px; font-weight:500; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
   .mpd-num dt{ margin-top:6px; font-size:13px; color:var(--mp-muto); }
   .mpd-num.mpd-acc{ background:var(--mp-accento); box-shadow:none; color:var(--mp-accento-ink); }
   .mpd-num.mpd-acc dt{ color:color-mix(in srgb, var(--mp-accento-ink) 75%, transparent); }
-  .mpd-corpo{ display:grid; grid-template-columns:minmax(300px, 380px) 1fr; gap:24px; margin-top:32px; align-items:start; }
-  .mpd-lista{ position:sticky; top:84px; max-height:calc(100dvh - 210px); overflow-y:auto; padding:8px; border-radius:28px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); scrollbar-width:thin; }
-  .mpd-gr{ display:flex; justify-content:space-between; margin:14px 14px 6px; font-size:13px; color:var(--mp-muto); }
+  .mpd-corpo{ display:grid; grid-template-columns:clamp(200px, 21vw, 250px) minmax(0, 1fr); gap:16px; margin-top:20px; min-height:0; }
+  .mpd-lista{ display:flex; flex-direction:column; min-height:0; padding:4px; border-radius:24px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); overflow:hidden; }
+  .mpd-scorre{ overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+  .mpd-su{ flex:1 1 auto; min-height:90px; }
+  .mpd-giu{ flex:0 1 auto; display:flex; flex-direction:column; min-height:0; max-height:44%; margin:0 -4px -4px; padding:0 4px 4px; border-top:1px solid var(--mp-linea); background:color-mix(in srgb, var(--mp-carta) 55%, transparent); }
+  .mpd-giu > .mpd-gr{ flex:none; }
+  .mpd-cop{ flex:0 1 auto; min-height:52px; }
+  .mpd-gr{ display:flex; justify-content:space-between; margin:12px 10px 4px; font-size:12px; color:var(--mp-muto); }
   .mpd-gr:first-child{ margin-top:8px; }
   .mpd-gr span{ font-variant-numeric:tabular-nums; }
-  .mpd-r{ display:flex; align-items:center; gap:12px; width:100%; padding:8px; border:0; border-radius:18px; background:none; color:var(--mp-ink); font:inherit; text-align:left; cursor:pointer; transition:background .2s; }
+  .mpd-r{ display:flex; align-items:center; gap:10px; width:100%; padding:6px; border:0; border-radius:14px; background:none; color:var(--mp-ink); font:inherit; text-align:left; cursor:pointer; transition:background .2s; }
   .mpd-r:hover{ background:color-mix(in srgb, var(--mp-ink) 5%, transparent); }
   .mpd-r[aria-current="true"]{ background:var(--mp-carta); box-shadow:var(--mp-ombra); }
-  .mpd-r .mp-tessera{ width:44px; height:44px; border-radius:13px; font-size:15px; }
-  .mpd-r .mp-tessera svg{ width:22px; height:22px; }
+  .mpd-r .mp-tessera{ width:36px; height:36px; border-radius:11px; font-size:13px; }
+  .mpd-r .mp-tessera svg{ width:18px; height:18px; }
   .mp-t-cop{ background:var(--mp-l-cop); }
   .mpd-rt{ flex:1; min-width:0; display:flex; flex-direction:column; }
-  .mpd-rt b{ font-size:16px; font-weight:500; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .mpd-rt small{ font-size:13px; color:var(--mp-muto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mpd-rt b{ font-size:14.5px; font-weight:500; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mpd-rt small{ font-size:12px; color:var(--mp-muto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mpd-fatto .mpd-rt b{ color:var(--mp-muto); }
-  .mpd-ok{ width:22px; height:22px; margin-right:6px; color:var(--mp-ok); flex:none; }
+  .mpd-ok{ width:18px; height:18px; margin-right:4px; color:var(--mp-ok); flex:none; }
   .mpd-ok svg{ width:100%; height:100%; }
-  .mpd-vuoto{ margin:22px; color:var(--mp-muto); }
-  .mpd-dett{ min-width:0; }
-  .mpd-info{ min-height:420px; padding:34px 38px; border-radius:30px; display:flex; flex-direction:column; }
+  .mpd-vuoto{ margin:8px 10px 14px; font-size:13px; color:var(--mp-muto); }
+  .mpd-dett{ min-width:0; min-height:0; display:flex; flex-direction:column; }
+  .mpd-info{ flex:1; min-height:0; overflow-y:auto; padding:30px 34px; border-radius:30px; display:flex; flex-direction:column; }
   .mpd-info.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
   .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
   /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
-  html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; height:calc(100dvh - 290px); min-height:500px; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
+  html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; flex:1; height:auto; min-height:0; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
   html[data-mp] .m-scheda.mp-dock .m-s-testa{ padding:32px 38px 6px; cursor:default; touch-action:auto; }
   html[data-mp] .m-scheda.mp-dock .m-s-testa::before, html[data-mp] .m-scheda.mp-dock .m-chiudi{ display:none; }
   html[data-mp] .m-scheda.mp-dock .m-s-testa h2{ font-size:40px; }
@@ -25060,15 +25066,16 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-azioni kbd{ position:absolute; right:14px; top:50%; transform:translateY(-50%); }
   .mp-btn.mpd-copiato{ background:var(--mp-ok); color:#fff; }
   .mpd kbd{ display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:7px; font:500 12px var(--mp-mono); background:color-mix(in srgb, currentColor 14%, transparent); color:inherit; opacity:.8; }
-  .mpd-piede{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:28px; }
+  .mpd-piede{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:10px; }
   .mpd-links{ display:flex; flex-wrap:wrap; gap:4px 18px; }
   .mpd-link{ border:0; background:none; padding:6px 0; color:var(--mp-muto); font:inherit; font-size:14px; cursor:pointer; }
   .mpd-link:hover{ color:var(--mp-ink); }
   .mpd-tasti{ margin:0; font-size:13px; color:var(--mp-tenue); white-space:nowrap; }
   .mpd-tasti kbd{ margin-right:2px; color:var(--mp-muto); }
-  @media (max-width:1100px){ .mpd-testa{ flex-direction:column; align-items:flex-start; gap:22px; } }
+  /* a mezzo schermo: i numeri li dice già la frase, i tasti si imparano */
+  @media (max-width:1100px){ .mpd-numeri, .mpd-tasti{ display:none; } html[data-mp].mp-pc .m-main{ padding-left:20px; padding-right:20px; } html[data-mp] .m-scheda.mp-dock .m-s-testa{ padding:26px 26px 6px; } html[data-mp] .m-scheda.mp-dock .m-s-corpo{ padding:0 26px; } html[data-mp] .m-scheda.mp-dock .m-s-piede{ padding:14px 26px 20px; } html[data-mp] .m-scheda.mp-dock .m-s-testa h2{ font-size:32px; } html[data-mp] .m-scheda.mp-dock :is(#m-eo, #m-provv){ font-size:16px; } }
   /* al PC la barra delle sezioni sta in alto, al centro della testata */
-  @media (min-width:900px){
+  @media (min-width:640px) and (min-height:560px){
     html[data-mp] .m-bar-in{ max-width:1100px; }
     html[data-mp] .mp-barra{ top:calc(8px + env(safe-area-inset-top,0px)); bottom:auto; padding:4px; box-shadow:none; background:color-mix(in srgb, var(--mp-ink) 6%, transparent); }
     html[data-mp] .mp-barra button{ height:38px; padding:0 16px; font-size:14px; }
@@ -25077,6 +25084,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
     html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
     html[data-mp].mp-scheda-aperta .mp-barra{ transform:translateX(-50%) translateY(-170%); }
     html[data-mp] .m-main{ padding-bottom:60px; }
+    html[data-mp].mp-pc .m-main{ padding-bottom:14px; }
   }
 
   /* le pagine di Pocket: stessi titoli leggeri, stesso avviso */
@@ -28184,7 +28192,8 @@ function mpOggi(){
    copiati), a destra il passo scelto per intero: il diario si legge tutto e
    si copia, poi si passa da soli al prossimo. Si va avanti con la tastiera:
    ↑ ↓ (o J K) per scegliere, Invio per l'azione, C per copiare */
-const MP_PC = matchMedia('(min-width: 900px)');
+// anche a mezzo schermo (accanto al programma dell'ospedale); non il telefono in orizzontale
+const MP_PC = matchMedia('(min-width: 640px) and (min-height: 560px)');
 let mpSel = null;           // la voce scelta (la sua chiave)
 let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
 const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
@@ -28246,13 +28255,23 @@ function mpOggiPC(dati, saluto, frase){
   $m('#mpd-testa').innerHTML = `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
       <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
     <dl class="mpd-numeri">${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
-  const lista = $m('#mpd-lista'), su = lista.scrollTop;
-  lista.innerHTML = !mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>` : gruppi.map(([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(p => `
+  // l'elenco in due parti: in alto, scorrevoli, i diari da completare e chi
+  // resta da vedere; in fondo, sempre in vista, lettere e consegne e i copiati
+  // di oggi (scorrevoli anche loro)
+  const riga = p => `
     <button class="mpd-r${p.copiato ? ' mpd-fatto' : ''}" data-mp="pc-sel" data-k="${esc(p.k)}" aria-current="${p.k === mpSel}">
       <span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span>
       <span class="mpd-rt"><b>${esc(p.titolo)}</b><small>${esc(p.sotto)}</small></span>${p.copiato ? `<i class="mpd-ok">${ICON.ok}</i>` : ''}
-    </button>`).join('')}`).join('');
-  lista.scrollTop = su;
+    </button>`;
+  const gruppo = ([t, v]) => `<p class="mpd-gr">${t}<span>${v.length}</span></p>${v.map(riga).join('')}`;
+  const giu = gruppi.filter(g => g[0] === 'Lettere e consegne' || g[0] === 'Copiati oggi');
+  const su = gruppi.filter(g => !giu.includes(g));
+  const lista = $m('#mpd-lista');
+  const pos = [...lista.querySelectorAll('.mpd-scorre')].map(x => x.scrollTop);
+  lista.innerHTML = !mpVoci.length ? `<p class="mpd-vuoto">${tot ? 'Niente da fare per oggi.' : 'Nessun paziente in reparto.'}</p>`
+    : `<div class="mpd-su mpd-scorre">${su.length ? su.map(gruppo).join('') : '<p class="mpd-gr">Diari da completare e copiare<span>0</span></p><p class="mpd-vuoto">Tutti copiati.</p>'}</div>`
+      + (giu.length ? `<div class="mpd-giu">${giu.map(g => g[0] === 'Copiati oggi' ? `<p class="mpd-gr">${g[0]}<span>${g[1].length}</span></p><div class="mpd-cop mpd-scorre">${g[1].map(riga).join('')}</div>` : gruppo(g)).join('')}</div>` : '');
+  lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   mpDett();
 }
 function mpDett(){
@@ -28287,7 +28306,7 @@ function mpDett(){
 function mpPcScegli(k, scorri){
   if(!mpVoci.some(v => v.k === k)) return;
   mpSel = k; mpDett();
-  if(scorri){ const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(k)}"]`); if(r) r.scrollIntoView({ block:'nearest' }); }
+  if(scorri){ const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(k)}"]`); if(r) r.scrollIntoView({ block:'nearest', inline:'nearest' }); }
 }
 function mpPcApri(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p) return;
