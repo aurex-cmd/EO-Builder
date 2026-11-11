@@ -24898,6 +24898,10 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .mp-mappa .m-mini.m-dimesso:not(.m-critico){ background-image:repeating-linear-gradient(135deg, color-mix(in srgb, var(--m-p-d) 26%, transparent) 0 2px, transparent 2px 6px); }
   html[data-mp] .mp-mappa .m-mini.m-vuoto{ background:transparent; box-shadow:inset 0 0 0 1px var(--mp-linea); color:var(--mp-tenue); }
   .mp-legenda-mappa{ margin-top:16px; }
+  /* in guardia: senza consegna (e non visti, non critici) i letti restano tenui */
+  html[data-mp] .mp-guardia .mp-mappa .m-mini:not(.m-consegnato, .m-oggi-l, .m-critico){ opacity:.35; }
+  html[data-mp] .mp-guardia .mp-griglia .m-tl:not(.m-consegnato, .m-oggi-l, .m-critico, .m-vuoto, .m-tl-nuovo){ opacity:.4; }
+  .mp-lg-tenue{ opacity:.45; }
 
   /* SCHEDA: il letto si allarga fino a diventare la scheda */
   html[data-mp] .m-velo{ inset:0; height:auto; clip-path:none; box-shadow:none; transition:opacity .4s ease;
@@ -28647,21 +28651,27 @@ function mpTrascina(el){
 let mpTutti = null;
 const mpGuardia = () => typeof eFestivo === 'function' && eFestivo();
 const mpVediTutti = () => mpGuardia() && (mpTutti === null ? true : mpTutti);
+// in guardia si vedono solo i consegnati: il bordo blu è "da vedere", gli
+// altri letti restano tenui (senza consegna); nei feriali "da vedere" è il grigio
+function mpLegenda(mappa){
+  const g = mpGuardia();
+  return `<div class="mp-legenda${mappa ? ' mp-legenda-mappa' : ''}" aria-hidden="true">${g ? '<span><i class="mp-lg-cons"></i>consegnato, da vedere</span>' : '<span><i class="mp-lg-base"></i>da vedere</span>'}<span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-cop"></i>copiato</span><span><i class="mp-lg-crit"></i>critico</span>${g ? '<span><i class="mp-lg-base mp-lg-tenue"></i>senza consegna</span>' : ''}</div>`;
+}
 function mpReparto(){
   M.zoom = true;
   const ss = settori(), ric = ricoveratiEO();
   const tutti = ric.length ? [...ss, RIC] : ss;
   if(!tutti.includes(M.settore)) M.settore = settoreScelto() || (ss.includes(settoreAttivo) ? settoreAttivo : ss[0]);
   const mappa = mpVediTutti();
-  $m('#m-vista').innerHTML = `<div class="mp-reparto">
+  $m('#m-vista').innerHTML = `<div class="mp-reparto${mpGuardia() ? ' mp-guardia' : ''}">
     <h1 class="mp-frase" id="mp-frase-rep"></h1>
     <div class="mp-settori" id="mp-settori">${mpGuardia() ? `<button data-mp="tutti" aria-pressed="${mappa}">Tutti</button>` : ''}${tutti.map(s => `<button data-mp="settore" data-s="${esc(s)}" aria-pressed="${!mappa && s === M.settore}">${esc(s === RIC ? 'Ricoveri' : nomeSettoreTitolo(s))}</button>`).join('')}</div>
     ${mappa ? `<div class="m-mappa mp-mappa" id="mp-mappa"></div>
-    <div class="mp-legenda mp-legenda-mappa" aria-hidden="true"><span><i class="mp-lg-base"></i>da vedere</span><span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-cop"></i>copiato</span><span><i class="mp-lg-crit"></i>critico</span><span><i class="mp-lg-cons"></i>consegnato</span></div>
+    ${mpLegenda(true)}
   </div>` : `
     <div class="mp-card mp-card-letti">
       <div class="mp-griglia" id="mp-letti"></div>
-      <div class="mp-legenda" aria-hidden="true"><span><i class="mp-lg-base"></i>da vedere</span><span><i class="mp-lg-dacop"></i>diario da copiare</span><span><i class="mp-lg-cop"></i>copiato</span><span><i class="mp-lg-crit"></i>critico</span></div>
+      ${mpLegenda(false)}
     </div>
     <p class="mp-lbl">Del settore</p>
     <div class="mp-altro" id="mp-del-settore"><button class="mp-chip" data-m="vitali">Parametri vitali</button><button class="mp-chip" data-m="aggcons">Consegne</button><button class="mp-chip" data-m="pagina" data-p="dimissioni">Dimissioni</button></div>
@@ -28676,10 +28686,15 @@ function mpMappa(){
   const file = [...box.querySelectorAll('.m-zona:not(.m-zona-ric) .m-mini-g')].map(g => Math.ceil(g.children.length / 4));
   box.style.setProperty('--file', Math.max(1, ...file));
   preparaMazzo(box);
+  // in guardia si vedono i consegnati: ogni riquadro conta quelli
+  box.querySelectorAll('.m-zona').forEach(z => {
+    const c = z.querySelectorAll('.m-mini.m-consegnato').length, v = z.querySelectorAll('.m-mini.m-consegnato.m-oggi-l').length;
+    const sm = z.querySelector('.m-zona-t small'); if(sm) sm.textContent = c ? `${v}/${c} visti` : 'nessun consegnato';
+  });
   const conta = sel => box.querySelectorAll(sel).length;
-  const crit = conta('.m-mini.m-critico'), cons = conta('.m-mini.m-consegnato'), vedere = n - f;
-  const parti = [crit && `${crit} ${crit === 1 ? 'critico' : 'critici'}`, cons && `${cons} ${cons === 1 ? 'consegnato' : 'consegnati'}`, vedere && `${vedere} da vedere`].filter(Boolean);
-  $m('#mp-frase-rep').innerHTML = `Tutti i settori<br><em>${parti.length ? parti.join(' · ') : 'giro finito'}</em>`;
+  const crit = conta('.m-mini.m-critico'), cons = conta('.m-mini.m-consegnato'), vedere = conta('.m-mini.m-consegnato:not(.m-oggi-l)');
+  const parti = [crit && `${crit} ${crit === 1 ? 'critico' : 'critici'}`, cons ? (vedere ? `${vedere} ${vedere === 1 ? 'consegnato' : 'consegnati'} da vedere` : 'consegnati tutti visti') : 'nessun consegnato'].filter(Boolean);
+  $m('#mp-frase-rep').innerHTML = `Tutti i settori<br><em>${parti.join(' · ')}</em>`;
 }
 function mpLetti(appena){
   if($m('#mp-mappa')) return mpMappa();
@@ -28688,8 +28703,11 @@ function mpLetti(appena){
   el.innerHTML = nomi.map(([n, et, ap], k) => tileLetto(n, et, k, appena, ap)).join('')
     + (ric ? '' : `<div class="m-tl m-tl-nuovo" style="--i:${Math.min(nomi.length, 20)}" data-m="nuovo-appoggio" role="button" tabindex="0" aria-label="Aggiungi un appoggio">${ICON.piu.replace('class="m-piu" ', '')}<span class="m-gg">appoggio</span></div>`);
   const ds = $m('#mp-del-settore'); if(ds) ds.hidden = ric;
-  const st = statoSettore(M.settore), resto = st.n - st.visti, dc = st.visti - st.cop;
-  $m('#mp-frase-rep').innerHTML = `${esc(ric ? 'Ricoveri' : nomeSettoreTitolo(M.settore))}<br><em>${!st.n ? 'nessun letto occupato' : resto ? `${resto} da vedere` : dc ? `${dc} ${dc === 1 ? 'diario' : 'diari'} da copiare` : 'giro finito'}</em>`;
+  const st = statoSettore(M.settore), dc = st.visti - st.cop;
+  let resto = st.n - st.visti, vuoto = !st.n ? 'nessun letto occupato' : '';
+  // in guardia: da vedere sono i consegnati non ancora visti
+  if(mpGuardia() && !ric){ const cs = [...el.querySelectorAll('.m-tl.m-consegnato')]; resto = cs.filter(t => !t.classList.contains('m-oggi-l')).length; if(!cs.length && !st.visti) vuoto = 'nessun consegnato'; }
+  $m('#mp-frase-rep').innerHTML = `${esc(ric ? 'Ricoveri' : nomeSettoreTitolo(M.settore))}<br><em>${vuoto || (resto ? `${resto} da vedere` : dc ? `${dc} ${dc === 1 ? 'diario' : 'diari'} da copiare` : 'giro finito')}</em>`;
   if(!ric) preparaAiuti();
 }
 // il letto toccato: visto oggi apre il diario; altrimenti la scheda che
