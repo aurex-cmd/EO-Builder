@@ -25069,16 +25069,14 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-dett{ min-width:0; min-height:0; display:flex; flex-direction:column; }
   .mpd-info{ flex:1; min-height:0; overflow-y:auto; padding:30px 34px; border-radius:30px; display:flex; flex-direction:column; }
   .mpd-info.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
-  .mpd-fine{ display:flex; flex-direction:column; flex:1; min-height:0; }
-  .mpd-fine-ok{ width:56px; height:56px; margin-bottom:22px; border-radius:18px; display:grid; place-items:center; background:var(--mp-ok-box); color:var(--mp-ok); }
-  .mpd-fine-ok svg{ width:28px; height:28px; }
-  .mpd-fine-ok path{ stroke-dasharray:30; stroke-dashoffset:30; animation:mp-traccia .5s .15s var(--mp-molla) forwards; }
-  .mpd-fine .mpd-dtesta p{ max-width:46ch; line-height:1.45; }
-  .mpd .mpd-fine-num{ display:flex; flex-wrap:wrap; margin-top:30px; }
-  .mpd-num dd{ display:flex; align-items:center; height:28px; }
-  .mpd-num-ok dd svg{ width:24px; height:24px; color:var(--mp-ok); }
-  .mpd-num-tempo dd{ color:var(--mp-accento); }
-  .mpd-fine-nota{ margin:auto 0 0; padding-top:26px; font-size:13px; color:var(--mp-tenue); }
+  .mpd-fine{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px 0 40px; }
+  .mpd-fine-spunta{ width:120px; height:120px; margin:0 0 30px; }
+  .mpd-fine-spunta svg{ width:54px; height:54px; }
+  .mpd-fine h2{ margin:0; font-size:clamp(30px, 3.4vw, 44px); font-weight:500; letter-spacing:-.04em; line-height:1.05; }
+  .mpd-fine-ciao{ margin:12px 0 0; font-size:clamp(17px, 1.6vw, 21px); color:var(--mp-muto); }
+  .mpd-fine-tempo{ margin:26px 0 0; font-size:clamp(15px, 1.3vw, 18px); color:var(--mp-muto); }
+  .mpd-fine-tempo b{ font-weight:500; color:var(--mp-accento); }
+  .mpd-fine-conto{ margin:34px 0 0; max-width:42ch; font-size:13px; line-height:1.5; color:var(--mp-tenue); }
   .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
   /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
   html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; flex:1; height:auto; min-height:0; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
@@ -28454,19 +28452,16 @@ function mpDett(){
     const pd = d.fattiAltri.some(v => v.k === 'f-pd');
     const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
     const min = pazienti * 3, tempo = min < 60 ? `${min} minuti` : `${Math.floor(min / 60)} ${min < 120 ? 'ora' : 'ore'}${min % 60 ? ` e ${min % 60} minuti` : ''}`;
-    const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
+    // come la card del telefono, ma in grande e al centro: il cerchio col
+    // baffo, il titolo, il saluto, il tempo risparmiato; sotto, piccolo, il conto
+    const conto = [`${pazienti} ${pazienti === 1 ? 'paziente visitato' : 'pazienti visitati'}`, `${d.fatti.length} ${d.fatti.length === 1 ? 'diario copiato' : 'diari copiati'}`,
+      lett && `${lett} ${lett === 1 ? 'lettera scritta' : 'lettere scritte'}`, cons && 'consegne aggiornate', pd && 'post-degenze controllate'].filter(Boolean).join(' · ');
     box.innerHTML = `<div class="mpd-fine">
-      <span class="mpd-fine-ok">${ICON.ok}</span>
-      <div class="mpd-dtesta"><div><h2>Tutto fatto per oggi.</h2><p>Ottimo lavoro${primo ? ', ' + esc(primo) : ''}.</p></div></div>
-      <dl class="mpd-numeri mpd-fine-num">
-        ${num(pazienti, pazienti === 1 ? 'paziente visitato' : 'pazienti visitati')}
-        ${num(d.fatti.length, d.fatti.length === 1 ? 'diario copiato' : 'diari copiati')}
-        ${num(lett, lett === 1 ? 'lettera scritta' : 'lettere scritte')}
-        ${num(cons ? ICON.ok : '–', cons ? 'consegne aggiornate' : 'consegne', cons ? 'mpd-num-ok' : '')}
-        ${pd ? num(ICON.ok, 'post-degenze controllate', 'mpd-num-ok') : ''}
-        ${pazienti ? num('≈ ' + (min < 60 ? min + ' min' : tempo.replace(' minuti', ' min')), 'risparmiati con l\'app', 'mpd-num-tempo') : ''}
-      </dl>
-      <p class="mpd-fine-nota">${pazienti ? 'Tempo risparmiato: stima di circa 3 minuti a paziente. ' : ''}Scegli una riga a sinistra per riaprire un diario o una lettera.</p>
+      <div class="mp-spunta mpd-fine-spunta">${ICON.ok}</div>
+      <h2>Tutto fatto per oggi</h2>
+      <p class="mpd-fine-ciao">Ottimo lavoro${primo ? ', ' + esc(primo) : ''}.</p>
+      ${pazienti ? `<p class="mpd-fine-tempo"><b>≈ ${tempo}</b> risparmiati oggi con l'app</p>` : ''}
+      <p class="mpd-fine-conto">${conto}</p>
     </div>`;
     return;
   }
