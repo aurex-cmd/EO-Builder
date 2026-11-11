@@ -25066,6 +25066,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-dett{ min-width:0; min-height:0; display:flex; flex-direction:column; }
   .mpd-info{ flex:1; min-height:0; overflow-y:auto; padding:30px 34px; border-radius:30px; display:flex; flex-direction:column; }
   .mpd-info.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
+  .mpd-info > .mp-finito{ margin:auto; }
   .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
   /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
   html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; flex:1; height:auto; min-height:0; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
@@ -25075,7 +25076,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] .m-scheda.mp-dock .m-s-testa .m-s-pratica{ top:30px; right:36px; }
   html[data-mp] .m-scheda.mp-dock .m-s-corpo{ padding:0 38px; }
   html[data-mp] .m-scheda.mp-dock :is(#m-eo, #m-provv){ font-size:18px; line-height:1.65; }
-  html[data-mp] .m-scheda.mp-dock .m-s-piede{ padding:18px 38px 26px; grid-template-columns:56px minmax(0, 420px); }
+  html[data-mp] .m-scheda.mp-dock .m-s-piede{ padding:18px 38px 26px; grid-template-columns:56px minmax(0, 1fr); }
   html[data-mp].mp-pc .m-velo{ display:none; }
   .mpd-dtesta h2{ margin:0; font-size:40px; font-weight:500; letter-spacing:-.045em; line-height:1; }
   .mpd-dtesta p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
@@ -25088,8 +25089,13 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-letti .mp-tessera{ width:64px; height:64px; border:0; color:var(--mp-ink); font:inherit; font-size:17px; font-weight:600; cursor:pointer; transition:transform .12s var(--mp-molla); }
   .mpd-letti .mp-tessera.mp-t-critico{ color:var(--mp-l-crit-ink); }
   .mpd-letti .mp-tessera:hover{ transform:translateY(-2px); }
-  .mpd-azioni{ display:grid; grid-template-columns:220px 1fr; gap:10px; margin-top:auto; padding-top:30px; max-width:620px; }
-  .mpd-azioni.mpd-una{ grid-template-columns:1fr; max-width:360px; }
+  /* i pulsanti si allargano e si stringono con la finestra, sempre interi */
+  .mpd-azioni{ display:grid; grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); gap:10px; margin-top:auto; padding-top:30px; width:100%; }
+  .mpd-azioni.mpd-una{ grid-template-columns:minmax(0, 1fr); }
+  .mpd-azioni .mp-btn{ min-width:0; padding:0 44px 0 16px; }
+  .mpd-azioni .mp-btn.mp-sec{ padding:0 16px; }
+  .mpd-azioni .mp-btn > :not(kbd):not(svg), .mpd-azioni .mp-btn{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (max-width:860px){ .mpd-azioni{ grid-template-columns:minmax(0, 1fr); } .mpd .mpd-azioni kbd{ display:none; } .mpd-azioni .mp-btn{ padding:0 16px; } }
   .mpd-azioni .mp-btn{ position:relative; }
   .mpd-azioni kbd{ position:absolute; right:14px; top:50%; transform:translateY(-50%); }
   .mp-btn.mpd-copiato{ background:var(--mp-ok); color:#fff; }
@@ -28174,6 +28180,7 @@ function mpVai(v){
   if($m('#m-scheda').classList.contains('m-su')) chiudiScheda();
   if(M.vista === v){ window.scrollTo({ top:0, behavior:mpFermo() ? 'auto' : 'smooth' }); return; }
   M.pila = []; M.vista = v;
+  if(v === 'home') mpScelto = false;
   // il settore scelto (anche da un altro dispositivo) vale all'ingresso
   if(v === 'visita'){ const s = settoreScelto(); if(s) M.settore = s; }
   disegna();
@@ -28280,7 +28287,9 @@ function mpOggi(){
   const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett } = dati;
   mpPila = passi;
   const ora = new Date().getHours();
-  const saluto = ora < 5 ? 'Buonanotte.' : ora < 13 ? 'Buongiorno.' : ora < 18 ? 'Buon pomeriggio.' : 'Buonasera.';
+  // col nome scritto in Account ("Aurelio Rossi" → "Buongiorno, Aurelio."), se c'è
+  const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
+  const saluto = (ora < 5 ? 'Buonanotte' : ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera') + (primo ? ', ' + primo : '') + '.';
   const diari = `${daCopiare} ${daCopiare === 1 ? 'diario' : 'diari'} da copiare`;
   const frase = !tot ? 'Nessun paziente in reparto.'
     : daVedere ? `${daVedere} ${daVedere === 1 ? 'paziente' : 'pazienti'} da vedere${daCopiare ? ', ' + diari : ''}.`
@@ -28315,7 +28324,8 @@ let mpSel = null;           // la voce scelta (la sua chiave)
 let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
 const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
 let mpSelLetto = null, mpDettK = null;
-let mpCopAperti = false;   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
+let mpCopAperti = false;
+let mpScelto = false;      // una riga scelta a mano (col clic o coi tasti): resta quella   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
 const mpDocked = () => { const s = $m('#m-scheda'); return !!s && s.classList.contains('mp-dock'); };
 const mpEDiario = p => !!p && (p.k.startsWith('dia|') || !!p.copiato);
 // l'editor del diario (la scheda di Pocket, con tutte le sue funzioni) si
@@ -28350,9 +28360,11 @@ function mpOggiPC(dati, saluto, frase){
   ].filter(g => g[1].length || (g[0] === 'Fatto oggi' && fatti.length));
   mpVoci = gruppi.flatMap(g => g[1]);
   // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
-  if(!mpVoci.some(v => v.k === mpSel)){
+  // tutto fatto: a destra "Tutto fatto per oggi", finché non si sceglie una riga
+  if(!passi.length && !mpScelto) mpSel = null;
+  else if(!mpVoci.some(v => v.k === mpSel)){
     const stessa = mpSelLetto && mpVoci.find(v => v.letto === mpSelLetto && mpEDiario(v));
-    mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk) || mpVoci[0] || {}).k || null;
+    mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk) || (passi.length ? mpVoci[0] : null) || {}).k || null;
   }
   const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
   const link = (attr, t) => `<button class="mpd-link" ${attr}>${t}</button>`;
@@ -28432,7 +28444,7 @@ function mpDett(){
 }
 function mpPcScegli(k, scorri){
   if(!mpVoci.some(v => v.k === k)) return;
-  mpSel = k; mpDett();
+  mpSel = k; mpScelto = true; mpDett();
   if(scorri){ const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(k)}"]`); if(r) r.scrollIntoView({ block:'nearest', inline:'nearest' }); }
 }
 function mpPcApri(){
@@ -28446,14 +28458,14 @@ function mpPcCopia(){ if(mpDocked()) $m('#m-copia').click(); }
 function mpPcDisfa(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.disfa) return;
   try{ p.disfa(); } catch(e){}
-  mpSel = null; mpOggi();
+  mpSel = null; mpScelto = false; mpOggi();
 }
 function mpPcFatto(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p || !p.fatto) return;
   try{ p.fatto(); } catch(e){}
   showToast('Fatto');
-  const k = mpVoci.indexOf(p), dopo = mpVoci[k + 1] || mpVoci[k - 1];
-  mpSel = dopo ? dopo.k : null; mpOggi();
+  const k = mpVoci.indexOf(p), dopo = mpVoci.slice(k + 1).concat(mpVoci.slice(0, k)).find(v => !v.copiato && !v.fattoOk);
+  mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
 }
 document.addEventListener('keydown', e => {
   if(!UI_MP || M.vista !== 'home' || !$m('.mpd') || document.querySelector('[id$="-overlay"].show')) return;
@@ -28462,7 +28474,7 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && e.target.closest && e.target.closest('#m-scheda') && e.target.matches('textarea, input')){ e.target.blur(); return; }
   if(e.metaKey || e.ctrlKey || e.altKey || e.target.closest('input, textarea, select, [contenteditable]')) return;
   const i = mpVoci.findIndex(v => v.k === mpSel);
-  if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); const v = mpVoci[Math.min(mpVoci.length - 1, i + 1)]; if(v) mpPcScegli(v.k, true); }
+  if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); const v = mpVoci[i < 0 ? 0 : Math.min(mpVoci.length - 1, i + 1)]; if(v) mpPcScegli(v.k, true); }
   else if(e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); const v = mpVoci[Math.max(0, i - 1)]; if(v) mpPcScegli(v.k, true); }
   else if(e.key === 'Enter' && !e.target.closest('button')){ e.preventDefault(); mpPcApri(); }
   else if(e.key === 'c' || e.key === 'C'){ e.preventDefault(); mpPcCopia(); }
@@ -28808,7 +28820,7 @@ if(UI_MP){
     const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
     const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
     const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0] || mpVoci.find(v => v.k.startsWith('cons'));
-    setTimeout(() => { if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return; mpSel = dopo ? dopo.k : 'cop|' + letto; mpOggi(); }, mpFermo() ? 0 : 700);
+    setTimeout(() => { if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return; mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi(); }, mpFermo() ? 0 : 700);
   });
   // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
   $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
