@@ -24724,10 +24724,11 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
      suoi stessi nomi (--m-*) -->
 <style id="stile-mp">
   html[data-mp]{
-    --mp-fondo:#f7f6f8; --mp-carta:#ffffff; --mp-ink:#16181f; --mp-muto:#6b6f7b; --mp-tenue:#a7aab3;
-    --mp-linea:#ecebef; --mp-campo:#f2f1f4; --mp-accento:#5b53e6; --mp-accento-ink:#ffffff;
-    --mp-ombra:0 1px 2px rgba(40,30,60,.05), 0 18px 44px rgba(40,30,60,.10);
-    --mp-ombra-scheda:0 2px 4px rgba(40,30,60,.06), 0 30px 70px rgba(40,30,60,.22);
+    --mp-fondo:#f2f3f5; --mp-carta:#ffffff; --mp-ink:#16181f; --mp-muto:#62666f; --mp-tenue:#a3a7af;
+    --mp-linea:#e3e5e9; --mp-campo:#eef0f3; --mp-accento:#1d5fbf; --mp-accento-ink:#ffffff;
+    --mp-scelto:#e6effb; --mp-scelto-ink:#123f80; --mp-scelto-bordo:#9fbde8;
+    --mp-ombra:none;
+    --mp-ombra-scheda:0 16px 40px rgba(20,24,32,.16);
     --mp-atm-1:rgba(240,158,110,.55); --mp-atm-2:rgba(222,120,172,.42); --mp-atm-3:rgba(190,170,245,.45); --mp-atm-4:rgba(246,210,110,.32);
     --mp-l-base:#eef0f3; --mp-l-dacop:#ffd9c2; --mp-l-dacop-f:#f0a577; --mp-l-cop:#bfe8d6; --mp-l-cop-f:#58b88f; --mp-l-crit:#ece2ff; --mp-l-crit-ink:#6b3fd1;
     --mp-ok:#2f9e63; --mp-ok-box:#cdeee1; --mp-allerta:#e0685d;
@@ -24736,10 +24737,11 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
     --mp-molla:cubic-bezier(.22,1,.36,1);
   }
   html[data-mp][data-m-tema="scuro"]{
-    --mp-fondo:#0e0f14; --mp-carta:#191a22; --mp-ink:#f1f1f5; --mp-muto:#9a9caa; --mp-tenue:#5d6070;
-    --mp-linea:#262833; --mp-campo:#22232d; --mp-accento:#8b84ff; --mp-accento-ink:#0e0f14;
-    --mp-ombra:0 1px 2px rgba(0,0,0,.4), 0 18px 44px rgba(0,0,0,.45);
-    --mp-ombra-scheda:0 2px 4px rgba(0,0,0,.4), 0 30px 70px rgba(0,0,0,.6);
+    --mp-fondo:#0f1013; --mp-carta:#1a1b20; --mp-ink:#f1f2f4; --mp-muto:#9a9da6; --mp-tenue:#5f626b;
+    --mp-linea:#2a2c33; --mp-campo:#24262c; --mp-accento:#7aa7ff; --mp-accento-ink:#0b1220;
+    --mp-scelto:#1b2a45; --mp-scelto-ink:#c4d8ff; --mp-scelto-bordo:#3c5b91;
+    --mp-ombra:none;
+    --mp-ombra-scheda:0 16px 40px rgba(0,0,0,.5);
     --mp-atm-1:rgba(200,110,70,.30); --mp-atm-2:rgba(170,70,130,.30); --mp-atm-3:rgba(110,90,210,.32); --mp-atm-4:rgba(180,150,60,.16);
     --mp-l-base:#252733; --mp-l-dacop:#5a3a28; --mp-l-dacop-f:#c2794c; --mp-l-cop:#1d4a3b; --mp-l-cop-f:#3f9c79; --mp-l-crit:#352a55; --mp-l-crit-ink:#c4a8ff;
     --mp-ok:#4cc38a; --mp-ok-box:#1f4d3f; --mp-allerta:#ef8479;
@@ -25200,6 +25202,59 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   /* le pagine di Pocket: stessi titoli leggeri, stesso avviso */
   html[data-mp] :is(.m-h2, .m-pag-t, .m-h1){ font-weight:500; letter-spacing:-.04em; text-transform:none; }
   html[data-mp] #toast{ background:var(--mp-ink); border-color:var(--mp-ink); color:var(--mp-fondo); border-radius:999px; font-family:var(--mp-font); font-weight:500; box-shadow:none; }
+
+  /* STRUMENTO, NON VETRINA (revisione con la skill di design): superfici
+     piane separate da un passo di tono e da un filo, nessuna sfumatura, niente
+     vetro né ombre a riposo; l'accento (un blu) solo sull'azione principale;
+     le scelte (tag, settore) in una tinta chiara col testo scuro dello stesso
+     blu; il titolo è una frase breve, la cosa più grande è il lavoro */
+  html[data-mp] .mp-atm{ display:none; }
+  html[data-mp] :is(.mp-barra, .mpd-lista){ -webkit-backdrop-filter:none; backdrop-filter:none; }
+  html[data-mp] :is(.mp-btn, .m-copia, .mp-tondo, .mp-chip){ box-shadow:none !important; }
+  html[data-mp] .mp-chip{ background:var(--mp-carta); border:1px solid var(--mp-linea); }
+  /* le superfici: un filo vero al posto dell'ombra */
+  html[data-mp] :is(.mp-card, .mpd-lista, .m-scheda.mp-dock, .mpd-r[aria-current="true"]){ box-shadow:none !important; border:1px solid var(--mp-linea); }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .card{ box-shadow:none !important; border:1px solid var(--mp-linea) !important; }
+  html[data-mp] .mpd-r{ border:1px solid transparent; }
+  /* dietro la scheda aperta: un velo piano, senza sfocatura */
+  html[data-mp] .m-velo{ background:rgba(15,18,24,.32) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  html[data-mp] .mpd-tasti, html[data-mp] .mpd-tasti kbd{ color:var(--mp-muto); }
+  /* barra in basso: una fila piana di destinazioni, l'attiva in grigio */
+  html[data-mp] .mp-barra{ left:0; right:0; bottom:0; transform:none; justify-content:space-around; gap:0; padding:6px max(12px, env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(12px, env(safe-area-inset-left,0px)); border-radius:0; background:var(--mp-carta); box-shadow:0 -1px 0 var(--mp-linea); }
+  html[data-mp] .mp-barra button{ flex:1; justify-content:center; height:48px; border-radius:12px; }
+  html[data-mp] .mp-barra button[aria-current="page"]{ background:var(--mp-campo); color:var(--mp-ink); }
+  html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+  html[data-mp].mp-scheda-aperta .mp-barra,
+  html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:translateY(110%); }
+  html[data-mp] .m-main{ padding-bottom:110px; }
+  /* le scelte: tinta chiara, testo scuro dello stesso blu (mai un blocco nero) */
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip.active,
+  html[data-mp] .mp-settori button[aria-pressed="true"]{ background:var(--mp-scelto); color:var(--mp-scelto-ink); box-shadow:none; outline:1.5px solid var(--mp-scelto-bordo); outline-offset:-1.5px; }
+  html[data-mp] .mp-progresso .mp-fatto i{ background:var(--mp-tenue); }
+  html[data-mp] .mp-progresso .mp-ora i{ background:var(--mp-ink); }
+  html[data-mp][data-mp-guida] .m-bar .m-azione{ color:var(--mp-ink) !important; background:none !important; }
+  html[data-mp] .mp-g-letto span{ color:var(--mp-muto) !important; }
+  /* le iniziali dell'account: neutre */
+  html[data-mp] .m-connessione{ background:var(--mp-campo); color:var(--mp-ink); }
+  html[data-mp] .m-connessione span, html[data-mp] .m-connessione.m-connesso span{ color:var(--mp-ink); }
+  /* il titolo è una frase breve: due righe, non la cosa più grande */
+  html[data-mp] .mp-frase{ font-size:clamp(24px, 6.6vw, 28px); line-height:1.15; letter-spacing:-.03em; }
+  html[data-mp] .mp-passo h3, html[data-mp] .mp-finito h3{ font-size:24px; }
+  /* al PC la frase dice già i numeri: niente riquadri che la ripetono */
+  html[data-mp] .mpd-numeri{ display:none !important; }
+  @media (min-width:640px) and (min-height:560px){
+    html[data-mp] .mp-barra{ left:50%; right:auto; bottom:auto; top:calc(8px + env(safe-area-inset-top,0px)); transform:translateX(-50%); padding:3px; gap:2px; border-radius:12px; background:var(--mp-campo); box-shadow:none; }
+    html[data-mp] .mp-barra button{ flex:none; height:34px; border-radius:9px; }
+    html[data-mp] .mp-barra button[aria-current="page"]{ background:var(--mp-carta); box-shadow:none; }
+    html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+    html[data-mp].mp-scheda-aperta .mp-barra{ transform:translateX(-50%) translateY(-170%); }
+    html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:translateX(-50%); }
+    html[data-mp] .mpd .mp-frase{ font-size:30px; }
+    html[data-mp] .m-main{ padding-bottom:60px; }
+    html[data-mp].mp-pc .m-main{ padding-bottom:14px; }
+  }
+  /* la nota sull'app non scende sotto i 12px */
+  html[data-mp] #app-info-box, html[data-mp] #app-info-box div{ font-size:12px !important; }
 
   @media (prefers-reduced-motion: reduce){ html[data-mp] :is(#m-app, .mp-guida, #clinical-view) :is(*, *::before, *::after){ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
