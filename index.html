@@ -24956,6 +24956,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp][data-mp-guida] #mp-domanda{ display:block; margin:0 0 22px; }
   html[data-mp][data-mp-guida] #mp-domanda h2{ margin:0; font-size:36px; font-weight:500; letter-spacing:-.045em; line-height:1; color:var(--mp-ink); }
   html[data-mp][data-mp-guida] #mp-domanda p{ margin:8px 0 0; font-size:15px; color:var(--mp-muto); }
+  html[data-mp][data-mp-guida] #mp-domanda .mp-g-letto span{ color:var(--mp-accento); }
   html[data-mp][data-mp-guida] #mp-domanda .mp-g-letto{ margin:0 0 10px; font-size:13px; font-weight:500; color:var(--mp-muto); }
   html[data-mp][data-mp-guida] #clinical-view > .card{ display:none !important; }
   html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view > .card.mp-passo-on{ display:block !important; background:var(--mp-carta); border:0; border-radius:28px; box-shadow:var(--mp-ombra); margin:14px 0 0; padding:24px 22px; }
@@ -28347,7 +28348,7 @@ function mpPassoApri(){
   // un letto: si passa al Reparto e il letto si apre da lì
   if(p.s) M.settore = p.s;
   M.pila = []; M.vista = 'visita'; disegna();
-  setTimeout(() => { const t = mpTile(p.letto); if(M.vista === 'visita') mpLetto(p.letto, t); }, mpFermo() ? 0 : 380);
+  setTimeout(() => { const t = mpTile(p.letto); if(M.vista === 'visita') mpLetto(p.letto, t, p.k.startsWith('dia|')); }, mpFermo() ? 0 : 380);
 }
 function mpTrascina(el){
   let x0 = null, dx = 0;
@@ -28388,11 +28389,14 @@ function mpLetti(appena){
 // il letto toccato: visto oggi apre il diario; altrimenti la scheda che
 // invita alla visita, con l'ultimo esame obiettivo scritto sotto gli occhi
 let mpDa = null;
-function mpLetto(nome, el){
+// diario: true quando si vuole proprio il diario (dalla card "Apri il diario" di Oggi)
+function mpLetto(nome, el, diario){
   mpDa = el || mpTile(nome);
   // aperto un letto, il settore è quello di oggi (anche per Oggi e per gli altri dispositivi)
   if(M.settore && nomiDelSettore(M.settore).has(nome)) ricordaSettore(M.settore);
-  if(infoLetto(nome).vistoOggi) return apriScheda(nome);
+  // già visto oggi: al PC il diario; sul telefono di nuovo l'esame obiettivo,
+  // con le risposte di prima (chiuso per sbaglio, o da correggere al letto)
+  if(infoLetto(nome).vistoOggi && (diario || MP_PC.matches)) return apriScheda(nome);
   // da vedere: dritti all'esame obiettivo (in corsia ogni tocco in più pesa)
   apriVisita(nome);
 }
@@ -28463,6 +28467,7 @@ function mpGuidaInizio(){
   // letto, al PC stanno già tra i provvedimenti
   if(document.getElementById('mp-card-appunti')) mpG.passi.push('mp-card-appunti');
   mpG.letto = M.letto;
+  mpG.giaVisto = !!(voce(M.letto) && infoLetto(M.letto).vistoOggi);
   const ap = $m('#mp-appunti'); if(ap) ap.value = '';
   mpG.verso = 1;
   mpGuida();
@@ -28478,7 +28483,7 @@ function mpGuida(){
   document.querySelectorAll('#clinical-view > .card').forEach(c => { c.classList.toggle('mp-passo-on', c.id === id); c.classList.remove('mp-trascina', 'mp-esce'); c.style.transform = c.style.opacity = c.style.transition = ''; });
   // la domanda sta in cima alla sua card: si sposta insieme a lei
   const dom = $m('#mp-domanda'), card = document.getElementById(id);
-  dom.innerHTML = `<p class="mp-g-letto">${esc(M.letto || '')}</p><h2>${esc(d[0])}</h2><p>${esc(d[1])}</p>`;
+  dom.innerHTML = `<p class="mp-g-letto">${esc(M.letto || '')}${mpG.giaVisto ? ' · <span>già visto oggi: correggi quello che serve</span>' : ''}</p><h2>${esc(d[0])}</h2><p>${esc(d[1])}</p>`;
   if(card && dom.parentElement !== card) card.prepend(dom);
   const cv = document.getElementById('clinical-view');
   cv.classList.remove('mp-anima', 'mp-da-sx'); void cv.offsetWidth; cv.classList.add('mp-anima'); cv.classList.toggle('mp-da-sx', mpG.verso < 0);
