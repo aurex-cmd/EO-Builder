@@ -25018,6 +25018,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-testa .mp-frase{ font-size:clamp(26px, 3vw, 40px); max-width:18em; margin-top:4px; }
   .mpd-testa .mp-sotto{ margin-top:6px; font-size:14px; }
   .mpd-numeri{ display:flex; gap:10px; margin:0; flex:none; }
+  .mpd-numeri[hidden]{ display:none !important; }
   .mpd-num{ min-width:96px; padding:12px 14px; border-radius:18px; background:color-mix(in srgb, var(--mp-carta) 72%, transparent); box-shadow:inset 0 0 0 1px var(--mp-linea); }
   .mpd-num dd{ margin:0; font-size:28px; font-weight:500; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
   .mpd-num dt{ margin-top:6px; font-size:13px; color:var(--mp-muto); }
@@ -25066,7 +25067,13 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mpd-dett{ min-width:0; min-height:0; display:flex; flex-direction:column; }
   .mpd-info{ flex:1; min-height:0; overflow-y:auto; padding:30px 34px; border-radius:30px; display:flex; flex-direction:column; }
   .mpd-info.mpd-cambia > *{ animation:mp-entra .35s var(--mp-molla) both; }
-  .mpd-info > .mp-finito{ margin:auto; }
+  .mpd-fine{ display:flex; flex-direction:column; flex:1; min-height:0; }
+  .mpd-fine-ok{ width:56px; height:56px; margin-bottom:22px; border-radius:18px; display:grid; place-items:center; background:var(--mp-ok-box); color:var(--mp-ok); }
+  .mpd-fine-ok svg{ width:28px; height:28px; }
+  .mpd-fine-ok path{ stroke-dasharray:30; stroke-dashoffset:30; animation:mp-traccia .5s .15s var(--mp-molla) forwards; }
+  .mpd-fine .mpd-dtesta p{ max-width:46ch; line-height:1.45; }
+  .mpd .mpd-fine-num{ display:flex; flex-wrap:wrap; margin-top:30px; }
+  .mpd-fine-nota{ margin:auto 0 0; padding-top:26px; font-size:13px; color:var(--mp-tenue); }
   .mpd-dett:has(> .mp-dock) .mpd-info{ display:none; }
   /* l'editor del diario agganciato: la scheda di Pocket, ferma nel riquadro */
   html[data-mp] .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; flex:1; height:auto; min-height:0; opacity:1; visibility:visible; transform:none !important; transition:none; box-shadow:var(--mp-ombra); will-change:auto; animation:mp-entra .35s var(--mp-molla) both; }
@@ -28325,6 +28332,7 @@ let mpVoci = [];            // le voci dell'elenco, nell'ordine in cui si vedono
 const mpTestoDiario = id => { const p = loadPatients()[id]; return p ? getRefertoFor(statoScheda(id, p)) : ''; };
 let mpSelLetto = null, mpDettK = null;
 let mpCopAperti = false;
+let mpDatiPC = null;      // i conti di Oggi al PC, per il riepilogo di "Tutto fatto"
 let mpScelto = false;      // una riga scelta a mano (col clic o coi tasti): resta quella   // la riga dei diari copiati aperta (solo finché resta aperta l'app)
 const mpDocked = () => { const s = $m('#m-scheda'); return !!s && s.classList.contains('mp-dock'); };
 const mpEDiario = p => !!p && (p.k.startsWith('dia|') || !!p.copiato);
@@ -28350,6 +28358,7 @@ function mpUndock(){
 }
 function mpOggiPC(dati, saluto, frase){
   const { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett } = dati;
+  mpDatiPC = dati;
   const lettere = passi.filter(p => p.stato === 'lettera').length;
   const gruppi = [
     ['Diari da completare e copiare', passi.filter(p => p.k.startsWith('dia|'))],
@@ -28385,7 +28394,7 @@ function mpOggiPC(dati, saluto, frase){
   }
   $m('#mpd-testa').innerHTML = `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
       <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
-    <dl class="mpd-numeri">${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
+    <dl class="mpd-numeri"${!passi.length && tot ? ' hidden' : ''}>${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
   // l'elenco in due parti: in alto, scorrevoli, i diari da completare e chi
   // resta da vedere; in fondo, sempre in vista, lettere e consegne e i copiati
   // di oggi (scorrevoli anche loro)
@@ -28423,7 +28432,23 @@ function mpDett(){
   // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
   if(diario){ mpDock(p); mpDettK = chiave; return; }
   mpUndock(); mpDettK = chiave;
-  if(!p){ box.innerHTML = `<div class="mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Niente altro da fare.</p></div>`; return; }
+  if(!p){
+    // TUTTO FATTO: come gli altri dettagli (titolo grande in alto a sinistra),
+    // col riepilogo della giornata in numeri, come in testata
+    const d = mpDatiPC || { fatti:[], fattiAltri:[] };
+    const lett = d.fattiAltri.filter(v => v.k.startsWith('f-let')).length;
+    const cons = d.fattiAltri.some(v => v.k.startsWith('f-cons'));
+    const pd = d.fattiAltri.some(v => v.k === 'f-pd');
+    const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
+    const num = (n, t) => `<div class="mpd-num"><dd>${n}</dd><dt>${t}</dt></div>`;
+    box.innerHTML = `<div class="mpd-fine">
+      <span class="mpd-fine-ok">${ICON.ok}</span>
+      <div class="mpd-dtesta"><div><h2>Tutto fatto per oggi.</h2><p>${primo ? `Buon lavoro, ${esc(primo)}: ` : ''}diari copiati${lett ? ', lettere scritte' : ''}${cons ? ', consegne aggiornate' : ''}${pd ? ', post-degenze controllate' : ''}.</p></div></div>
+      <dl class="mpd-numeri mpd-fine-num">${num(d.fatti.length, d.fatti.length === 1 ? 'diario copiato' : 'diari copiati')}${lett ? num(lett, lett === 1 ? 'lettera scritta' : 'lettere scritte') : ''}${num(cons ? '✓' : '–', 'consegne')}</dl>
+      <p class="mpd-fine-nota">Scegli una riga a sinistra per riaprire un diario o una lettera.</p>
+    </div>`;
+    return;
+  }
   let corpo = '';
   if(p.k.startsWith('vis|')){
     let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
