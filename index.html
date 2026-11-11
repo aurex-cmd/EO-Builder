@@ -25131,6 +25131,47 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
     html[data-mp].mp-pc .m-main{ padding-bottom:14px; }
   }
 
+  /* TUTTE LE SCHERMATE come Oggi: lo stesso fondo d'atmosfera, i riquadri
+     diventano card bianche arrotondate senza bordo, i tasti morbidi, i campi
+     pieni, le scelte a pillola. Le pagine di Pocket restano quelle (stessi
+     dati, stessi tasti): cambia solo la veste */
+  html[data-mp] .mp-atm{ opacity:1; }
+  html[data-mp][data-ui="minimal"] .m-pagina{ position:relative; z-index:1; }
+  html[data-mp] .m-bar:not(.m-home){ background:color-mix(in srgb, var(--mp-fondo) 72%, transparent); -webkit-backdrop-filter:blur(18px) saturate(1.3); backdrop-filter:blur(18px) saturate(1.3); }
+  html[data-mp] .m-bar .m-indietro{ border-radius:14px; }
+  /* titoli: una frase grande e leggera, il sottotitolo sommesso */
+  html[data-mp] :is(.m-pag-t, #m-vista .m-h2){ font-size:clamp(32px, 9vw, 40px); line-height:1.04; letter-spacing:-.045em; color:var(--mp-ink); }
+  html[data-mp] :is(.m-pag-testa, #m-vista) .m-sub{ font-size:15px; color:var(--mp-muto); }
+  html[data-mp][data-ui="minimal"] .m-pagina .group-label{ font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
+  /* card */
+  html[data-mp][data-ui="minimal"] :is(#m-vista .m-righe, #m-aggcons table, .m-we-ins, .m-we-come, #ricoveri-view .admit-block.ric-cal, .m-pagina .sync-box, .m-dim-vuoto, .m-bk-carta, .pd-gruppo, #pd-avviso-lista, #vitali-settore-view #vitali-settore-lista, #dimissioni-lista .group-label + .ric-lista-riga, .ric-stat-card){ background:var(--mp-carta) !important; border:0 !important; border-radius:24px !important; box-shadow:var(--mp-ombra) !important; }
+  html[data-mp][data-ui="minimal"] #m-aggcons table{ border-collapse:separate; border-spacing:0; overflow:hidden; }
+  html[data-mp][data-ui="minimal"] #m-aggcons :is(table, tbody, tr){ background:transparent; }
+  html[data-mp][data-ui="minimal"] #m-aggcons tbody{ border:0 !important; border-radius:0 !important; box-shadow:none !important; }
+  html[data-mp][data-ui="minimal"] #m-aggcons tr:first-child > *{ border-top:0 !important; }
+  html[data-mp][data-ui="minimal"] #m-aggcons :is(tr, td, th){ border-color:var(--mp-linea) !important; }
+  html[data-mp][data-ui="minimal"] #m-vista .m-righe > * + *, html[data-mp][data-ui="minimal"] .vitali-riga{ border-color:var(--mp-linea) !important; }
+  /* le finestre sopra le pagine: come la scheda del diario */
+  html[data-mp][data-ui="minimal"] :is(#rubrica-box, #svuota-settore-modal, #isolamento-modal, #ega-modal, #vfg-modal, #ecgsim-modal, #soffi-modal, #farmaco-modal, #mdc-modal, #score-modal, #strumento-box){ background:var(--mp-carta) !important; border:0 !important; border-radius:28px !important; box-shadow:var(--mp-ombra-scheda) !important; font-family:var(--mp-font); }
+  /* tasti: morbidi, pieni; il principale col colore dell'app */
+  html[data-mp][data-ui="minimal"] :is(.m-pagina .btn, .m-we-btn, .m-we-analizza, #rubrica-editor .btn, .pd-avviso-tasti .btn, #svuota-settore-modal .btn){ min-height:48px; border:0 !important; border-radius:14px !important; background:var(--mp-campo) !important; color:var(--mp-ink) !important; box-shadow:none !important; font-family:var(--mp-font); font-weight:500; }
+  html[data-mp][data-ui="minimal"] :is(.m-pagina .btn.primary, .m-we-btn.m-we-pri, #rubrica-box .btn.primary, .pd-avviso-tasti .btn.primary, .m-pagina #editor-contenuto .diari-fondo > .btn:first-child){ background:var(--mp-accento) !important; color:var(--mp-accento-ink) !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina .btn.primary .hicon{ stroke:var(--mp-accento-ink) !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina #editor-contenuto .diari-fondo > #editor-svuota-btn.m-armato{ background:var(--mp-allerta) !important; color:#fff !important; }
+  /* campi: pieni, senza bordo, arrotondati */
+  html[data-mp][data-ui="minimal"] .m-pagina :is(input[type=text], input[type=number], input[type=date], input:not([type]), textarea, select):not(.vitals-strip input, .vitals-strip select), html[data-mp][data-ui="minimal"] :is(#consegne-testo-incollato, #consegne-reparto){ background:var(--mp-campo) !important; border:1.5px solid transparent !important; border-radius:14px !important; box-shadow:none !important; color:var(--mp-ink); font-family:var(--mp-font); }
+  html[data-mp][data-ui="minimal"] .m-pagina :is(input, textarea, select):not(.vitals-strip *):focus{ border-color:var(--mp-accento) !important; background:var(--mp-carta) !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina .sync-box .inline-fields{ border:0 !important; border-radius:14px !important; background:var(--mp-campo) !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina .sync-box :is(input[type=email], input[type=password]){ background:none !important; border-color:var(--mp-linea) !important; }
+  /* scelte: pillole, l'attiva piena come i settori */
+  html[data-mp][data-ui="minimal"] .m-pagina .chip, html[data-mp] .pd-quando-chip{ border:0 !important; border-radius:999px !important; background:var(--mp-campo) !important; color:var(--mp-muto) !important; box-shadow:none !important; font-family:var(--mp-font); font-weight:500; }
+  html[data-mp][data-ui="minimal"] .m-pagina .chip.active{ background:color-mix(in srgb, var(--mp-accento) 14%, var(--mp-carta)) !important; color:var(--mp-accento) !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina .inline-fields:has(> .chip:first-child + .chip:last-child){ border-radius:999px !important; background:var(--mp-campo) !important; padding:4px; }
+  html[data-mp][data-ui="minimal"] .m-pagina .inline-fields:has(> .chip:first-child + .chip:last-child) > .chip{ background:none !important; }
+  html[data-mp][data-ui="minimal"] .m-pagina .inline-fields:has(> .chip:first-child + .chip:last-child) > .chip.active{ background:var(--mp-carta) !important; color:var(--mp-ink) !important; box-shadow:0 1px 3px rgba(20,20,40,.12) !important; }
+  html[data-mp][data-ui="minimal"] :is(#m-ric-tab, #ricoveri-tabs){ border-radius:999px !important; background:var(--mp-campo) !important; padding:4px; }
+  html[data-mp][data-ui="minimal"] :is(#m-ric-tab, #ricoveri-tabs) > *{ border-radius:999px !important; }
+
   /* le pagine di Pocket: stessi titoli leggeri, stesso avviso */
   html[data-mp] :is(.m-h2, .m-pag-t, .m-h1){ font-weight:500; letter-spacing:-.04em; text-transform:none; }
   html[data-mp] #toast{ background:var(--mp-ink); border-color:var(--mp-ink); color:var(--mp-fondo); border-radius:999px; font-family:var(--mp-font); font-weight:500; box-shadow:none; }
