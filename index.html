@@ -27015,8 +27015,44 @@ const sc = $m('#m-scheda');
 const salvaSeInSospeso = () => { if(sc.classList.contains('m-su') || timerSalva) salvaOra(); };
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') salvaSeInSospeso(); });
 window.addEventListener('pagehide', salvaSeInSospeso);
+// le caselle del diario sempre alte quanto il loro testo: si ricalcolano
+// anche quando cambia la larghezza (finestra ristretta, telefono girato,
+// diario agganciato al PC) o quando arriva il carattere vero. Prima restavano
+// alte come all'apertura e il testo in più restava nascosto
+function rialzaTutte(){
+  const aree = [...document.querySelectorAll('#m-s-corpo textarea')].filter(t => t.offsetParent);
+  if(!aree.length) return;
+  const c = $m('#m-s-corpo'), st = c.scrollTop;
+  aree.forEach(t => { t.style.height = 'auto'; });
+  aree.map(t => t.scrollHeight).forEach((h, k) => { aree[k].style.height = h + 'px'; });
+  c.scrollTop = st;
+}
+if(window.ResizeObserver){
+  let largo = 0, frame = 0;
+  new ResizeObserver(voci => {
+    const w = Math.round(voci[0].contentRect.width);
+    if(w === largo) return; largo = w;
+    cancelAnimationFrame(frame); frame = requestAnimationFrame(rialzaTutte);
+  }).observe($m('#m-s-corpo'));
+}
+if(document.fonts){ document.fonts.ready.then(rialzaTutte); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', rialzaTutte); }
+// PROVVEDIMENTI: andando a capo il trattino c'è già; un secondo trattino
+// scritto per abitudine ("- -") si toglie da solo
+function unTrattino(t){
+  const i = t.selectionStart, v = t.value;
+  if(i !== t.selectionEnd) return false;
+  const inizio = v.lastIndexOf('\n', i - 1) + 1, riga = v.slice(inizio, i);
+  // "- -" (o "- –"), e lo spazio scritto subito dopo ("-  ")
+  const m = /^(\s*)[-–—]\s*[-–—]\s?$/.exec(riga) || /^(\s*)-\s{2,}$/.exec(riga);
+  if(!m) return false;
+  const nuova = m[1] + '- ';
+  t.value = v.slice(0, inizio) + nuova + v.slice(i);
+  t.selectionStart = t.selectionEnd = inizio + nuova.length;
+  return true;
+}
 sc.addEventListener('input', e => {
   const t = e.target;
+  if(t.id === 'm-provv' && unTrattino(t)){ t.dispatchEvent(new Event('input', { bubbles:true })); e.stopImmediatePropagation(); return; }
   if(t.matches('textarea')) alza(t);
   if(t.id === 'm-eo'){ D.eo = t.value; salvaPresto(); }
   if(t.id === 'm-provv'){
