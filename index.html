@@ -4156,11 +4156,11 @@ if(UI_MINIMAL){
     // un accento solo, il suo: il colore scelto per Pocket qui non vale
     document.documentElement.dataset.mPulsante = 'mp';
     const geist = document.createElement('link'); geist.rel = 'stylesheet';
-    geist.href = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap';
+    geist.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap';
     testa.appendChild(geist);
     testa.querySelector('link[rel="manifest"]').href = 'minimal-pocket/manifest.webmanifest';
     testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Minimal Pocket';
-    testa.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#0e0f14' : '#f7f6f8';
+    testa.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#1e1e1e' : '#f5f5f7';
   }
 }
 </script>
@@ -24724,25 +24724,27 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
      suoi stessi nomi (--m-*) -->
 <style id="stile-mp">
   html[data-mp]{
-    --mp-fondo:#f7f6f8; --mp-carta:#ffffff; --mp-ink:#16181f; --mp-muto:#6b6f7b; --mp-tenue:#a7aab3;
-    --mp-linea:#ecebef; --mp-campo:#f2f1f4; --mp-accento:#5b53e6; --mp-accento-ink:#ffffff;
-    --mp-ombra:0 1px 2px rgba(40,30,60,.05), 0 18px 44px rgba(40,30,60,.10);
-    --mp-ombra-scheda:0 2px 4px rgba(40,30,60,.06), 0 30px 70px rgba(40,30,60,.22);
+    --mp-fondo:#f5f5f7; --mp-carta:#ffffff; --mp-ink:#1d1d1f; --mp-muto:#6e6e73; --mp-tenue:#aeaeb2;
+    --mp-linea:rgba(0,0,0,.08); --mp-campo:rgba(118,118,128,.12); --mp-accento:#007aff; --mp-accento-ink:#ffffff;
+    --mp-ombra:0 0 0 .5px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
+    --mp-ombra-scheda:0 0 0 .5px rgba(0,0,0,.15), 0 22px 70px rgba(0,0,0,.28);
+    --mp-tasto:#ffffff; --mp-laterale:rgba(232,232,237,.85);
     --mp-atm-1:rgba(240,158,110,.55); --mp-atm-2:rgba(222,120,172,.42); --mp-atm-3:rgba(190,170,245,.45); --mp-atm-4:rgba(246,210,110,.32);
-    --mp-l-base:#eef0f3; --mp-l-dacop:#ffd9c2; --mp-l-dacop-f:#f0a577; --mp-l-cop:#bfe8d6; --mp-l-cop-f:#58b88f; --mp-l-crit:#ece2ff; --mp-l-crit-ink:#6b3fd1;
-    --mp-ok:#2f9e63; --mp-ok-box:#cdeee1; --mp-allerta:#e0685d;
-    --mp-font:'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mp-l-base:#e9e9ed; --mp-l-dacop:#ffe3c2; --mp-l-dacop-f:#f0a577; --mp-l-cop:#d5f5dc; --mp-l-cop-f:#58b88f; --mp-l-crit:#efe1fb; --mp-l-crit-ink:#8944ab;
+    --mp-ok:#28a745; --mp-ok-box:#d5f5dc; --mp-allerta:#ff3b30;
+    --mp-font:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
     --mp-mono:'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --mp-molla:cubic-bezier(.22,1,.36,1);
   }
   html[data-mp][data-m-tema="scuro"]{
-    --mp-fondo:#0e0f14; --mp-carta:#191a22; --mp-ink:#f1f1f5; --mp-muto:#9a9caa; --mp-tenue:#5d6070;
-    --mp-linea:#262833; --mp-campo:#22232d; --mp-accento:#8b84ff; --mp-accento-ink:#0e0f14;
-    --mp-ombra:0 1px 2px rgba(0,0,0,.4), 0 18px 44px rgba(0,0,0,.45);
-    --mp-ombra-scheda:0 2px 4px rgba(0,0,0,.4), 0 30px 70px rgba(0,0,0,.6);
+    --mp-fondo:#1e1e1e; --mp-carta:#2a2a2c; --mp-ink:#f5f5f7; --mp-muto:#98989d; --mp-tenue:#636366;
+    --mp-linea:rgba(255,255,255,.1); --mp-campo:rgba(118,118,128,.24); --mp-accento:#0a84ff; --mp-accento-ink:#ffffff;
+    --mp-ombra:0 0 0 .5px rgba(255,255,255,.08);
+    --mp-ombra-scheda:0 0 0 .5px rgba(255,255,255,.15), 0 22px 70px rgba(0,0,0,.6);
+    --mp-tasto:#5a5a5e; --mp-laterale:rgba(40,40,42,.9);
     --mp-atm-1:rgba(200,110,70,.30); --mp-atm-2:rgba(170,70,130,.30); --mp-atm-3:rgba(110,90,210,.32); --mp-atm-4:rgba(180,150,60,.16);
-    --mp-l-base:#252733; --mp-l-dacop:#5a3a28; --mp-l-dacop-f:#c2794c; --mp-l-cop:#1d4a3b; --mp-l-cop-f:#3f9c79; --mp-l-crit:#352a55; --mp-l-crit-ink:#c4a8ff;
-    --mp-ok:#4cc38a; --mp-ok-box:#1f4d3f; --mp-allerta:#ef8479;
+    --mp-l-base:#3a3a3c; --mp-l-dacop:#5e4120; --mp-l-dacop-f:#c2794c; --mp-l-cop:#1e4a2a; --mp-l-cop-f:#3f9c79; --mp-l-crit:#3f2a52; --mp-l-crit-ink:#d9a8f5;
+    --mp-ok:#32d74b; --mp-ok-box:#1e4a2a; --mp-allerta:#ff453a;
     color-scheme:dark;
   }
   /* i nomi di Pocket con i colori di qui: le sue pagine seguono da sole */
@@ -25203,6 +25205,88 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp] :is(.m-h2, .m-pag-t, .m-h1){ font-weight:500; letter-spacing:-.04em; text-transform:none; }
   html[data-mp] #toast{ background:var(--mp-ink); border-color:var(--mp-ink); color:var(--mp-fondo); border-radius:999px; font-family:var(--mp-font); font-weight:500; box-shadow:none; }
 
+  /* STILE macOS: il linguaggio delle app di Apple. Fondo grigio di sistema,
+     gruppi bianchi come in Impostazioni di Sistema, blu di sistema come
+     accento, settori in un controllo segmentato, al Mac una barra laterale
+     traslucida (compatta, a sole icone, a mezzo schermo) e la riga scelta
+     piena blu come nelle liste del Finder; al telefono la barra a schede
+     dell'iPhone */
+  html[data-mp] .mp-atm{ display:none; }
+  html[data-mp] :is(#m-app, .mp-guida, #clinical-view, .m-pagina) :is(*:not(kbd)){ font-family:var(--mp-font); }
+  html[data-mp] .mp-frase{ font-size:26px; line-height:32px; font-weight:700; letter-spacing:-.02em; }
+  html[data-mp] .mp-frase em{ font-weight:400; color:var(--mp-muto); }
+  html[data-mp] .mp-lbl{ font-size:13px; font-weight:600; color:var(--mp-muto); margin-left:4px; }
+  html[data-mp] :is(.mp-passo h3, .mp-finito h3){ font-size:20px; font-weight:600; letter-spacing:-.01em; }
+  html[data-mp] :is(#mp-domanda h2, .m-s-testa h2){ font-size:28px !important; font-weight:700 !important; letter-spacing:-.02em !important; }
+  html[data-mp] :is(.mp-card, .mpd-lista, .m-scheda.mp-dock), html[data-mp][data-mp-guida] #clinical-view .card{ border-radius:12px !important; box-shadow:var(--mp-ombra) !important; -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--mp-carta) !important; }
+  html[data-mp] .m-scheda:not(.mp-dock){ border-radius:14px; }
+  html[data-mp] :is(.mp-btn, .m-copia){ border-radius:8px; height:44px; font-size:15px; font-weight:500; box-shadow:0 .5px 1px rgba(0,0,0,.2); }
+  html[data-mp] :is(.mp-btn.mp-sec, .mp-tondo){ background:var(--mp-tasto); color:var(--mp-ink); box-shadow:0 0 0 .5px rgba(0,0,0,.12), 0 .5px 1.5px rgba(0,0,0,.15); border-radius:8px; }
+  html[data-mp] .mp-tondo{ width:44px; height:44px; }
+  html[data-mp] .mp-chip{ border-radius:7px; height:32px; font-size:14px; background:var(--mp-tasto); box-shadow:0 0 0 .5px rgba(0,0,0,.12), 0 .5px 1.5px rgba(0,0,0,.12); color:var(--mp-ink); }
+  /* i settori: un controllo segmentato, lo scelto bianco in rilievo */
+  html[data-mp] .mp-settori{ display:inline-flex; gap:0; padding:2px; margin:22px 0 0; border-radius:9px; background:var(--mp-campo); width:max-content; max-width:100%; }
+  html[data-mp] .mp-settori button{ height:30px; border-radius:7px; padding:0 14px; font-size:13px; font-weight:500; background:none; color:var(--mp-ink); box-shadow:none; }
+  html[data-mp] .mp-settori button[aria-pressed="true"]{ background:var(--mp-tasto); color:var(--mp-ink); box-shadow:0 0 0 .5px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.12); }
+  /* i tag dell'esame: gettoni grigi, lo scelto pieno nel blu di sistema */
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip{ border-radius:8px; min-height:40px; padding:6px 14px; font-size:15px; font-weight:400; background:var(--mp-campo); box-shadow:none; }
+  html[data-mp][data-mp-guida][data-ui="minimal"] #clinical-view .chip.active{ background:var(--mp-accento); color:#fff; font-weight:500; }
+  html[data-mp] .mp-griglia .m-tl, html[data-mp] .mp-tessera{ border-radius:10px; }
+  html[data-mp] .mp-griglia .m-tl{ font-size:16px; font-weight:600; }
+  html[data-mp] .mp-griglia{ gap:8px; }
+  /* al Mac: la riga scelta piena blu, come nel Finder */
+  html[data-mp] .mpd-r{ border-radius:6px; }
+  html[data-mp] .mpd-r[aria-current="true"]{ background:var(--mp-accento); box-shadow:none; color:#fff; }
+  html[data-mp] .mpd-r[aria-current="true"] :is(b, small, span):not(.mp-tessera, .mp-tessera *){ color:#fff; }
+  html[data-mp] .mpd-r[aria-current="true"] .mp-tessera{ color:var(--mp-ink); }
+  html[data-mp] .mpd-num{ border-radius:12px; box-shadow:var(--mp-ombra); }
+  html[data-mp] .mpd-num:not(.mpd-acc){ background:var(--mp-carta); }
+  /* le iniziali dell'account: il grigio dei contatti di Apple */
+  html[data-mp] .m-connessione{ background:linear-gradient(180deg, #a1a1a6, #86868b); }
+  html[data-mp] .m-connessione span, html[data-mp] .m-connessione.m-connesso span, html[data-mp] .m-connessione svg{ color:#fff; }
+  /* al telefono: la barra a schede dell'iPhone, traslucida, l'attiva in blu */
+  html[data-mp] .mp-barra{ left:0; right:0; bottom:0; transform:none; border-radius:0; justify-content:space-around; gap:0; padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px)); background:color-mix(in srgb, var(--mp-fondo) 85%, transparent); -webkit-backdrop-filter:blur(20px) saturate(1.8); backdrop-filter:blur(20px) saturate(1.8); box-shadow:0 -.5px 0 var(--mp-linea); }
+  html[data-mp] .mp-barra button{ flex:1; flex-direction:column; justify-content:center; gap:3px; height:48px; padding:0; font-size:10px; font-weight:500; color:var(--mp-tenue); background:none; }
+  html[data-mp] .mp-barra button svg{ width:24px; height:24px; }
+  html[data-mp] .mp-barra button[aria-current="page"]{ color:var(--mp-accento); background:none; }
+  html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+  html[data-mp].mp-scheda-aperta .mp-barra,
+  html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:translateY(110%); }
+  html[data-mp] .m-main{ padding-bottom:110px; }
+  /* al Mac (e al PC): barra laterale a sinistra e titolo della sezione in alto */
+  @media (min-width:640px) and (min-height:560px){
+    html[data-mp] .mp-barra{ top:10px; bottom:10px; left:10px; right:auto; width:220px; flex-direction:column; justify-content:flex-start; gap:2px; padding:52px 10px 10px; border-radius:12px; background:var(--mp-laterale); -webkit-backdrop-filter:blur(30px) saturate(1.8); backdrop-filter:blur(30px) saturate(1.8); box-shadow:0 0 0 .5px rgba(0,0,0,.1); transform:none; }
+    html[data-mp] .mp-barra::before{ content:"EO Pocket"; display:block; padding:4px 8px 6px; font:600 11px var(--mp-font); color:var(--mp-tenue); }
+    html[data-mp] .mp-barra button{ flex:none; flex-direction:row; justify-content:flex-start; gap:8px; height:30px; padding:0 8px; font-size:13px; font-weight:400; color:var(--mp-ink); border-radius:6px; }
+    html[data-mp] .mp-barra button svg{ width:16px; height:16px; color:var(--mp-accento); }
+    html[data-mp] .mp-barra button[aria-current="page"]{ background:rgba(0,0,0,.08); color:var(--mp-ink); }
+    html[data-mp][data-m-tema="scuro"] .mp-barra button[aria-current="page"]{ background:rgba(255,255,255,.1); }
+    html[data-mp]:not([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-barra,
+    html[data-mp].mp-scheda-aperta .mp-barra{ transform:translateX(-120%); }
+    html[data-mp]:has(#m-vista :is(input, textarea):focus) .mp-barra{ transform:none; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .m-bar{ padding-left:252px; height:52px; border-bottom:.5px solid var(--mp-linea); }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .m-bar-in{ max-width:none; height:52px; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-marchio{ font-size:0; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .mp-marchio::after{ content:"Oggi"; font:600 15px var(--mp-font); color:var(--mp-ink); }
+    html[data-mp][data-mp-v="visita"] .mp-marchio::after{ content:"Reparto"; }
+    html[data-mp][data-mp-v="ricovero"] .mp-marchio::after{ content:"Ricovero"; }
+    html[data-mp] .m-connessione{ width:28px; height:28px; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .m-main{ margin-left:240px; max-width:none; padding-left:24px; padding-right:24px; padding-bottom:24px; }
+    html[data-mp] :is(.mp-reparto, .mp-ricovero){ max-width:560px; margin-top:12px; }
+    html[data-mp] .mp-griglia{ grid-template-columns:repeat(6, 1fr); }
+    html[data-mp] .mpd{ height:calc(100dvh - 76px); }
+    html[data-mp] .mpd-testa{ margin-top:14px; }
+  }
+  /* a mezzo schermo, accanto al software dell'ospedale: barra a sole icone */
+  @media (min-width:640px) and (max-width:1100px) and (min-height:560px){
+    html[data-mp] .mp-barra{ width:52px; padding:52px 6px 10px; }
+    html[data-mp] .mp-barra::before{ display:none; }
+    html[data-mp] .mp-barra button{ justify-content:center; padding:0; height:36px; font-size:0; gap:0; }
+    html[data-mp] .mp-barra button svg{ width:18px; height:18px; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .m-bar{ padding-left:84px; }
+    html[data-mp]:is([data-mp-v="home"], [data-mp-v="visita"], [data-mp-v="ricovero"]) .m-main{ margin-left:72px; padding-left:16px; padding-right:16px; }
+  }
+
   @media (prefers-reduced-motion: reduce){ html[data-mp] :is(#m-app, .mp-guida, #clinical-view) :is(*, *::before, *::after){ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
 <div id="m-app" aria-live="polite">
@@ -25365,7 +25449,7 @@ function coloreTema(visita){
   applicaTema(f);
   // la barra del telefono come la barra in alto: scura solo col tema Scuro
   // (con Aurex l'esame obiettivo è scuro ma la barra resta chiara)
-  document.querySelector('meta[name="theme-color"]').content = UI_MP ? (t === 'scuro' ? '#0e0f14' : '#f7f6f8') : t === 'scuro' ? '#0c1622' : visita ? (t === 'aurex' ? '#eef1f3' : '#eef2f6') : '#f5f7f9';
+  document.querySelector('meta[name="theme-color"]').content = UI_MP ? (t === 'scuro' ? '#1e1e1e' : '#f5f5f7') : t === 'scuro' ? '#0c1622' : visita ? (t === 'aurex' ? '#eef1f3' : '#eef2f6') : '#f5f7f9';
 }
 function impostaTemaMinimal(t){
   try{ localStorage.setItem(UI_MP ? MPTEMA_KEY : MTEMA_KEY, t); } catch(e){}
