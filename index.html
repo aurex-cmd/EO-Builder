@@ -6513,7 +6513,7 @@ function costruisciDiario({sesso, cognome, nome, eta, diagnosi}){
 // testo libero, non staccato da uno spazio)
 // "altro esame": sempre tra virgolette (referti: angioTC, ecografie...),
 // tranne EGA ed ECG che si riportano come sono
-const RE_ESAME_SENZA_VIRGOLETTE = /^\s*(ega|ecg|emogas\w*|elettrocardiogramma)\b/i;
+const RE_ESAME_SENZA_VIRGOLETTE = /^\s*(ega|ecg|emogas\w*|elettrocardiogramma|emo\w*|uro\w*|urin\w*)\b/i;
 function testoAltroEsame(nome, testo){
   return RE_ESAME_SENZA_VIRGOLETTE.test(nome) ? testo : `"${testo}"`;
 }
@@ -26461,7 +26461,9 @@ const RE_STRUM = /^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale
 // referto di un esame "Altro": Nome: "testo". (le virgolette lo distinguono dai provvedimenti)
 const RE_ALTRO = /^\s*([^\s\-"][^:"\n]{0,40}?)\s*:\s*(".+")\.?\s*$/;
 const RE_EE = /^\s*-?\s*agli\s+ee\s*:?\s*(.*)$/i;
-const SENZA_VIRGOLETTE = /^(ECG|EGA)$/i;
+// senza virgolette: ECG, EGA e le colture (Uro/Urinocoltura, Emo/Emocolture…),
+// che non sono un referto da citare
+const SENZA_VIRGOLETTE = /^\s*(ECG|EGA|emo\w*|uro\w*|urin\w*)\b/i;
 function nomeStrum(n){ return STRUM_NOTI.find(x => x.toLowerCase() === n.toLowerCase()) || (n.toLowerCase() === 'eco addome' ? 'Ecografia addome' : n); }
 function leggiDiario(id){
   const p = loadPatients()[id]; if(!p) return null;
@@ -29030,19 +29032,19 @@ if(UI_MP){
   ['pointerdown', 'touchstart'].forEach(ev => $m('#m-scheda').addEventListener(ev, e => { if(mpDocked()) e.stopPropagation(); }, true));
   // copiato un diario agganciato: si passa da soli al prossimo, e dopo l'ultimo alle consegne
   // (in cattura: prima che la copia ridisegni l'elenco). Il diario copiato
-  // resta in vista 2 secondi, col verde di "Copiato", poi si passa al prossimo
+  // resta in vista 3 secondi, col verde di "Copiato", poi si passa al prossimo
   $m('#m-copia').addEventListener('click', () => {
     if(!mpDocked() || M.vista !== 'home') return;
     const letto = M.letto, ss = settoreScelto();
     const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
-    mpTieni = { letto, fino:Date.now() + 2600 };
+    mpTieni = { letto, fino:Date.now() + 3600 };
     setTimeout(() => {
       mpTieni = null;
       if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return;
       const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
       const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0];
       mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
-    }, mpFermo() ? 0 : 2000);
+    }, mpFermo() ? 0 : 3000);
   }, true);
   // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
   $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
