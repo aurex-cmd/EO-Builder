@@ -24815,6 +24815,8 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-btn svg{ width:20px; height:20px; flex:none; }
   .mp-btn-su{ margin-top:12px; }
   .mp-riga-btn{ display:grid; grid-template-columns:1fr 1.5fr; gap:10px; margin-top:20px; }
+  /* una card sola: niente "Dopo" (non avrebbe dove mandarla), il pulsante prende tutta la riga */
+  .mp-riga-btn.mp-solo{ grid-template-columns:1fr; }
   .mp-tondo{ width:54px; height:54px; border-radius:16px; border:0; background:var(--mp-campo); color:var(--mp-ink); display:grid; place-items:center; cursor:pointer; flex:none; transition:transform .12s var(--mp-molla); }
   .mp-tondo:active{ transform:scale(.94); }
   .mp-tondo svg{ width:20px; height:20px; }
@@ -28635,7 +28637,7 @@ function mpDisegnaPila(){
   }
   pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
       <div class="mp-chi"><span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span><div><h3>${esc(p.titolo)}</h3><p>${esc(p.sotto)}</p></div></div>
-      <div class="mp-riga-btn"><button class="mp-btn mp-sec" data-mp="passo-via">${p.fatto ? 'Fatto' : 'Dopo'}</button><button class="mp-btn" data-mp="passo-apri">${esc(p.azione)}</button></div>
+      <div class="mp-riga-btn${!p.fatto && mpPila.length < 2 ? ' mp-solo' : ''}">${p.fatto || mpPila.length > 1 ? `<button class="mp-btn mp-sec" data-mp="passo-via">${p.fatto ? 'Fatto' : 'Dopo'}</button>` : ''}<button class="mp-btn" data-mp="passo-apri">${esc(p.azione)}</button></div>
     </div>`).join('');
   pall.innerHTML = mpPila.length > 1 ? mpPila.slice(0, 8).map((_, k) => `<i${k ? '' : ' class="on"'}></i>`).join('') : '';
   const p = mpPila[0];
