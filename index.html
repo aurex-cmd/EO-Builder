@@ -24256,6 +24256,9 @@ function editorLettereSvuota(){
   .m-ingr.m-rep-home{ min-height:166px; padding:16px; }
   .m-ingr.m-rep-home .m-sn{ font-size:38px; font-weight:700; gap:7px; }
   .m-ingr.m-rep-home .m-sn small{ font-size:14px; }
+  /* la mattina, prima del primo paziente: al posto di "0 su 12" l'invito grande */
+  .m-ingr.m-rep-home .m-inizia{ display:inline-flex; align-items:center; gap:4px; font-size:34px; font-weight:700; letter-spacing:-.02em; color:inherit; }
+  .m-ingr.m-rep-home .m-inizia svg{ width:30px; height:30px; flex:none; color:inherit; stroke-width:2.6; }
   .m-rep-home .m-rh-tondo{ top:16px; right:16px; width:64px; height:64px; }
   .m-rep-home .m-rh-tondo svg{ width:64px; height:64px; }
   .m-rep-home .m-rh-tondo b{ font-size:16px; }
@@ -25854,9 +25857,10 @@ function vHome(){
   const sett = settoreScelto(), st = sett && statoSettore(sett);
   const reparto = st
     ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0, st.n ? st.cop / st.n * 100 : 0)}</span>
-        <span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
-        <span class="m-ss">${rigaReparto(st)}</span>${FESTA_HTML}</button>`
-    : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : '',
+        ${st.n && !st.visti ? `<span class="m-sn"><span class="m-inizia">Inizia il giro${ICON.chev}</span></span>
+        <span class="m-ss">${st.n} ${st.n === 1 ? 'paziente' : 'pazienti'} da vedere</span>` : `<span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
+        <span class="m-ss">${rigaReparto(st)}</span>`}${FESTA_HTML}</button>`
+    : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : `<span class="m-inizia">Inizia il giro${ICON.chev}</span>`,
       visti ? (daCopiare ? `${daCopiare} da copiare${quantiRic(ricDa, daCopiare)} · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}${quantiRic(ricCop, copiati)}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore').replace('</button>', FESTA_HTML + '</button>');
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
@@ -28368,9 +28372,14 @@ function mpPassi(){
   if(pd && sett !== RIC) resto.push({ k:'pd', ico:ICON.postdegenze, titolo:pd === 1 ? 'Una post-degenza' : `${pd} post-degenze`, sotto:'Da controllare oggi', azione:'Apri le post-degenze', vai:() => vai('app', { pag:'postdegenze' }) });
   // il giro: chi resta da vedere (i critici hanno già la loro card)
   const altri = daVedere - critici.length;
-  if(altri > 0) resto.push({ k:'giro', ico:MP_ICO.giro, titolo:sett ? `Il giro · ${sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)}` : 'Il giro di oggi',
+  // la mattina, prima del primo paziente, il giro è la prima cosa: "Inizia il giro"
+  const inizio = tot > 0 && daVedere === tot;
+  const dove = sett ? (sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : '';
+  if(inizio) resto.unshift({ k:'giro', ico:MP_ICO.giro, titolo:'Inizia il giro',
+    sotto:`${dove ? dove + ' · ' : ''}${tot} ${tot === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Inizia il giro', vai:() => mpVai('visita') });
+  else if(altri > 0) resto.push({ k:'giro', ico:MP_ICO.giro, titolo:sett ? `Il giro · ${dove}` : 'Il giro di oggi',
     sotto:`${altri} ${altri === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Apri il reparto', vai:() => mpVai('visita') });
-  const passi = [...critici, ...diari, ...resto];
+  const passi = inizio ? [...resto.slice(0, 1), ...critici, ...diari, ...resto.slice(1)] : [...critici, ...diari, ...resto];
   mpDopo = mpDopo.filter(k => passi.some(p => p.k === k));
   passi.sort((a, b) => mpDopo.indexOf(a.k) - mpDopo.indexOf(b.k));
   return { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett };
