@@ -24817,6 +24817,19 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .mp-riga-btn{ display:grid; grid-template-columns:1fr 1.5fr; gap:10px; margin-top:20px; }
   /* una card sola: niente "Dopo" (non avrebbe dove mandarla), il pulsante prende tutta la riga */
   .mp-riga-btn.mp-solo{ grid-template-columns:1fr; }
+  /* la mattina: i settori in una riga, una tessera per settore con la lettera */
+  .mp-sett-scegli{ display:grid; grid-template-columns:repeat(var(--c, 4), minmax(0, 1fr)); gap:10px; margin-top:20px; }
+  .mp-sett-scegli button{ aspect-ratio:1/1.15; min-width:0; border:0; border-radius:20px; background:var(--mp-campo); color:var(--mp-ink); font:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:0 4px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .15s var(--mp-molla), background .25s, color .25s; }
+  .mp-sett-scegli button:active{ transform:scale(.95); }
+  .mp-sett-scegli b{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:30px; font-weight:600; letter-spacing:-.03em; line-height:1; }
+  .mp-sett-scegli span{ font-size:12px; color:var(--mp-muto); }
+  .mp-sett-scegli button[aria-pressed="true"]{ background:var(--mp-accento); color:var(--mp-accento-ink); }
+  .mp-sett-scegli button[aria-pressed="true"] span{ color:inherit; opacity:.8; }
+  .mpd-info .mp-sett-scegli{ max-width:440px; margin-top:26px; }
+  /* la card del giro: il settore come titolo, "Cambia" in alto a destra */
+  .mp-passo-giro .mp-tessera{ display:none; }
+  .mp-cambia-sett{ flex:none; align-self:flex-start; margin-left:auto; height:32px; padding:0 13px; border:0; border-radius:999px; background:var(--mp-campo); color:var(--mp-muto); font:inherit; font-size:13px; font-weight:500; cursor:pointer; }
+  .mpd-dtesta:has(.mp-cambia-sett){ display:flex; align-items:flex-start; gap:12px; }
   .mp-tondo{ width:54px; height:54px; border-radius:16px; border:0; background:var(--mp-campo); color:var(--mp-ink); display:grid; place-items:center; cursor:pointer; flex:none; transition:transform .12s var(--mp-molla); }
   .mp-tondo:active{ transform:scale(.94); }
   .mp-tondo svg{ width:20px; height:20px; }
@@ -28298,6 +28311,7 @@ function mpSettoreDi(nome){
 // copiare, le lettere di dimissione di oggi e domani, le consegne, le
 // post-degenze e, finché resta qualcuno, il giro. Del settore scelto, o di
 // tutti se non se n'è scelto uno
+let mpCambiaSett = false; // "Cambia" sulla card del giro: si torna alla scelta del settore
 let mpDopo = [];     // le card rimandate vanno in fondo alla pila (finché l'app resta aperta)
 let mpPila = [];
 function mpPassi(){
@@ -28374,20 +28388,39 @@ function mpPassi(){
   if(pd && sett !== RIC) resto.push({ k:'pd', ico:ICON.postdegenze, titolo:pd === 1 ? 'Una post-degenza' : `${pd} post-degenze`, sotto:'Da controllare oggi', azione:'Apri le post-degenze', vai:() => vai('app', { pag:'postdegenze' }) });
   // il giro: chi resta da vedere (i critici hanno già la loro card)
   const altri = daVedere - critici.length;
-  // la mattina, prima del primo paziente, il giro è la prima cosa: "Inizia il giro"
+  // la mattina, prima del primo paziente: se oggi il settore non è ancora
+  // stato scelto (qui o nel Reparto, anche su un altro dispositivo) prima si
+  // sceglie, poi "Inizia il giro" con i pazienti di quel settore. Nei festivi
+  // no: c'è la guardia, con tutti i settori
   const inizio = tot > 0 && daVedere === tot;
   const dove = sett ? (sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : '';
-  if(inizio) resto.unshift({ k:'giro', ico:MP_ICO.giro, titolo:'Inizia il giro',
-    sotto:`${dove ? dove + ' · ' : ''}${tot} ${tot === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Inizia il giro', vai:() => mpVai('visita') });
+  const scegli = inizio && sett !== RIC && !eFestivo(new Date()) && (mpCambiaSett || !settoreDiOggi()) && settori().length > 1;
+  if(scegli){
+    const vuo = lettiVuoti();
+    const scelta = settori().map(x => {
+      let n = 0; mpNomi(x).forEach(([nm, et, ap]) => { const i = infoLetto(nm); if(ap || i.occupato || !vuo[nm]) n++; });
+      return { s:x, l:nomeSettoreTitolo(x).replace(/^settore\s+/i, ''), n };
+    });
+    let il = null; try{ il = localStorage.getItem(SETT_IL_KEY); } catch(e){}
+    const ieri = il === chiaveGiorno(Date.now() - 864e5);
+    resto.unshift({ k:'scegli', ico:MP_ICO.giro, titolo:'Scegli il settore', scelta,
+      sotto:mpCambiaSett && dove ? `Ora sei nel ${dove}` : dove ? `${ieri ? 'Ieri eri' : 'L\'ultima volta eri'} nel ${dove}` : 'Tocca quello del giro di oggi',
+      azione:'', vai:() => mpScegliSett(sett || scelta[0].s) });
+  } else if(inizio) resto.unshift({ k:'giro', ico:MP_ICO.giro, titolo:dove || 'Il giro di oggi', cambia:settori().length > 1 && sett !== RIC,
+    sotto:`${tot} ${tot === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Inizia il giro', vai:() => mpVai('visita') });
   else if(altri > 0) resto.push({ k:'giro', ico:MP_ICO.giro, titolo:sett ? `Il giro · ${dove}` : 'Il giro di oggi',
     sotto:`${altri} ${altri === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Apri il reparto', vai:() => mpVai('visita') });
-  const passi = inizio ? [...resto.slice(0, 1), ...critici, ...diari, ...resto.slice(1)] : [...critici, ...diari, ...resto];
+  // scegliendo il settore, i critici di ieri non c'entrano ancora
+  const passi = scegli ? resto : inizio ? [...resto.slice(0, 1), ...critici, ...diari, ...resto.slice(1)] : [...critici, ...diari, ...resto];
   mpDopo = mpDopo.filter(k => passi.some(p => p.k === k));
   passi.sort((a, b) => mpDopo.indexOf(a.k) - mpDopo.indexOf(b.k));
-  return { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett };
+  return { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett, scegli };
+}
+function mpScegliSett(x){
+  mpCambiaSett = false; M.settore = x; ricordaSettore(x); mpSel = null; mpOggi();
 }
 function mpOggi(){
-  const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett } = dati;
+  const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett, scegli } = dati;
   mpDatiPC = dati;
   mpPila = passi;
   const ora = new Date().getHours();
@@ -28395,7 +28428,7 @@ function mpOggi(){
   const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
   const saluto = (ora < 5 ? 'Buonanotte' : ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera') + (primo ? ', ' + primo : '') + '.';
   const diari = `${daCopiare} ${daCopiare === 1 ? 'diario' : 'diari'} da copiare`;
-  const frase = !tot ? 'Nessun paziente in reparto.'
+  const frase = scegli ? 'Quale settore vedi oggi?' : !tot ? 'Nessun paziente in reparto.'
     : daVedere ? `${daVedere} ${daVedere === 1 ? 'paziente' : 'pazienti'} da vedere${daCopiare ? ', ' + diari : ''}.`
     : daCopiare ? `Tutti i pazienti visti, ${diari}.` : !passi.length ? 'Tutto fatto per oggi.' : 'Tutti i pazienti visti, tutti i diari copiati.';
   document.documentElement.classList.toggle('mp-pc', MP_PC.matches);
@@ -28405,7 +28438,7 @@ function mpOggi(){
   const chip = (attr, t) => `<button class="mp-chip" ${attr}>${t}</button>`;
   $m('#m-vista').innerHTML = `<div class="mp-oggi">
     <h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
-    <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p>
+    <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${dati.scegli ? '' : (sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori') + ' · '}${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p>
     <div class="mp-pila" id="mp-pila"></div>
     <div class="mp-pallini" id="mp-pallini" aria-hidden="true"></div>
     <p class="mp-sugg" id="mp-sugg"></p>
@@ -28460,8 +28493,8 @@ function mpOggiPC(dati, saluto, frase){
   const lettere = passi.filter(p => p.stato === 'lettera').length;
   const gruppi = [
     ['Diari da completare e copiare', passi.filter(p => p.k.startsWith('dia|'))],
-    ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro')],
-    ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro')],
+    ['Da vedere', passi.filter(p => p.k.startsWith('vis|') || p.k === 'giro' || p.k === 'scegli')],
+    ['Lettere e consegne', passi.filter(p => !p.k.startsWith('dia|') && !p.k.startsWith('vis|') && p.k !== 'giro' && p.k !== 'scegli')],
     // i diari copiati in una riga sola, che si apre col clic (mpCopAperti)
     ['Fatto oggi', [...fattiAltri, ...(mpCopAperti ? fatti : [])]]
   ].filter(g => g[1].length || (g[0] === 'Fatto oggi' && fatti.length));
@@ -28494,8 +28527,8 @@ function mpOggiPC(dati, saluto, frase){
     </div>`;
   }
   $m('#mpd-testa').innerHTML = `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
-      <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
-    <dl class="mpd-numeri"${!passi.length && tot ? ' hidden' : ''}>${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
+      <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${dati.scegli ? '' : (sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori') + ' · '}${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
+    <dl class="mpd-numeri"${(!passi.length && tot) || dati.scegli ? ' hidden' : ''}>${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(daVedere, 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
   // l'elenco in due parti: in alto, scorrevoli, i diari da completare e chi
   // resta da vedere; in fondo, sempre in vista, lettere e consegne e i copiati
   // di oggi (scorrevoli anche loro)
@@ -28562,6 +28595,8 @@ function mpDett(){
   if(p.k.startsWith('vis|')){
     let eo = ''; try{ const i = infoLetto(p.letto); if(i.occupato) eo = (leggiDiario(i.id) || {}).eo || ''; } catch(e){}
     corpo = eo ? `<p class="mpd-lbl">L'ultimo esame obiettivo</p><div class="mpd-testo mpd-muto">${esc(eo)}</div>` : '';
+  } else if(p.k === 'scegli'){
+    corpo = mpSceltaHtml(p.scelta);
   } else if(p.k === 'giro'){
     // i letti ancora da vedere: toccato, il letto si apre nel Reparto
     const sett = settoreScelto(), vu = lettiVuoti(), visti = new Set();
@@ -28573,7 +28608,7 @@ function mpDett(){
   }
   const dopo = p.fatto ? `<button class="mp-btn mp-sec" data-mp="pc-fatto">${p.stato === 'lettera' ? 'Segna la lettera scritta' : 'Segna fatto'}</button>`
     : p.disfa ? `<button class="mp-btn mp-sec" data-mp="pc-disfa">Segna da fare</button>` : '';
-  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${esc(p.fattoOk ? p.titolo : p.letto || p.titolo)}</h2><p class="${p.fattoOk ? 'mpd-st-ok' : ''}">${p.fattoOk ? esc('Fatto · ' + p.sotto.replace(/^./, c => c.toLowerCase())) : esc(p.sotto)}</p></div></div>${corpo}<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>`;
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${esc(p.fattoOk ? p.titolo : p.letto || p.titolo)}</h2><p class="${p.fattoOk ? 'mpd-st-ok' : ''}">${p.fattoOk ? esc('Fatto · ' + p.sotto.replace(/^./, c => c.toLowerCase())) : esc(p.sotto)}</p></div>${p.cambia ? '<button class="mp-cambia-sett" data-mp="cambia-sett">Cambia</button>' : ''}</div>${corpo}${p.azione ? `<div class="mpd-azioni${dopo ? '' : ' mpd-una'}">${dopo}<button class="mp-btn" data-mp="pc-apri">${esc(p.azione)}<kbd>↵</kbd></button></div>` : ''}`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
 function mpPcScegli(k, scorri){
@@ -28635,15 +28670,20 @@ function mpDisegnaPila(){
     pila.innerHTML = `<div class="mp-card mp-finito"><div class="mp-spunta">${ICON.ok}</div><h3>Tutto fatto per oggi</h3><p>Ottimo lavoro${primo ? ', ' + esc(primo) : ''}.</p>${paz ? `<p class="mp-finito-tempo"><b>≈ ${tempo}</b> risparmiati oggi con l'app</p>` : ''}</div>`;
     pall.innerHTML = ''; sugg.hidden = true; return;
   }
-  pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
-      <div class="mp-chi"><span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span><div><h3>${esc(p.titolo)}</h3><p>${esc(p.sotto)}</p></div></div>
-      <div class="mp-riga-btn${!p.fatto && mpPila.length < 2 ? ' mp-solo' : ''}">${p.fatto || mpPila.length > 1 ? `<button class="mp-btn mp-sec" data-mp="passo-via">${p.fatto ? 'Fatto' : 'Dopo'}</button>` : ''}<button class="mp-btn" data-mp="passo-apri">${esc(p.azione)}</button></div>
+  pila.innerHTML = mpPila.slice(0, 4).map((p, k) => `<div class="mp-card mp-passo${p.cambia ? ' mp-passo-giro' : ''}" data-pos="${k}" style="z-index:${10 - k}"${k ? ' aria-hidden="true" inert' : ''}>
+      <div class="mp-chi"><span class="mp-tessera${p.stato ? ' mp-t-' + p.stato : ''}">${p.ico || esc(p.et || '')}</span><div><h3>${esc(p.titolo)}</h3><p>${esc(p.sotto)}</p></div>${p.cambia ? '<button class="mp-cambia-sett" data-mp="cambia-sett">Cambia</button>' : ''}</div>
+      ${p.scelta ? mpSceltaHtml(p.scelta) : `<div class="mp-riga-btn${!p.fatto && mpPila.length < 2 ? ' mp-solo' : ''}">${p.fatto || mpPila.length > 1 ? `<button class="mp-btn mp-sec" data-mp="passo-via">${p.fatto ? 'Fatto' : 'Dopo'}</button>` : ''}<button class="mp-btn" data-mp="passo-apri">${esc(p.azione)}</button></div>`}
     </div>`).join('');
   pall.innerHTML = mpPila.length > 1 ? mpPila.slice(0, 8).map((_, k) => `<i${k ? '' : ' class="on"'}></i>`).join('') : '';
   const p = mpPila[0];
   sugg.hidden = !p.fatto && mpPila.length < 2;
   sugg.textContent = p.fatto ? 'Scorri la card verso destra quando è fatto' : 'Scorri la card verso destra per passare alla prossima';
   mpTrascina(pila.firstElementChild);
+}
+// le tessere dei settori, in una riga: il settore dell'ultima volta già acceso
+function mpSceltaHtml(scelta){
+  const ora = settoreScelto();
+  return `<div class="mp-sett-scegli" style="--c:${Math.min(scelta.length, 4)}">${scelta.map(x => `<button data-mp="scegli-sett" data-s="${esc(x.s)}" aria-pressed="${x.s === ora}" aria-label="${esc(nomeSettoreTitolo(x.s))}, ${x.n} pazienti"><b>${esc(x.l)}</b><span>${x.n} paz.</span></button>`).join('')}</div>`;
 }
 function mpPassoVia(){
   const p = mpPila[0], el = $m('#mp-pila .mp-passo[data-pos="0"]'); if(!p || !el || el.classList.contains('mp-via')) return;
@@ -29026,6 +29066,8 @@ if(UI_MP){
     else if(a === 'fatto-apri'){ const v = (mpFattiTel || [])[+el.dataset.i]; if(v && v.vai) v.vai(); }
     else if(a === 'pc-letto'){ const n = el.dataset.n; M.settore = el.dataset.s; M.pila = []; M.vista = 'visita'; disegna(); setTimeout(() => { if(M.vista === 'visita') mpLetto(n, mpTile(n)); }, mpFermo() ? 0 : 380); }
     else if(a === 'passo-apri') mpPassoApri();
+    else if(a === 'scegli-sett') mpScegliSett(el.dataset.s);
+    else if(a === 'cambia-sett'){ mpCambiaSett = true; mpSel = null; mpOggi(); }
     else if(a === 'zona'){
       // il settore toccato resta, gli altri svaniscono; poi la sua griglia
       const box = $m('#mp-mappa'); if(!box || box.classList.contains('m-zoom')) return;
