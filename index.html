@@ -13283,7 +13283,9 @@ function dataInizioScritta(frase, giornoDiario){
   if(!m[3] && chiave(d) > rif) d = new Date(anno - 1, mese - 1, g);
   return chiave(d) > rif ? null : chiave(d);
 }
-const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|fine\s+terapia)\b/i;
+// anche "ultima dose di Amoxi/clav" (o ultima somministrazione, ultimo giorno):
+// la terapia finisce, non è un antibiotico da contare
+const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|interrott\w*|fine\s+terapia|ultim[ao]\s+(?:dose|somministrazion\w*|giorn\w*|assunzion\w*))\b/i;
 const RE_INIZIO_ATB = /\b(?:inizi\w*|avvi\w*|impost\w*|intrapres\w*|introdott\w*|aggiunt\w*|si\s+aggiunge|start)\b/i;
 // tutti i verbi che decidono di un antibiotico (stop, inizio, prosegue):
 // per capire a quale farmaco si riferisce ciascuno, vedi antibioticiInCorso
