@@ -4115,10 +4115,9 @@ async function segnaCreatore(user){
 // (una griglia sola, il letto che si allarga fino a diventare la scheda),
 // l'esame obiettivo una domanda alla volta e il ricovero in un minuto.
 // Vedi il blocco "MINIMAL POCKET" in fondo allo script di Pocket
-// PER ORA SOLO PER IL CREATORE DELL'APP: si apre soltanto sul dispositivo dove
-// ha fatto l'accesso col suo account (creatoreApp, qui sopra). Per chiunque
-// altro lo stesso indirizzo apre EO Pocket, che non cambia
-const UI_MP = UI_MINIMAL && ['minimal-pocket', 'mp'].includes(UI_PARAMS.get('ui')) && creatoreApp();
+// Si apre per chiunque dal suo indirizzo, con o senza account: non è più
+// legato all'account del creatore. EO Pocket, all'indirizzo normale, non cambia
+const UI_MP = UI_MINIMAL && ['minimal-pocket', 'mp'].includes(UI_PARAMS.get('ui'));
 const pulsantiDisponibili = () => festeNatale() || creatoreApp() ? [...MPULSANTI, ['natale', 'Natale', '#b3232c', '#c8323b']] : MPULSANTI;
 const foglioPagine = t => t === 'scuro' ? 'scuro' : 'chiaro';
 const foglioVisita = t => t === 'chiaro' ? 'chiaro' : 'scuro';
@@ -4159,6 +4158,14 @@ if(UI_MINIMAL){
     geist.href = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap';
     testa.appendChild(geist);
     testa.querySelector('link[rel="manifest"]').href = 'minimal-pocket/manifest.webmanifest';
+    // la sua icona (le quattro tessere dei letti sul fondo d'atmosfera)
+    testa.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]').forEach(l => l.remove());
+    [['apple-touch-icon', 'minimal-pocket/apple-touch-icon-180.png'], ['icon', 'minimal-pocket/favicon.svg'], ['icon', 'minimal-pocket/favicon-32.png']].forEach(([rel, href]) => {
+      const l = document.createElement('link'); l.rel = rel; l.href = href;
+      if(href.endsWith('.svg')) l.type = 'image/svg+xml';
+      if(href.endsWith('-32.png')) l.sizes = '32x32';
+      testa.appendChild(l);
+    });
     testa.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Minimal Pocket';
     testa.querySelector('meta[name="theme-color"]').content = temaMinimal() === 'scuro' ? '#0e0f14' : '#f7f6f8';
   }
