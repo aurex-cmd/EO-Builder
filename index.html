@@ -24237,6 +24237,10 @@ function editorLettereSvuota(){
   .m-set-carta{ position:relative; isolation:isolate; padding:16px 14px 18px; }
   .m-set-fondo{ position:absolute; inset:0; z-index:-1; border:1px solid var(--m-line); border-radius:16px; background:#fff; }
   .m-set-carta .m-griglia{ grid-template-columns:repeat(4, 1fr); gap:11px 9px; }
+  /* letti del settore grandi come in Minimal Pocket: quadrati, fino a 84px,
+     10px tra l'uno e l'altro. Cambia solo la misura, lo stile resta di Pocket */
+  html:not([data-mp]) .m-set-carta .m-griglia{ grid-template-columns:repeat(4, minmax(0, 84px)); gap:10px; justify-content:start; }
+  html:not([data-mp]) .m-set-carta .m-griglia .m-tl{ height:auto; aspect-ratio:1; }
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
