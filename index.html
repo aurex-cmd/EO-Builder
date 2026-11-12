@@ -26483,7 +26483,22 @@ function leggiDiario(id){
     d.provv.push(r);
   });
   d.provv = d.provv.join('\n').replace(/^\n+|\n+$/g, '');
+  // gli esami ematochimici valgono per il giorno in cui si scrivono: il
+  // giorno dopo il diario riparte senza "Agli EE". Sono di un giorno prima
+  // se il diario non è stato più toccato da allora, o se sono identici a
+  // quelli dell'ultimo diario archiviato (lo scatto di fine giornata)
+  if(d.ee && eeDiPrima(p, d.ee)) d.ee = '';
   return d;
+}
+function eeDiPrima(p, ee){
+  if(!p.savedAt || !isOggi(p.savedAt)) return true;
+  const oggi = chiaveGiorno(Date.now());
+  const k = Object.keys(p.storico || {}).filter(x => x < oggi).sort().pop();
+  if(!k) return false;
+  const t = String(p.storico[k] || ''), i = t.indexOf('\n\n');
+  const r = (i === -1 ? '' : t.slice(i + 2)).split('\n').map(x => x.match(RE_EE)).find(Boolean);
+  const norma = x => x.trim().replace(/[.;\s]+$/, '').replace(/\s+/g, ' ').toLowerCase();
+  return !!r && norma(r[1]) === norma(ee);
 }
 function componi(d){
   const righe = [];
