@@ -14741,10 +14741,12 @@ function renderAggiornaConsegne(container, entries){
     // prefestivo, se non citati, si aggiungono come voce a sé
     antibioticiInCorso(p, id).forEach(a => {
       const re = ANTIBIOTICI.find(x => x[0] === a.nome)[1];
-      // (non se la giornata c'è già: "gg5", "IV gg", "in V giornata")
-      const reG = new RegExp(String.raw`\b(?:` + re.source + String.raw`)(?!\s*(?:gg?\s?\d|[IVXL]+\s+gg?\b|(?:in\s+)?(?:[IVXL]+|\d+°?)\s+giornata))`, 'i');
+      // (non se la giornata c'è già: "gg5", "IV gg", "in V giornata"; il nome si
+      // prende intero, senza accorciarlo: "Ceftriaxon|e in II giornata" no)
+      const reG = new RegExp(String.raw`\b(?=(` + re.source + String.raw`))\1(?!\s*(?:gg?\s?\d|[IVXL]+\s+gg?\b|(?:in\s+)?(?:[IVXL]+|\d+°?)\s+giornata))`, 'i');
       if(reG.test(sintesi)) sintesi = sintesi.replace(reG, a.etichetta);
-      else if(prefestivo) sintesi += (sintesi ? '\n' : '') + '- ' + a.etichetta;
+      // (citato già con la sua giornata: non si aggiunge una seconda volta)
+      else if(prefestivo && !new RegExp(String.raw`\b(?:` + re.source + ')', 'i').test(sintesi)) sintesi += (sintesi ? '\n' : '') + '- ' + a.etichetta;
     });
     // prefestivo: anche le richieste ancora senza esito (in giallo)
     if(prefestivo){
