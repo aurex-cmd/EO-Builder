@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="a" cx="0" cy="1" r="0.85"><stop offset="0" stop-color="#f09e6e" stop-opacity=".75"/><stop offset="1" stop-color="#f09e6e" stop-opacity="0"/></radialGradient>
+    <radialGradient id="b" cx="1" cy="0.85" r="0.75"><stop offset="0" stop-color="#de78ac" stop-opacity=".55"/><stop offset="1" stop-color="#de78ac" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c" cx="0.95" cy="0.1" r="0.7"><stop offset="0" stop-color="#beaaf5" stop-opacity=".8"/><stop offset="1" stop-color="#beaaf5" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#f7f6f8"/>
+  <rect width="512" height="512" fill="url(#a)"/>
+  <rect width="512" height="512" fill="url(#b)"/>
+  <rect width="512" height="512" fill="url(#c)"/>
+  <g transform="translate(116 116)">
+    <rect x="0" y="0" width="128" height="128" rx="34" fill="#7fd0ad"/>
+    <rect x="152" y="0" width="128" height="128" rx="34" fill="#7fd0ad"/>
+    <rect x="0" y="152" width="128" height="128" rx="34" fill="#ffb98f"/>
+    <rect x="152" y="152" width="128" height="128" rx="34" fill="#5b53e6"/>
+    <path d="M186 218 l24 24 l46 -50" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
