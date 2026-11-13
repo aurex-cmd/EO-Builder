@@ -15878,7 +15878,26 @@ function renderAddomeAlvo(){
 // "risvegliabile")
 const INCOMPATIBILI_CON_NON_CONTATTO = ['orientato', 'collaborante', 'discretamente_orientato'];
 
-// riga 1: le varianti di orientato (incluse le nuove S/T/P e S/P); a capo,
+// orientato in persona/spazio/tempo: i tre tag e la frase che ne viene
+const ORIENT_PST = ['orient_p', 'orient_s', 'orient_t'];
+// le schede di prima: S/T/P = orientato con P, S e T; S/P = con P e S
+function orientamentoVecchio(s){
+  if(s.has('orientato_stp')){ s.delete('orientato_stp'); ['orientato', ...ORIENT_PST].forEach(v => s.add(v)); }
+  if(s.has('orientato_sp')){ s.delete('orientato_sp'); ['orientato', 'orient_p', 'orient_s'].forEach(v => s.add(v)); }
+}
+function fraseOrientato(s, f){
+  const o = f ? 'orientata' : 'orientato';
+  const si = ['orient_p', 'orient_s', 'orient_t'].filter(v => s.has(v)).map(v => v.slice(-1));
+  if(!si.length) return o;
+  if(si.length === 3) return o + ' in tempo/spazio/persona';
+  const nel = { p:'nella persona', s:'nello spazio', t:'nel tempo' };
+  const no = ['p', 's', 't'].filter(x => !si.includes(x));
+  // ordine della frase: persona, poi spazio, poi tempo ("nella persona e
+  // nello spazio, non nel tempo"); nel "non" con due: tempo/spazio/persona
+  const neg = no.length === 1 ? nel[no[0]] : 'in ' + ['t', 's', 'p'].filter(x => no.includes(x)).map(x => ({ p:'persona', s:'spazio', t:'tempo' })[x]).join('/');
+  return o + ' ' + si.map(x => nel[x]).join(' e ') + ', non ' + neg;
+}
+// riga 1: le varianti di orientato (con P, S, T sotto "orientato"); a capo,
 // riga 2: disorientato/a tratti disorientato. Tutte condividono lo stesso
 // Set e le stesse esclusioni reciproche, cambia solo la disposizione
 function renderOrientamento(){
@@ -15902,9 +15921,21 @@ function renderOrientamento(){
     return b;
   }
 
-  ['orientato', 'discretamente_orientato', 'parzialmente_orientato', 'orientato_stp', 'orientato_sp'].forEach(v => {
+  orientamentoVecchio(s);
+  if(!s.has('orientato')) ORIENT_PST.forEach(v => s.delete(v));
+  ['orientato', 'discretamente_orientato', 'parzialmente_orientato'].forEach(v => {
     const chip = creaChip(v);
     if(chip) el.appendChild(chip);
+    // con "orientato" acceso, subito dopo: P, S, T, ognuno si accende da sé
+    if(v === 'orientato' && s.has('orientato')) ORIENT_PST.forEach(x => {
+      const o = OPT.coscienzaDescrittori.find(y => y.value === x);
+      const b = document.createElement('div');
+      b.className = 'chip chip-pst' + (s.has(x) ? ' active' : '');
+      b.textContent = o.label;
+      b.title = { orient_p:'persona', orient_s:'spazio', orient_t:'tempo' }[x];
+      b.onclick = () => { s.has(x) ? s.delete(x) : s.add(x); update(); };
+      el.appendChild(b);
+    });
   });
 
   const spacer = document.createElement('div');
@@ -16838,13 +16869,17 @@ const OPT = {
     {value:'in_asse', label:'in asse'}
   ],
   coscienzaDescrittori: [
-    {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'discretamente_orientato', chipLabel:'Do', m:'discretamente orientato', f:'discretamente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'parzialmente_orientato', chipLabel:'Po', m:'parzialmente orientato', f:'parzialmente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp'], gruppo:'orientamento'},
-    {value:'orientato_stp', label:'S/T/P', fragM:'orientato in S/T/P', fragF:'orientata in S/T/P', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'orientato_sp', label:'S/P', fragM:'orientato nella persona e nello spazio, meno nel tempo', fragF:'orientata nella persona e nello spazio, meno nel tempo', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
-    {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','orientato_stp','orientato_sp','parzialmente_orientato'], gruppo:'orientamento'},
+    {value:'orientato', m:'orientato', f:'orientata', excludes:['disorientato','a_tratti_disorientato','discretamente_orientato','parzialmente_orientato'], gruppo:'orientamento'},
+    {value:'discretamente_orientato', chipLabel:'Do', m:'discretamente orientato', f:'discretamente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','parzialmente_orientato'], gruppo:'orientamento'},
+    {value:'parzialmente_orientato', chipLabel:'Po', m:'parzialmente orientato', f:'parzialmente orientata', excludes:['orientato','disorientato','a_tratti_disorientato','discretamente_orientato'], gruppo:'orientamento'},
+    // P, S, T (persona, spazio, tempo): compaiono solo con "orientato" acceso,
+    // si scelgono tutti, due, uno o nessuno; cambiano la frase di "orientato"
+    // (vedi fraseOrientato). Hanno preso il posto di S/T/P e S/P
+    {value:'orient_p', label:'P', soloCon:'orientato', gruppo:'orientamento_pst'},
+    {value:'orient_s', label:'S', soloCon:'orientato', gruppo:'orientamento_pst'},
+    {value:'orient_t', label:'T', soloCon:'orientato', gruppo:'orientamento_pst'},
+    {value:'disorientato', m:'disorientato', f:'disorientata', excludes:['orientato','a_tratti_disorientato','discretamente_orientato','parzialmente_orientato'], gruppo:'orientamento'},
+    {value:'a_tratti_disorientato', m:'a tratti disorientato', f:'a tratti disorientata', excludes:['orientato','disorientato','discretamente_orientato','parzialmente_orientato'], gruppo:'orientamento'},
     {value:'mutacico', m:'mutacico', f:'mutacica', excludes:['disartrico','confabulante'], gruppo:'linguaggio'},
     // compare solo con "mutacico" acceso, e va nella frase subito dopo, con
     // la virgola: "mutacica, segue con lo sguardo"
@@ -17399,7 +17434,8 @@ const DESCRITTORI_FRASE_INIZIALE = ['occhi_aperti'];
 
 function composeCoscienza(){
   const primaryOpt = OPT.coscienzaPrimary.find(o => o.value === state.coscienza.primary);
-  const tuttiSelezionati = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value));
+  orientamentoVecchio(state.coscienza.descrittori);
+  const tuttiSelezionati = OPT.coscienzaDescrittori.filter(o => state.coscienza.descrittori.has(o.value) && o.gruppo !== 'orientamento_pst');
   const frasiInizio = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_INIZIALE.includes(o.value));
   const frasiASe = tuttiSelezionati.filter(o => DESCRITTORI_FRASE_A_SE.includes(o.value));
   // "segue con lo sguardo" non è una voce a sé dell'elenco: si attacca a
@@ -17419,6 +17455,7 @@ function composeCoscienza(){
   }
 
   const etichetta = o => {
+    if(o.value === 'orientato') return fraseOrientato(state.coscienza.descrittori, state.sesso === 'F');
     const fragGiusto = o.fragM !== undefined ? (state.sesso === 'F' ? o.fragF : o.fragM) : o.frag;
     const testo = fragGiusto || g(o);
     return (o.value === 'mutacico' && segueSguardo) ? testo + ', segue con lo sguardo' : testo;
