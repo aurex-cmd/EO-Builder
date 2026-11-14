@@ -7947,7 +7947,7 @@ function renderStatisticheRicoveri(el, list){
     else if(m.n && m.n === maxPassati) m.colore = 'var(--st-bar-hi)';
   });
   colonne(cMesi, mesi, ['ricovero', 'ricoveri']);
-  cMesi.appendChild(crea('div', 'ric-stat-nota', 'In teal il mese in corso; più marcato il mese record.'));
+  cMesi.appendChild(crea('div', 'ric-stat-nota', (UI_MP ? 'In viola' : 'In teal') + ' il mese in corso; più marcato il mese record.'));
 
   // giorni della settimana: il weekend più chiaro
   const cSett = card('Per giorno della settimana');
@@ -25262,6 +25262,45 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-mp][data-ui="minimal"] .m-pagina .group-label{ font-size:13px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
   /* card */
   html[data-mp][data-ui="minimal"] :is(#m-vista .m-righe, #m-aggcons table, .m-we-ins, .m-we-come, #ricoveri-view .admit-block.ric-cal, .m-pagina .sync-box, .m-dim-vuoto, .m-bk-carta, .pd-gruppo, #pd-avviso-lista, #vitali-settore-view #vitali-settore-lista, #dimissioni-lista .group-label + .ric-lista-riga, .ric-stat-card){ background:var(--mp-carta) !important; border:0 !important; border-radius:24px !important; box-shadow:var(--mp-ombra) !important; }
+  /* STATISTICHE DEI RICOVERI in Minimal Pocket: niente riquadro dentro il
+     riquadro (il titolo "Statistiche" c'è già nel selettore), e i colori di
+     Minimal Pocket al posto del teal e dei grigi di Pocket: barre lilla, il
+     mese in corso viola pieno, femmine rosa e maschi azzurro-viola */
+  html[data-mp] #ricoveri-view .admit-block.ric-cal:has(.ric-stat){ background:none !important; box-shadow:none !important; padding:0 !important; }
+  html[data-mp] #ricoveri-view .admit-block.ric-cal:has(.ric-stat) > .admit-block-head{ display:none; }
+  html[data-mp][data-ui="minimal"] .ric-stat{ gap:14px; --signal:var(--mp-accento) !important; --on-signal:var(--mp-accento-ink) !important;
+    --st-bar:color-mix(in srgb, var(--mp-accento) 22%, var(--mp-campo)); --st-bar-hi:color-mix(in srgb, var(--mp-accento) 48%, var(--mp-campo));
+    --st-f:#ec8fb4; --st-m:#7d8cf2;
+    --st-eta-1:color-mix(in srgb, var(--mp-accento) 18%, var(--mp-campo)); --st-eta-2:color-mix(in srgb, var(--mp-accento) 36%, var(--mp-campo)); --st-eta-3:color-mix(in srgb, var(--mp-accento) 56%, var(--mp-campo)); --st-eta-4:color-mix(in srgb, var(--mp-accento) 78%, var(--mp-campo)); --st-eta-5:var(--mp-accento);
+    --ink:var(--mp-ink); --ink-dim:var(--mp-muto); --ink-faint:var(--mp-tenue); --line:var(--mp-linea); --panel:var(--mp-campo); font-family:var(--mp-font); }
+  html[data-mp][data-ui="minimal"] .ric-stat-card{ padding:20px !important; }
+  html[data-mp][data-ui="minimal"] .ric-stat-tit{ font-family:var(--mp-font); font-size:13px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--mp-muto); }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero{ background:var(--mp-carta) !important; }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero::after{ content:none; }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero :is(.ric-stat-tit, .medie, .big span){ color:var(--mp-muto); }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero .big b{ font-family:var(--mp-font); font-size:64px; font-weight:500; letter-spacing:-.05em; color:var(--mp-ink); }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero .medie{ gap:8px; font-size:14px; }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero .medie > div{ padding:6px 12px; border-radius:999px; background:var(--mp-campo); }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero .medie b{ color:var(--mp-ink); font-weight:600; }
+  html[data-mp][data-ui="minimal"] .ric-stat-hero .medie b.ora{ background:none; padding:0; color:var(--mp-accento); }
+  html[data-mp][data-ui="minimal"] .ric-stat-tile{ background:var(--mp-carta) !important; border-radius:24px; padding:18px; box-shadow:var(--mp-ombra); }
+  html[data-mp][data-ui="minimal"] .ric-stat-tile:last-child{ background:color-mix(in srgb, var(--mp-accento) 12%, var(--mp-carta)) !important; }
+  html[data-mp][data-ui="minimal"] .ric-stat-tile:last-child .v{ color:var(--mp-accento); }
+  html[data-mp][data-ui="minimal"] .ric-stat-tile:last-child :is(.l, .n){ color:var(--mp-muto); }
+  html[data-mp][data-ui="minimal"] :is(.ric-stat-tile .v, .ric-stat-estremo .val b){ font-family:var(--mp-font); font-weight:500; letter-spacing:-.04em; }
+  html[data-mp][data-ui="minimal"] .ric-stat-estremo{ background:var(--mp-campo); border-radius:18px; }
+  html[data-mp][data-ui="minimal"] .ric-stat-estremo.anziano .val b{ color:var(--mp-accento); }
+  html[data-mp][data-ui="minimal"] :is(.ric-stat-col .num, .ric-stat-labs div, .ric-stat-leg .dim, .ric-stat-riga .val){ font-family:var(--mp-font); }
+  html[data-mp][data-ui="minimal"] .ric-stat-col .bar{ border-radius:8px 8px 3px 3px; }
+  html[data-mp][data-ui="minimal"] .ric-stat-riga .traccia{ height:8px; border-radius:4px; background:var(--mp-campo); }
+  html[data-mp][data-ui="minimal"] .ric-stat-riga .bar{ border-radius:4px; }
+  html[data-mp][data-ui="minimal"] .ric-stat-torta svg circle:first-of-type{ stroke:var(--mp-campo) !important; }
+  html[data-mp][data-ui="minimal"] .ric-stat-nota{ font-size:12px; color:var(--mp-tenue); }
+  html[data-mp][data-ui="minimal"] .ric-stat-tutte{ color:var(--mp-accento); }
+  html[data-mp][data-ui="minimal"] .ric-stat-dia .ric-stat-riga .traccia{ background:var(--mp-campo); }
+  html[data-mp][data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar{ background:color-mix(in srgb, var(--mp-accento) 38%, var(--mp-campo)); }
+  html[data-mp][data-ui="minimal"] .ric-stat-dia .ric-stat-riga .bar[style*="--colore"]{ background:var(--mp-accento); }
+  html[data-mp][data-ui="minimal"] .ric-stat-dia .ric-stat-riga.ric-stat-altre .bar{ background:color-mix(in srgb, var(--mp-tenue) 45%, var(--mp-campo)); }
   html[data-mp][data-ui="minimal"] #m-aggcons table{ border-collapse:separate; border-spacing:0; overflow:hidden; }
   html[data-mp][data-ui="minimal"] #m-aggcons :is(table, tbody, tr){ background:transparent; }
   html[data-mp][data-ui="minimal"] #m-aggcons tbody{ border:0 !important; border-radius:0 !important; box-shadow:none !important; }
