@@ -25394,6 +25394,27 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd .mpd-tuttofatto{ padding:14px; font-weight:600; }
   .pkd .mp-tessera{ border-radius:10px; font-weight:800; }
   .pkd .mp-t-critico{ box-shadow:inset 0 0 0 2px var(--m-critico); }
+  /* i settori: una fila di tessere in cima, la lettera e i visti; sotto,
+     una barretta che si riempie (chiara i visti, piena i copiati) */
+  .pkd-sett{ flex:none; display:flex; gap:6px; padding:10px; border-bottom:1px solid var(--m-line); }
+  .pkd-sett button{ position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 2px 10px; border:0; border-radius:8px; background:var(--m-l-base); color:var(--m-ink); font:inherit; cursor:pointer; overflow:hidden; transition:background .15s, box-shadow .15s; }
+  .pkd-sett button:hover{ background:color-mix(in srgb, var(--m-l-base) 70%, var(--m-line-forte)); }
+  .pkd-sett b{ font-size:16px; font-weight:800; line-height:1.1; }
+  .pkd-sett small{ font-size:11px; font-weight:600; color:var(--m-muted); font-variant-numeric:tabular-nums; }
+  .pkd-sett i{ position:absolute; left:6px; right:6px; bottom:4px; height:3px; border-radius:2px; background:linear-gradient(90deg, var(--m-teal) var(--c), var(--m-l-visto) var(--c) var(--p), var(--m-line) var(--p)); }
+  .pkd-sett button.pkd-oggi{ box-shadow:inset 0 0 0 1.5px var(--m-line-forte); }
+  .pkd-sett button[aria-current="true"]{ background:var(--m-notte); color:#fff; box-shadow:none; }
+  .pkd-sett button[aria-current="true"] small{ color:rgba(255,255,255,.8); }
+  .pkd-sett button[aria-current="true"] i{ background:linear-gradient(90deg, #fff var(--c), rgba(255,255,255,.55) var(--c) var(--p), rgba(255,255,255,.22) var(--p)); }
+  /* il settore nel riquadro grande */
+  .pkd-st-testa{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+  .pkd-st-tondo{ position:relative; flex:none; width:72px; height:72px; display:grid; place-items:center; }
+  .pkd-st-tondo svg{ position:absolute; inset:0; width:72px; height:72px; transform:rotate(-90deg); }
+  .pkd-st-tondo .m-td-f{ stroke:var(--m-l-base); } .pkd-st-tondo .m-td-b{ stroke:var(--m-l-visto); } .pkd-st-tondo .m-td-a{ stroke:var(--m-teal); }
+  .pkd-st-tondo b{ position:relative; font-size:17px; font-weight:800; color:var(--m-ink); } .pkd-st-tondo b small{ font-size:10px; color:var(--m-muted); }
+  .pkd-griglia{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 84px)); gap:12px; margin-top:26px; }
+  .pkd-griglia .m-tl{ height:auto; aspect-ratio:1; font-size:17px; animation:m-compare .3s var(--m-molla) both; animation-delay:calc(var(--i) * 12ms); }
+  .pkd-st-nota{ margin:18px 0 0; font-size:13px; color:var(--m-muted); }
   /* a destra il riquadro grande, il riquadro di Pocket */
   .pkd .mpd-info{ border:1px solid var(--m-line); border-radius:12px; background:var(--m-carta); box-shadow:none; padding:28px 32px; }
   .pkd .mpd-dtesta h2{ font-size:34px; font-weight:800; letter-spacing:-.025em; }
@@ -28743,7 +28764,8 @@ function mpOggiPC(dati, saluto, frase, pk){
     // i diari copiati in una riga sola, che si apre col clic (mpCopAperti)
     ['Fatto oggi', [...fattiAltri, ...(mpCopAperti ? fatti : [])]]
   ].filter(g => g[1].length || (g[0] === 'Fatto oggi' && fatti.length));
-  mpVoci = gruppi.flatMap(g => g[1]);
+  // EO Pocket: in cima i settori (una fila di tessere), scelti come le righe
+  mpVoci = [...(pk ? pk.settori : []), ...gruppi.flatMap(g => g[1])];
   // la voce scelta resta la stessa anche se il suo diario cambia stato (copiato ↔ da copiare)
   // il diario appena copiato resta dov'è finché non si passa al prossimo
   const tieni = mpTieni && mpTieni.fino > Date.now() && mpDocked() && M.letto === mpTieni.letto;
@@ -28752,7 +28774,7 @@ function mpOggiPC(dati, saluto, frase, pk){
   else if(!passi.length && !mpScelto) mpSel = null;
   else if(!mpVoci.some(v => v.k === mpSel)){
     const stessa = mpSelLetto && mpVoci.find(v => v.letto === mpSelLetto && mpEDiario(v));
-    mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk) || (passi.length ? mpVoci[0] : null) || {}).k || null;
+    mpSel = (stessa || mpVoci.find(v => !v.copiato && !v.fattoOk && !v.sett) || (passi.length ? mpVoci.find(v => !v.sett) : null) || {}).k || null;
   }
   const num = (n, t, cl) => `<div class="mpd-num${cl ? ' ' + cl : ''}"><dd>${n}</dd><dt>${t}</dt></div>`;
   const link = (attr, t) => `<button class="mpd-link" ${attr}>${t}</button>`;
@@ -28797,6 +28819,7 @@ function mpOggiPC(dati, saluto, frase, pk){
           <span class="mp-tessera mp-t-cop">${ICON.diario}</span>
           <span class="mpd-rt"><b>${fatti.length} ${fatti.length === 1 ? 'diario copiato' : 'diari copiati'}</b><small>${mpCopAperti ? 'Tocca per chiudere' : 'Tocca per vederli'}</small></span>${ICON.giu}
         </button>${mpCopAperti ? `<div class="mpd-copiati-in">${fatti.map(riga).join('')}</div>` : ''}` : ''}</div>` : gruppo(g)).join('')}</div>` : '');
+  if(pk) lista.insertAdjacentHTML('afterbegin', `<div class="pkd-sett" role="group" aria-label="Settori">${pk.settori.map(v => `<button data-mp="pc-sel" data-k="${esc(v.k)}" aria-current="${v.k === mpSel}" class="${v.oggi ? 'pkd-oggi' : ''}" style="--p:${v.n ? Math.round(v.visti / v.n * 100) : 0}%;--c:${v.n ? Math.round(v.cop / v.n * 100) : 0}%" aria-label="${esc(v.titolo)}, ${esc(v.sotto)}"><b>${esc(v.l)}</b><small>${v.visti}/${v.n}</small><i></i></button>`).join('')}</div>`);
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   if(tieni) return;
   mpDett();
@@ -28817,7 +28840,42 @@ function pkScrivania(reparto, festivo){
   const links = link('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri') + link('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni')
     + (festivo ? link('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne weekend') : link('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne'))
     + link('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze') + link('data-m="rubrica"', ICON.rubrica, 'Rubrica') + link('data-m="strumenti-home"', ICON.strumenti, 'Strumenti');
-  mpOggiPC(dati, '', '', { testa, links });
+  // i settori: la lettera, i visti su tutti; il settore di oggi acceso
+  const oggi = settoreDiOggi() || settoreScelto();
+  const ss = ricoveratiEO().length ? [...settori(), RIC] : settori();
+  const settV = ss.map(x => {
+    const st = statoSettore(x), dc = st.visti - st.cop;
+    // nei festivi la guardia: contano i consegnati (visti su tutti)
+    if(festivo && x !== RIC){
+      let cons = 0, cv = 0; mpNomi(x).forEach(([n]) => { const i = infoLetto(n); if(i.consegne){ cons++; if(i.vistoOggi) cv++; } });
+      st.n = cons; st.visti = cv; st.cop = 0; st.guardia = true;
+    }
+    const firma = mpNomi(x).map(([n]) => { const i = infoLetto(n); return classiLetto(i) + (i.copiato ? 'c' : '') + htmlPallini(i).length; }).join(',');
+    return { k:'sett|' + x, sett:x, n:st.n, visti:st.visti, cop:st.cop, oggi:x === oggi, firma,
+      l:x === RIC ? 'R' : letteraSettore(x), titolo:st.nome,
+      sotto:st.guardia ? (!st.n ? 'Nessun consegnato' : st.n - st.visti ? `${st.n - st.visti} ${st.n - st.visti === 1 ? 'consegnato' : 'consegnati'} da vedere su ${st.n}` : `Consegnati tutti visti (${st.n})`) : !st.n ? 'Nessun letto' : `${st.visti} ${st.visti === 1 ? 'visto' : 'visti'} su ${st.n}${dc ? ` · ${dc} da copiare` : st.visti ? ' · diari copiati' : ''}` };
+  });
+  mpOggiPC(dati, '', '', { testa, links, settori:settV });
+}
+// il settore scelto, nel riquadro grande: il nome, il tondo, i letti coi
+// colori di Pocket. Un letto visto apre il suo diario qui; da vedere, la
+// visita (Fatto riporta qui). "Apri il settore": la vista completa
+function pkDettSettore(box, p){
+  const s = p.sett, st = { n:p.n, visti:p.visti, cop:p.cop }, vu = lettiVuoti();
+  const letti = mpNomi(s).filter(([n, et, ap]) => ap || infoLetto(n).occupato || !vu[n]);
+  box.innerHTML = `<div class="mpd-dtesta pkd-st-testa"><div><h2>${esc(p.titolo)}</h2><p>${esc(p.sotto)}</p></div><span class="pkd-st-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0, st.n ? st.cop / st.n * 100 : 0)}</span></div>
+    ${letti.length ? `<div class="pkd-griglia">${letti.map(([n, et, ap], k) => tileLetto(n, et, k, null, ap).replace('data-m="letto"', 'data-mp="pk-letto"').replace(/<span class="m-togli"[\s\S]*?<\/span>/, '')).join('')}</div>` : '<p class="mpd-vuoto">Nessun letto in questo settore.</p>'}
+    <p class="pkd-st-nota">Già visto: il diario si apre qui. Da vedere: la visita.</p>
+    <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Apri il settore</button></div>`;
+  box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
+}
+// un letto toccato nel settore: visto, il suo diario agganciato (la sua riga
+// nell'elenco, anche tra i copiati); da vedere, la visita
+function pkLettoSett(nome){
+  if(!infoLetto(nome).vistoOggi) return apriVisita(nome);
+  let v = mpVoci.find(x => x.letto === nome && mpEDiario(x));
+  if(!v && !mpCopAperti){ mpCopAperti = true; mpSel = 'cop|' + nome; mpScelto = true; mpSelLetto = nome; return vHome(); }
+  if(v){ mpSel = v.k; mpScelto = true; mpDett(); const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(v.k)}"]`); if(r) r.scrollIntoView({ block:'nearest' }); }
 }
 // un letto dalla scrivania di Pocket: da vedere, dritti alla visita (Fatto
 // riporta qui); altrimenti il Reparto col suo settore e il letto aperto
@@ -28832,13 +28890,14 @@ function mpDett(){
   const box = $m('#mpd-info'); if(!box) return;
   const p = mpVoci.find(v => v.k === mpSel);
   mpSelLetto = p && p.letto || null;
-  document.querySelectorAll('#mpd-lista .mpd-r').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
+  document.querySelectorAll('#mpd-lista [data-k]').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
   const diario = mpEDiario(p);
-  const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto;
+  const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto + (p.sett ? '|' + p.firma : '');
   if(chiave === mpDettK && (!diario || mpDocked())) return;
   // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
   if(diario){ mpDock(p); mpDettK = chiave; return; }
   mpUndock(); mpDettK = chiave;
+  if(p && p.sett) return pkDettSettore(box, p);
   if(!p){
     // TUTTO FATTO: come gli altri dettagli (titolo grande in alto a sinistra),
     // con tutto quello che si è fatto oggi e il tempo risparmiato con l'app
@@ -29393,6 +29452,8 @@ if(!UI_MP) document.addEventListener('click', e => {
   else if(a === 'pc-disfa') mpPcDisfa();
   else if(a === 'pc-copiati'){ mpCopAperti = !mpCopAperti; if(!mpCopAperti && String(mpSel).startsWith('cop|')) mpSel = null; mpOggi(); }
   else if(a === 'pc-letto') pkApriLetto(el.dataset.n, el.dataset.s);
+  else if(a === 'pk-letto') pkLettoSett(el.dataset.n);
+  else if(a === 'pk-apri-sett'){ const x = el.dataset.s; vai('visita', x === RIC ? { zoom:true, settore:RIC } : { zoom:true, settore:x }); }
 });
 nascondiViste();
 disegna();
