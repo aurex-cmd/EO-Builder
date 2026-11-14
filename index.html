@@ -9676,6 +9676,9 @@ function resetFormToDefaults(){
 // automaticamente una scheda vuota prima ancora che l'utente faccia qualcosa
 let appInitialized = false;
 
+// vero solo mentre si crea la scheda vuota di un letto (vedi apriLetto):
+// quel salvataggio non è una visita, non deve segnare "tag toccati oggi"
+let salvaSenzaTag = false;
 function autosaveCurrentPatient(){
   if(!appInitialized) return;
   if(!currentPatientId){
@@ -9713,7 +9716,7 @@ function autosaveCurrentPatient(){
   patients[currentPatientId].esameAggiornatoIl = Date.now();
   // i tag toccati (non le note del diario scritte da altrove): EO Pocket
   // lo usa per dire "visitato oggi"
-  patients[currentPatientId].tagIl = Date.now();
+  if(!salvaSenzaTag) patients[currentPatientId].tagIl = Date.now();
   if(primaVoltaOggi) patients[currentPatientId].esameIniziatoOggiIl = Date.now();
   savePatients(patients);
   if(typeof aggiornaEoRicoveroDalVivo === 'function') aggiornaEoRicoveroDalVivo();
@@ -11403,7 +11406,11 @@ function apriLetto(nome){
   savePatients(patients);
   currentPatientId = id;
   setLocalAndCloud(LAST_PATIENT_KEY, id);
-  update(false); // scheda nuova/vuota appena creata: niente da scartare
+  // scheda nuova/vuota appena creata: niente da scartare. Aprirla e
+  // tornare indietro senza toccare niente non è una visita: il letto non
+  // diventa "visto oggi" (EO Pocket, Minimal Pocket)
+  salvaSenzaTag = true;
+  try{ update(false); } finally { salvaSenzaTag = false; }
   chiudiWardMap();
   showToast('Scheda "' + nome + '" creata');
 }
