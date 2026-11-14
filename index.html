@@ -25334,6 +25334,90 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
 
   @media (prefers-reduced-motion: reduce){ html[data-mp] :is(#m-app, .mp-guida, #clinical-view) :is(*, *::before, *::after){ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
+<style id="stile-pk-pc">
+  /* EO POCKET AL PC: la scrivania di Minimal Pocket (vedi mpOggiPC) con la
+     veste di Pocket. I nomi --mp-* della scrivania prendono i colori di
+     Pocket (--m-*), e righe, riquadri e tasti tornano quelli di Pocket:
+     bordi sottili, angoli piccoli, niente ombre morbide */
+  html:not([data-mp]) .pkd{
+    --mp-carta:var(--m-carta); --mp-ink:var(--m-ink); --mp-muto:var(--m-muted); --mp-tenue:var(--m-faint);
+    --mp-linea:var(--m-line); --mp-campo:var(--m-l-base); --mp-accento:var(--m-notte); --mp-accento-ink:#fff;
+    --mp-ombra:none; --mp-l-dacop:var(--m-l-dacop); --mp-l-cop:var(--m-l-cop); --mp-l-crit:var(--m-l-critico); --mp-l-crit-ink:var(--m-critico);
+    --mp-ok:var(--m-teal); --mp-ok-box:var(--m-teal-box); --mp-molla:var(--m-molla);
+    --mp-mono:ui-monospace, 'SF Mono', Menlo, monospace;
+    height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); min-height:520px; color:var(--m-ink);
+  }
+  html.pk-pc:not([data-mp]) .m-main{ max-width:1180px; padding:0 40px 12px; }
+  html.pk-pc:not([data-mp]) .m-bar-in{ max-width:1100px; }
+  html.pk-pc:not([data-mp]) .m-velo{ display:none; }
+  @media (max-width:1100px){ html.pk-pc:not([data-mp]) .m-main{ padding-left:20px; padding-right:20px; } }
+  /* in alto: il saluto, sotto quello che diceva il pulsante del Reparto
+     (resta un tocco: apre il Reparto), il cerchio a destra */
+  .pkd .pkd-testa{ position:relative; display:block; padding-right:130px; }
+  .pkd-ciao h1{ margin:6px 0 0; font-size:clamp(26px, 2.6vw, 34px); font-weight:800; letter-spacing:-.025em; line-height:1.1; }
+  .pkd-ciao p{ margin:4px 0 0; font-size:14px; color:var(--m-muted); }
+  .pkd .m-ingr.pkd-rep{ position:static; display:grid; grid-template-columns:auto 1fr; align-items:baseline; column-gap:14px; min-height:0; margin-top:14px; padding:0; border:0; border-radius:0 !important; background:none; box-shadow:none !important; color:var(--m-ink); transform:none; }
+  .pkd .m-ingr.pkd-rep:active{ transform:none; }
+  .pkd .pkd-rep .m-sh{ grid-column:1 / -1; padding:0; font-size:14px; font-weight:600; color:var(--m-muted); }
+  .pkd .pkd-rep .m-sh svg{ width:17px; height:17px; color:var(--m-muted); }
+  .pkd .pkd-rep .m-sn{ margin:0; padding:4px 0 0; font-size:30px; font-weight:700; color:var(--m-ink); }
+  .pkd .pkd-rep .m-sn small{ font-size:15px; font-weight:600; color:var(--m-muted); }
+  .pkd .pkd-rep .m-inizia{ font-size:30px; color:var(--m-notte); }
+  .pkd .pkd-rep .m-inizia svg{ width:26px; height:26px; color:var(--m-notte); }
+  .pkd .pkd-rep .m-ss{ margin:0; font-size:14px; color:var(--m-muted); }
+  .pkd .pkd-rep:hover .m-inizia{ text-decoration:underline; text-underline-offset:5px; text-decoration-thickness:2px; }
+  .pkd .pkd-rep .m-rh-tondo{ top:2px; right:0; width:104px; height:104px; }
+  .pkd .pkd-rep .m-rh-tondo svg{ width:104px; height:104px; }
+  .pkd .pkd-rep .m-rh-tondo b{ font-size:24px; color:var(--m-ink); }
+  .pkd .pkd-rep .m-rh-tondo b small{ font-size:12px; color:var(--m-muted); }
+  .pkd .pkd-rep .m-td-f{ stroke:var(--m-l-base); }
+  .pkd .pkd-rep .m-td-b{ stroke:var(--m-l-visto); }
+  .pkd .pkd-rep .m-td-a{ stroke:var(--m-teal); }
+  /* a sinistra le cose da fare: l'elenco di Pocket (righe con la linea) */
+  .pkd .mpd-corpo{ grid-template-columns:clamp(230px, 24vw, 290px) minmax(0, 1fr); margin-top:18px; }
+  .pkd .mpd-lista{ padding:0; border:1px solid var(--m-line); border-radius:10px; background:var(--m-carta); box-shadow:none; overflow:hidden; }
+  .pkd .mpd-giu{ margin:0; padding:0; background:none; border-top:1px solid var(--m-line); }
+  .pkd .mpd-gr{ margin:0; padding:14px 14px 6px; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
+  .pkd .mpd-gr:first-child{ margin:0; }
+  .pkd .mpd-r{ gap:12px; padding:9px 14px; border-radius:0; border-top:1px solid var(--m-line); transition:background .15s; }
+  .pkd .mpd-gr + .mpd-r{ border-top:0; }
+  .pkd .mpd-r:hover{ background:var(--m-hover); }
+  .pkd .mpd-r[aria-current="true"]{ background:var(--m-notte-box); box-shadow:inset 3px 0 0 var(--m-notte); }
+  .pkd .mpd-r .mp-tessera{ width:34px; height:34px; border-radius:8px; font-size:13px; font-weight:800; }
+  .pkd .mpd-r .mp-tessera svg{ width:17px; height:17px; }
+  .pkd .mpd-rt b{ font-size:14.5px; font-weight:600; }
+  .pkd .mpd-copiati-in{ margin-left:0; padding-left:0; border-left:0; }
+  .pkd .mpd-tuttofatto{ padding:14px; font-weight:600; }
+  .pkd .mp-tessera{ border-radius:10px; font-weight:800; }
+  .pkd .mp-t-critico{ box-shadow:inset 0 0 0 2px var(--m-critico); }
+  /* a destra il riquadro grande, il riquadro di Pocket */
+  .pkd .mpd-info{ border:1px solid var(--m-line); border-radius:12px; background:var(--m-carta); box-shadow:none; padding:28px 32px; }
+  .pkd .mpd-dtesta h2{ font-size:34px; font-weight:800; letter-spacing:-.025em; }
+  .pkd .mpd-dtesta p{ font-size:15px; }
+  .pkd .mpd-lbl{ font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+  .pkd .mpd-testo{ font-size:16px; }
+  .pkd .mpd-letti .mp-tessera{ width:60px; height:60px; font-size:16px; font-weight:800; }
+  .pkd .mp-btn{ height:48px; border-radius:12px; font-size:16px; font-weight:600; }
+  .pkd .mp-btn.mp-sec{ background:var(--m-sec); }
+  .pkd .mpd-ill-fig > i, .pkd .mpd-ill-ico{ border-radius:14px; }
+  .pkd .mpd-fine h2{ font-weight:800; letter-spacing:-.03em; }
+  .pkd .mpd-fine-tempo b{ font-weight:700; color:var(--m-teal); }
+  /* in fondo le altre voci della home, con le loro icone */
+  .pkd .mpd-links{ flex-wrap:nowrap; gap:4px 18px; min-width:0; }
+  .pkd .mpd-link{ white-space:nowrap; }
+  @media (max-width:1599px){ .pkd .mpd-tasti{ display:none; } }
+  @media (max-width:900px){ .pkd .mpd-links{ flex-wrap:wrap; } }
+  .pkd .mpd-link{ display:inline-flex; align-items:center; gap:7px; font-weight:500; color:var(--m-ink-2); }
+  .pkd .mpd-link svg{ width:16px; height:16px; color:var(--m-muted); }
+  .pkd .mpd-link:hover{ color:var(--m-notte); }
+  .pkd .mpd-link:hover svg{ color:var(--m-notte); }
+  .pkd kbd{ font-weight:600; }
+  /* il diario agganciato: la scheda di Pocket, ferma nel riquadro */
+  html:not([data-mp]) .m-scheda.mp-dock{ position:relative; left:auto; right:auto; top:auto; bottom:auto; z-index:auto; max-width:none; width:100%; margin:0; flex:1; height:auto; min-height:0; visibility:visible; transform:none !important; transition:none; border:1px solid var(--m-line); border-radius:12px; box-shadow:none; background:var(--m-carta); --m-bg:var(--m-carta); overflow:hidden; animation:m-compare .25s ease-out both; }
+  html:not([data-mp]) .m-scheda.mp-dock .m-s-testa{ padding-top:22px; cursor:default; touch-action:auto; }
+  html:not([data-mp]) .m-scheda.mp-dock .m-s-testa::before, html:not([data-mp]) .m-scheda.mp-dock .m-chiudi{ display:none; }
+  html:not([data-mp]) .m-scheda.mp-dock .m-s-testa .m-s-pratica{ right:18px; }
+</style>
 <div id="m-app" aria-live="polite">
   <header class="m-bar" id="m-bar"><div class="m-bar-in" id="m-bar-in"></div></header>
   <main class="m-main" id="m-main"><div class="m-vista" id="m-vista"></div></main>
@@ -25511,6 +25595,8 @@ function disegna(verso){
   if(UI_MP) mpPrima();
   if(M.vista === 'eo'){ $m('#m-main').style.display = 'none'; barra('', ['fatto', 'Fatto']); $m('#m-bar-t').textContent = M.letto || ''; if(UI_MP) mpGuida(); return; }
   $m('#m-main').classList.toggle('m-main-home', M.vista === 'home' && !UI_MP);
+  // EO Pocket al PC: fuori dalla home il diario agganciato torna al suo posto
+  if(!UI_MP && M.vista !== 'home'){ document.documentElement.classList.remove('pk-pc'); mpUndock(); }
   if(M.vista === 'app'){ $m('#m-main').style.display = 'none'; barra(titoloPagina(M.pag)); document.getElementById('impostazioni-view').classList.toggle('m-solo-account', M.pag === 'account'); mostraVista(M.pag === 'account' ? 'impostazioni' : M.pag); window.scrollTo(0, 0); return; }
   nascondiViste();
   $m('#m-main').style.display = '';
@@ -25933,6 +26019,9 @@ const FESTA_HTML = `<span class="m-festa" aria-hidden="true"><i style="--x:6%;--
 <span class="m-f-pupazzo"><svg viewBox="0 0 40 54"><circle cx="20" cy="41" r="13" fill="#fff"/><circle cx="20" cy="21" r="9.5" fill="#fff"/><g class="m-f-cappello"><rect x="13" y="3" width="14" height="9" rx="1.2" fill="#2a2f3a"/><rect x="13" y="9" width="14" height="2" fill="#b3232c"/><rect x="9.5" y="11" width="21" height="2.6" rx="1.3" fill="#2a2f3a"/></g><circle cx="16.5" cy="19.5" r="1.3" fill="#2a2f3a"/><circle cx="23.5" cy="19.5" r="1.3" fill="#2a2f3a"/><path d="M20 22l7 2-7 .9z" fill="#f08a2c"/><path d="M16.5 26c2.2 1.3 4.8 1.3 7 0" fill="none" stroke="#2a2f3a" stroke-width="1" stroke-linecap="round"/><path d="M11 28.5c5 3 13 3 18 0l.8 3.3c-6 2.6-13.6 2.6-19.6 0z" fill="#3fae6a"/><rect x="24" y="30" width="3.6" height="9" rx="1.6" fill="#3fae6a"/><circle cx="20" cy="37" r="1.3" fill="#b3232c"/><circle cx="20" cy="42" r="1.3" fill="#b3232c"/><circle cx="20" cy="47" r="1.3" fill="#b3232c"/><g class="m-f-braccio"><path d="M32 36l6-8M35.5 31l3-.6" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g><g class="m-f-lancio"><path d="M8 36L1 30M4 32.5l-2.8.8" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g></svg></span></span></span>`;
 function vHome(){
   barra();
+  document.documentElement.classList.toggle('pk-pc', MP_PC.matches);
+  $m('#m-main').classList.toggle('m-main-home', !MP_PC.matches);
+  if(!MP_PC.matches) mpUndock();
   const { visti, copiati, copiatiCons, ricDa, ricCop } = contiHome();
   const festivo = eFestivo(new Date());
   const consegnati = Object.values(loadConsegne()).filter(c => c && ['V','E','S','C'].some(l => c[l] && !c['fatto' + l])).length;
@@ -25993,6 +26082,11 @@ function vHome(){
   const consegne = festivo
     ? voce('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne weekend', consegnati ? '' : 'da incollare', consegnati ? `${consegnati} consegnat${consegnati === 1 ? 'o' : 'i'}` : '')
     : voce('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne', 'diari di oggi');
+  // AL PC (finestra larga): niente pulsante grande, la scrivania di Minimal
+  // Pocket con la veste di Pocket. In alto il saluto e quello che diceva il
+  // pulsante, il cerchio a destra; a sinistra le cose da fare, a destra il
+  // diario o la cosa scelta
+  if(MP_PC.matches) return pkScrivania(reparto, festivo);
   const fare = bloccoFare(copiatiCons);
   const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
@@ -27425,7 +27519,7 @@ sc.addEventListener('keydown', e => {
     }
   }
 });
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && sc.classList.contains('m-su') && !mpDocked() && !document.querySelector('[id$="-overlay"].show')) chiudiScheda(); });
 // il campo del nome di un esame largo quanto il testo (o il segnaposto),
 // misurato col font vero: niente nomi tagliati né spazi vuoti
 let misuraNome = null;
@@ -28416,6 +28510,8 @@ function mpVista(){
   return true;
 }
 function mpVai(v){
+  // EO Pocket (scrivania al PC): il Reparto di Pocket, come il pulsante grande
+  if(!UI_MP){ if(v === 'visita'){ const s = settoreDiOggi(); vai('visita', !eFestivo(new Date()) && s ? { zoom:true, settore:s } : { zoom:false }); } return; }
   if($m('#m-scheda').classList.contains('m-su')) chiudiScheda();
   if(M.vista === v){ window.scrollTo({ top:0, behavior:mpFermo() ? 'auto' : 'smooth' }); return; }
   M.pila = []; M.vista = v;
@@ -28534,7 +28630,7 @@ function mpPassi(){
       sotto:vedere ? `${vedere} ${vedere === 1 ? 'consegnato' : 'consegnati'} da vedere · tutti i settori` : cons ? 'Consegnati tutti visti' : 'Nessun consegnato' };
     if(vedere) resto.unshift(g); else resto.push(g);
   }
-  const scegli = !festa && inizio && sett !== RIC && (mpCambiaSett || !settoreDiOggi()) && settori().length > 1;
+  const scegli = UI_MP && !festa && inizio && sett !== RIC && (mpCambiaSett || !settoreDiOggi()) && settori().length > 1;
   if(scegli){
     const vuo = lettiVuoti();
     const scelta = settori().map(x => {
@@ -28548,7 +28644,7 @@ function mpPassi(){
       azione:'', vai:() => mpScegliSett(sett || scelta[0].s) });
   } else if(festa){
     // la guardia ha già la sua card
-  } else if(inizio) resto.unshift({ k:'giro', ico:MP_ICO.giro, titolo:dove || 'Il giro di oggi', cambia:settori().length > 1 && sett !== RIC,
+  } else if(inizio) resto.unshift({ k:'giro', ico:MP_ICO.giro, titolo:dove || 'Il giro di oggi', cambia:UI_MP && settori().length > 1 && sett !== RIC,
     sotto:`${tot} ${tot === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Inizia il giro', vai:() => mpVai('visita') });
   else if(altri > 0) resto.push({ k:'giro', ico:MP_ICO.giro, titolo:sett ? `Il giro · ${dove}` : 'Il giro di oggi',
     sotto:`${altri} ${altri === 1 ? 'paziente' : 'pazienti'} da vedere`, azione:'Apri il reparto', vai:() => mpVai('visita') });
@@ -28562,6 +28658,7 @@ function mpScegliSett(x){
   mpCambiaSett = false; M.settore = x; ricordaSettore(x); mpSel = null; mpOggi();
 }
 function mpOggi(){
+  if(!UI_MP) return vHome();
   const dati = mpPassi(), { passi, tot, daVedere, daCopiare, sett, scegli } = dati;
   mpDatiPC = dati;
   mpPila = passi;
@@ -28631,7 +28728,7 @@ function mpUndock(){
   $m('#m-velo').after(s);
   mpDettK = null;
 }
-function mpOggiPC(dati, saluto, frase){
+function mpOggiPC(dati, saluto, frase, pk){
   const { passi, fatti, fattiAltri, tot, daVedere, daCopiare, sett } = dati;
   mpDatiPC = dati;
   const lettere = passi.filter(p => p.stato === 'lettera').length;
@@ -28658,19 +28755,19 @@ function mpOggiPC(dati, saluto, frase){
   if(!$m('#m-vista > .mpd')){
     mpUndock(); mpDettK = null;
     const festivo = eFestivo(new Date());
-    $m('#m-vista').innerHTML = `<div class="mpd">
-      <div class="mpd-testa" id="mpd-testa"></div>
+    $m('#m-vista').innerHTML = `<div class="mpd${pk ? ' pkd' : ''}">
+      <div class="mpd-testa${pk ? ' pkd-testa' : ''}" id="mpd-testa"></div>
       <div class="mpd-corpo">
         <nav class="mpd-lista" id="mpd-lista" aria-label="Il lavoro di oggi"></nav>
         <section class="mpd-dett" id="mpd-dett"><div class="mp-card mpd-info" id="mpd-info" aria-live="polite"></div></section>
       </div>
       <div class="mpd-piede">
-        <div class="mpd-links">${link('data-m="pagina" data-p="dimissioni"', 'Dimissioni')}${festivo ? link('data-m="pagina" data-p="consegne"', 'Consegne weekend') : link('data-m="aggcons"', 'Aggiorna consegne')}${link('data-m="pagina" data-p="ricoveri"', 'Ricoveri')}${link('data-m="pagina" data-p="postdegenze"', 'Post-degenze')}${link('data-m="rubrica"', 'Rubrica')}${link('data-m="strumenti-home"', 'Strumenti')}</div>
+        <div class="mpd-links">${pk ? pk.links : link('data-m="pagina" data-p="dimissioni"', 'Dimissioni') + (festivo ? link('data-m="pagina" data-p="consegne"', 'Consegne weekend') : link('data-m="aggcons"', 'Aggiorna consegne')) + link('data-m="pagina" data-p="ricoveri"', 'Ricoveri') + link('data-m="pagina" data-p="postdegenze"', 'Post-degenze') + link('data-m="rubrica"', 'Rubrica') + link('data-m="strumenti-home"', 'Strumenti')}</div>
         <p class="mpd-tasti"><kbd>↑</kbd><kbd>↓</kbd> scegli · <kbd>Invio</kbd> scrivi · <kbd>C</kbd> copia · <kbd>Ctrl</kbd><kbd>Invio</kbd> copia mentre scrivi</p>
       </div>
     </div>`;
   }
-  $m('#mpd-testa').innerHTML = `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
+  $m('#mpd-testa').innerHTML = pk ? pk.testa : `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
       <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${dati.scegli ? '' : dati.guardia ? 'guardia · ' : (sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori') + ' · '}${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
     <dl class="mpd-numeri"${(!passi.length && tot) || dati.scegli ? ' hidden' : ''}>${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(dati.guardia ? dati.guardia.vedere : daVedere, dati.guardia ? 'consegnati da vedere' : 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
   // l'elenco in due parti: in alto, scorrevoli, i diari da completare e chi
@@ -28699,6 +28796,33 @@ function mpOggiPC(dati, saluto, frase){
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   if(tieni) return;
   mpDett();
+}
+// EO POCKET AL PC: la stessa scrivania (stessi passi, stesso diario
+// agganciato, stessi tasti), con la veste di Pocket. In alto a sinistra il
+// saluto e, sotto, quello che diceva il pulsante grande del Reparto (che
+// resta un tocco: apre il Reparto); il cerchio in alto a destra
+function pkScrivania(reparto, festivo){
+  const dati = mpPassi();
+  mpDatiPC = dati; mpPila = dati.passi;
+  const ora = new Date().getHours();
+  const primo = (nomeAccount().split(/\s+/)[0] || '').replace(/^./, c => c.toUpperCase());
+  const saluto = (ora < 5 ? 'Buonanotte' : ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera') + (primo ? ', ' + primo : '') + '.';
+  const testa = `<div class="pkd-ciao"><h1>${esc(saluto)}</h1><p>${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>`
+    + reparto.replace('m-ingr m-pri m-rep-home', 'm-ingr m-rep-home pkd-rep').replace(FESTA_HTML, '');
+  const link = (attr, ic, t) => `<button class="mpd-link" ${attr}>${ic}${t}</button>`;
+  const links = link('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri') + link('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni')
+    + (festivo ? link('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne weekend') : link('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne'))
+    + link('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze') + link('data-m="rubrica"', ICON.rubrica, 'Rubrica') + link('data-m="strumenti-home"', ICON.strumenti, 'Strumenti');
+  mpOggiPC(dati, '', '', { testa, links });
+}
+// un letto dalla scrivania di Pocket: da vedere, dritti alla visita (Fatto
+// riporta qui); altrimenti il Reparto col suo settore e il letto aperto
+function pkApriLetto(nome, s, visita){
+  if(!nome) return;
+  if(visita && !infoLetto(nome).vistoOggi) return apriVisita(nome);
+  const sett = s && s !== RIC ? s : settoreDiOggi();
+  vai('visita', sett ? { zoom:true, settore:sett } : { zoom:false });
+  setTimeout(() => { if(M.vista !== 'visita') return; if(infoLetto(nome).vistoOggi) apriScheda(nome); else apriVisita(nome); }, 380);
 }
 function mpDett(){
   const box = $m('#mpd-info'); if(!box) return;
@@ -28788,7 +28912,7 @@ function mpPcFatto(){
   mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
 }
 document.addEventListener('keydown', e => {
-  if(!UI_MP || M.vista !== 'home' || !$m('.mpd') || document.querySelector('[id$="-overlay"].show')) return;
+  if(M.vista !== 'home' || !$m('.mpd') || document.querySelector('[id$="-overlay"].show')) return;
   // mentre si scrive nel diario: Ctrl (o ⌘) + Invio copia e passa al prossimo, Esc lascia la casella
   if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ if(mpDocked()){ e.preventDefault(); mpPcCopia(); } return; }
   if(e.key === 'Escape' && e.target.closest && e.target.closest('#m-scheda') && e.target.matches('textarea, input')){ e.target.blur(); return; }
@@ -28800,7 +28924,7 @@ document.addEventListener('keydown', e => {
   else if(e.key === 'c' || e.key === 'C'){ e.preventDefault(); mpPcCopia(); }
 });
 // passando dal telefono al PC (o allargando la finestra) Oggi cambia forma
-MP_PC.addEventListener('change', () => { if(UI_MP && M.vista === 'home') mpOggi(); });
+MP_PC.addEventListener('change', () => { if(M.vista === 'home') mpOggi(); });
 // TELEFONO: sotto la pila, le cose già fatte oggi (come in Pocket), col baffo
 let mpFattiTel = [];
 function mpHtmlFatti(dati){
@@ -28846,6 +28970,7 @@ function mpPassoVia(){
 function mpPassoApri(){
   const p = mpPila[0]; if(!p) return;
   if(p.vai) return p.vai();
+  if(!UI_MP) return pkApriLetto(p.letto, p.s, p.k.startsWith('vis|'));
   // un letto: si passa al Reparto e il letto si apre da lì
   if(p.s) M.settore = p.s;
   M.pila = []; M.vista = 'visita'; disegna();
@@ -29177,26 +29302,7 @@ if(UI_MP){
   document.getElementById('output-card').insertAdjacentHTML('beforebegin', '<div class="card" id="mp-card-appunti"><textarea id="mp-appunti" rows="5" placeholder="richiedere Rx torace&#10;sentire i familiari&#10;esami di controllo domani" aria-label="Appunti per il diario" autocapitalize="sentences"></textarea><p class="mp-nota">Una riga per ogni cosa. Puoi anche lasciare vuoto.</p></div>');
   // sul telefono, col settore già scelto oggi, si apre sui letti: è lì che si lavora in corsia
   if(!MP_PC.matches){ const so = settoreDiOggi(); if(so){ M.vista = 'visita'; M.settore = so; } }
-  // l'editor del diario agganciato in Oggi al PC non si trascina
-  ['pointerdown', 'touchstart'].forEach(ev => $m('#m-scheda').addEventListener(ev, e => { if(mpDocked()) e.stopPropagation(); }, true));
-  // copiato un diario agganciato: si passa da soli al prossimo, e dopo l'ultimo alle consegne
-  // (in cattura: prima che la copia ridisegni l'elenco). Il diario copiato
-  // resta in vista 3 secondi, col verde di "Copiato", poi si passa al prossimo
-  $m('#m-copia').addEventListener('click', () => {
-    if(!mpDocked() || M.vista !== 'home') return;
-    const letto = M.letto, ss = settoreScelto();
-    const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
-    mpTieni = { letto, fino:Date.now() + 3600 };
-    setTimeout(() => {
-      mpTieni = null;
-      if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return;
-      const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
-      const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0];
-      mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
-    }, mpFermo() ? 0 : 3000);
-  }, true);
-  // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
-  $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
+
   // nella scheda del diario: a sinistra di "Copia il diario" il tasto con le altre azioni
   $m('.m-s-piede').insertAdjacentHTML('afterbegin', `<div class="mp-menu" id="mp-menu" hidden><button data-m="modifica">Rifai l'esame obiettivo, una domanda alla volta</button><button data-m="strumenti">Strumenti: EGA, VFG, farmaci</button><button data-m="pr-menu">Pratiche: aggiungi o togli</button></div>
     <button class="mp-tondo mp-menu-btn" id="mp-menu-btn" data-mp="menu" aria-label="Altre azioni" aria-expanded="false">${MP_ICO.altro}</button>`);
@@ -29249,6 +29355,41 @@ if(UI_MP){
   mpGuidaGesto();
 }
 
+/* la scrivania al PC (Minimal Pocket e EO Pocket): il diario agganciato */
+{
+  // l'editor del diario agganciato in Oggi al PC non si trascina
+  ['pointerdown', 'touchstart'].forEach(ev => $m('#m-scheda').addEventListener(ev, e => { if(mpDocked()) e.stopPropagation(); }, true));
+  // copiato un diario agganciato: si passa da soli al prossimo, e dopo l'ultimo alle consegne
+  // (in cattura: prima che la copia ridisegni l'elenco). Il diario copiato
+  // resta in vista 3 secondi, col verde di "Copiato", poi si passa al prossimo
+  $m('#m-copia').addEventListener('click', () => {
+    if(!mpDocked() || M.vista !== 'home') return;
+    const letto = M.letto, ss = settoreScelto();
+    const ordine = (ss ? [ss] : settori()).flatMap(x => mpNomi(x).map(y => y[0])), k = ordine.indexOf(letto);
+    mpTieni = { letto, fino:Date.now() + 3600 };
+    setTimeout(() => {
+      mpTieni = null;
+      if(M.vista !== 'home' || !mpDocked() || M.letto !== letto) return;
+      const resto = mpVoci.filter(v => v.k.startsWith('dia|') && v.letto !== letto);
+      const dopo = resto.find(v => ordine.indexOf(v.letto) > k) || resto[0];
+      mpSel = dopo ? dopo.k : null; mpScelto = false; mpOggi();
+    }, mpFermo() ? 0 : 3000);
+  }, true);
+  // scritto qualcosa nel diario agganciato: l'elenco si riallinea (copiato → da copiare)
+  $m('#m-scheda').addEventListener('focusout', () => { if(mpDocked()) setTimeout(() => { if(M.vista === 'home' && mpDocked()) mpOggi(); }, 800); });
+}
+// EO Pocket: i tocchi della scrivania (in Minimal Pocket li gestisce il suo avvio)
+if(!UI_MP) document.addEventListener('click', e => {
+  const el = e.target.closest('[data-mp]'); if(!el) return;
+  const a = el.dataset.mp;
+  if(a === 'pc-sel') mpPcScegli(el.dataset.k);
+  else if(a === 'pc-apri') mpPcApri();
+  else if(a === 'pc-copia') mpPcCopia();
+  else if(a === 'pc-fatto') mpPcFatto();
+  else if(a === 'pc-disfa') mpPcDisfa();
+  else if(a === 'pc-copiati'){ mpCopAperti = !mpCopAperti; if(!mpCopAperti && String(mpSel).startsWith('cop|')) mpSel = null; mpOggi(); }
+  else if(a === 'pc-letto') pkApriLetto(el.dataset.n, el.dataset.s);
+});
 nascondiViste();
 disegna();
 document.documentElement.classList.add('m-pronto');
