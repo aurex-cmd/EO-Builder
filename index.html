@@ -25382,6 +25382,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd .pkd-rep .m-rh-tondo b{ font-size:24px; color:var(--m-ink); }
   .pkd .pkd-rep .m-rh-tondo b small{ font-size:12px; color:var(--m-muted); }
   .pkd .pkd-rep .m-td-f{ stroke:var(--m-l-base); }
+  .pkd-tondo-chi{ position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:6px; font-size:12px; font-weight:600; color:var(--m-notte); white-space:nowrap; }
   .pkd .pkd-rep .m-td-b{ stroke:var(--m-l-visto); }
   .pkd .pkd-rep .m-td-a{ stroke:var(--m-teal); }
   /* a sinistra le cose da fare: l'elenco di Pocket (righe con la linea) */
@@ -28872,6 +28873,15 @@ function pkDettSettore(box, p){
     <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Apri il settore</button></div>`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
+// il tondo in alto segue il settore scelto nella fila (col suo nome sotto);
+// scelto altro, torna quello di oggi
+function pkTondo(p){
+  const t = document.querySelector('.pkd-rep .m-rh-tondo'); if(!t) return;
+  if(t._base == null) t._base = t.innerHTML;
+  const segue = p && p.sett && (eFestivo(new Date()) || p.sett !== settoreScelto());
+  const html = segue ? tondo(p.n ? p.visti / p.n * 100 : 0, p.n ? p.cop / p.n * 100 : 0) + `<span class="pkd-tondo-chi">${esc(p.sett === RIC ? 'Ricoveri' : 'Settore ' + p.l)}</span>` : t._base;
+  if(t.innerHTML !== html) t.innerHTML = html;
+}
 // un letto toccato nel settore: visto, il suo diario agganciato (la sua riga
 // nell'elenco, anche tra i copiati); da vedere, la visita
 function pkLettoSett(nome){
@@ -28893,6 +28903,7 @@ function mpDett(){
   const box = $m('#mpd-info'); if(!box) return;
   const p = mpVoci.find(v => v.k === mpSel);
   mpSelLetto = p && p.letto || null;
+  if(!UI_MP) pkTondo(p);
   document.querySelectorAll('#mpd-lista [data-k]').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
   const diario = mpEDiario(p);
   const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto + (p.sett ? '|' + p.firma : '');
