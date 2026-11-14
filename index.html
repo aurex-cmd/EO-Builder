@@ -25943,8 +25943,10 @@ function vHome(){
     const visti = new Set(); let cons = 0, vedere = 0, crit = 0;
     settori().forEach(x => nomiDelSettore(x).forEach(nm => { if(visti.has(nm)) return; visti.add(nm); const i = infoLetto(nm); if(i.consegne){ cons++; if(!i.vistoOggi) vedere++; } if(i.critico) crit++; }));
     reparto = `<button class="m-ingr m-pri m-rep-home" data-m="reparto-guardia"><span class="m-sh">${ICON.steto}Guardia</span>${cons ? `<span class="m-rh-tondo">${tondo((cons - vedere) / cons * 100)}</span>` : ''}
-        ${vedere ? `<span class="m-sn">${vedere}<small>${vedere === 1 ? 'consegnato' : 'consegnati'} da vedere</small></span>` : ''}
-        <span class="m-ss">${vedere ? `Tutti i settori · ${cons} ${cons === 1 ? 'consegnato' : 'consegnati'} in tutto${crit ? ` · ${crit} ${crit === 1 ? 'critico' : 'critici'}` : ''}` : cons ? 'Tutti i settori · consegnati tutti visti' : 'Tutti i settori · nessun consegnato'}</span>${FESTA_HTML}</button>`;
+        ${vedere ? `<span class="m-sn">${vedere}<small>${vedere === 1 ? 'consegnato' : 'consegnati'} da vedere</small></span>`
+          : cons ? `<span class="m-sn">${cons}<small>su ${cons} ${cons === 1 ? 'consegnato visto' : 'consegnati visti'}</small></span>`
+          : `<span class="m-sn"><span class="m-inizia">Inizia la guardia${ICON.chev}</span></span>`}
+        <span class="m-ss">${vedere ? `Tutti i settori · ${cons} ${cons === 1 ? 'consegnato' : 'consegnati'} in tutto${crit ? ` · ${crit} ${crit === 1 ? 'critico' : 'critici'}` : ''}` : cons ? 'Tutti i settori · guardia finita' : 'Tutti i settori · consegne ancora da allegare'}</span>${FESTA_HTML}</button>`;
   }
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
