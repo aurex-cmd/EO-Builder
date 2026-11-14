@@ -28862,13 +28862,13 @@ function pkScrivania(reparto, festivo){
 }
 // il settore scelto, nel riquadro grande: il nome, il tondo, i letti coi
 // colori di Pocket. Un letto visto apre il suo diario qui; da vedere, la
-// visita (Fatto riporta qui). "Apri il settore": la vista completa
+// visita (Fatto riporta qui). "Appoggi, parametri vitali e altro": la vista completa
 function pkDettSettore(box, p){
   const s = p.sett, vu = lettiVuoti();
   const letti = mpNomi(s).filter(([n, et, ap]) => ap || infoLetto(n).occupato || !vu[n]);
   box.innerHTML = `<div class="mpd-dtesta pkd-st-testa"><div><h2>${esc(p.titolo)}</h2><p>${esc(p.sotto)}</p></div></div>
     ${letti.length ? `<div class="pkd-griglia">${letti.map(([n, et, ap], k) => tileLetto(n, et, k, null, ap).replace('data-m="letto"', 'data-mp="pk-letto"').replace(/<span class="m-togli"[\s\S]*?<\/span>/, '')).join('')}</div>` : '<p class="mpd-vuoto">Nessun letto in questo settore.</p>'}
-    <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Apri il settore</button></div>`;
+    <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Appoggi, parametri vitali e altro</button></div>`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
 // il tondo in alto segue il settore scelto nella fila (col suo nome sotto);
