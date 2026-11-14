@@ -25408,10 +25408,6 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd-sett button[aria-current="true"] i{ background:linear-gradient(90deg, #fff var(--c), rgba(255,255,255,.55) var(--c) var(--p), rgba(255,255,255,.22) var(--p)); }
   /* il settore nel riquadro grande */
   .pkd-st-testa{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
-  .pkd-st-tondo{ position:relative; flex:none; width:72px; height:72px; display:grid; place-items:center; }
-  .pkd-st-tondo svg{ position:absolute; inset:0; width:72px; height:72px; transform:rotate(-90deg); }
-  .pkd-st-tondo .m-td-f{ stroke:var(--m-l-base); } .pkd-st-tondo .m-td-b{ stroke:var(--m-l-visto); } .pkd-st-tondo .m-td-a{ stroke:var(--m-teal); }
-  .pkd-st-tondo b{ position:relative; font-size:17px; font-weight:800; color:var(--m-ink); } .pkd-st-tondo b small{ font-size:10px; color:var(--m-muted); }
   .pkd-griglia{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 84px)); gap:12px; margin-top:26px; }
   .pkd-griglia .m-tl{ height:auto; aspect-ratio:1; font-size:17px; animation:m-compare .3s var(--m-molla) both; animation-delay:calc(var(--i) * 12ms); }
   .pkd-st-nota{ margin:18px 0 0; font-size:13px; color:var(--m-muted); }
@@ -28861,9 +28857,9 @@ function pkScrivania(reparto, festivo){
 // colori di Pocket. Un letto visto apre il suo diario qui; da vedere, la
 // visita (Fatto riporta qui). "Apri il settore": la vista completa
 function pkDettSettore(box, p){
-  const s = p.sett, st = { n:p.n, visti:p.visti, cop:p.cop }, vu = lettiVuoti();
+  const s = p.sett, vu = lettiVuoti();
   const letti = mpNomi(s).filter(([n, et, ap]) => ap || infoLetto(n).occupato || !vu[n]);
-  box.innerHTML = `<div class="mpd-dtesta pkd-st-testa"><div><h2>${esc(p.titolo)}</h2><p>${esc(p.sotto)}</p></div><span class="pkd-st-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0, st.n ? st.cop / st.n * 100 : 0)}</span></div>
+  box.innerHTML = `<div class="mpd-dtesta pkd-st-testa"><div><h2>${esc(p.titolo)}</h2><p>${esc(p.sotto)}</p></div></div>
     ${letti.length ? `<div class="pkd-griglia">${letti.map(([n, et, ap], k) => tileLetto(n, et, k, null, ap).replace('data-m="letto"', 'data-mp="pk-letto"').replace(/<span class="m-togli"[\s\S]*?<\/span>/, '')).join('')}</div>` : '<p class="mpd-vuoto">Nessun letto in questo settore.</p>'}
     <p class="pkd-st-nota">Già visto: il diario si apre qui. Da vedere: la visita.</p>
     <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Apri il settore</button></div>`;
