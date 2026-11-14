@@ -24289,6 +24289,8 @@ function editorLettereSvuota(){
      10px tra l'uno e l'altro. Cambia solo la misura, lo stile resta di Pocket */
   html:not([data-mp]) .m-set-carta .m-griglia{ grid-template-columns:repeat(4, minmax(0, 84px)); gap:10px; justify-content:center; }
   html:not([data-mp]) .m-set-carta .m-griglia .m-tl{ height:auto; aspect-ratio:1; }
+  /* letti grandi, angoli più morbidi (anche nel riquadro del settore al PC) */
+  html:not([data-mp]) :is(.m-set-carta .m-griglia, .pkd-griglia) .m-tl{ border-radius:18px; }
   /* mentre i letti volano, il resto della scheda compare piano */
   .m-set-entra :is(.m-set-su, .m-set-carta > .m-rep-lbl, .m-set-carta > .m-rep-link, .m-set-elenco){ animation:m-compare .35s ease-out .22s both; }
   /* il + appoggio arriva per ultimo, quando i letti sono già atterrati */
