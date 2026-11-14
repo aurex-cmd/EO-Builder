@@ -23704,6 +23704,20 @@ function editorLettereSvuota(){
   /* i riquadri nello spazio sotto il titolo, con sopra un terzo dello spazio
      che resta sotto; scorrono solo se non ci stanno */
   .m-home-giu{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; padding:0 0 calc(16px + env(safe-area-inset-bottom,0px)); container-type:inline-size; }
+  /* TELEFONO IN ORIZZONTALE (poca altezza): la home in due colonne, a
+     sinistra il Reparto fermo, a destra Da fare oggi e l'elenco, che
+     scorrono; il titolo più piccolo. Così si vede tutta */
+  @media (orientation:landscape) and (max-height:559px) and (min-width:560px){
+    html:not([data-mp]) .m-main.m-main-home{ max-width:960px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); }
+    html:not([data-mp]) .m-bar.m-home .m-bar-in{ max-width:928px; }
+    html:not([data-mp]) .m-main-home .m-h1-home{ font-size:22px; margin-top:0; }
+    html:not([data-mp]) .m-main-home .m-home-su .m-sub{ margin-top:0; font-size:13px; }
+    html:not([data-mp]) .m-home-giu{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows:max-content; column-gap:16px; align-content:start; margin-top:8px; }
+    html:not([data-mp]) .m-home-giu > .m-schede{ grid-column:1; grid-row:1 / span 20; position:sticky; top:0; align-self:start; margin:0; }
+    html:not([data-mp]) .m-home-giu > :not(.m-schede){ grid-column:2; }
+    html:not([data-mp]) .m-home-giu > :nth-child(2){ margin-top:0; }
+    html:not([data-mp]) .m-home-giu > .m-fare-t:nth-child(2){ margin-top:2px; }
+  }
   /* home sobria: un blu notte solo sull'azione principale, bordi sottili, grigi neutri */
   /* il nome del reparto alla stessa altezza dei titoli delle altre viste (Settori, …) */
   .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
