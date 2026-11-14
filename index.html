@@ -25418,7 +25418,6 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd-st-testa{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
   .pkd-griglia{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 84px)); gap:12px; margin-top:26px; }
   .pkd-griglia .m-tl{ height:auto; aspect-ratio:1; font-size:17px; animation:m-compare .3s var(--m-molla) both; animation-delay:calc(var(--i) * 12ms); }
-  .pkd-st-nota{ margin:18px 0 0; font-size:13px; color:var(--m-muted); }
   /* a destra il riquadro grande, il riquadro di Pocket */
   .pkd .mpd-info{ border:1px solid var(--m-line); border-radius:12px; background:var(--m-carta); box-shadow:none; padding:28px 32px; }
   .pkd .mpd-dtesta h2{ font-size:34px; font-weight:800; letter-spacing:-.025em; }
@@ -28869,7 +28868,6 @@ function pkDettSettore(box, p){
   const letti = mpNomi(s).filter(([n, et, ap]) => ap || infoLetto(n).occupato || !vu[n]);
   box.innerHTML = `<div class="mpd-dtesta pkd-st-testa"><div><h2>${esc(p.titolo)}</h2><p>${esc(p.sotto)}</p></div></div>
     ${letti.length ? `<div class="pkd-griglia">${letti.map(([n, et, ap], k) => tileLetto(n, et, k, null, ap).replace('data-m="letto"', 'data-mp="pk-letto"').replace(/<span class="m-togli"[\s\S]*?<\/span>/, '')).join('')}</div>` : '<p class="mpd-vuoto">Nessun letto in questo settore.</p>'}
-    <p class="pkd-st-nota">Già visto: il diario si apre qui. Da vedere: la visita.</p>
     <div class="mpd-azioni mpd-una"><button class="mp-btn mp-sec" data-mp="pk-apri-sett" data-s="${esc(s)}">Apri il settore</button></div>`;
   box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
