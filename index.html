@@ -25930,13 +25930,22 @@ function vHome(){
   };
   // una scheda sola, il Reparto: dentro Visita e Diari sono gli stessi letti
   const sett = settoreScelto(), st = sett && statoSettore(sett);
-  const reparto = st
+  let reparto = st
     ? `<button class="m-ingr m-pri m-rep-home" data-m="reparto"><span class="m-sh">${ICON.steto}Reparto · ${esc(st.nome)}</span><span class="m-rh-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0, st.n ? st.cop / st.n * 100 : 0)}</span>
         ${st.n && !st.visti ? `<span class="m-sn"><span class="m-inizia">Inizia il giro${ICON.chev}</span></span>
         <span class="m-ss">${st.n} ${st.n === 1 ? 'paziente' : 'pazienti'} da vedere</span>` : `<span class="m-sn">${st.visti}<small>su ${st.n} vist${st.visti === 1 ? 'o' : 'i'} oggi</small></span>
         <span class="m-ss">${rigaReparto(st)}</span>`}${FESTA_HTML}</button>`
     : scheda(' m-pri m-rep-home', 'data-m="reparto"', ICON.steto, 'Reparto', visti ? `${visti}<small>vist${visti === 1 ? 'o' : 'i'} oggi</small>` : `<span class="m-inizia">Inizia il giro${ICON.chev}</span>`,
       visti ? (daCopiare ? `${daCopiare} da copiare${quantiRic(ricDa, daCopiare)} · ${copiati} copiat${copiati === 1 ? 'o' : 'i'}${quantiRic(ricCop, copiati)}` : `Tutti i diari copiati`) : 'Visita e diari, settore per settore').replace('</button>', FESTA_HTML + '</button>');
+  // nei festivi c'è la guardia: il pulsante grande conta i consegnati da
+  // vedere in tutti i settori e apre la vista di tutti i settori
+  if(festivo){
+    const visti = new Set(); let cons = 0, vedere = 0, crit = 0;
+    settori().forEach(x => nomiDelSettore(x).forEach(nm => { if(visti.has(nm)) return; visti.add(nm); const i = infoLetto(nm); if(i.consegne){ cons++; if(!i.vistoOggi) vedere++; } if(i.critico) crit++; }));
+    reparto = `<button class="m-ingr m-pri m-rep-home" data-m="reparto-guardia"><span class="m-sh">${ICON.steto}Guardia</span>${cons ? `<span class="m-rh-tondo">${tondo((cons - vedere) / cons * 100)}</span>` : ''}
+        ${vedere ? `<span class="m-sn">${vedere}<small>${vedere === 1 ? 'consegnato' : 'consegnati'} da vedere</small></span>` : ''}
+        <span class="m-ss">${vedere ? `Tutti i settori · ${cons} ${cons === 1 ? 'consegnato' : 'consegnati'} in tutto${crit ? ` · ${crit} ${crit === 1 ? 'critico' : 'critici'}` : ''}` : cons ? 'Tutti i settori · consegnati tutti visti' : 'Tutti i settori · nessun consegnato'}</span>${FESTA_HTML}</button>`;
+  }
   // voce dell'elenco: icona, nome, a destra il dato (o un contatore) e la freccia
   const voce = (attr, ic, nome, dato, conta) => `<button class="m-voce" ${attr}>${ic}<span class="m-vn">${nome}</span>${conta ? `<span class="m-vc">${conta}</span>` : `<span class="m-vv">${dato || ''}</span>`}${ICON.chev}</button>`;
   const ricTesto = (ricOggi ? `${ricOggi} oggi` : giorniUltimo > 0 ? `ultimo ${giorniUltimo === 1 ? 'ieri' : giorniUltimo + ' giorni fa'}` : '') + (ric.length ? `${ricOggi || giorniUltimo > 0 ? ' · ' : ''}${ric.length} totali` : '');
@@ -27133,6 +27142,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'zoom') zoomSettore(el.dataset.s, el);
   else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
   else if(a === 'mappa') tornaMappa();
+  else if(a === 'reparto-guardia') vai('visita', { zoom:false });
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
