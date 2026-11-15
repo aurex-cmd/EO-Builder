@@ -17529,7 +17529,18 @@ function composeCoscienza(){
   let ncCoda = '';
   if(ncTesto && descPrima.includes(ncTesto)){ descPrima = descPrima.filter(t => t !== ncTesto); ncCoda = ncTesto; }
   if(descPrima.length || clausolaMa || ncCoda) parts.push([descPrima.length ? joinIt(descPrima) : '', clausolaMa, ncCoda].filter(Boolean).join(', '));
-  const corpo = parts.join(', ');
+  let corpo = parts.join(', ');
+  // l'orientamento parziale finisce col "non" ("orientato nella persona e
+  // nello spazio, non nel tempo"): quello che segue diventa una frase a sé,
+  // "..., non nel tempo. Collaborante", non "..., non nel tempo e collaborante"
+  if(state.coscienza.descrittori.has('orientato')){
+    const lab = fraseOrientato(state.coscienza.descrittori, state.sesso === 'F');
+    const k = lab.includes(', non ') ? corpo.indexOf(lab) : -1;
+    if(k > -1){
+      const dopo = corpo.slice(k + lab.length).replace(/^(?:,\s*|\s+e\s+)/, '');
+      if(dopo && dopo !== corpo.slice(k + lab.length)) corpo = corpo.slice(0, k + lab.length) + '. ' + cap(dopo);
+    }
+  }
   let s = corpo ? cap(corpo) + '.' : '';
   [fraseMut, fraseDopo].filter(Boolean).forEach(f => { s += (s ? ' ' : '') + cap(f) + '.'; });
 
