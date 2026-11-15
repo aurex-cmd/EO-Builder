@@ -17481,7 +17481,10 @@ function composeCoscienza(){
   let clausolaMa = '';
   selected.forEach(o => {
     if(partner && o.value === partner.value){
-      clausolaMa = etichetta(o) + ' ma ' + joinIt(positivi.map(etichetta));
+      // dopo il "ma" la collaborazione è "alla visita" (il pendant di "non
+      // collaborante alla visita"): "confabulante ma collaborante alla visita"
+      const collab = positivi.some(x => x.value === 'collaborante' || x.value === 'parzialmente_collaborante');
+      clausolaMa = etichetta(o) + ' ma ' + joinIt(positivi.map(etichetta)) + (collab ? ' alla visita' : '');
     } else if(partner && MA_POSITIVI.includes(o.value)){
       // già dentro la clausola col "ma"
     } else {
