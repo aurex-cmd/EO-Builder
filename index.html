@@ -23724,6 +23724,13 @@ function editorLettereSvuota(){
   @media (orientation:landscape) and (max-height:559px) and (min-width:560px){
     html:not([data-mp]) .m-main.m-main-home{ max-width:960px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); }
     html:not([data-mp]) .m-bar.m-home .m-bar-in{ max-width:928px; }
+    /* in orizzontale l'iPhone non ha niente in alto (la tacca è di lato), ma
+       iOS a volte tiene il margine del verticale dopo la rotazione: via */
+    html:not([data-mp]) .m-bar{ padding-top:6px; padding-bottom:4px; }
+    html:not([data-mp]) .m-main-home .m-vista{ height:calc(100dvh - 58px); }
+    html:not([data-mp]) .m-main-home .m-home-su{ gap:2px; }
+    html:not([data-mp])[data-m-eo] #clinical-view{ padding-top:56px; }
+    html[data-ui="minimal"]:not([data-mp]) .m-pagina{ padding-top:58px !important; }
     html:not([data-mp]) .m-main-home .m-h1-home{ font-size:22px; margin-top:0; }
     html:not([data-mp]) .m-main-home .m-home-su .m-sub{ margin-top:0; font-size:13px; }
     html:not([data-mp]) .m-home-giu{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows:max-content; column-gap:16px; align-content:start; margin-top:8px; }
