@@ -16962,7 +16962,8 @@ const OPT = {
     {value:'mitralico', label:'mitralico'},
     {value:'aorto-mitralico', label:'aorto-mitralico'},
     {value:'mesocardio', label:'mesocardio'},
-    {value:'tricuspidale', label:'tricuspidale'}
+    {value:'tricuspidale', label:'tricuspidale'},
+    {value:'ubiquitario', label:'ubiquitario'}
   ],
   toraceMv: [
     {value:'presente', label:'Presente su TAP', frag:'MV presente su TAP', noLoc:true},
@@ -17674,7 +17675,8 @@ function composeCuore(){
   let soffioFrag = '';
   if(soffioAttivo){
     const foc = c.focolaio || 'non specificato';
-    const focText = foc === 'mesocardio' ? 'in mesocardio' : `su focolaio ${foc}`;
+    // ubiquitario: su tutti i focolai ("soffio sistolico 2/6 sec. Levine ubiquitario")
+    const focText = foc === 'mesocardio' ? 'in mesocardio' : foc === 'ubiquitario' ? 'ubiquitario' : `su focolaio ${foc}`;
     // senza l'entità (grado) selezionata, si omette tutta la scala "X/6
     // sec. Levine" invece di lasciare un segnaposto ("_/6 sec.")
     soffioFrag = c.grado
