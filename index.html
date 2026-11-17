@@ -13296,6 +13296,26 @@ const RE_STOP_ATB = /\b(?:stop|sospes\w*|sospend\w*|termin\w*|interromp\w*|inter
 const RE_INIZIO_ATB = /\b(?:inizi\w*|avvi\w*|impost\w*|intrapres\w*|introdott\w*|aggiunt\w*|si\s+aggiunge|start)\b/i;
 // tutti i verbi che decidono di un antibiotico (stop, inizio, prosegue):
 // per capire a quale farmaco si riferisce ciascuno, vedi antibioticiInCorso
+// ANTIBIOGRAMMA: "R ad amoxi/clav, S a levofloxacina", "resistente a
+// ciprofloxacina", "sensibile a meropenem e piperacillina/tazobactam" dicono
+// a cosa è sensibile il germe, non la terapia: da lì alla fine della frase
+// (o fino a un verbo di terapia: "..., si inizia levofloxacina") il testo
+// non conta per gli antibiotici in corso
+const RE_ANTIBIOGRAMMA = /(?:\b[RSI]|\b[Rr]esistent\w*|\b[Ss]ensibil\w*|\b[Ii]ntermedi\w*)\s+(?:all['’]|(?:a|ad|al|alla|allo|ai|agli|alle)\b)/g;
+function senzaAntibiogramma(t){
+  let out = '', da = 0, m;
+  const re = new RegExp(RE_ANTIBIOGRAMMA.source, 'g');
+  while((m = re.exec(t))){
+    if(m.index < da) continue;
+    const resto = t.slice(m.index);
+    let fine = resto.search(/[.;\n]/); if(fine < 0) fine = resto.length;
+    const v = new RegExp(RE_VERBI_ATB.source, 'i').exec(resto.slice(m[0].length));
+    if(v && m[0].length + v.index < fine) fine = m[0].length + v.index;
+    out += t.slice(da, m.index); da = m.index + fine;
+    re.lastIndex = da;
+  }
+  return out + t.slice(da);
+}
 const RE_VERBI_ATB = new RegExp(RE_STOP_ATB.source + '|' + RE_INIZIO_ATB.source + String.raw`|\b(?:prosegu\w*|continu\w*|mantien\w*|mantenut\w*|in\s+corso|in\s+atto)\b`, 'gi');
 // (aggiornato) l'antibiotico resta in corso anche nei giorni in cui il diario
 // non lo nomina più ("continua terapia in atto", o niente del tutto): il
@@ -13312,7 +13332,7 @@ function antibioticiInCorso(p, idPaziente){
   const senzaPuntiAbbreviazioni = t => (t || '')
     .replace(/(?<![\p{L}])(ac|acid)\.\s*(?=\p{L})/giu, '$1 ')
     .replace(/(?<![\p{L}])([a-z])\.\s?([a-z])\.(?=[\s,;)]|$)/gim, '$1$2');
-  const giorni = diarioGiorniPaziente(p, idPaziente).map(x => Object.assign({}, x, { testo: senzaPuntiAbbreviazioni(x.testo) }));
+  const giorni = diarioGiorniPaziente(p, idPaziente).map(x => Object.assign({}, x, { testo: senzaAntibiogramma(senzaPuntiAbbreviazioni(x.testo)) }));
   const oggi = chiaveGiorno(Date.now());
   if(!giorni.length || giorni[giorni.length - 1].giorno !== oggi) return [];
   const risultati = [];
@@ -14592,13 +14612,16 @@ const AGG_CONS_FINE_RICHIESTA = /\s+(?:come\s+(?:da|indicato|suggerito|consiglia
 function aggConsRichiesteHtml(testo, apri, chiudi){
   const fine = String.raw`(?=\s*(?:,|;|->|→|>|\)|$))`;
   // 1) R a inizio riga o dopo un separatore: qualsiasi richiesta
-  const reSep = new RegExp(String.raw`(^|->|→|>|;|:|,|\()(\s*)(R\s+[^,;()→>]+?)` + fine, 'g');
+  // "R ad amoxi/clav", "R a levofloxacina" (antibiogramma: resistente a)
+  // non sono richieste
+  const noAntibiogramma = String.raw`(?!(?:a|ad|al|alla|allo|ai|agli|alle)\b|all['’])`;
+  const reSep = new RegExp(String.raw`(^|->|→|>|;|:|,|\()(\s*)(R\s+` + noAntibiogramma + String.raw`[^,;()→>]+?)` + fine, 'g');
   // 2) R in mezzo alla frase (\"per peggioramento respiratorio R RX torace\",
   //    \"in caso di febbre R emocolture\"): qualsiasi richiesta, purché la R
   //    sia seguita da una parola e non da un numero (\"KCl R 2 cp\" resta
   //    normale). La lista degli esami resta per riferimento
   const esami = String.raw`(?:rx|tc|angio-?\w*|colangio-?\w*|entero-?\w*|uro-?\w*|rmn?|eco\w*|doppler|ecocolordoppler|v\.|visita|val\.|valutazione|cons\.|consulenza|fkt|fisioterapia|egds|gastroscopia|colonscopia|rettosigmoidoscopia|rss|scintigrafia|pet|moc|dxa|holter|ecg|eeg|emg|spirometria|broncoscopia|toracentesi|paracentesi|mammografia|biopsia)`;
-  const reMezzo = new RegExp(String.raw`(\s)()(R\s+(?=[\p{L}])[^,;()→>]*?)` + fine, 'gu');
+  const reMezzo = new RegExp(String.raw`(\s)()(R\s+` + noAntibiogramma + String.raw`(?=[\p{L}])[^,;()→>]*?)` + fine, 'gu');
   const intervalli = [];
   for(const re of [reSep, reMezzo]){
     let m;
