@@ -25451,6 +25451,14 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd .mpd-corpo{ grid-template-columns:clamp(230px, 24vw, 290px) minmax(0, 1fr); margin-top:18px; }
   .pkd .mpd-lista{ padding:0; border:1px solid var(--m-line); border-radius:10px; background:var(--m-carta); box-shadow:none; overflow:hidden; }
   .pkd .mpd-giu{ margin:0; padding:0; background:none; border-top:1px solid var(--m-line); }
+  /* spazi fissi: la fila dei settori sempre in alto, lettere e consegne e
+     Fatto oggi (se ci sono) sempre in fondo, entro un tetto; le cose da fare
+     prendono quel che resta e scorrono lì dentro. La colonna non scorre mai
+     tutta insieme (clip: neanche scegliendo una riga coi tasti) */
+  .pkd .mpd-lista{ overflow:clip; }
+  .pkd .mpd-su{ flex:0 1 auto; max-height:none; min-height:96px; }
+  .pkd .mpd-giu{ flex:0 0 auto; max-height:min(44vh, 380px); }
+  .pkd .mpd-giu > .mpd-gr, .pkd .mpd-giu > .mpd-r{ flex:none; }
   .pkd .mpd-gr{ margin:0; padding:14px 14px 6px; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
   .pkd .mpd-gr:first-child{ margin:0; }
   .pkd .mpd-r{ gap:12px; padding:9px 14px; border-radius:0; border-top:1px solid var(--m-line); transition:background .15s; }
