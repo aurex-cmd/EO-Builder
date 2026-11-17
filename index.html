@@ -22782,7 +22782,10 @@ document.addEventListener('paste', (e) => {
   // obiettivo + riga vuota + aggiunte) non è un singolo referto: si uniscono
   // solo i blocchi con un'intestazione riconosciuta, il resto resta com'è
   const piuParagrafi = /\n[ \t]*\n/.test(incollato.replace(/\r\n?/g, '\n').trim());
-  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto || (boxDiario && !piuParagrafi));
+  // nell'Editor di testo si incollano solo referti: sempre su una riga,
+  // anche senza intestazione e con righe vuote in mezzo
+  const editorTesto = el.id === 'editor-lettere-testo';
+  const formattato = formattaRefertoIncollato(incollato, el.value.slice(0, el.selectionStart), boxReferto || editorTesto || (boxDiario && !piuParagrafi));
   let finale = correggiAccenti(formattato === null ? incollato : formattato);
   // intestazione scritta a mano e poi "a capo" prima di incollare
   // ("AngioTC dell'aorta toracica:" + Invio + incolla): il referto va
