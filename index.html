@@ -25459,7 +25459,9 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   /* la colonna è sempre alta quanto il riquadro del diario, anche con poche
      cose: lettere e consegne e Fatto oggi restano in fondo */
   .pkd .mpd-lista{ align-self:stretch; max-height:none; }
-  .pkd .mpd-giu{ margin-top:auto; }
+  /* in fondo solo se sopra ci sono ancora cose da fare; finite quelle,
+     lettere e consegne e Fatto oggi salgono in cima */
+  .pkd .mpd-su ~ .mpd-giu{ margin-top:auto; }
   .pkd .mpd-su{ flex:0 1 auto; max-height:none; min-height:96px; }
   .pkd .mpd-giu{ flex:0 0 auto; max-height:min(44vh, 380px); }
   .pkd .mpd-giu > .mpd-gr, .pkd .mpd-giu > .mpd-r{ flex:none; }
