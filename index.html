@@ -11370,12 +11370,15 @@ function selezionaPaziente(id){
     if(resetGiornalieroAttivo()){
       applicaResetGiornalieroCompleto();
     } else {
+      // il testo dell'esame scritto (o corretto) a mano resta: prima si
+      // buttava via per non lasciarci i parametri di ieri, ma così l'esame
+      // tornava quello standard dei tag e con Fatto si salvava al posto del
+      // proprio. Dei parametri si cambia solo la loro frase (respiro, SatO2,
+      // PA, FC, temperatura), se nel testo c'è ancora uguale
+      const manuale = state.outputEsameManuale || '';
+      const respiroIeri = manuale ? composeRespiroConNota() : '';
       Object.assign(state.respiro, respiroVuotoDiOggi());
-      // se il giorno prima avevi migliorato a mano il testo (vedi
-      // outputEsameManuale), conteneva probabilmente i vecchi parametri
-      // scritti dentro la frase: lo scartiamo insieme ai parametri, così il
-      // testo mostrato riparte pulito e coerente con i campi appena azzerati
-      state.outputEsameManuale = '';
+      if(manuale && respiroIeri && manuale.includes(respiroIeri)) state.outputEsameManuale = manuale.replace(respiroIeri, composeRespiroConNota());
     }
   }
   populateInputsFromState();
