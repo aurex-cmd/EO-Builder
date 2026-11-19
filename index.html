@@ -17562,6 +17562,15 @@ function composeCoscienza(){
   const ncTesto = ncOpt ? etichetta(ncOpt) : '';
   let ncCoda = '';
   if(ncTesto && descPrima.includes(ncTesto)){ descPrima = descPrima.filter(t => t !== ncTesto); ncCoda = ncTesto; }
+  // con l'oppositivo, una coda sola: "non collaborante e a tratti
+  // oppositivo alla visita" (non "a tratti oppositivo alla visita, non
+  // collaborante alla visita")
+  const oppOpt = ncCoda && selected.find(o => o.value === 'oppositivo' || o.value === 'a_tratti_oppositivo');
+  const oppTesto = oppOpt ? etichetta(oppOpt) : '';
+  if(oppTesto && descPrima.includes(oppTesto)){
+    descPrima = descPrima.filter(t => t !== oppTesto);
+    ncCoda = ncCoda.replace(/\s+alla visita$/, '') + ' e ' + oppTesto;
+  }
   if(descPrima.length || clausolaMa || ncCoda) parts.push([descPrima.length ? joinIt(descPrima) : '', clausolaMa, ncCoda].filter(Boolean).join(', '));
   let corpo = parts.join(', ');
   // l'orientamento parziale finisce col "non" ("orientato nella persona e
