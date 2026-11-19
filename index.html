@@ -18291,10 +18291,15 @@ function composeNeuro(){
   if(n.pupille && n.pupille.has('iso')){
     parts.push('pupille isocicliche e isocoriche');
   } else if(n.pupille && n.pupille.size){
-    const pezzi = [];
-    if(n.pupille.has('anisocoriche')) pezzi.push('anisocoriche' + (n.pupilleCoriaLato ? ', midriatica la ' + n.pupilleCoriaLato : ''));
-    if(n.pupille.has('anisocicliche')) pezzi.push('anisocicliche' + (n.pupilleCicliaLato ? ', irregolare la ' + n.pupilleCicliaLato : ''));
-    parts.push('pupille ' + pezzi.join(', e '));
+    // prima i due aggettivi insieme, poi i lati: "pupille anisocoriche e
+    // anisocicliche, midriatica e irregolare la dx" (lato diverso:
+    // "midriatica la dx e irregolare la sx")
+    const coria = n.pupille.has('anisocoriche'), ciclia = n.pupille.has('anisocicliche');
+    const lc = coria ? n.pupilleCoriaLato : '', ll = ciclia ? n.pupilleCicliaLato : '';
+    const tipi = [coria && 'anisocoriche', ciclia && 'anisocicliche'].filter(Boolean).join(' e ');
+    const lati = lc && ll ? (lc === ll ? `midriatica e irregolare la ${lc}` : `midriatica la ${lc} e irregolare la ${ll}`)
+      : lc ? `midriatica la ${lc}` : ll ? `irregolare la ${ll}` : '';
+    parts.push('pupille ' + tipi + (lati ? ', ' + lati : ''));
   }
 
   const linguaggioLabel = { non_disartria:'non disartria', disartrico: state.sesso === 'F' ? 'disartrica' : 'disartrico', afasico: state.sesso === 'F' ? 'afasica' : 'afasico' };
