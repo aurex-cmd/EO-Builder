@@ -15175,7 +15175,7 @@ function g(opt){
   return opt.label;
 }
 
-function renderSingle(containerId, options, getVal, setVal){
+function renderSingle(containerId, options, getVal, setVal, dopo){
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   options.forEach(opt => {
@@ -15190,9 +15190,28 @@ function renderSingle(containerId, options, getVal, setVal){
     const b = document.createElement('div');
     b.className = 'chip' + (getVal()===opt.value ? ' active' : '');
     b.textContent = g(opt);
-    b.onclick = () => { setVal(getVal()===opt.value ? '' : opt.value); update(); };
+    b.onclick = () => { setVal(getVal()===opt.value ? '' : opt.value); (dopo || update)(); };
     el.appendChild(b);
   });
+}
+// MASCHIO/FEMMINA non è un tag dell'esame: non deve far perdere il testo
+// scritto o corretto a mano (prima tornava l'esame dei soli tag, spesso
+// quello standard). Si confronta il testo dei tag prima e dopo il cambio:
+// le parole cambiate (soporoso → soporosa, orientato → orientata...) si
+// cambiano anche nel testo a mano, il resto resta com'è
+function cambiaSessoTenendoTesto(){
+  const manuale = state.outputEsameManuale || '';
+  if(!manuale){ update(); return; }
+  const prima = outputAutoUltimo || '';
+  syncInputsToState(); renderAll();
+  const dopo = composeReferto();
+  const parole = t => t.match(/[\p{L}]+/gu) || [];
+  const wp = parole(prima), wd = parole(dopo), cambi = new Map();
+  if(wp.length === wd.length) wp.forEach((w, i) => { if(w !== wd[i] && !cambi.has(w)) cambi.set(w, wd[i]); });
+  const nuovo = manuale.replace(/[\p{L}]+/gu, w => cambi.has(w) ? cambi.get(w) : w);
+  state.outputEsameManuale = nuovo === dopo ? '' : nuovo;
+  refreshUI(false);
+  autosaveCurrentPatient();
 }
 function renderMulti(containerId, options, getSet){
   const el = document.getElementById(containerId);
@@ -17337,7 +17356,7 @@ function fraseCute(valore, sedeSet, extraSet){
    RENDER DI TUTTI I GRUPPI
    ============================================================ */
 function renderAll(){
-  renderSingle('sesso-chips', OPT.sesso, ()=>state.sesso, v=>state.sesso=v);
+  renderSingle('sesso-chips', OPT.sesso, ()=>state.sesso, v=>state.sesso=v, cambiaSessoTenendoTesto);
   renderIsolamentoToggle();
 
   renderCoscienzaPrimary();
