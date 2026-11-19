@@ -5757,8 +5757,12 @@ async function cloudPullAll(){
           if(resetGiornalieroAttivo()){
             applicaResetGiornalieroCompleto();
           } else {
+            // come selezionaPaziente: il testo scritto a mano resta, si
+            // cambia solo la frase dei parametri vitali di ieri
+            const manuale = state.outputEsameManuale || '';
+            const respiroIeri = manuale ? composeRespiroConNota() : '';
             Object.assign(state.respiro, respiroVuotoDiOggi());
-            state.outputEsameManuale = '';
+            if(manuale && respiroIeri && manuale.includes(respiroIeri)) state.outputEsameManuale = manuale.replace(respiroIeri, composeRespiroConNota());
           }
         }
         if(typeof populateInputsFromState === 'function') populateInputsFromState();
@@ -26837,11 +26841,19 @@ let D = null;           // diario della scheda aperta
 // un paziente visto ieri per salvarlo come diario di oggi (comparendo in
 // Aggiorna consegne con "Nessuna novità rispetto a ieri")
 let dAperto = '';
+// l'esame obiettivo com'era all'apertura del diario: se nel diario non lo si
+// è toccato, salvando si usa quello di adesso (magari compilato coi tag
+// sull'altro dispositivo, o nella visita), non la copia vecchia rimasta qui
+let eoAperto = '';
 let timerSalva = null, modificato = false;
 function salvaOra(){
   clearTimeout(timerSalva);
   if(!M.id || !D) return;
   const prima = getRefertoFor(statoScheda(M.id, loadPatients()[M.id]));
+  if(D.eo === eoAperto){
+    const k = prima.indexOf('\n\n'), eoOra = (k === -1 ? prima : prima.slice(0, k)).trim();
+    if(eoOra && eoOra !== D.eo){ D.eo = eoOra; eoAperto = eoOra; }
+  }
   const ora = componi(D);
   if(ora === prima || ora === dAperto) return;
   dAperto = ora;
@@ -26869,7 +26881,7 @@ function apriScheda(nome){
   // tutto il lavoro prima che la scheda si muova: durante la salita il
   // telefono deve solo spostarla (antibiotici e richieste vengono dalla
   // memoria, vedi calcolaAiuti; se mancano si calcolano a scheda ferma)
-  conPazientiFermi(() => { D = leggiDiario(M.id); dAperto = D ? componi(D) : ''; disegnaScheda(); });
+  conPazientiFermi(() => { D = leggiDiario(M.id); dAperto = D ? componi(D) : ''; eoAperto = D ? D.eo : ''; disegnaScheda(); });
   const sh = $m('#m-scheda');
   void sh.offsetHeight;
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -28040,6 +28052,15 @@ renderWardMap = function(){
     if(v){ clearTimeout(quietaTimer); v.classList.add('m-quieta'); }
     disegnaLetti();
   }
+  // il diario aperto (al PC, agganciato) arrivato cambiato da un altro
+  // dispositivo: se qui non lo si sta scrivendo, si ridisegna col nuovo
+  try{
+    const sc = $m('#m-scheda');
+    if(M.id && D && sc.classList.contains('m-su') && !sc.contains(document.activeElement) && componi(D) === dAperto){
+      const f = leggiDiario(M.id);
+      if(f && componi(f) !== dAperto){ D = f; dAperto = componi(f); eoAperto = f.eo; disegnaScheda(); }
+    }
+  } catch(e){}
   if(M.vista === 'home'){ if(UI_MP) mpOggi(); else vHome(); }
   // mappa dei settori aperta e settore scelto cambiato da un altro
   // dispositivo: il contorno si sposta sul nuovo
