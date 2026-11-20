@@ -7518,6 +7518,13 @@ function aggiornaEoRicoveroDalVivo(){
     // senza disturbare chi sta scrivendo in una voce del ricovero
     const a = document.activeElement;
     if(id === currentRicoveroId && !(a && a.closest && a.closest('#ricovero-singolo-view .ric-anteprima'))) renderRicoveroSingoloBox();
+    else if(id === currentRicoveroId){
+      // cursore in un box (anche quello dell'esame, su iPhone ci resta
+      // toccando i tag): il box dell'esame si aggiorna lo stesso, se non ci
+      // si sta scrivendo, così Copia copia il testo nuovo
+      const ed = document.querySelector('#ricovero-singolo-view .ric-anteprima [data-campo="esameObiettivo"]');
+      if(ed && !(ed._sporco && ed._sporco())){ ed.textContent = testo; if(ed._rec) ed._rec.esameObiettivo = testo; }
+    }
   }, 250);
 }
 
@@ -8319,8 +8326,16 @@ function creaTestoVoceRicovero(rec, campo, voce){
   };
   editable._testo = testoDelBox;
   let debounceSalvataggio = null;
+  // si salva solo se in questo box si è scritto davvero: un box solo
+  // toccato (cursore dentro, su iPhone ci resta anche toccando i tag
+  // dell'esame obiettivo) non deve riscrivere il testo che aveva quando è
+  // stato disegnato sopra a quello nuovo (l'esame obiettivo tornava classico)
+  let sporco = false;
+  editable._sporco = () => sporco;
   const salvaSubito = () => {
     clearTimeout(debounceSalvataggio);
+    if(!sporco) return;
+    sporco = false;
     const list = loadRicoveri();
     const idx = list.findIndex(r => r.id === rec.id);
     if(idx === -1) return;
@@ -8332,6 +8347,7 @@ function creaTestoVoceRicovero(rec, campo, voce){
     saveRicoveri(list);
   };
   editable.addEventListener('input', () => {
+    sporco = true;
     rec[campo] = testoDelBox();
     if(rec.copiati && rec.copiati[campo]){
       rec.copiati[campo] = false;
