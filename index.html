@@ -7531,7 +7531,16 @@ function aggiornaEoRicoveroDalVivo(){
       // toccando i tag): il box dell'esame si aggiorna lo stesso, se non ci
       // si sta scrivendo, così Copia copia il testo nuovo
       const ed = document.querySelector('#ricovero-singolo-view .ric-anteprima [data-campo="esameObiettivo"]');
-      if(ed && !(ed._sporco && ed._sporco())){ ed.textContent = testo; if(ed._rec) ed._rec.esameObiettivo = testo; }
+      if(ed && !(ed._sporco && ed._sporco())){
+        ed.textContent = testo;
+        if(ed._rec){ ed._rec.esameObiettivo = testo; if(ed._rec.copiati) ed._rec.copiati.esameObiettivo = !!(list[idx].copiati && list[idx].copiati.esameObiettivo); }
+        // testo cambiato: il segno "copiato" segue quello salvato
+        const voce = ed.closest('.ric-voce');
+        if(voce && !(list[idx].copiati && list[idx].copiati.esameObiettivo)){
+          voce.classList.remove('copiato');
+          voce.querySelector('.admit-sub-copiato-badge')?.remove();
+        }
+      }
     }
   }, 250);
 }
@@ -8281,7 +8290,13 @@ function renderRicoveroSingoloBox(){
       const testo = editable._testo();
       if(!testo.trim()){ showToast('Niente da copiare: compila prima i campi'); return; }
       copiaTesto(testo);
+      // una correzione appena scritta va salvata PRIMA del segno "copiato":
+      // salvata dopo (mezzo secondo più tardi), lo cancellava, e la barra
+      // del ricovero non diventava mai verde
+      if(editable._salva) editable._salva();
       segnaBoxCopiato(rec.id, campo, voce);
+      rec.copiati = rec.copiati || {};
+      rec.copiati[campo] = true;
     };
     testa.appendChild(copyBtn);
   });
@@ -8354,6 +8369,7 @@ function creaTestoVoceRicovero(rec, campo, voce){
     if(chiave && list[idx].campi) list[idx].campi[chiave] = rec[campo];
     saveRicoveri(list);
   };
+  editable._salva = salvaSubito;
   editable.addEventListener('input', () => {
     sporco = true;
     rec[campo] = testoDelBox();
