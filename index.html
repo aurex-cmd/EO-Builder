@@ -12100,6 +12100,28 @@ function estraiDimissioniProgrammate(testoExtra){
     if(/(?:esami|\bee|\beec)\b[^.,;\n]*$/.test(prima)) continue;
     aggiungi(m[1], !!m[2].trim());
   }
+  // date in numeri: "dimissione prevista il 16/11", "dimesso 16.11",
+  // "16/11 trasferimento in RSA" (anno: quello del diario; una data di
+  // molti mesi prima è dell'anno dopo, a cavallo di Capodanno)
+  const DATA = String.raw`(\d{1,2})(?:\/(\d{1,2})|\.(\d{2}))(?![.,\/]?\d)`;
+  const aggiungiData = (g, me) => {
+    const gg = parseInt(g, 10), mm = parseInt(me, 10);
+    if(!(gg >= 1 && gg <= 31 && mm >= 1 && mm <= 12)) return;
+    const rif = oggiRiferimento();
+    const d = new Date(rif.getFullYear(), mm - 1, gg);
+    if(d.getMonth() !== mm - 1) return;
+    if(d - rif < -180 * 864e5) d.setFullYear(d.getFullYear() + 1);
+    risultati.push(d);
+  };
+  const SALTA_D = String.raw`(?:(?!esami|\bee\b|\beec\b)[^.,;\n\d]){0,30}?`;
+  const reData = new RegExp(PAROLA + SALTA_D + String.raw`\b` + DATA, 'g');
+  while((m = reData.exec(testoG))) aggiungiData(m[1], m[2] || m[3]);
+  const reDataPrima = new RegExp(String.raw`\b` + DATA + String.raw`(?:(?!esami|\bee\b|\beec\b)[^.,;\n\d]){0,25}?\b` + PAROLA, 'g');
+  while((m = reDataPrima.exec(testoG))){
+    const prima = testoG.slice(Math.max(0, m.index - 30), m.index);
+    if(/(?:esami|\bee|\beec)\b[^.,;\n]*$/.test(prima)) continue;
+    aggiungiData(m[1], m[2] || m[3]);
+  }
   // stessa data trovata due volte (es. "dimesso lunedì ... dimissione lunedì"): una sola
   const viste = new Set();
   return risultati.filter(d => { const k = d.getTime(); if(viste.has(k)) return false; viste.add(k); return true; });
@@ -12123,12 +12145,15 @@ function calcolaCalendarioDimissioni(){
     if(ultimoSavedAt === null || p.savedAt > ultimoSavedAt) ultimoSavedAt = p.savedAt;
   });
   if(ultimoSavedAt === null) return [];
-  const chiaveRiferimento = chiaveGiorno(ultimoSavedAt);
+  // i diari degli ultimi giorni, non solo dell'ultimo: prima, scritto il
+  // primo diario della mattina, sparivano dal calendario le dimissioni
+  // scritte ieri negli altri (fino a 4 giorni: c'entra il weekend)
+  const chiaveRiferimento = chiaveGiorno(ultimoSavedAt - 3 * 864e5);
 
   const risultati = [];
   Object.entries(patients).forEach(([id, p]) => {
     if(!schedaHaDati(p.state) || !p.savedAt) return;
-    if(chiaveGiorno(p.savedAt) !== chiaveRiferimento) return;
+    if(chiaveGiorno(p.savedAt) < chiaveRiferimento) return;
     const extra = (p.state.outputExtra || '').trim();
     if(!extra) return;
     dateDimissionePaziente(p, id, extra).forEach(data => {
@@ -12721,7 +12746,8 @@ function classificaConsegna(testo){
     // "emo"/"emoc"/"emocolture" e "uro"/"urocoltura", ma non le parole che
     // cominciano allo stesso modo (emodinamica, emorragia, emotrasfusione,
     // emoglobina, emocromo, urologo/urologica...)
-    C: categoriaValidaOggi(togliCondizionali(testo), '\\bemo(?:c(?!romo)\\w*)?\\b|\\buro(?:c\\w*)?\\b|\\bantibiogramma\\w*|\\batb\\b|\\bcolt\\w*')
+    // anche dentro la parola: urinocoltura, coprocoltura, emocoltura… (non "ascoltare")
+    C: categoriaValidaOggi(togliCondizionali(testo), '\\bemo(?:c(?!romo)\\w*)?\\b|\\buro(?:c\\w*)?\\b|\\bantibiogramma\\w*|\\batb\\b|\\bcolt\\w*|\\b\\w+coltur\\w*')
   };
 }
 
@@ -25516,6 +25542,7 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pkd-ciao p{ margin:4px 0 0; font-size:14px; color:var(--m-muted); }
   .pkd .m-ingr.pkd-rep{ position:static; display:grid; grid-template-columns:auto 1fr; align-items:baseline; column-gap:14px; min-height:0; margin-top:14px; padding:0; border:0; border-radius:0 !important; background:none; box-shadow:none !important; color:var(--m-ink); transform:none; }
   .pkd .m-ingr.pkd-rep:active{ transform:none; }
+  html[data-m-tema="scuro"] .pkd .m-ingr.pkd-rep{ background:none; border:0; box-shadow:none; }
   .pkd .pkd-rep .m-sh{ grid-column:1 / -1; padding:0; font-size:14px; font-weight:600; color:var(--m-muted); }
   .pkd .pkd-rep .m-sh svg{ width:17px; height:17px; color:var(--m-muted); }
   .pkd .pkd-rep .m-sn{ margin:0; padding:4px 0 0; font-size:30px; font-weight:700; color:var(--m-ink); }
