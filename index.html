@@ -6356,6 +6356,13 @@ function scalaCatenaLeucociti(voce, catena){
   return catena.replace(/-?\d+(?:\.\d+)?/g, n => scalaContaLeucociti(voce, n));
 }
 
+// l'unità giusta per il valore: l'emoglobina si scrive di solito in g/L
+// ("Hb 98"), ma "Hb 9,8" è in g/dL (9,8 g/L non esiste); lo stesso per MCHC
+function unitaPerValore(voce, valore){
+  const v = parseFloat(String(valore).replace(/^[<>]\s*/, '').replace(',', '.'));
+  if(voce.unit === 'g/L' && (voce.label === 'Hb' || voce.label === 'MCHC') && isFinite(v) && v > 0 && v < (voce.label === 'Hb' ? 25 : 100)) return 'g/dL';
+  return voce.unit;
+}
 // converte l'elenco grezzo di esami (es. "Hb 90, Na 127, creatinina 1.28")
 // aggiungendo l'unità di misura corretta a ogni esame riconosciuto
 function formattaEsamiEmatochimici(raw){
@@ -6376,7 +6383,7 @@ function formattaEsamiEmatochimici(raw){
         const voce = DIZ_EMATOCHIMICI[chiave];
         if(voce){
           const catena = scalaCatenaLeucociti(voce, mTrend[2].trim().replace(/(\d),(\d)/g, '$1.$2'));
-          return voce.unit ? `${voce.label} ${catena} ${voce.unit}` : `${voce.label} ${catena}`;
+          return voce.unit ? `${voce.label} ${catena} ${unitaPerValore(voce, catena.split(/->|-->|→/).pop())}` : `${voce.label} ${catena}`;
         }
       }
       const m = seg.match(/^(.*?)\s*([<>]?\s*-?\d+(?:[.,]\d+)?)\s*\.?\s*$/);
@@ -6387,7 +6394,7 @@ function formattaEsamiEmatochimici(raw){
       const voce = DIZ_EMATOCHIMICI[chiave];
       if(!voce) return seg;
       const valoreOk = scalaContaLeucociti(voce, valore);
-      return voce.unit ? `${voce.label} ${valoreOk} ${voce.unit}` : `${voce.label} ${valore}`;
+      return voce.unit ? `${voce.label} ${valoreOk} ${unitaPerValore(voce, valore)}` : `${voce.label} ${valore}`;
     })
     .join(', ');
 }
@@ -6420,11 +6427,12 @@ function aggiungiUnitaMancantiTesto(testo){
     // arrivare a riconoscere l'andamento nel suo insieme
     const reTrend = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)(-?\\d+(?:[.,]\\d+)?(?:\\s*(?:->|-->|→)\\s*-?\\d+(?:[.,]\\d+)?)+)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(reTrend, (match, nomeMatch, spazio, catena) => {
-      return `${nomeMatch}${spazio}${scalaCatenaLeucociti(voce, catena.replace(/(\d),(\d)/g, '$1.$2'))} ${voce.unit}`;
+      const c = scalaCatenaLeucociti(voce, catena.replace(/(\d),(\d)/g, '$1.$2'));
+      return `${nomeMatch}${spazio}${c} ${unitaPerValore(voce, c.split(/->|-->|→/).pop())}`;
     });
     const re = new RegExp(`\\b(${nomeEsc}\\b\\.?)(\\s*)([<>]?\\s*-?\\d+(?:[.,]\\d+)?)(?!\\s*[.,]+\\s*\\d)(?=\\s*(?:,|\\.|;|\\n|$))`, 'gi');
     risultato = risultato.replace(re, (match, nomeMatch, spazio, numero) => {
-      return `${nomeMatch}${spazio}${scalaContaLeucociti(voce, numero.trim().replace(',', '.'))} ${voce.unit}`;
+      return `${nomeMatch}${spazio}${scalaContaLeucociti(voce, numero.trim().replace(',', '.'))} ${unitaPerValore(voce, numero.trim())}`;
     });
   });
   return risultato;
@@ -13388,6 +13396,17 @@ function antibioticiInCorso(p, idPaziente){
       return out;
     };
     const eStop = f => RE_STOP_ATB.test(f) && !RE_INIZIO_ATB.test(f);
+    // "si inizia Ceftriaxone" vale come primo giorno solo il giorno in cui è
+    // stato scritto: il diario si riporta da un giorno all'altro, e la stessa
+    // frase ricopiata il giorno dopo non è un nuovo inizio (prima il
+    // contatore ripartiva ogni giorno da "I g")
+    const frasiAvvio = t => (t || '').split(/[;\n]|\.(?!\d)/).map(x => x.replace(/^[\s\-–•]+/, '').replace(/\s+/g, ' ').trim().toLowerCase()).filter(x => reG.test(x) && RE_INIZIO_ATB.test(x));
+    const avvioNuovo = i => {
+      const qui = frasiAvvio(giorni[i].testo); if(!qui.length) return false;
+      if(i === 0 || giorniTra(giorni[i - 1].giorno, giorni[i].giorno) > 3) return true;
+      const prima = new Set(frasiAvvio(giorni[i - 1].testo));
+      return qui.some(x => !prima.has(x));
+    };
     // ultimo giorno in cui il farmaco è nominato
     let ultimo = -1;
     for(let i = giorni.length - 1; i >= 0; i--){ if(frasi(giorni[i].testo).length){ ultimo = i; break; } }
@@ -13407,7 +13426,7 @@ function antibioticiInCorso(p, idPaziente){
       if(!f.length || f.some(eStop)) break;
       if(i < ultimo && giorniTra(giorni[i].giorno, inizio) > 3) break;
       inizio = giorni[i].giorno;
-      if(f.some(x => RE_INIZIO_ATB.test(x))) break; // "inizia": è il primo giorno
+      if(f.some(x => RE_INIZIO_ATB.test(x)) && avvioNuovo(i)) break; // "inizia": è il primo giorno
     }
     let n = giorniTra(inizio, oggi) + 1;
     // giornata scritta nel diario ("continua Ceftriaxone in seconda giornata",
@@ -13421,7 +13440,7 @@ function antibioticiInCorso(p, idPaziente){
       // "si avvia Linezolid" senza data né giornata: è la I giornata di quel
       // giorno, anche se un'altra frase (una consulenza: "durata da
       // calcolare a partire dal 07/10") riporta una data più vecchia
-      if(frasi(giorni[i].testo).some(f => RE_INIZIO_ATB.test(f) && !RE_STOP_ATB.test(f))){
+      if(frasi(giorni[i].testo).some(f => RE_INIZIO_ATB.test(f) && !RE_STOP_ATB.test(f)) && avvioNuovo(i)){
         const conAvvio = frasiIntere.filter(f => RE_INIZIO_ATB.test(f));
         if(!conAvvio.some(f => dataInizioScritta(f, giorni[i].giorno) || giornataScritta(f))){
           n = giorniTra(giorni[i].giorno, oggi) + 1;
