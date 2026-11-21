@@ -5436,6 +5436,7 @@ function cloudPush(key, rawValue){
           rawValue = fuso;
           if(key === PATIENTS_KEY && typeof ricaricaSchedaApertaDopoSync === 'function') ricaricaSchedaApertaDopoSync(attuale, fuso);
           if(key === POSTDEGENZE_KEY && typeof renderPostDegenze === 'function') renderPostDegenze();
+          if(key === 'eo_builder_ricoveri_v1' && typeof ridisegnaRicoveriDopoSync === 'function') ridisegnaRicoveriDopoSync();
         } else {
           rawValue = attuale;
         }
@@ -5521,8 +5522,9 @@ const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
 const FARE_SYNC_KEY = 'eo_minimal_dafare_v1';
 // pratiche di EO Pocket: una voce per paziente e pratica, fuse voce per voce
 const PRATICHE_SYNC_KEY = 'eo_minimal_pratiche_v1';
-const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY;
-function fondiPerVoce(key, rawBase, rawLocale, rawCloud){
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY || key === 'eo_builder_ricoveri_v1';
+function fondiPerVoce(key, rawBase, rawLocale, rawCloud, localePiuNuovo = true){
+  if(key === 'eo_builder_ricoveri_v1') return fondiRicoveri(rawBase, rawLocale, rawCloud, localePiuNuovo);
   const fuso = fondiSchedePazienti(rawBase, rawLocale, rawCloud);
   if(key !== FARE_SYNC_KEY) return fuso;
   const parte = r => { try{ const o = JSON.parse(r || '{}'); return JSON.stringify((o && o.lettere) || {}); } catch(e){ return '{}'; } };
@@ -5608,6 +5610,52 @@ function fondiScheda(b, l, c){
   out.savedAt = Math.max(l.savedAt || 0, c.savedAt || 0);
   return out;
 }
+// RICOVERI: un elenco (non una mappa per id), prima inviato e scaricato in
+// blocco: se telefono e PC lo toccavano tutti e due prima di allinearsi,
+// vinceva l'ultimo salvato e le modifiche dell'altro (anche a un ricovero
+// diverso, o un ricovero nuovo) sparivano. Ora si fonde ricovero per
+// ricovero e, dentro, campo per campo (anche dentro campi, copiati e
+// consegna): ogni campo cambiato da una parte sola tiene quella modifica
+function fondiRicoveri(rawBase, rawLocale, rawCloud, localePiuNuovo){
+  const parse = r => { try{ const a = JSON.parse(r || '[]'); return Array.isArray(a) ? a : []; } catch(e){ return []; } };
+  const haBase = rawBase !== null && rawBase !== undefined;
+  const Ba = parse(rawBase), La = parse(rawLocale), Ca = parse(rawCloud);
+  const mappa = a => { const m = {}; a.forEach(r => { if(r && r.id) m[r.id] = r; }); return m; };
+  const B = mappa(Ba), L = mappa(La), C = mappa(Ca);
+  const js = x => x === undefined ? undefined : JSON.stringify(x);
+  const ogg = x => x && typeof x === 'object' && !Array.isArray(x);
+  const fondiRic = (b, l, c) => {
+    const out = fondiCampi(b, l, c, localePiuNuovo);
+    ['campi', 'copiati', 'consegna'].forEach(k => {
+      if(ogg(l[k]) && ogg(c[k])) out[k] = fondiCampi(ogg(b[k]) ? b[k] : {}, l[k], c[k], localePiuNuovo);
+    });
+    return out;
+  };
+  const scegli = id => {
+    const l = L[id], c = C[id], b = B[id];
+    const sl = js(l), sc = js(c), sb = js(b);
+    if(sl === sc) return l;
+    if(haBase && b !== undefined && c === undefined) return sl === sb ? undefined : l; // eliminato sul cloud
+    if(haBase && b !== undefined && l === undefined) return sc === sb ? undefined : c; // eliminato qui
+    if(l === undefined) return c;
+    if(c === undefined) return l;
+    if(haBase && sl === sb) return c;
+    if(haBase && sc === sb) return l;
+    return fondiRic(ogg(b) ? b : {}, l, c);
+  };
+  // l'ordine è quello di qui; i ricoveri arrivati dall'altra parte si
+  // inseriscono subito dopo quello che li precede là
+  const ids = La.filter(r => r && r.id).map(r => r.id);
+  Ca.forEach((r, i) => {
+    if(!r || !r.id || ids.includes(r.id)) return;
+    let j = i - 1;
+    while(j >= 0 && !ids.includes(Ca[j] && Ca[j].id)) j--;
+    ids.splice(j >= 0 ? ids.indexOf(Ca[j].id) + 1 : 0, 0, r.id);
+  });
+  const out = [];
+  ids.forEach(id => { const r = scegli(id); if(r !== undefined) out.push(r); });
+  return JSON.stringify(out);
+}
 
 // dopo una fusione fatta durante un INVIO: se la scheda aperta a schermo
 // è cambiata (o è stata eliminata altrove), la si riallinea subito
@@ -5634,6 +5682,8 @@ async function cloudPullAll(){
   // modifiche ai diari ancora in attesa di salvataggio: prima in locale,
   // così il confronto col cloud parte dal testo vero
   if(typeof eseguiTuttiSalvataggiDiario === 'function') eseguiTuttiSalvataggiDiario();
+  // lo stesso per il ricovero aperto (campi, consegna, testi dei box)
+  if(typeof eseguiSalvataggioRicoveroForm === 'function'){ eseguiSalvataggioRicoveroForm(); eseguiSalvataggiConsegna(); salvaBoxRicoveroInSospeso(); }
   try{
     const { data: userData, error: erroreUtente } = await supabaseClient.auth.getUser();
     const user = userData && userData.user;
@@ -5679,7 +5729,7 @@ async function cloudPullAll(){
           // copia di sicurezza della versione locale prima di toccarla,
           // senza aspettare l'intervallo dei 15 minuti dei backup
           if(row.key === PATIENTS_KEY) aggiornaBackupLocale(valoreLocaleAttuale, true);
-          const fuso = fondiPerVoce(row.key, sincronizzato, valoreLocaleAttuale, row.value);
+          const fuso = fondiPerVoce(row.key, sincronizzato, valoreLocaleAttuale, row.value, leggiTimestampLocale(row.key) > (row.updated_at ? new Date(row.updated_at).getTime() : 0));
           try{ localStorage.setItem(row.key, fuso); } catch(e){}
           if(fuso === row.value){ segnaValoreSincronizzato(row.key, row.value); }
           else { segnaValoreSincronizzato(row.key, row.value); await cloudPush(row.key, fuso); }
@@ -5949,6 +5999,25 @@ function ridisegnaVisteDopoPull(){
   if(typeof renderRiepilogo === 'function' && document.getElementById('riepilogo-view')?.style.display !== 'none') renderRiepilogo();
   if(typeof renderConsegneLista === 'function' && document.getElementById('consegne-view')?.style.display !== 'none') renderConsegneLista();
   if(typeof renderVitaliSettore === 'function' && document.getElementById('vitali-settore-view')?.style.display !== 'none') renderVitaliSettore();
+  if(ultimoPullCambi.has('eo_builder_ricoveri_v1') || ricoveriDaRidisegnare) ridisegnaRicoveriDopoSync();
+}
+let ricoveriDaRidisegnare = false;
+// ricoveri cambiati da un altro dispositivo: la lista e il ricovero aperto
+// si ridisegnano (anche i campi del modulo: rimasti vecchi, al primo tasto
+// verrebbero risalvati sopra alle modifiche appena arrivate). Mai mentre
+// si scrive o con l'esame obiettivo del ricovero aperto
+function ridisegnaRicoveriDopoSync(){
+  if(campoAttivo() || (typeof esameObiettivoInlineAperto !== 'undefined' && esameObiettivoInlineAperto)){ ridisegnoInSospeso = true; ricoveriDaRidisegnare = true; return; }
+  ricoveriDaRidisegnare = false;
+  const visibile = id => { const el = document.getElementById(id); return !!el && el.style.display !== 'none'; };
+  if(visibile('ricovero-singolo-view') && currentRicoveroId){
+    if(loadRicoveri().some(r => r.id === currentRicoveroId)){
+      const y = window.scrollY;
+      caricaRicovero(currentRicoveroId);
+      window.scrollTo(0, y);
+    }
+  }
+  if(visibile('ricoveri-view') && typeof renderRicoveriLista === 'function') renderRicoveriLista();
 }
 // uscendo da un campo: se c'era un ridisegno in attesa lo si fa ora, ma
 // solo se non si è appena entrati in un altro campo (passaggio diretto da
@@ -7554,6 +7623,8 @@ function chiudiEsameObiettivoInline(){
   clinical.style.display = 'none';
   document.getElementById('ricovero-eo-inline').style.display = 'none';
   esameObiettivoInlineAperto = false;
+  // ricoveri arrivati da un altro dispositivo mentre l'esame era aperto
+  if(ricoveriDaRidisegnare) setTimeout(ridisegnaRicoveriDopoSync, 300);
   applicaSezioniNascoste(true);
 
   // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
@@ -8311,6 +8382,10 @@ function renderRicoveroSingoloBox(){
 // chiusa "Testo che verrà copiato" dell'anamnesi prossima) restituisce una
 // stringa vuota — lì vale textContent, che con "plaintext-only" conserva
 // comunque gli a capo
+// salvataggi dei box del ricovero (testi corretti a mano) ancora in attesa
+function salvaBoxRicoveroInSospeso(){
+  document.querySelectorAll('#ricovero-singolo-view .admit-editable').forEach(e => { if(e._salva) e._salva(); });
+}
 function testoVisibile(el){
   const t = el.innerText;
   return (t || !el.textContent) ? t : el.textContent;
