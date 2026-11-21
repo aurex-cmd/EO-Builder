@@ -24000,6 +24000,12 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #vitali-settore-view .vitals-strip .v.fc .unit{ display:none; }
   /* home: i due ingressi restano fermi, scorre solo l'elenco sotto */
   .m-main.m-main-home{ padding-bottom:0; }
+  /* sul telefono (dito, non mouse) niente barra di scorrimento della home:
+     su iPhone compariva scorrendo, sottile ma visibile accanto ai riquadri */
+  @media (pointer:coarse){
+    .m-home-giu{ scrollbar-width:none; }
+    .m-home-giu::-webkit-scrollbar{ display:none; width:0; height:0; }
+  }
   .m-main-home .m-vista{ height:calc(100vh - 64px - env(safe-area-inset-top,0px)); height:calc(100dvh - 64px - env(safe-area-inset-top,0px)); gap:0; }
   .m-home-su{ flex:none; display:flex; flex-direction:column; gap:14px; }
   /* i riquadri nello spazio sotto il titolo, con sopra un terzo dello spazio
