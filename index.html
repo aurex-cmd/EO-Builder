@@ -2040,6 +2040,11 @@
   .ric-stat-estremo .val span{ font-size:13px; color:var(--ink-dim); }
   .ric-stat-estremo .nota{ font-size:11px; color:var(--ink-faint); margin-top:4px; overflow-wrap:anywhere; }
   .ric-stat-estremo .badge{ display:inline-block; margin-top:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--on-signal); background:var(--signal); border-radius:999px; padding:2px 8px; }
+  .ric-stat-cento{ display:flex; align-items:center; gap:14px; margin-top:8px; padding:12px 14px; border-radius:12px; background:var(--signal); color:var(--on-signal); }
+  .ric-stat-cento > b{ font-family:var(--font-display); font-size:44px; font-weight:700; line-height:1; flex:none; }
+  .ric-stat-cento .testo{ min-width:0; }
+  .ric-stat-cento .cosa{ font-size:16px; font-weight:700; letter-spacing:.01em; }
+  .ric-stat-cento .nota{ font-size:12px; opacity:.85; margin-top:2px; }
   .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:5px; }
   .ric-stat-riga .nome{ min-width:0; overflow-wrap:anywhere; }
   .ric-stat-riga .val{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
@@ -8080,12 +8085,24 @@ function renderStatisticheRicoveri(el, list){
       const quando = x.r.creatoIl ? new Date(x.r.creatoIl).toLocaleDateString('it-IT', { day:'numeric', month:'short', year:'numeric' }) : '';
       const dia = (campi(x.r).diagnosi || '').trim();
       b.appendChild(crea('div', 'nota', [quando, dia].filter(Boolean).join(' · ')));
-      if(!giovane && x.eta >= 100) b.appendChild(crea('div', 'badge', f ? 'ultracentenaria' : 'ultracentenario'));
+      if(!giovane && x.eta >= 100) b.appendChild(crea('div', 'badge', (x.eta > 100 ? 'ultra' : '') + (f ? 'centenaria' : 'centenario')));
       return b;
     };
     g.append(lato(piuGiovane, true), lato(piuAnziano, false));
     cEstremi.appendChild(g);
-    if(ultracentenari) cEstremi.appendChild(crea('div', 'ric-stat-nota', `${ultracentenari} ricover${ultracentenari === 1 ? 'o' : 'i'} di ultracentenari`));
+    // centenari: in evidenza, un numero grande sotto i due estremi
+    if(ultracentenari){
+      const fCento = conEta.filter(x => x.eta >= 100 && campi(x.r).sesso !== 'M').length;
+      const cento = crea('div', 'ric-stat-cento');
+      cento.appendChild(crea('b', '', String(ultracentenari)));
+      const t = crea('div', 'testo');
+      t.appendChild(crea('div', 'cosa', ultracentenari === 1 ? (fCento ? 'centenaria' : 'centenario') : 'centenari'));
+      const det = [`${pct(ultracentenari, conEta.length)} dei ricoveri`];
+      if(ultracentenari > 1) det.push(`${fCento} F · ${ultracentenari - fCento} M`);
+      t.appendChild(crea('div', 'nota', det.join(' · ')));
+      cento.appendChild(t);
+      cEstremi.appendChild(cento);
+    }
   }
 
   // fasce d'età: una sola tinta, più intensa con l'età
@@ -24492,6 +24509,10 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .ric-stat-tile .v, html[data-ui="minimal"] .ric-stat-estremo .val b{ font-weight:800; letter-spacing:-.03em; }
   html[data-ui="minimal"] .ric-stat-estremo{ background:var(--m-bg); border:0; border-radius:10px; }
   html[data-ui="minimal"] .ric-stat-estremo .badge{ font-family:var(--m-sans); }
+  html[data-ui="minimal"] .ric-stat-cento{ border-radius:10px; font-family:var(--m-sans); }
+  html[data-ui="minimal"] .ric-stat-cento > b{ font-family:var(--m-sans); font-weight:800; letter-spacing:-.03em; }
+  .m-anim .ric-stat-cento{ opacity:0; transform:scale(.92); transition:opacity .4s, transform .6s var(--m-molla); transition-delay:400ms; }
+  .m-anim .m-vis .ric-stat-cento{ opacity:1; transform:none; }
   html[data-ui="minimal"] .ric-stat-bars{ border-bottom-color:var(--m-line); }
   html[data-ui="minimal"] .ric-stat-col .bar{ border-radius:6px 6px 2px 2px; }
   html[data-ui="minimal"] .ric-stat-riga .traccia{ background:var(--m-bg); }
