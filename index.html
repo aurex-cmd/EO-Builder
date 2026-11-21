@@ -24229,6 +24229,11 @@ function editorLettereSvuota(){
   .m-h1 .m-gu-esci{ margin-left:12px; vertical-align:middle; height:30px; padding:0 13px; border:1px solid var(--m-line-forte); border-radius:999px; background:none; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0; color:var(--m-muted); cursor:pointer; }
   .m-in-guardia > .m-schede{ margin-top:4px; }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
+  /* al PC, riquadro largo: a sinistra letti liberi e ricoveri dal PS, a destra le cose da fare */
+  @media (min-width:1180px){
+    .pkd .mpd-dett .m-gu{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:32px; align-items:start; }
+    .pkd .mpd-dett .m-gu-col > .m-gu-tit:first-child{ margin-top:0; }
+  }
   .pkd .mpd-dett .mpd-dtesta{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .pkd .mpd-dett .mpd-dtesta > div{ flex:1; min-width:0; }
   .pkd .mpd-dett .mpd-dtesta > .mp-btn{ flex:none; width:auto; padding:0 18px; }
@@ -26739,13 +26744,17 @@ function htmlGuardia(){
     return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
   }).join('');
   return `<div class="m-gu" id="m-gu">
+    <div class="m-gu-col">
     <p class="m-lbl m-gu-tit">Letti liberi<button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></p>
     <div class="m-gu-letti${modifica ? ' m-gu-in-mod' : ''}">${righeLetti}</div>
     <p class="m-gu-nota">${modifica ? 'Quanti letti liberi per reparto: bis in C1 e Geriatria, monitorati solo in C1. Poi «Fatto».' : 'Tocca un quadratino per la X. Pieni: i ricoveri del turno (verde il 5914, arancione il 5899), messi da soli.'}</p>
     ${htmlArrivi(arrivi, st)}
+    </div>
+    <div class="m-gu-col">
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
     ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}
+    </div>
   </div>`;
 }
 function htmlArrivi(arrivi, st){
