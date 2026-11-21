@@ -5524,7 +5524,7 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   // lo stesso su tutti i dispositivi dell'account
   'eo_minimal_nome_v1',
   // EO Pocket, guardia: le cose da fare e i letti liberi del turno
-  'eo_minimal_guardia_fare_v1', 'eo_minimal_letti_liberi_v1'];
+  'eo_minimal_guardia_fare_v1', 'eo_minimal_letti_liberi_v1', 'eo_minimal_guardia_arrivi_v1', 'eo_minimal_guardia_io_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -5534,7 +5534,7 @@ const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
 const FARE_SYNC_KEY = 'eo_minimal_dafare_v1';
 // pratiche di EO Pocket: una voce per paziente e pratica, fuse voce per voce
 const PRATICHE_SYNC_KEY = 'eo_minimal_pratiche_v1';
-const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY || key === 'eo_builder_ricoveri_v1' || key === 'eo_minimal_guardia_fare_v1';
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY || key === 'eo_builder_ricoveri_v1' || key === 'eo_minimal_guardia_fare_v1' || key === 'eo_minimal_guardia_arrivi_v1';
 function fondiPerVoce(key, rawBase, rawLocale, rawCloud, localePiuNuovo = true){
   if(key === 'eo_builder_ricoveri_v1') return fondiRicoveri(rawBase, rawLocale, rawCloud, localePiuNuovo);
   const fuso = fondiSchedePazienti(rawBase, rawLocale, rawCloud);
@@ -24185,6 +24185,32 @@ function editorLettereSvuota(){
   .m-gu-q.m-gu-x::after{ transform:translate(-50%, -50%) rotate(-45deg); }
   .m-gu-q.m-gu-ric{ border-color:var(--m-teal); background:var(--m-teal); }
   .m-gu-q.m-gu-ric::before, .m-gu-q.m-gu-ric::after{ background:#fff; }
+  .m-gu-q.m-gu-verde{ border-color:#2e9d57; background:#2e9d57; }
+  .m-gu-q.m-gu-arancione{ border-color:#e0832b; background:#e0832b; }
+  .m-gu-ar{ display:flex; align-items:center; gap:10px; padding:10px 6px 10px 12px; background:var(--m-carta); }
+  .m-gu-ar + .m-gu-ar{ border-top:1px solid var(--m-line); }
+  .m-gu-chi{ flex:none; display:grid; place-items:center; width:46px; height:26px; border-radius:7px; font-size:12px; font-weight:700; color:#fff; }
+  .m-gu-chi.m-gu-verde{ background:#2e9d57; } .m-gu-chi.m-gu-arancione{ background:#e0832b; }
+  .m-gu-form{ border:1px solid var(--m-line-forte); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--m-carta); display:flex; flex-direction:column; gap:10px; }
+  .m-gu-campi{ display:grid; grid-template-columns:1.2fr 1fr 64px; gap:6px; }
+  .m-gu-campi input{ min-width:0; height:42px; padding:0 10px; border:1px solid var(--m-line-forte); border-radius:9px; background:var(--m-carta); color:var(--m-ink); font:inherit; font-size:16px; }
+  .m-gu-campi input:focus{ outline:none; border-color:var(--m-notte); }
+  .m-gu-scelta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .m-gu-scelta > small{ width:64px; font-size:12px; color:var(--m-muted); }
+  .m-gu-chip{ height:32px; padding:0 12px; border:1.5px solid var(--m-line-forte); border-radius:999px; background:none; color:var(--m-ink); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .m-gu-chip i{ font-style:normal; font-weight:500; color:var(--m-muted); margin-left:3px; }
+  .m-gu-chip.m-on{ background:var(--m-notte); border-color:var(--m-notte); color:#fff; }
+  .m-gu-chip.m-on i{ color:rgba(255,255,255,.8); }
+  .m-gu-chip.m-gu-verde.m-on{ background:#2e9d57; border-color:#2e9d57; }
+  .m-gu-chip.m-gu-arancione.m-on{ background:#e0832b; border-color:#e0832b; }
+  .m-gu-chip.m-gu-verde:not(.m-on){ border-color:#2e9d57; color:#2e9d57; }
+  .m-gu-chip.m-gu-arancione:not(.m-on){ border-color:#e0832b; color:#c56d1c; }
+  .m-gu-iosono{ border:0; background:none; padding:0 4px; font:inherit; font-size:12px; color:var(--m-link); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .m-gu-form-az{ display:flex; justify-content:flex-end; gap:8px; }
+  .m-gu-annulla{ height:40px; padding:0 14px; border:0; border-radius:10px; background:var(--m-sec, #e9edf2); color:var(--m-ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .m-gu-ok-big{ height:40px; padding:0 16px; border:0; border-radius:10px; background:var(--m-notte); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  html[data-m-tema="scuro"] :is(.m-gu-ar, .m-gu-form, .m-gu-campi input){ background:var(--m-carta, #132133); }
+  html[data-m-tema="scuro"] .m-gu-annulla{ background:var(--m-box); }
   .m-gu-lib{ flex:none; min-width:20px; text-align:right; font-size:15px; font-weight:700; color:var(--m-ink); }
   .m-gu-mod{ flex-wrap:wrap; }
   .m-gu-passo{ display:inline-flex; align-items:center; gap:4px; }
@@ -24200,6 +24226,9 @@ function editorLettereSvuota(){
   .pkd .mpd-dett .mpd-dtesta > .mp-btn{ flex:none; width:auto; padding:0 18px; }
   html[data-m-tema="scuro"] :is(.m-gu-r, .m-gu-lr, .m-gu-q, .m-gu-passo button, .m-gu-add input){ background:var(--m-carta, #132133); }
   html[data-m-tema="scuro"] .m-gu-q.m-gu-x{ background:color-mix(in srgb, var(--m-notte) 22%, transparent); }
+  html[data-m-tema="scuro"] .m-gu-q.m-gu-ric{ background:var(--m-teal); }
+  html[data-m-tema="scuro"] .m-gu-q.m-gu-verde{ background:#2e9d57; }
+  html[data-m-tema="scuro"] .m-gu-q.m-gu-arancione{ background:#e0832b; }
   .m-fare-r{ display:flex; align-items:center; background:#fff; border-top:1px solid var(--m-line); }
   /* PRATICHE: una riga che si apre (quante ne mancano e la freccia a destra,
      al posto del cerchio) e sotto i pazienti coi moduli da spuntare */
@@ -26451,7 +26480,7 @@ const FESTA_HTML = `<span class="m-festa" aria-hidden="true"><i style="--x:6%;--
 <span class="m-f-palla"><i></i></span>
 <span class="m-f-pupazzo"><svg viewBox="0 0 40 54"><circle cx="20" cy="41" r="13" fill="#fff"/><circle cx="20" cy="21" r="9.5" fill="#fff"/><g class="m-f-cappello"><rect x="13" y="3" width="14" height="9" rx="1.2" fill="#2a2f3a"/><rect x="13" y="9" width="14" height="2" fill="#b3232c"/><rect x="9.5" y="11" width="21" height="2.6" rx="1.3" fill="#2a2f3a"/></g><circle cx="16.5" cy="19.5" r="1.3" fill="#2a2f3a"/><circle cx="23.5" cy="19.5" r="1.3" fill="#2a2f3a"/><path d="M20 22l7 2-7 .9z" fill="#f08a2c"/><path d="M16.5 26c2.2 1.3 4.8 1.3 7 0" fill="none" stroke="#2a2f3a" stroke-width="1" stroke-linecap="round"/><path d="M11 28.5c5 3 13 3 18 0l.8 3.3c-6 2.6-13.6 2.6-19.6 0z" fill="#3fae6a"/><rect x="24" y="30" width="3.6" height="9" rx="1.6" fill="#3fae6a"/><circle cx="20" cy="37" r="1.3" fill="#b3232c"/><circle cx="20" cy="42" r="1.3" fill="#b3232c"/><circle cx="20" cy="47" r="1.3" fill="#b3232c"/><g class="m-f-braccio"><path d="M32 36l6-8M35.5 31l3-.6" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g><g class="m-f-lancio"><path d="M8 36L1 30M4 32.5l-2.8.8" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g></svg></span></span></span>`;
 /* ---------- GUARDIA ---------- */
-// MODALITÀ GUARDIA: di notte (20:00–8:15) da sola, di giorno a mano. In
+// MODALITÀ GUARDIA: di notte (19:45–8:15) e nei festivi da sola, di giorno a mano. In
 // home, sopra a tutto, "Da fare in guardia" (quello che gli infermieri o i
 // colleghi chiedono: un farmaco da mettere in terapia, un paziente da
 // visitare, un esame da vedere) e i letti liberi dei reparti, coi
@@ -26461,20 +26490,45 @@ const GU_FARE_KEY = 'eo_minimal_guardia_fare_v1';   // { id: { t, letto, tipo, c
 const GU_LETTI_KEY = 'eo_minimal_letti_liberi_v1';  // { turno, rep:{C1:{l,b,m}}, x:{'C1|l|0': 1 | idRicovero}, ric:[id] }
 const GU_MODO_KEY = 'eo_minimal_guardia_modo_v1';   // solo qui: { turno, on } scelto a mano
 const GU_REPARTI = [['C1', 'MED C1'], ['C2', 'MED C2'], ['GER', 'GERIATRIA']];
-// la guardia di notte va dalle 20:00 alle 8:15 (il passaggio delle consegne)
-const inOrarioGuardia = (d = new Date()) => { const m = d.getHours() * 60 + d.getMinutes(); return m >= 20 * 60 || m < 8 * 60 + 15; };
-// il turno della guardia: la notte dalle 20 alle 8:15, il giorno dalle 8:15
-// alle 20 (chiave "YYYY-MM-DD|N" col giorno in cui la notte comincia)
+// la notte di guardia va dalle 19:45 alle 8:15 (i passaggi delle consegne)
+const GU_INIZIO = 19 * 60 + 45, GU_FINE = 8 * 60 + 15;
+const inOrarioGuardia = (d = new Date()) => { const m = d.getHours() * 60 + d.getMinutes(); return m >= GU_INIZIO || m < GU_FINE; };
+// il turno della guardia: la notte dalle 19:45 alle 8:15, il giorno dalle
+// 8:15 alle 19:45 (chiave "YYYY-MM-DD|N" col giorno in cui la notte comincia)
 function turnoGu(ts){
   const d = new Date(ts), m = d.getHours() * 60 + d.getMinutes();
-  if(m < 8 * 60 + 15) return chiaveGiorno(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).getTime()) + '|N';
-  return chiaveGiorno(d.getTime()) + (m >= 20 * 60 ? '|N' : '|G');
+  if(m < GU_FINE) return chiaveGiorno(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).getTime()) + '|N';
+  return chiaveGiorno(d.getTime()) + (m >= GU_INIZIO ? '|N' : '|G');
+}
+// il nome della festa, per il titolo ("Guardia di Natale")
+function nomeFesta(d){
+  const mmgg = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const fisse = { '01-01':'Capodanno', '01-06':'Epifania', '04-25':'Liberazione', '05-01':'Primo maggio', '06-02':'Festa della Repubblica', '08-15':'Ferragosto',
+    '11-01':'Ognissanti', '11-02':'Patrono', '12-08':'Immacolata', '12-25':'Natale', '12-26':'Santo Stefano' };
+  if(fisse[mmgg]) return fisse[mmgg];
+  const Y = d.getFullYear(), a = Y % 19, b = Math.floor(Y / 100), c = Y % 100, dd = Math.floor(b / 4), e = b % 4,
+    f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - dd - g + 15) % 30,
+    i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    mese = Math.floor((h + l - 7 * m + 114) / 31), giorno = ((h + l - 7 * m + 114) % 31) + 1;
+  const pasqua = new Date(Y, mese - 1, giorno);
+  if(d.getMonth() === pasqua.getMonth() && d.getDate() === pasqua.getDate()) return 'Pasqua';
+  const lun = new Date(Y, mese - 1, giorno + 1);
+  if(d.getMonth() === lun.getMonth() && d.getDate() === lun.getDate()) return 'Pasquetta';
+  return '';
+}
+// "Notte di guardia", "Guardia weekend", "Guardia di Natale", "Guardia giorno"
+function titoloGuardia(){
+  const d = new Date();
+  if(inOrarioGuardia(d)) return 'Notte di guardia';
+  if(eFestivo(d)){ const n = nomeFesta(d); return n ? (n === 'Patrono' ? 'Guardia del Patrono' : `Guardia di ${n}`) : 'Guardia weekend'; }
+  return 'Guardia giorno';
 }
 const turnoOra = () => turnoGu(Date.now());
 function guardiaAttiva(){
   let m = null; try{ m = JSON.parse(localStorage.getItem(GU_MODO_KEY)); } catch(e){}
   if(m && m.turno === turnoOra()) return !!m.on;
-  return inOrarioGuardia();
+  // da sola: di notte e, nei weekend e nei festivi, tutto il giorno
+  return inOrarioGuardia() || eFestivo(new Date());
 }
 // accesa o spenta a mano: vale per il turno in corso, poi torna l'orario
 function impostaGuardia(on){
@@ -26537,6 +26591,51 @@ function segnaVoceGuardia(id){
   f[id].fatto = f[id].fatto ? 0 : Date.now(); f[id].savedAt = Date.now();
   scriviGu(GU_FARE_KEY, f);
 }
+// RICOVERI DAL PS: chi chiamano per ricoverare. Nome, cognome, età, dove va
+// (reparto e letto: libero, bis o monitorato) e quale guardia lo vede: il
+// 5914 (verde) o il 5899 (arancione). Mettono la X nei letti liberi; quelli
+// che vedo io diventano subito una scheda in Ricoveri
+const GU_ARRIVI_KEY = 'eo_minimal_guardia_arrivi_v1'; // { id: { cognome, nome, eta, rep, tipo, chi, creato, ricId, savedAt } }
+const GU_IO_KEY = 'eo_minimal_guardia_io_v1';         // '5914' o '5899'
+const GU_GUARDIE = { '5914':'verde', '5899':'arancione' };
+const guIo = () => { try{ const v = localStorage.getItem(GU_IO_KEY); return GU_GUARDIE[v] ? v : '5914'; } catch(e){ return '5914'; } };
+let guArrivoAperto = false, guArrivoBozza = { rep:'', tipo:'l', chi:'' };
+function arriviGuardia(){
+  const a = leggiGu(GU_ARRIVI_KEY), ora = turnoOra();
+  return Object.entries(a).filter(([, v]) => v && turnoGu(v.creato) === ora).map(([id, v]) => Object.assign({ id }, v)).sort((x, y) => x.creato - y.creato);
+}
+function aggiungiArrivo(){
+  const val = id => ($m('#' + id)?.value || '').trim();
+  const cognome = val('m-gu-a-cog'), nome = val('m-gu-a-nome'), eta = val('m-gu-a-eta').replace(/\D/g, '');
+  const b = guArrivoBozza;
+  if(!cognome && !nome){ showToast('Scrivi almeno il cognome'); $m('#m-gu-a-cog')?.focus(); return; }
+  if(!b.rep){ showToast('Scegli il reparto'); return; }
+  const chi = b.chi || guIo(), ora = Date.now();
+  const id = 'a' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
+  const voce = { cognome, nome, eta, rep:b.rep, tipo:b.tipo || 'l', chi, creato:ora, savedAt:ora };
+  // lo vedo io: la scheda del ricovero nasce subito, coi dati già scritti
+  if(chi === guIo()){
+    try{
+      const campi = { sesso:'F', cognome, nome, letto:'', reparto:(GU_REPARTI.find(r => r[0] === b.rep) || [])[1] || 'GERIATRIA', eta, diagnosi:'', allergie:'', prossima:'', provvedimenti:'',
+        ematochimici:'', rxtorace:'', rxaddome:'', tcaddome:'', tctorace:'', tccerebrale:'', altriEsami:[], remota:'', farmacologica:'', familiare:'' };
+      const list = loadRicoveri();
+      const rec = { id:'ric_' + ora + '_' + Math.random().toString(36).slice(2, 7), seq:nextRicoveroSeq(), creatoIl:ora, selezionato:true,
+        label:`${cognome.toUpperCase()} ${nome.toUpperCase()}`.trim(), campi, daArrivo:id,
+        diario:costruisciDiario(campi), prossima:costruisciProssima(campi), remota:costruisciRemota(campi), farmacologica:costruisciFarmacologica(campi),
+        familiare:costruisciFamiliare(campi), allergie:costruisciAllergie(campi), problemi:'' };
+      list.push(rec); saveRicoveri(list);
+      voce.ricId = rec.id;
+    } catch(e){ console.warn('Ricovero non creato:', e); }
+  }
+  const a = leggiGu(GU_ARRIVI_KEY); a[id] = voce; scriviGu(GU_ARRIVI_KEY, a);
+  guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' };
+  showToast(chi === guIo() ? 'Ricovero aggiunto: la scheda è già in Ricoveri' : `Ricovero aggiunto: lo vede il ${chi}`);
+}
+function togliArrivo(id){
+  const a = leggiGu(GU_ARRIVI_KEY); const v = a[id]; if(!v) return;
+  delete a[id]; scriviGu(GU_ARRIVI_KEY, a);
+  if(v.ricId) showToast('Tolto dai ricoveri dal PS; la scheda resta in Ricoveri');
+}
 function togliVoceGuardia(id){ const f = leggiGu(GU_FARE_KEY); if(!f[id]) return; delete f[id]; scriviGu(GU_FARE_KEY, f); }
 
 // letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
@@ -26550,23 +26649,34 @@ function lettiLiberi(){
   // riconcilia coi ricoveri del turno
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
   const repDi = r => { const c = (r.campi || {}).reparto || 'GERIATRIA'; const g = GU_REPARTI.find(([, nome]) => nome === c); return g ? g[0] : null; };
-  const delTurno = new Map(ric.filter(r => r.creatoIl && turnoGu(r.creatoIl) === ora).map(r => [r.id, r]));
+  // i ricoveri dal PS hanno la loro X (col colore di chi li vede): le schede
+  // nate da loro non ne mettono un'altra
+  const arrivi = new Map(arriviGuardia().map(v => ['a:' + v.id, v]));
+  const delTurno = new Map(ric.filter(r => r.creatoIl && turnoGu(r.creatoIl) === ora && !(r.daArrivo && arrivi.has('a:' + r.daArrivo))).map(r => [r.id, r]));
   let cambiato = false;
   Object.entries(st.x).forEach(([q, v]) => {
     if(v === 1) return;
-    const r = delTurno.get(v);
-    if(!r || repDi(r) !== q.split('|')[0]){ delete st.x[q]; st.ric = st.ric.filter(id => id !== v); cambiato = true; }
+    const [rq, tq] = q.split('|');
+    if(String(v).startsWith('a:')){
+      const a = arrivi.get(v);
+      if(a && a.rep === rq && (a.tipo || 'l') === tq) return;
+    } else {
+      const r = delTurno.get(v);
+      if(r && repDi(r) === rq) return;
+    }
+    delete st.x[q]; st.ric = st.ric.filter(id => id !== v); cambiato = true;
   });
-  delTurno.forEach((r, id) => {
-    if(st.ric.includes(id)) return;
-    const rep = repDi(r), n = rep && st.rep[rep]; if(!n) return;
-    for(const tipo of ['l', 'b', 'm']){
+  const assegna = (id, rep, tipi) => {
+    const n = rep && st.rep[rep]; if(!n) return;
+    for(const tipo of tipi){
       for(let i = 0; i < (n[tipo] || 0); i++){
         const q = `${rep}|${tipo}|${i}`;
         if(!st.x[q]){ st.x[q] = id; st.ric.push(id); cambiato = true; return; }
       }
     }
-  });
+  };
+  arrivi.forEach((a, id) => { if(!st.ric.includes(id)) assegna(id, a.rep, [a.tipo || 'l', ...['l', 'b', 'm'].filter(t => t !== (a.tipo || 'l'))]); });
+  delTurno.forEach((r, id) => { if(!st.ric.includes(id)) assegna(id, repDi(r), ['l', 'b', 'm']); });
   if(cambiato) scriviGu(GU_LETTI_KEY, { turno:st.turno, rep:st.rep, x:st.x, ric:st.ric });
   return st;
 }
@@ -26602,8 +26712,9 @@ function htmlGuardia(){
     </div>`;
   };
   const st = lettiLiberi();
-  const quadri = (rep, tipo, n) => Array.from({ length:n }, (_, i) => { const q = `${rep}|${tipo}|${i}`, v = st.x[q];
-    return `<button class="m-gu-q${v ? ' m-gu-x' : ''}${v && v !== 1 ? ' m-gu-ric' : ''}" data-m="gu-x" data-q="${q}" aria-pressed="${!!v}" aria-label="${rep} ${tipo === 'l' ? 'letto' : tipo === 'b' ? 'bis' : 'monitorato'} ${i + 1}${v ? ': occupato' : ': libero'}"></button>`; }).join('');
+  const arrivi = arriviGuardia(), perId = new Map(arrivi.map(a => ['a:' + a.id, a]));
+  const quadri = (rep, tipo, n) => Array.from({ length:n }, (_, i) => { const q = `${rep}|${tipo}|${i}`, v = st.x[q], a = v && perId.get(v);
+    return `<button class="m-gu-q${v ? ' m-gu-x' : ''}${v && v !== 1 ? ' m-gu-ric' : ''}${a ? ' m-gu-' + GU_GUARDIE[a.chi] : ''}"${a ? ` title="${esc((a.cognome + ' ' + a.nome).trim())} · ${a.chi}"` : ''} data-m="gu-x" data-q="${q}" aria-pressed="${!!v}" aria-label="${rep} ${tipo === 'l' ? 'letto' : tipo === 'b' ? 'bis' : 'monitorato'} ${i + 1}${v ? ': occupato' : ': libero'}"></button>`; }).join('');
   const passo = (rep, tipo, n, nome) => `<span class="m-gu-passo"><small>${nome}</small><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="-1" aria-label="Meno">−</button><b>${n}</b><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="1" aria-label="Più">+</button></span>`;
   const modifica = guLettiModifica || !st.impostato;
   const righeLetti = GU_REPARTI.map(([rep]) => {
@@ -26617,13 +26728,39 @@ function htmlGuardia(){
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
     ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}
+    ${htmlArrivi(arrivi, st)}
     <p class="m-lbl m-gu-tit">Letti liberi<button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></p>
     <div class="m-gu-letti${modifica ? ' m-gu-in-mod' : ''}">${righeLetti}</div>
-    <p class="m-gu-nota">${modifica ? 'Quanti letti liberi, bis e monitorati per reparto. Poi «Fatto».' : 'Tocca un quadratino per la X. Quelli pieni sono i ricoveri di questo turno, messi da soli.'}</p>
+    <p class="m-gu-nota">${modifica ? 'Quanti letti liberi, bis e monitorati per reparto. Poi «Fatto».' : 'Tocca un quadratino per la X. Pieni: i ricoveri del turno (verde il 5914, arancione il 5899), messi da soli.'}</p>
   </div>`;
+}
+function htmlArrivi(arrivi, st){
+  const io = guIo(), altro = io === '5914' ? '5899' : '5914';
+  const TIPI = { l:'libero', b:'bis', m:'monitorato' };
+  const chip = (attr, testo, on, cl) => `<button class="m-gu-chip${on ? ' m-on' : ''}${cl ? ' ' + cl : ''}" ${attr} aria-pressed="${on}">${testo}</button>`;
+  const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
+  const righe = arrivi.map(a => `<div class="m-gu-ar">
+      <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
+      <span class="m-gu-t"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small></span>
+      <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli">${ICON.x}</button>
+    </div>`).join('');
+  const b = guArrivoBozza, chi = b.chi || io;
+  const form = !guArrivoAperto ? '' : `<div class="m-gu-form">
+      <div class="m-gu-campi"><input id="m-gu-a-cog" placeholder="Cognome" autocomplete="off" autocapitalize="characters"><input id="m-gu-a-nome" placeholder="Nome" autocomplete="off" autocapitalize="words"><input id="m-gu-a-eta" placeholder="Età" inputmode="numeric" autocomplete="off"></div>
+      <div class="m-gu-scelta"><small>Reparto</small>${GU_REPARTI.map(([r]) => chip(`data-m="gu-a-rep" data-v="${r}"`, `${r}${st.impostato ? ` <i>${liberi(r, 'l') + liberi(r, 'b') + liberi(r, 'm')}</i>` : ''}`, b.rep === r)).join('')}</div>
+      <div class="m-gu-scelta"><small>Letto</small>${['l', 'b', 'm'].map(t => chip(`data-m="gu-a-tipo" data-v="${t}"`, t === 'l' ? 'libero' : t === 'b' ? '(bis)' : '[mon]', (b.tipo || 'l') === t)).join('')}</div>
+      <div class="m-gu-scelta"><small>Lo vede</small>${[io, altro].map(g => chip(`data-m="gu-a-chi" data-v="${g}"`, `${g}${g === io ? ' · io' : ''}`, chi === g, 'm-gu-' + GU_GUARDIE[g])).join('')}<button class="m-gu-iosono" data-m="gu-io" title="Cambia chi sei">Sono il ${altro}?</button></div>
+      <div class="m-gu-form-az"><button class="m-gu-annulla" data-m="gu-a-chiudi">Annulla</button><button class="m-gu-ok-big" data-m="gu-a-ok">Aggiungi ricovero</button></div>
+    </div>`;
+  return `<p class="m-lbl m-gu-tit">Ricoveri dal PS${arrivi.length ? `<span class="m-gu-n">${arrivi.length}</span>` : ''}${guArrivoAperto ? '' : `<button class="m-gu-imp" data-m="gu-a-apri">+ Nuovo</button>`}</p>
+    ${form}${righe ? `<div class="m-gu-lista">${righe}</div>` : guArrivoAperto ? '' : '<p class="m-gu-vuoto">Quando il PS chiama: «+ Nuovo», nome, età, dove va e chi lo vede.</p>'}`;
 }
 // ridisegna solo il blocco (senza perdere il cursore nel campo)
 function ridisegnaGuardia(fuoco){
+  // i campi del ricovero dal PS già scritti restano (scegliere un reparto ridisegna)
+  const tieni = ['m-gu-a-cog', 'm-gu-a-nome', 'm-gu-a-eta'].map(id => [id, $m('#' + id)?.value]);
+  const rimetti = () => tieni.forEach(([id, v]) => { const el = $m('#' + id); if(el && v) el.value = v; });
+  setTimeout(rimetti, 0);
   if(MP_PC.matches){
     // al PC anche la tessera G (i conti) e, se i dati non cambiano (es. Fatto
     // sui letti), il pannello va riscritto lo stesso
@@ -26646,7 +26783,7 @@ function aggiungiDaCampo(){
 }
 // pannello a destra al PC
 function guDett(box){
-  box.innerHTML = `<div class="mpd-dtesta"><div><h2>Guardia</h2><p>${inOrarioGuardia() ? 'Notte' : 'Di giorno'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div><button class="mp-btn mp-sec" data-m="gu-off">Esci dalla guardia</button></div>${htmlGuardia()}`;
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${titoloGuardia()}</h2><p>${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }).replace(/^./, c => c.toUpperCase())}</p></div><button class="mp-btn mp-sec" data-m="gu-off">Esci dalla guardia</button></div>${htmlGuardia()}`;
 }
 
 function vHome(){
@@ -26732,8 +26869,8 @@ function vHome(){
   const dataOggi = new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' });
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
-      <h1 class="m-h1 m-h1-home">${guardia ? 'Guardia<button class="m-gu-esci" data-m="gu-off">Esci</button>' : esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
-      <p class="m-sub">${guardia ? `${inOrarioGuardia() ? 'Notte' : 'Di giorno'} · ${dataOggi}` : `Il giro di oggi · ${dataOggi}`}</p>
+      <h1 class="m-h1 m-h1-home">${guardia ? `${titoloGuardia()}<button class="m-gu-esci" data-m="gu-off">Esci</button>` : esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
+      <p class="m-sub">${guardia ? dataOggi.replace(/^./, c => c.toUpperCase()) : `Il giro di oggi · ${dataOggi}`}</p>
     </div>
     <div class="m-home-giu${guardia ? ' m-in-guardia' : ''}" id="m-home-giu">
       ${guardia ? htmlGuardia() : ''}
@@ -27933,6 +28070,12 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'gu-via'){ togliVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-x'){ toccaLetto(el.dataset.q); ridisegnaGuardia(); }
   else if(a === 'gu-pm'){ guLettiModifica = true; cambiaNumeroLetti(el.dataset.r, el.dataset.t, +el.dataset.d); ridisegnaGuardia(); }
+  else if(a === 'gu-a-apri'){ guArrivoAperto = true; ridisegnaGuardia(); setTimeout(() => $m('#m-gu-a-cog')?.focus(), 30); }
+  else if(a === 'gu-a-chiudi'){ guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); }
+  else if(a === 'gu-a-rep' || a === 'gu-a-tipo' || a === 'gu-a-chi'){ guArrivoBozza[a.slice(5) === 'rep' ? 'rep' : a.slice(5)] = el.dataset.v; ridisegnaGuardia(); }
+  else if(a === 'gu-io'){ setLocalAndCloud(GU_IO_KEY, guIo() === '5914' ? '5899' : '5914'); guArrivoBozza.chi = ''; ridisegnaGuardia(); showToast(`Sei il ${guIo()} (${GU_GUARDIE[guIo()]})`); }
+  else if(a === 'gu-a-ok'){ aggiungiArrivo(); ridisegnaGuardia(); }
+  else if(a === 'gu-a-via'){ togliArrivo(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-letti'){ const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
   else if(a === 'modo-rep'){
@@ -29501,7 +29644,7 @@ function pkScrivania(reparto, festivo, guardia){
   if(guardia){
     const voci = vociGuardia(), fatte = voci.filter(v => v.fatto).length;
     settV.unshift({ k:'gu|pc', gu:true, n:voci.length, visti:fatte, cop:0, oggi:true, l:'G', titolo:'Guardia',
-      firma:voci.map(v => v.id + (v.fatto ? 'f' : '')).join(',') + JSON.stringify(leggiGu(GU_LETTI_KEY)),
+      firma:voci.map(v => v.id + (v.fatto ? 'f' : '')).join(',') + JSON.stringify(leggiGu(GU_LETTI_KEY)) + JSON.stringify(leggiGu(GU_ARRIVI_KEY)) + guIo(),
       sotto:voci.length ? `${voci.length - fatte} da fare su ${voci.length}` : 'Niente da fare' });
   } else links = link('data-m="gu-on"', '', 'Modalità guardia') + links;
   mpOggiPC(dati, '', '', { testa, links, settori:settV });
