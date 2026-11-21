@@ -5522,7 +5522,9 @@ const CHIAVI_SINCRONIZZATE = ['eo_builder_patients_v1', 'eo_builder_ricoveri_v1'
   'eo_minimal_settore_il_v1',
   // EO Pocket: il nome scritto in Account (le iniziali in alto nella home),
   // lo stesso su tutti i dispositivi dell'account
-  'eo_minimal_nome_v1'];
+  'eo_minimal_nome_v1',
+  // EO Pocket, guardia: le cose da fare e i letti liberi del turno
+  'eo_minimal_guardia_fare_v1', 'eo_minimal_letti_liberi_v1'];
 // post-degenze: una voce per id, come le schede pazienti, quindi fuse voce
 // per voce (una aggiunta dal telefono e una dal PC restano entrambe)
 const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
@@ -5532,7 +5534,7 @@ const POSTDEGENZE_KEY = 'eo_builder_postdegenze_v1';
 const FARE_SYNC_KEY = 'eo_minimal_dafare_v1';
 // pratiche di EO Pocket: una voce per paziente e pratica, fuse voce per voce
 const PRATICHE_SYNC_KEY = 'eo_minimal_pratiche_v1';
-const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY || key === 'eo_builder_ricoveri_v1';
+const fusaPerVoce = key => key === PATIENTS_KEY || key === POSTDEGENZE_KEY || key === FARE_SYNC_KEY || key === PRATICHE_SYNC_KEY || key === 'eo_builder_ricoveri_v1' || key === 'eo_minimal_guardia_fare_v1';
 function fondiPerVoce(key, rawBase, rawLocale, rawCloud, localePiuNuovo = true){
   if(key === 'eo_builder_ricoveri_v1') return fondiRicoveri(rawBase, rawLocale, rawCloud, localePiuNuovo);
   const fuso = fondiSchedePazienti(rawBase, rawLocale, rawCloud);
@@ -24135,6 +24137,67 @@ function editorLettereSvuota(){
   .m-fare-t.m-tutto{ color:var(--m-teal); }
   .m-fare{ flex:none; border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
   .m-elenco.m-dopo-fare{ margin-top:0; }
+  /* GUARDIA: da fare (una riga per cosa: icona del tipo, letto in grassetto,
+     a destra il cerchio che diventa baffo) e letti liberi coi quadratini */
+  .m-gu{ flex:none; }
+  .m-gu-tit{ display:flex; align-items:center; gap:8px; margin:14px 0 8px; }
+  .m-gu-tit + .m-gu-add{ margin-top:0; }
+  .m-gu-n{ display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--m-notte); color:#fff; font-size:11.5px; font-weight:700; letter-spacing:0; }
+  .m-gu-imp{ margin-left:auto; border:0; background:none; color:var(--m-link); font:inherit; font-size:12.5px; font-weight:600; letter-spacing:0; text-transform:none; cursor:pointer; padding:2px 0; }
+  .m-gu-add{ display:flex; gap:8px; margin-bottom:8px; }
+  .m-gu-add input{ flex:1; min-width:0; height:44px; padding:0 14px; border:1px solid var(--m-line-forte); border-radius:10px; background:var(--m-carta); color:var(--m-ink); font:inherit; font-size:16px; }
+  .m-gu-add input:focus{ outline:none; border-color:var(--m-notte); box-shadow:0 0 0 3px color-mix(in srgb, var(--m-notte) 18%, transparent); }
+  .m-gu-add button{ flex:none; width:44px; height:44px; border:0; border-radius:10px; background:var(--m-notte); color:#fff; display:grid; place-items:center; cursor:pointer; }
+  .m-gu-add button svg{ width:20px; height:20px; }
+  .m-gu-lista{ border:1px solid var(--m-line); border-radius:10px; overflow:hidden; }
+  .m-gu-r{ display:flex; align-items:center; gap:10px; padding:10px 6px 10px 12px; background:var(--m-carta); }
+  .m-gu-r + .m-gu-r{ border-top:1px solid var(--m-line); }
+  .m-gu-ic{ flex:none; width:30px; height:30px; border-radius:8px; display:grid; place-items:center; background:var(--m-box); color:var(--m-muted); }
+  .m-gu-ic svg{ width:17px; height:17px; }
+  .m-gu-r[data-tipo="farmaco"] .m-gu-ic{ background:var(--m-rame-box); color:var(--m-rame); }
+  .m-gu-r[data-tipo="esame"] .m-gu-ic{ background:var(--m-notte-box); color:var(--m-notte); }
+  .m-gu-r[data-tipo="visita"] .m-gu-ic{ background:var(--m-teal-box); color:var(--m-teal); }
+  .m-gu-t{ flex:1; min-width:0; font-size:15px; line-height:1.3; color:var(--m-ink); overflow-wrap:anywhere; }
+  .m-gu-t b{ font-weight:700; }
+  .m-gu-t small{ display:block; margin-top:2px; font-size:12px; color:var(--m-muted); }
+  .m-gu-ok{ flex:none; display:grid; place-items:center; width:30px; height:30px; padding:0; border:1.5px solid var(--m-line-forte); border-radius:50%; background:none; color:transparent; cursor:pointer; }
+  .m-gu-ok svg{ width:15px; height:15px; }
+  .m-gu-ok[aria-pressed="true"]{ background:var(--m-teal); border-color:var(--m-teal); color:#fff; }
+  .m-gu-via{ flex:none; width:26px; height:30px; margin-left:-4px; border:0; background:none; color:var(--m-faint); display:grid; place-items:center; cursor:pointer; padding:0; }
+  .m-gu-via svg{ width:15px; height:15px; }
+  .m-gu-fatta .m-gu-t{ color:var(--m-muted); }
+  .m-gu-fatta .m-gu-t > :not(small){ text-decoration:line-through; }
+  .m-gu-fatta .m-gu-ic{ opacity:.55; }
+  .m-gu-vuoto{ margin:0; padding:12px 14px; border:1px dashed var(--m-line-forte); border-radius:10px; font-size:13.5px; color:var(--m-muted); }
+  .m-gu-letti{ border:1px solid var(--m-line); border-radius:10px; overflow:hidden; margin-top:0; }
+  .m-gu .m-gu-tit:nth-of-type(2){ margin-top:20px; }
+  .m-gu-lr{ display:flex; align-items:center; gap:10px; min-height:50px; padding:8px 12px; background:var(--m-carta); }
+  .m-gu-lr + .m-gu-lr{ border-top:1px solid var(--m-line); }
+  .m-gu-rep{ flex:none; width:38px; font-weight:700; font-size:14px; color:var(--m-ink); }
+  .m-gu-qq{ flex:1; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+  .m-gu-qq i{ font-style:normal; font-size:20px; line-height:1; color:var(--m-faint); margin:0 -1px; }
+  .m-gu-qq em{ font-style:normal; font-size:13px; color:var(--m-faint); }
+  .m-gu-q{ position:relative; width:26px; height:26px; padding:0; border:1.5px solid var(--m-line-forte); border-radius:6px; background:var(--m-carta); cursor:pointer; }
+  .m-gu-q.m-gu-x{ border-color:var(--m-notte); background:var(--m-notte-box); }
+  .m-gu-q.m-gu-x::before, .m-gu-q.m-gu-x::after{ content:""; position:absolute; left:50%; top:50%; width:15px; height:2px; border-radius:1px; background:var(--m-notte); transform:translate(-50%, -50%) rotate(45deg); }
+  .m-gu-q.m-gu-x::after{ transform:translate(-50%, -50%) rotate(-45deg); }
+  .m-gu-q.m-gu-ric{ border-color:var(--m-teal); background:var(--m-teal); }
+  .m-gu-q.m-gu-ric::before, .m-gu-q.m-gu-ric::after{ background:#fff; }
+  .m-gu-lib{ flex:none; min-width:20px; text-align:right; font-size:15px; font-weight:700; color:var(--m-ink); }
+  .m-gu-mod{ flex-wrap:wrap; }
+  .m-gu-passo{ display:inline-flex; align-items:center; gap:4px; }
+  .m-gu-passo small{ font-size:12px; color:var(--m-muted); margin-right:2px; }
+  .m-gu-passo button{ width:28px; height:28px; border:1px solid var(--m-line-forte); border-radius:7px; background:var(--m-carta); color:var(--m-ink); font:inherit; font-size:16px; line-height:1; cursor:pointer; padding:0; }
+  .m-gu-passo b{ min-width:18px; text-align:center; font-size:15px; color:var(--m-ink); }
+  .m-gu-nota{ margin:6px 2px 18px; font-size:12px; color:var(--m-muted); }
+  .m-h1 .m-gu-esci{ margin-left:12px; vertical-align:middle; height:30px; padding:0 13px; border:1px solid var(--m-line-forte); border-radius:999px; background:none; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0; color:var(--m-muted); cursor:pointer; }
+  .m-in-guardia > .m-schede{ margin-top:4px; }
+  .pkd .mpd-dett .m-gu{ margin-top:14px; }
+  .pkd .mpd-dett .mpd-dtesta{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .pkd .mpd-dett .mpd-dtesta > div{ flex:1; min-width:0; }
+  .pkd .mpd-dett .mpd-dtesta > .mp-btn{ flex:none; width:auto; padding:0 18px; }
+  html[data-m-tema="scuro"] :is(.m-gu-r, .m-gu-lr, .m-gu-q, .m-gu-passo button, .m-gu-add input){ background:var(--m-carta, #132133); }
+  html[data-m-tema="scuro"] .m-gu-q.m-gu-x{ background:color-mix(in srgb, var(--m-notte) 22%, transparent); }
   .m-fare-r{ display:flex; align-items:center; background:#fff; border-top:1px solid var(--m-line); }
   /* PRATICHE: una riga che si apre (quante ne mancano e la freccia a destra,
      al posto del cerchio) e sotto i pazienti coi moduli da spuntare */
@@ -26385,6 +26448,186 @@ const FESTA_HTML = `<span class="m-festa" aria-hidden="true"><i style="--x:6%;--
 <span class="m-f-albero"><svg viewBox="0 0 36 50"><rect x="15.5" y="41" width="5" height="7" rx="1" fill="#7a5a3a"/><path d="M18 6L7 22h5L4 33h6L1 44h34l-9-11h6l-8-11h5z" fill="#2f8f5b"/><path d="M12 22h-1.5L18 12l7.5 10H24M10 33H8l4-5M26 28l4 5h-2" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".85"/><path d="M18 1.5l1.3 2.8 3 .3-2.3 2 .7 3-2.7-1.6-2.7 1.6.7-3-2.3-2 3-.3z" fill="#f2c14e"/><g class="m-f-luci"><circle cx="14" cy="19" r="1.4" fill="#ffd54a"/><circle cx="21" cy="25" r="1.4" fill="#5ab0ff"/><circle cx="12" cy="30" r="1.4" fill="#ff6b6b"/><circle cx="24" cy="35" r="1.4" fill="#ffd54a"/><circle cx="9" cy="40" r="1.4" fill="#5ab0ff"/><circle cx="18" cy="39" r="1.4" fill="#ff6b6b"/><circle cx="28" cy="41" r="1.4" fill="#ffd54a"/><circle cx="19" cy="16" r="1.4" fill="#ff6b6b"/></g></svg></span>
 <span class="m-f-palla"><i></i></span>
 <span class="m-f-pupazzo"><svg viewBox="0 0 40 54"><circle cx="20" cy="41" r="13" fill="#fff"/><circle cx="20" cy="21" r="9.5" fill="#fff"/><g class="m-f-cappello"><rect x="13" y="3" width="14" height="9" rx="1.2" fill="#2a2f3a"/><rect x="13" y="9" width="14" height="2" fill="#b3232c"/><rect x="9.5" y="11" width="21" height="2.6" rx="1.3" fill="#2a2f3a"/></g><circle cx="16.5" cy="19.5" r="1.3" fill="#2a2f3a"/><circle cx="23.5" cy="19.5" r="1.3" fill="#2a2f3a"/><path d="M20 22l7 2-7 .9z" fill="#f08a2c"/><path d="M16.5 26c2.2 1.3 4.8 1.3 7 0" fill="none" stroke="#2a2f3a" stroke-width="1" stroke-linecap="round"/><path d="M11 28.5c5 3 13 3 18 0l.8 3.3c-6 2.6-13.6 2.6-19.6 0z" fill="#3fae6a"/><rect x="24" y="30" width="3.6" height="9" rx="1.6" fill="#3fae6a"/><circle cx="20" cy="37" r="1.3" fill="#b3232c"/><circle cx="20" cy="42" r="1.3" fill="#b3232c"/><circle cx="20" cy="47" r="1.3" fill="#b3232c"/><g class="m-f-braccio"><path d="M32 36l6-8M35.5 31l3-.6" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g><g class="m-f-lancio"><path d="M8 36L1 30M4 32.5l-2.8.8" stroke="#7a5a3a" stroke-width="1.6" stroke-linecap="round"/></g></svg></span></span></span>`;
+/* ---------- GUARDIA ---------- */
+// MODALITÀ GUARDIA: di notte (20:00–7:45) da sola, di giorno a mano. In
+// home, sopra a tutto, "Da fare in guardia" (quello che gli infermieri o i
+// colleghi chiedono: un farmaco da mettere in terapia, un paziente da
+// visitare, un esame da vedere) e i letti liberi dei reparti, coi
+// quadratini come sul foglio. Il giro resta lì sotto, come sempre.
+// Le voci e i letti sono uguali su telefono e PC (sincronizzati)
+const GU_FARE_KEY = 'eo_minimal_guardia_fare_v1';   // { id: { t, letto, tipo, creato, fatto, savedAt } }
+const GU_LETTI_KEY = 'eo_minimal_letti_liberi_v1';  // { turno, rep:{C1:{l,b,m}}, x:{'C1|l|0': 1 | idRicovero}, ric:[id] }
+const GU_MODO_KEY = 'eo_minimal_guardia_modo_v1';   // solo qui: { turno, on } scelto a mano
+const GU_REPARTI = [['C1', 'MED C1'], ['C2', 'MED C2'], ['GER', 'GERIATRIA']];
+const inOrarioGuardia = (d = new Date()) => { const m = d.getHours() * 60 + d.getMinutes(); return m >= 20 * 60 || m < 7 * 60 + 45; };
+const turnoOra = () => turnoGuardia(Date.now()).k;
+function guardiaAttiva(){
+  let m = null; try{ m = JSON.parse(localStorage.getItem(GU_MODO_KEY)); } catch(e){}
+  if(m && m.turno === turnoOra()) return !!m.on;
+  return inOrarioGuardia();
+}
+// accesa o spenta a mano: vale per il turno in corso, poi torna l'orario
+function impostaGuardia(on){
+  try{ localStorage.setItem(GU_MODO_KEY, JSON.stringify({ turno:turnoOra(), on })); } catch(e){}
+  if(MP_PC.matches){ mpSel = on ? 'gu|pc' : null; }
+  vHome();
+}
+const leggiGu = k => { try{ const v = JSON.parse(localStorage.getItem(k)); return v && typeof v === 'object' ? v : {}; } catch(e){ return {}; } };
+const scriviGu = (k, v) => setLocalAndCloud(k, JSON.stringify(v));
+
+// "13.1 trittico per agitazione" → letto 13.1 e il resto; il tipo dalle parole
+function leggiVoceGuardia(testo){
+  let t = testo.trim().replace(/\s+/g, ' '), letto = '';
+  const m = t.match(/^(?:letto\s+)?((?:C[12]|GER)\s*[:·]?\s*)?(\d{1,2}(?:[.,]\d)?(?:\s?P\b)?)(?=[\s:,;–-]|$)[\s:,;–-]*/i);
+  if(m){ letto = ((m[1] ? m[1].replace(/[\s:·]+$/, '').toUpperCase() + ' ' : '') + m[2].replace(',', '.').replace(/\s?p$/i, ' P')).trim(); t = t.slice(m[0].length); }
+  const s = t.toLowerCase();
+  const tipo = /\b(emocrom\w*|ega|emogas\w*|tc|tac|rx|rmn?|eco\w*|ecg|esam\w*|emocoltur\w*|urinocoltur\w*|coltur\w*|pcr|troponin\w*|hb|potassi\w*|sodi\w*|kaliemi\w*|inr|glicemi\w*|lab\w*|refert\w*|stick|dtx|ammoni\w*|lattat\w*)\b/.test(s) ? 'esame'
+    : /\b(da(?:i|re|gli)|fa(?:i|gli)|somministr\w*|trittico|tavor|lorazepam|aloperidolo|serenase|haldol|lasix|furosemide|paracetamolo|tachipirina|perfalgan|morfina|eparina|clexane|insulina|bolo|flebo\w*|fisiologica|kcl|toradol|ketorolac|quetiapina|seroquel|diazepam|valium|midazolam|ipnovel|pantoprazolo|ondansetron|plasil|metoclopramide|bentelan|solumedrol|antibiotic\w*|ossigeno|o2|terapia|mg)\b/.test(s) ? 'farmaco'
+    : /\b(visit\w*|vedi|vedere|valut\w*|rivalut\w*|controll\w*)\b/.test(s) ? 'visita' : 'altro';
+  return { letto, t: t.replace(/^./, c => c.toUpperCase()), tipo };
+}
+const GU_TIPI = {
+  farmaco:{ nome:'Farmaco', ok:'In terapia', fatto:'messo in terapia', da:'da mettere in terapia',
+    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg>' },
+  visita:{ nome:'Visita', ok:'Visitato', fatto:'visitato', da:'da visitare', ic:ICON.steto },
+  esame:{ nome:'Esame', ok:'Visto', fatto:'visto', da:'da vedere',
+    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L5 18a2 2 0 001.8 3h10.4a2 2 0 001.8-3L14 9.5V3"/><path d="M7.5 15h9"/></svg>' },
+  altro:{ nome:'Da fare', ok:'Fatto', fatto:'fatto', da:'da fare', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/></svg>' }
+};
+// le voci: le fatte in un turno passato non servono più; le non fatte restano
+function vociGuardia(){
+  const f = leggiGu(GU_FARE_KEY), ora = turnoOra();
+  let tolte = false;
+  Object.keys(f).forEach(id => { const v = f[id]; if(!v || (v.fatto && turnoGuardia(v.fatto).k !== ora)){ delete f[id]; tolte = true; } });
+  if(tolte) scriviGu(GU_FARE_KEY, f);
+  return Object.entries(f).map(([id, v]) => Object.assign({ id }, v))
+    .sort((a, b) => (!!a.fatto - !!b.fatto) || (a.fatto ? b.fatto - a.fatto : a.creato - b.creato));
+}
+function aggiungiVoceGuardia(testo){
+  const v = leggiVoceGuardia(testo || '');
+  if(!v.t && !v.letto) return false;
+  const f = leggiGu(GU_FARE_KEY), ora = Date.now();
+  f['g' + ora.toString(36) + Math.random().toString(36).slice(2, 6)] = { t:v.t, letto:v.letto, tipo:v.tipo, creato:ora, fatto:0, savedAt:ora };
+  scriviGu(GU_FARE_KEY, f);
+  return true;
+}
+function segnaVoceGuardia(id){
+  const f = leggiGu(GU_FARE_KEY); if(!f[id]) return;
+  f[id].fatto = f[id].fatto ? 0 : Date.now(); f[id].savedAt = Date.now();
+  scriviGu(GU_FARE_KEY, f);
+}
+function togliVoceGuardia(id){ const f = leggiGu(GU_FARE_KEY); if(!f[id]) return; delete f[id]; scriviGu(GU_FARE_KEY, f); }
+
+// letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
+// soli (nel reparto scritto nel ricovero: se lo si cambia, la X si sposta)
+let guLettiModifica = false;
+function lettiLiberi(){
+  const s = leggiGu(GU_LETTI_KEY), ora = turnoOra();
+  const nuovo = s.turno !== ora;
+  const st = { turno:ora, rep:s.rep || {}, x:nuovo ? {} : (s.x || {}), ric:nuovo ? [] : (s.ric || []), impostato:!nuovo };
+  if(!st.impostato) return st;
+  // riconcilia coi ricoveri del turno
+  let ric = []; try{ ric = loadRicoveri(); } catch(e){}
+  const repDi = r => { const c = (r.campi || {}).reparto || 'GERIATRIA'; const g = GU_REPARTI.find(([, nome]) => nome === c); return g ? g[0] : null; };
+  const delTurno = new Map(ric.filter(r => r.creatoIl && turnoGuardia(r.creatoIl).k === ora).map(r => [r.id, r]));
+  let cambiato = false;
+  Object.entries(st.x).forEach(([q, v]) => {
+    if(v === 1) return;
+    const r = delTurno.get(v);
+    if(!r || repDi(r) !== q.split('|')[0]){ delete st.x[q]; st.ric = st.ric.filter(id => id !== v); cambiato = true; }
+  });
+  delTurno.forEach((r, id) => {
+    if(st.ric.includes(id)) return;
+    const rep = repDi(r), n = rep && st.rep[rep]; if(!n) return;
+    for(const tipo of ['l', 'b', 'm']){
+      for(let i = 0; i < (n[tipo] || 0); i++){
+        const q = `${rep}|${tipo}|${i}`;
+        if(!st.x[q]){ st.x[q] = id; st.ric.push(id); cambiato = true; return; }
+      }
+    }
+  });
+  if(cambiato) scriviGu(GU_LETTI_KEY, { turno:st.turno, rep:st.rep, x:st.x, ric:st.ric });
+  return st;
+}
+function salvaLetti(st){ scriviGu(GU_LETTI_KEY, { turno:st.turno, rep:st.rep, x:st.x, ric:st.ric }); }
+function cambiaNumeroLetti(rep, tipo, d){
+  const st = lettiLiberi();
+  const n = Object.assign({ l:0, b:0, m:0 }, st.rep[rep]);
+  n[tipo] = Math.max(0, Math.min(20, (n[tipo] || 0) + d));
+  st.rep = Object.assign({}, st.rep, { [rep]:n });
+  // i quadratini che non ci sono più perdono la X
+  Object.keys(st.x).forEach(q => { const [r, t, i] = q.split('|'); if(r === rep && t === tipo && +i >= n[tipo]){ const v = st.x[q]; delete st.x[q]; if(v !== 1) st.ric = st.ric.filter(id => id !== v); } });
+  salvaLetti(st);
+}
+function toccaLetto(q){
+  const st = lettiLiberi();
+  if(st.x[q]){ const v = st.x[q]; delete st.x[q]; if(v !== 1){ /* tolta a mano: il ricovero non la rimette */ } }
+  else st.x[q] = 1;
+  salvaLetti(st);
+}
+
+function htmlGuardia(){
+  const voci = vociGuardia(), ora = turnoOra();
+  const daFare = voci.filter(v => !v.fatto).length;
+  const quando = ts => new Date(ts).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+  const riga = v => {
+    const tp = GU_TIPI[v.tipo] || GU_TIPI.altro;
+    const prima = turnoGuardia(v.creato).k !== ora;
+    return `<div class="m-gu-r${v.fatto ? ' m-gu-fatta' : ''}" data-tipo="${v.tipo}">
+      <span class="m-gu-ic">${tp.ic}</span>
+      <span class="m-gu-t">${v.letto ? `<b>${esc(v.letto)}</b> ` : ''}${esc(v.t)}<small>${v.fatto ? `${tp.fatto.replace(/^./, c => c.toUpperCase())} alle ${quando(v.fatto)}` : `${v.tipo === 'altro' ? '' : tp.da.replace(/^./, c => c.toUpperCase()) + ' · '}${prima ? 'dal turno prima · ' : ''}${quando(v.creato)}`}</small></span>
+      <button class="m-gu-ok" data-m="gu-ok" data-id="${esc(v.id)}" aria-pressed="${!!v.fatto}" aria-label="${tp.ok}${v.fatto ? ': tocca per togliere' : '?'}" title="${tp.ok}">${ICON.ok}</button>
+      <button class="m-gu-via" data-m="gu-via" data-id="${esc(v.id)}" aria-label="Togli">${ICON.x}</button>
+    </div>`;
+  };
+  const st = lettiLiberi();
+  const quadri = (rep, tipo, n) => Array.from({ length:n }, (_, i) => { const q = `${rep}|${tipo}|${i}`, v = st.x[q];
+    return `<button class="m-gu-q${v ? ' m-gu-x' : ''}${v && v !== 1 ? ' m-gu-ric' : ''}" data-m="gu-x" data-q="${q}" aria-pressed="${!!v}" aria-label="${rep} ${tipo === 'l' ? 'letto' : tipo === 'b' ? 'bis' : 'monitorato'} ${i + 1}${v ? ': occupato' : ': libero'}"></button>`; }).join('');
+  const passo = (rep, tipo, n, nome) => `<span class="m-gu-passo"><small>${nome}</small><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="-1" aria-label="Meno">−</button><b>${n}</b><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="1" aria-label="Più">+</button></span>`;
+  const modifica = guLettiModifica || !st.impostato;
+  const righeLetti = GU_REPARTI.map(([rep]) => {
+    const n = Object.assign({ l:0, b:0, m:0 }, st.rep[rep]);
+    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span>${passo(rep, 'l', n.l, 'liberi')}${passo(rep, 'b', n.b, '(bis)')}${passo(rep, 'm', n.m, '[mon]')}</div>`;
+    const tot = n.l + n.b + n.m;
+    const occ = Object.keys(st.x).filter(q => q.startsWith(rep + '|')).length;
+    return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
+  }).join('');
+  return `<div class="m-gu" id="m-gu">
+    <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
+    <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
+    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}
+    <p class="m-lbl m-gu-tit">Letti liberi<button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></p>
+    <div class="m-gu-letti${modifica ? ' m-gu-in-mod' : ''}">${righeLetti}</div>
+    <p class="m-gu-nota">${modifica ? 'Quanti letti liberi, bis e monitorati per reparto. Poi «Fatto».' : 'Tocca un quadratino per la X. Quelli pieni sono i ricoveri di questo turno, messi da soli.'}</p>
+  </div>`;
+}
+// ridisegna solo il blocco (senza perdere il cursore nel campo)
+function ridisegnaGuardia(fuoco){
+  if(MP_PC.matches){
+    // al PC anche la tessera G (i conti) e, se i dati non cambiano (es. Fatto
+    // sui letti), il pannello va riscritto lo stesso
+    const scritto = $m('#m-gu-in')?.value || '';
+    vHome();
+    const b = $m('#m-gu'); if(b) b.outerHTML = htmlGuardia();
+    const inp = $m('#m-gu-in'); if(inp && scritto) inp.value = scritto;
+    if(fuoco) inp?.focus();
+    return;
+  }
+  const box = $m('#m-gu'); if(!box){ vHome(); return; }
+  box.outerHTML = htmlGuardia();
+  if(fuoco) $m('#m-gu-in')?.focus();
+}
+function aggiungiDaCampo(){
+  const inp = $m('#m-gu-in'); if(!inp) return;
+  if(!aggiungiVoceGuardia(inp.value)){ inp.focus(); return; }
+  inp.value = '';
+  ridisegnaGuardia(true);
+}
+// pannello a destra al PC
+function guDett(box){
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>Guardia</h2><p>${inOrarioGuardia() ? 'Notte' : 'Di giorno'} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div><button class="mp-btn mp-sec" data-m="gu-off">Esci dalla guardia</button></div>${htmlGuardia()}`;
+}
+
 function vHome(){
   barra();
   document.documentElement.classList.toggle('pk-pc', MP_PC.matches);
@@ -26454,7 +26697,8 @@ function vHome(){
   // Pocket con la veste di Pocket. In alto il saluto e quello che diceva il
   // pulsante, il cerchio a destra; a sinistra le cose da fare, a destra il
   // diario o la cosa scelta
-  if(MP_PC.matches) return pkScrivania(reparto, festivo);
+  const guardia = guardiaAttiva();
+  if(MP_PC.matches) return pkScrivania(reparto, festivo, guardia);
   const fare = bloccoFare(copiatiCons);
   const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
@@ -26462,13 +26706,16 @@ function vHome(){
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
-    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…');
+    + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
+    + (guardia ? '' : voce('data-m="gu-on"', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>', 'Modalità guardia', 'cose da fare, letti liberi'));
+  const dataOggi = new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' });
   $m('#m-vista').innerHTML = `
     <div class="m-home-su">
-      <h1 class="m-h1 m-h1-home">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
-      <p class="m-sub">Il giro di oggi · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p>
+      <h1 class="m-h1 m-h1-home">${guardia ? 'Guardia<button class="m-gu-esci" data-m="gu-off">Esci</button>' : esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</h1>
+      <p class="m-sub">${guardia ? `${inOrarioGuardia() ? 'Notte' : 'Di giorno'} · ${dataOggi}` : `Il giro di oggi · ${dataOggi}`}</p>
     </div>
-    <div class="m-home-giu" id="m-home-giu">
+    <div class="m-home-giu${guardia ? ' m-in-guardia' : ''}" id="m-home-giu">
+      ${guardia ? htmlGuardia() : ''}
       <div class="m-schede m-schede-una">${reparto}</div>
       ${fare.html}
       ${fare.html ? '<p class="m-lbl m-fare-t">A portata di mano</p>' : ''}
@@ -27623,6 +27870,10 @@ function apriSotto(btn){
   box._fine = setTimeout(() => { if(box.classList.contains('m-aperta')) box.style.height = 'auto'; }, 320);
 }
 /* ---------- tocchi ---------- */
+// guardia: Invio nel campo aggiunge la cosa da fare (prima dei tasti della scrivania)
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target && e.target.id === 'm-gu-in' && !e.isComposing){ e.preventDefault(); e.stopPropagation(); aggiungiDaCampo(); }
+}, true);
 document.getElementById('m-app').addEventListener('click', e => {
   const el = e.target.closest('[data-m]'); if(!el) return;
   const a = el.dataset.m;
@@ -27654,6 +27905,14 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'togli-rep'){ impostaRepartiExtraOggi(getRepartiExtraOggi().filter(r => r !== el.dataset.r)); if(!settori().includes(M.settore)) M.settore = null; disegnaMappa(); }
   else if(a === 'mappa') tornaMappa();
   else if(a === 'reparto-guardia') vai('visita', { zoom:false });
+  else if(a === 'gu-on') impostaGuardia(true);
+  else if(a === 'gu-off') impostaGuardia(false);
+  else if(a === 'gu-add') aggiungiDaCampo();
+  else if(a === 'gu-ok'){ segnaVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
+  else if(a === 'gu-via'){ togliVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
+  else if(a === 'gu-x'){ toccaLetto(el.dataset.q); ridisegnaGuardia(); }
+  else if(a === 'gu-pm'){ guLettiModifica = true; cambiaNumeroLetti(el.dataset.r, el.dataset.t, +el.dataset.d); ridisegnaGuardia(); }
+  else if(a === 'gu-letti'){ const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
@@ -29153,6 +29412,8 @@ function mpOggiPC(dati, saluto, frase, pk){
       </div>
     </div>`;
   }
+  // i link in fondo cambiano con la guardia (accesa o no): si riscrivono
+  if(pk){ const ln = $m('#m-vista .mpd-links'); if(ln && ln.innerHTML !== pk.links) ln.innerHTML = pk.links; }
   $m('#mpd-testa').innerHTML = pk ? pk.testa : `<div><h1 class="mp-frase">${saluto} <em>${frase}</em></h1>
       <p class="mp-sotto">${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${dati.scegli ? '' : dati.guardia ? 'guardia · ' : (sett ? esc(sett === RIC ? 'Ricoveri' : nomeSettoreTitolo(sett)) : 'tutti i settori') + ' · '}${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>
     <dl class="mpd-numeri"${(!passi.length && tot) || dati.scegli ? ' hidden' : ''}>${num(daCopiare, daCopiare === 1 ? 'diario da copiare' : 'diari da copiare', daCopiare ? 'mpd-acc' : '')}${num(fatti.length, fatti.length === 1 ? 'copiato' : 'copiati')}${num(dati.guardia ? dati.guardia.vedere : daVedere, dati.guardia ? 'consegnati da vedere' : 'da vedere')}${num(lettere, lettere === 1 ? 'lettera' : 'lettere')}</dl>`;
@@ -29188,7 +29449,7 @@ function mpOggiPC(dati, saluto, frase, pk){
 // agganciato, stessi tasti), con la veste di Pocket. In alto a sinistra il
 // saluto e, sotto, quello che diceva il pulsante grande del Reparto (che
 // resta un tocco: apre il Reparto); il cerchio in alto a destra
-function pkScrivania(reparto, festivo){
+function pkScrivania(reparto, festivo, guardia){
   const dati = mpPassi();
   mpDatiPC = dati; mpPila = dati.passi;
   const ora = new Date().getHours();
@@ -29197,7 +29458,7 @@ function pkScrivania(reparto, festivo){
   const testa = `<div class="pkd-ciao"><h1>${esc(saluto)}</h1><p>${esc(NOMI_REPARTO[getReparto()] || 'Reparto')} · ${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' })}</p></div>`
     + reparto.replace('m-ingr m-pri m-rep-home', 'm-ingr m-rep-home pkd-rep').replace(FESTA_HTML, '');
   const link = (attr, ic, t) => `<button class="mpd-link" ${attr}>${ic}${t}</button>`;
-  const links = link('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri') + link('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni')
+  let links = link('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri') + link('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni')
     + (festivo ? link('data-m="pagina" data-p="consegne"', ICON.consegne, 'Consegne weekend') : link('data-m="aggcons"', ICON.consegne, 'Aggiorna consegne'))
     + link('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze') + link('data-m="rubrica"', ICON.rubrica, 'Rubrica') + link('data-m="strumenti-home"', ICON.strumenti, 'Strumenti');
   // i settori: la lettera, i visti su tutti; il settore di oggi acceso
@@ -29215,6 +29476,13 @@ function pkScrivania(reparto, festivo){
       l:x === RIC ? 'R' : letteraSettore(x), titolo:st.nome,
       sotto:st.guardia ? (!st.n ? 'Nessun consegnato' : st.n - st.visti ? `${st.n - st.visti} ${st.n - st.visti === 1 ? 'consegnato' : 'consegnati'} da vedere su ${st.n}` : `Consegnati tutti visti (${st.n})`) : !st.n ? 'Nessun letto' : `${st.visti} ${st.visti === 1 ? 'visto' : 'visti'} su ${st.n}${dc ? ` · ${dc} da copiare` : st.visti ? ' · diari copiati' : ''}` };
   });
+  // in guardia: per prima la tessera della guardia (da fare e letti liberi)
+  if(guardia){
+    const voci = vociGuardia(), fatte = voci.filter(v => v.fatto).length;
+    settV.unshift({ k:'gu|pc', gu:true, n:voci.length, visti:fatte, cop:0, oggi:true, l:'G', titolo:'Guardia',
+      firma:voci.map(v => v.id + (v.fatto ? 'f' : '')).join(',') + JSON.stringify(leggiGu(GU_LETTI_KEY)),
+      sotto:voci.length ? `${voci.length - fatte} da fare su ${voci.length}` : 'Niente da fare' });
+  } else links = link('data-m="gu-on"', '', 'Modalità guardia') + links;
   mpOggiPC(dati, '', '', { testa, links, settori:settV });
 }
 // il settore scelto, nel riquadro grande: il nome, il tondo, i letti coi
@@ -29261,11 +29529,12 @@ function mpDett(){
   if(!UI_MP) pkTondo(p);
   document.querySelectorAll('#mpd-lista [data-k]').forEach(r => r.setAttribute('aria-current', String(r.dataset.k === mpSel)));
   const diario = mpEDiario(p);
-  const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto + (p.sett ? '|' + p.firma : '');
+  const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto + (p.sett || p.gu ? '|' + p.firma : '');
   if(chiave === mpDettK && (!diario || mpDocked())) return;
   // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
   if(diario){ mpDock(p); mpDettK = chiave; return; }
   mpUndock(); mpDettK = chiave;
+  if(p && p.gu) return guDett(box);
   if(p && p.sett) return pkDettSettore(box, p);
   if(!p){
     // TUTTO FATTO: come gli altri dettagli (titolo grande in alto a sinistra),
