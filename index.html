@@ -2040,11 +2040,8 @@
   .ric-stat-estremo .val span{ font-size:13px; color:var(--ink-dim); }
   .ric-stat-estremo .nota{ font-size:11px; color:var(--ink-faint); margin-top:4px; overflow-wrap:anywhere; }
   .ric-stat-estremo .badge{ display:inline-block; margin-top:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--on-signal); background:var(--signal); border-radius:999px; padding:2px 8px; }
-  .ric-stat-cento{ display:flex; align-items:center; gap:14px; margin-top:8px; padding:12px 14px; border-radius:12px; background:var(--signal); color:var(--on-signal); }
-  .ric-stat-cento > b{ font-family:var(--font-display); font-size:44px; font-weight:700; line-height:1; flex:none; }
-  .ric-stat-cento .testo{ min-width:0; }
-  .ric-stat-cento .cosa{ font-size:16px; font-weight:700; letter-spacing:.01em; }
-  .ric-stat-cento .nota{ font-size:12px; opacity:.85; margin-top:2px; }
+  .ric-stat-cento{ display:inline-flex; align-self:flex-start; width:fit-content; align-items:center; gap:5px; margin-top:10px; padding:3px 10px 3px 8px; border-radius:999px; background:var(--signal-soft); color:var(--signal); font-size:11.5px; font-weight:600; }
+  .ric-stat-cento svg{ width:12px; height:12px; fill:currentColor; flex:none; }
   .ric-stat-riga .testo{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); margin-bottom:5px; }
   .ric-stat-riga .nome{ min-width:0; overflow-wrap:anywhere; }
   .ric-stat-riga .val{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
@@ -8090,17 +8087,11 @@ function renderStatisticheRicoveri(el, list){
     };
     g.append(lato(piuGiovane, true), lato(piuAnziano, false));
     cEstremi.appendChild(g);
-    // centenari: in evidenza, un numero grande sotto i due estremi
+    // centenari: un tag piccolo, tutto suo, con la stellina
     if(ultracentenari){
-      const fCento = conEta.filter(x => x.eta >= 100 && campi(x.r).sesso !== 'M').length;
       const cento = crea('div', 'ric-stat-cento');
-      cento.appendChild(crea('b', '', String(ultracentenari)));
-      const t = crea('div', 'testo');
-      t.appendChild(crea('div', 'cosa', ultracentenari === 1 ? (fCento ? 'centenaria' : 'centenario') : 'centenari'));
-      const det = [`${pct(ultracentenari, conEta.length)} dei ricoveri`];
-      if(ultracentenari > 1) det.push(`${fCento} F · ${ultracentenari - fCento} M`);
-      t.appendChild(crea('div', 'nota', det.join(' · ')));
-      cento.appendChild(t);
+      cento.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>';
+      cento.append(`${ultracentenari} ricover${ultracentenari === 1 ? 'o' : 'i'} di centenari`);
       cEstremi.appendChild(cento);
     }
   }
@@ -24509,8 +24500,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] .ric-stat-tile .v, html[data-ui="minimal"] .ric-stat-estremo .val b{ font-weight:800; letter-spacing:-.03em; }
   html[data-ui="minimal"] .ric-stat-estremo{ background:var(--m-bg); border:0; border-radius:10px; }
   html[data-ui="minimal"] .ric-stat-estremo .badge{ font-family:var(--m-sans); }
-  html[data-ui="minimal"] .ric-stat-cento{ border-radius:10px; font-family:var(--m-sans); }
-  html[data-ui="minimal"] .ric-stat-cento > b{ font-family:var(--m-sans); font-weight:800; letter-spacing:-.03em; }
+  html[data-ui="minimal"] .ric-stat-cento{ font-family:var(--m-sans); }
   .m-anim .ric-stat-cento{ opacity:0; transform:scale(.92); transition:opacity .4s, transform .6s var(--m-molla); transition-delay:400ms; }
   .m-anim .m-vis .ric-stat-cento{ opacity:1; transform:none; }
   html[data-ui="minimal"] .ric-stat-bars{ border-bottom-color:var(--m-line); }
