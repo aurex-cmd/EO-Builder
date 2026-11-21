@@ -2024,6 +2024,7 @@
   .ric-stat-labs{ display:flex; gap:5px; margin-top:-6px; }
   .ric-stat-labs div{ flex:1 1 0; min-width:0; text-align:center; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); white-space:nowrap; }
   .ric-stat-nota{ font-size:11px; color:var(--ink-faint); }
+  .ric-stat-labs small{ display:block; font-size:9.5px; opacity:.8; margin-top:1px; }
   .ric-stat-torta{ display:flex; align-items:center; gap:18px; }
   .ric-stat-torta svg{ flex-shrink:0; }
   .ric-stat-leg{ flex:1; min-width:0; display:flex; flex-direction:column; gap:9px; font-size:13px; color:var(--ink); }
@@ -7838,6 +7839,10 @@ function renderStatisticheRicoveri(el, list){
   // (sul giorno del turno: un ricovero alle 2 del sabato è della notte del venerdì)
   const perSett = [0,0,0,0,0,0,0];
   date.forEach(d => { const t = turnoGuardia(d.getTime()); perSett[(t.inizio.getDay() + 6) % 7]++; });
+  // ...rapportati ai turni fatti in quel giorno (quelli con almeno un
+  // ricovero: gli altri l'app non li vede): ricoveri per turno
+  const turniSett = [0,0,0,0,0,0,0];
+  Object.keys(perTurno).forEach(k => { const [a, m, g] = k.split('|')[0].split('-').map(Number); turniSett[(new Date(a, m - 1, g).getDay() + 6) % 7]++; });
 
   // sesso ed età
   const campi = r => r.campi || {};
@@ -7920,8 +7925,8 @@ function renderStatisticheRicoveri(el, list){
     const labs = crea('div', 'ric-stat-labs');
     dati.forEach(d => {
       const c = crea('div', 'ric-stat-col');
-      c.title = `${d.titolo || d.etichetta}: ${d.n} ${d.n === 1 ? unita[0] : unita[1]}`;
-      const num = crea('div', 'num', d.n || '');
+      c.title = d.suggerimento || `${d.titolo || d.etichetta}: ${d.n} ${d.n === 1 ? unita[0] : unita[1]}`;
+      const num = crea('div', 'num', d.n ? (d.mostra || d.n) : '');
       const area = crea('div', 'area');
       const bar = crea('div', 'bar');
       bar.style.height = (d.n ? Math.max(3, d.n / max * 100) : 0) + '%';
@@ -7931,6 +7936,7 @@ function renderStatisticheRicoveri(el, list){
       c.append(num, area);
       g.appendChild(c);
       const lab = crea('div', '', d.etichetta);
+      if(d.sotto !== undefined) lab.appendChild(crea('small', '', d.sotto));
       if(d.accento) lab.style.color = 'var(--signal)';
       labs.appendChild(lab);
     });
@@ -8054,9 +8060,16 @@ function renderStatisticheRicoveri(el, list){
   cMesi.appendChild(crea('div', 'ric-stat-nota', (UI_MP ? 'In viola' : 'In teal') + ' il mese in corso; più marcato il mese record.'));
 
   // giorni della settimana: il weekend più chiaro
+  // ricoveri per turno: un giorno con più guardie non sembra più "pieno"
+  // solo perché ci si è stati più spesso
   const cSett = card('Per giorno della settimana');
-  colonne(cSett, perSett.map((n, i) => ({ etichetta: GIORNI[i], n, colore: i >= 5 ? 'var(--st-bar-hi)' : '' })), ['ricovero', 'ricoveri']);
-  cSett.appendChild(crea('div', 'ric-stat-nota', 'La notte (20–8) conta sul giorno in cui comincia.'));
+  const NOMI_GIORNI = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
+  colonne(cSett, perSett.map((n, i) => {
+    const media = turniSett[i] ? n / turniSett[i] : 0;
+    return { etichetta: GIORNI[i], sotto: turniSett[i] + ' t', n: media, mostra: fmt(media), colore: i >= 5 ? 'var(--st-bar-hi)' : '',
+      suggerimento: `${NOMI_GIORNI[i]}: ${n} ricover${n === 1 ? 'o' : 'i'} in ${turniSett[i]} turn${turniSett[i] === 1 ? 'o' : 'i'}` + (turniSett[i] ? ` (${fmt(media)} per turno)` : '') };
+  }), ['ricovero', 'ricoveri']);
+  cSett.appendChild(crea('div', 'ric-stat-nota', 'Ricoveri per turno; sotto, i turni (t). La notte conta sul giorno in cui comincia.'));
 
   // pazienti: ciambella F/M con l'età media al centro
   const cPaz = card('Pazienti');
