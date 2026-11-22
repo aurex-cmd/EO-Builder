@@ -24229,11 +24229,19 @@ function editorLettereSvuota(){
   .m-h1 .m-gu-esci{ margin-left:12px; vertical-align:middle; height:30px; padding:0 13px; border:1px solid var(--m-line-forte); border-radius:999px; background:none; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0; color:var(--m-muted); cursor:pointer; }
   .m-in-guardia > .m-schede{ margin-top:4px; }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
-  /* al PC, riquadro largo: a sinistra letti liberi e ricoveri dal PS, a destra le cose da fare */
-  @media (min-width:1180px){
-    .pkd .mpd-dett .m-gu{ display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:32px; align-items:start; }
-    .pkd .mpd-dett .m-gu-col > .m-gu-tit:first-child{ margin-top:0; }
-  }
+  /* al PC: letti liberi e ricoveri dal PS nella colonna di sinistra, sotto le tessere */
+  .pkd .pkd-gu-sx{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:4px 14px 14px; }
+  .pkd .pkd-gu-sx .m-gu{ margin-bottom:0; }
+  .pkd .pkd-gu-sx .m-gu-lr{ gap:8px; padding:8px 10px; min-height:46px; }
+  .pkd .pkd-gu-sx .m-gu-rep{ width:32px; }
+  .pkd .pkd-gu-sx .m-gu-q{ width:24px; height:24px; }
+  .pkd .pkd-gu-sx .m-gu-form{ padding:10px; gap:8px; }
+  .pkd .pkd-gu-sx .m-gu-campi{ grid-template-columns:1.1fr 1fr 52px; }
+  .pkd .pkd-gu-sx .m-gu-scelta{ gap:5px; }
+  .pkd .pkd-gu-sx .m-gu-scelta > small{ width:100%; margin-bottom:-1px; }
+  .pkd .pkd-gu-sx :is(.m-gu-ok-big, .m-gu-annulla){ white-space:nowrap; height:36px; padding:0 12px; font-size:13.5px; }
+  .pkd .pkd-gu-sx .m-gu-chip{ height:30px; padding:0 10px; font-size:13px; }
+
   .pkd .mpd-dett .mpd-dtesta{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .pkd .mpd-dett .mpd-dtesta > div{ flex:1; min-width:0; }
   .pkd .mpd-dett .mpd-dtesta > .mp-btn{ flex:none; width:auto; padding:0 18px; }
@@ -26716,7 +26724,7 @@ function toccaLetto(q){
   salvaLetti(st);
 }
 
-function htmlGuardia(){
+function htmlGuardia(parte){
   const voci = vociGuardia(), ora = turnoOra();
   const daFare = voci.filter(v => !v.fatto).length;
   const quando = ts => new Date(ts).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
@@ -26743,18 +26751,20 @@ function htmlGuardia(){
     const occ = Object.keys(st.x).filter(q => q.startsWith(rep + '|')).length;
     return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
   }).join('');
-  return `<div class="m-gu" id="m-gu">
-    <div class="m-gu-col">
+  // al PC la guardia si divide: letti liberi e ricoveri dal PS nella colonna
+  // di sinistra (sx), le cose da fare nel riquadro grande (dx)
+  const sx = `
     <p class="m-lbl m-gu-tit">Letti liberi<button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></p>
     <div class="m-gu-letti${modifica ? ' m-gu-in-mod' : ''}">${righeLetti}</div>
     <p class="m-gu-nota">${modifica ? 'Quanti letti liberi per reparto: bis in C1 e Geriatria, monitorati solo in C1. Poi «Fatto».' : 'Tocca un quadratino per la X. Pieni: i ricoveri del turno (verde il 5914, arancione il 5899), messi da soli.'}</p>
-    ${htmlArrivi(arrivi, st)}
-    </div>
-    <div class="m-gu-col">
+    ${htmlArrivi(arrivi, st)}`;
+  const dx = `
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
-    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}
-    </div>
+    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}`;
+  if(parte === 'sx') return `<div class="m-gu m-gu-sx" id="m-gu-sx">${sx}</div>`;
+  if(parte === 'dx') return `<div class="m-gu" id="m-gu">${dx}</div>`;
+  return `<div class="m-gu" id="m-gu">${sx}${dx}
   </div>`;
 }
 function htmlArrivi(arrivi, st){
@@ -26789,7 +26799,8 @@ function ridisegnaGuardia(fuoco){
     // sui letti), il pannello va riscritto lo stesso
     const scritto = $m('#m-gu-in')?.value || '';
     vHome();
-    const b = $m('#m-gu'); if(b) b.outerHTML = htmlGuardia();
+    const b = $m('#m-gu'); if(b) b.outerHTML = htmlGuardia('dx');
+    const sx = $m('#m-gu-sx'); if(sx) sx.outerHTML = htmlGuardia('sx');
     const inp = $m('#m-gu-in'); if(inp && scritto) inp.value = scritto;
     if(fuoco) inp?.focus();
     return;
@@ -26806,7 +26817,7 @@ function aggiungiDaCampo(){
 }
 // pannello a destra al PC
 function guDett(box){
-  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${titoloGuardia()}</h2><p>${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }).replace(/^./, c => c.toUpperCase())}</p></div><button class="mp-btn mp-sec" data-m="gu-off">Esci dalla guardia</button></div>${htmlGuardia()}`;
+  box.innerHTML = `<div class="mpd-dtesta"><div><h2>${titoloGuardia()}</h2><p>${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }).replace(/^./, c => c.toUpperCase())}</p></div><button class="mp-btn mp-sec" data-m="gu-off">Esci dalla guardia</button></div>${htmlGuardia('dx')}`;
 }
 
 function vHome(){
@@ -29627,6 +29638,13 @@ function mpOggiPC(dati, saluto, frase, pk){
           <span class="mp-tessera mp-t-cop">${ICON.diario}</span>
           <span class="mpd-rt"><b>${fatti.length} ${fatti.length === 1 ? 'diario copiato' : 'diari copiati'}</b><small>${mpCopAperti ? 'Tocca per chiudere' : 'Tocca per vederli'}</small></span>${ICON.giu}
         </button>${mpCopAperti ? `<div class="mpd-copiati-in">${fatti.map(riga).join('')}</div>` : ''}` : ''}</div>` : gruppo(g)).join('')}</div>` : '');
+  // in guardia: sotto le tessere, al posto del giro, letti liberi e ricoveri dal PS
+  if(pk && pk.guardia){
+    const prima = lista.querySelector('.pkd-gu-sx'), y = prima ? prima.scrollTop : 0;
+    lista.classList.remove('mpd-tutto');
+    lista.innerHTML = `<div class="pkd-gu-sx">${htmlGuardia('sx')}</div>`;
+    lista.querySelector('.pkd-gu-sx').scrollTop = y;
+  }
   if(pk) lista.insertAdjacentHTML('afterbegin', `<div class="pkd-sett" role="group" aria-label="Settori">${pk.settori.map(v => `<button data-mp="pc-sel" data-k="${esc(v.k)}" aria-current="${v.k === mpSel}" class="${v.oggi ? 'pkd-oggi' : ''}" style="--p:${v.n ? Math.round(v.visti / v.n * 100) : 0}%;--c:${v.n ? Math.round(v.cop / v.n * 100) : 0}%" aria-label="${esc(v.titolo)}, ${esc(v.sotto)}"><b>${esc(v.l)}</b><small>${v.visti}/${v.n}</small><i></i></button>`).join('')}</div>`);
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   if(tieni) return;
@@ -29670,7 +29688,7 @@ function pkScrivania(reparto, festivo, guardia){
       firma:voci.map(v => v.id + (v.fatto ? 'f' : '')).join(',') + JSON.stringify(leggiGu(GU_LETTI_KEY)) + JSON.stringify(leggiGu(GU_ARRIVI_KEY)) + guIo(),
       sotto:voci.length ? `${voci.length - fatte} da fare su ${voci.length}` : 'Niente da fare' });
   } else links = link('data-m="gu-on"', '', 'Modalità guardia') + links;
-  mpOggiPC(dati, '', '', { testa, links, settori:settV });
+  mpOggiPC(dati, '', '', { testa, links, settori:settV, guardia });
 }
 // il settore scelto, nel riquadro grande: il nome, il tondo, i letti coi
 // colori di Pocket. Un letto visto apre il suo diario qui; da vedere, la
