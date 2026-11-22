@@ -24246,17 +24246,47 @@ function editorLettereSvuota(){
   .m-gu-nota{ margin:6px 2px 18px; font-size:12px; color:var(--m-muted); }
   .m-h1 .m-gu-esci{ margin-left:12px; vertical-align:middle; height:30px; padding:0 13px; border:1px solid var(--m-line-forte); border-radius:999px; background:none; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0; color:var(--m-muted); cursor:pointer; }
   .m-in-guardia > .m-schede{ margin-top:4px; }
-  /* telefono in guardia: i letti liberi in una fascia compatta, fissa in cima
-     mentre si scorre */
-  .m-gu-fissa{ position:sticky; top:0; z-index:6; margin:0 0 10px; padding:2px 0 10px; background:var(--m-fondo, var(--m-bg)); }
-  .m-gu-fissa .m-gu-tit{ margin:6px 0 6px; }
-  .m-gu-fissa:not(.m-gu-aperta) .m-gu-lr{ min-height:40px; padding:6px 12px; gap:8px; }
-  .m-gu-fissa:not(.m-gu-aperta) .m-gu-q{ width:22px; height:22px; border-radius:5px; }
-  .m-gu-fissa:not(.m-gu-aperta) .m-gu-q.m-gu-x::before, .m-gu-fissa:not(.m-gu-aperta) .m-gu-q.m-gu-x::after{ width:13px; }
-  .m-gu-fissa:not(.m-gu-aperta) .m-gu-qq i{ font-size:17px; }
-  .m-gu-fissa:not(.m-gu-aperta) .m-gu-nota{ display:none; }
-  .m-gu-fissa .m-gu-nota{ margin-bottom:0; }
-  .m-gu-fissa + .m-gu > .m-gu-tit:first-child, .m-gu-fissa + .m-schede{ margin-top:6px; }
+  /* TELEFONO IN GUARDIA: i letti liberi nella card principale della home
+     (lo stesso colore del pulsante del giro); di giorno il giro sta sotto, nella card */
+  .m-gu-card{ flex:none; margin-top:4px; border-radius:16px; background:var(--m-notte); color:#fff; padding:14px 16px; }
+  html[data-m-tema="scuro"] .m-gu-card{ background:linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); }
+  .m-gu-card-t{ display:flex; align-items:center; font-size:15px; font-weight:600; color:rgba(255,255,255,.85); }
+  .m-gu-card .m-gu-imp{ margin-left:auto; color:#fff; text-decoration:underline; text-underline-offset:2px; font-size:13.5px; }
+  .m-gu-card .m-gu-letti{ border:0; border-radius:0; overflow:visible; margin-top:4px; }
+  .m-gu-card .m-gu-lr{ background:none !important; border:0 !important; min-height:40px; padding:4px 0; gap:10px; }
+  .m-gu-card .m-gu-rep{ color:#fff; opacity:.9; font-size:14px; }
+  .m-gu-card .m-gu-lib{ color:#fff; font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  .m-gu-card .m-gu-q{ width:24px; height:24px; border-color:rgba(255,255,255,.8) !important; background:transparent !important; }
+  .m-gu-card .m-gu-q.m-gu-x::before, .m-gu-card .m-gu-q.m-gu-x::after{ background:#fff; width:14px; }
+  .m-gu-card .m-gu-q.m-gu-ric:not(.m-gu-verde, .m-gu-arancione){ background:#fff !important; border-color:#fff !important; }
+  .m-gu-card .m-gu-q.m-gu-ric:not(.m-gu-verde, .m-gu-arancione)::before, .m-gu-card .m-gu-q.m-gu-ric:not(.m-gu-verde, .m-gu-arancione)::after{ background:var(--m-notte); }
+  .m-gu-card .m-gu-q.m-gu-verde{ background:#4fd17f !important; border-color:#4fd17f !important; }
+  .m-gu-card .m-gu-q.m-gu-arancione{ background:#ff9d47 !important; border-color:#ff9d47 !important; }
+  .m-gu-card .m-gu-qq i, .m-gu-card .m-gu-qq em{ color:rgba(255,255,255,.7); }
+  .m-gu-card .m-gu-passo small{ color:rgba(255,255,255,.8); }
+  .m-gu-card .m-gu-passo b{ color:#fff; }
+  .m-gu-card .m-gu-passo button{ background:rgba(255,255,255,.14) !important; border-color:rgba(255,255,255,.35); color:#fff; }
+  .m-gu-card .m-gu-nota{ color:rgba(255,255,255,.8); margin:6px 0 0; }
+  /* il giro (di giorno), dentro la card sotto i letti */
+  .m-gu-card .m-gu-giro{ display:block; width:100%; min-height:0; margin-top:12px; padding:12px 0 0; border:0; border-top:1px solid rgba(255,255,255,.22); border-radius:0; background:none; color:#fff; text-align:left; }
+  .m-gu-card .m-gu-giro :is(.m-sh, .m-rh-tondo){ display:none; }
+  .m-gu-card .m-gu-giro .m-sn{ padding-top:0; font-size:22px; font-weight:700; }
+  .m-gu-card .m-gu-giro .m-sn small{ font-size:13px; }
+  .m-gu-card .m-gu-giro .m-inizia{ display:inline-flex; align-items:center; gap:3px; font-size:22px; font-weight:700; }
+  .m-gu-card .m-gu-giro .m-inizia svg{ width:20px; height:20px; stroke-width:2.6; color:#fff; opacity:1; }
+  .m-gu-card .m-gu-giro .m-ss{ display:block; font-size:13px; color:rgba(255,255,255,.8); margin-top:2px; }
+  .m-gu-card + .m-gu > .m-gu-tit:first-child{ margin-top:22px; }
+  /* le righe per aggiungere: prima riga dell'elenco, in teal */
+  .m-gu-agg{ width:100%; border:0; font:inherit; text-align:left; cursor:pointer; color:var(--m-teal); }
+  .m-gu-agg .m-gu-ic{ background:var(--m-teal-box); color:var(--m-teal); }
+  .m-gu-agg .m-gu-ic svg{ width:18px; height:18px; }
+  .m-gu-agg .m-gu-t{ color:var(--m-teal); font-weight:600; }
+  .m-gu-agg input{ flex:1; min-width:0; height:36px; border:0; outline:none; background:none; color:var(--m-ink); font:inherit; font-size:16px; padding:0; }
+  .m-gu-agg input::placeholder{ color:var(--m-teal); font-weight:600; opacity:.9; }
+  .m-gu-agg-ok{ display:none; flex:none; height:32px; padding:0 12px; border:0; border-radius:999px; background:var(--m-teal); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .m-gu-agg input:not(:placeholder-shown) + .m-gu-agg-ok{ display:block; }
+  .m-gu-lista > .m-gu-form{ border:0; border-radius:0; margin:0; }
+  .m-gu-lista > :is(.m-gu-form, .m-gu-agg) + .m-gu-ar{ border-top:1px solid var(--m-line); }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
   /* al PC: letti liberi e ricoveri dal PS nella colonna di sinistra, sotto le tessere */
   .pkd .pkd-gu-sx{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:4px 14px 14px; }
@@ -26727,6 +26757,7 @@ function togliVoceGuardia(id){
 // letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
 // soli (nel reparto scritto nel ricovero: se lo si cambia, la X si sposta)
 let guLettiModifica = false;
+let guGiroUltimo = ''; // la card del giro (di giorno) dentro quella dei letti, per ridisegnarla
 function lettiLiberi(){
   const s = leggiGu(GU_LETTI_KEY), ora = turnoOra();
   const nuovo = s.turno !== ora;
@@ -26786,7 +26817,7 @@ function toccaLetto(q){
   salvaLetti(st);
 }
 
-function htmlGuardia(parte){
+function htmlGuardia(parte, giro){
   const voci = vociGuardia(), ora = turnoOra();
   const daFare = voci.filter(v => !v.fatto).length;
   const quando = ts => new Date(ts).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
@@ -26823,14 +26854,25 @@ function htmlGuardia(parte){
   `;
   const arr = htmlArrivi(arrivi, st);
   const sx = letti + arr;
+  // la prima riga dell'elenco è quella per aggiungere: si scrive e Invio
+  // (o il pulsante che compare appena c'è del testo)
   const dx = `
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
-    <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
-    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div><p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}`;
+    <div class="m-gu-lista">
+      <div class="m-gu-r m-gu-agg"><span class="m-gu-ic">${ICON.piu}</span><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aggiungi… «13.1 trittico»" aria-label="Nuova cosa da fare"><button class="m-gu-agg-ok" data-m="gu-add">Aggiungi</button></div>
+      ${voci.map(riga).join('')}
+    </div>${voci.length ? '<p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>' : ''}`;
   if(parte === 'sx') return `<div class="m-gu m-gu-sx" id="m-gu-sx">${sx}</div>`;
   if(parte === 'dx') return `<div class="m-gu" id="m-gu">${dx}</div>`;
   // sul telefono in guardia: i letti liberi in una fascia fissa in cima, il resto sotto
-  if(parte === 'letti') return `<div class="m-gu m-gu-fissa${modifica ? ' m-gu-aperta' : ''}" id="m-gu-letti">${letti}</div>`;
+  // sul telefono i letti liberi sono la card principale della home (quella
+  // che di giorno è il pulsante del giro); di giorno il giro sta sotto, nella card
+  if(parte === 'card') return `<div class="m-gu-card${modifica ? ' m-gu-aperta' : ''}" id="m-gu-letti">
+      <div class="m-gu-card-t"><span>Letti liberi</span><button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></div>
+      <div class="m-gu-letti">${righeLetti}</div>
+      ${modifica ? '<p class="m-gu-nota">Bis in C1 e Geriatria, monitorati solo in C1.</p>' : ''}
+      ${giro ? giro.replace(/m-ingr m-pri m-rep-home/, 'm-ingr m-gu-giro').replace(FESTA_HTML, '') : ''}
+    </div>`;
   if(parte === 'resto') return `<div class="m-gu" id="m-gu">${arr}${dx}</div>`;
   return `<div class="m-gu" id="m-gu">${sx}${dx}
   </div>`;
@@ -26854,8 +26896,8 @@ function htmlArrivi(arrivi, st){
       <div class="m-gu-scelta"><small>Lo vede</small>${[io, altro].map(g => chip(`data-m="gu-a-chi" data-v="${g}"`, `${g}${g === io ? ' · io' : ''}`, chi === g, 'm-gu-' + GU_GUARDIE[g])).join('')}<button class="m-gu-iosono" data-m="gu-io" title="Cambia chi sei">Sono il ${altro}?</button></div>
       <div class="m-gu-form-az"><button class="m-gu-annulla" data-m="gu-a-chiudi">Annulla</button><button class="m-gu-ok-big" data-m="gu-a-ok">Aggiungi ricovero</button></div>
     </div>`;
-  return `<p class="m-lbl m-gu-tit">Ricoveri dal PS${arrivi.length ? `<span class="m-gu-n">${arrivi.length}</span>` : ''}${guArrivoAperto ? '' : `<button class="m-gu-imp" data-m="gu-a-apri">+ Nuovo</button>`}</p>
-    ${form}${righe ? `<div class="m-gu-lista">${righe}</div><p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>` : guArrivoAperto ? '' : '<p class="m-gu-vuoto">Quando il PS chiama: «+ Nuovo», nome, età, dove va e chi lo vede.</p>'}`;
+  return `<p class="m-lbl m-gu-tit">Ricoveri dal PS${arrivi.length ? `<span class="m-gu-n">${arrivi.length}</span>` : ''}</p>
+    <div class="m-gu-lista">${guArrivoAperto ? form : `<button class="m-gu-r m-gu-agg" data-m="gu-a-apri"><span class="m-gu-ic">${ICON.piu}</span><span class="m-gu-t">Nuovo ricovero</span></button>`}${righe}</div>${righe ? '<p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>' : ''}`;
 }
 // ridisegna solo il blocco (senza perdere il cursore nel campo)
 function ridisegnaGuardia(fuoco){
@@ -26875,8 +26917,8 @@ function ridisegnaGuardia(fuoco){
     return;
   }
   const box = $m('#m-gu'); if(!box){ vHome(); return; }
-  const fissa = $m('#m-gu-letti');
-  if(fissa){ fissa.outerHTML = htmlGuardia('letti'); box.outerHTML = htmlGuardia('resto'); }
+  const card = $m('#m-gu-letti');
+  if(card){ card.outerHTML = htmlGuardia('card', guGiroUltimo); box.outerHTML = htmlGuardia('resto'); }
   else box.outerHTML = htmlGuardia();
   if(fuoco) $m('#m-gu-in')?.focus();
 }
@@ -26982,12 +27024,10 @@ function vHome(){
       <p class="m-sub">${guardia ? dataOggi.replace(/^./, c => c.toUpperCase()) : `Il giro di oggi · ${dataOggi}`}</p>
     </div>
     <div class="m-home-giu${guardia ? ' m-in-guardia' : ''}" id="m-home-giu">
-      ${guardia ? htmlGuardia('letti') : ''}
-      ${notteGu ? htmlGuardia('resto') : `<div class="m-schede m-schede-una">${reparto}</div>`}
-      ${guardia && !notteGu ? htmlGuardia('resto') : ''}
+      ${guardia ? htmlGuardia('card', guGiroUltimo = notteGu ? '' : reparto) + htmlGuardia('resto') : `<div class="m-schede m-schede-una">${reparto}</div>`}
       ${fare.html}
-      ${fare.html ? '<p class="m-lbl m-fare-t">A portata di mano</p>' : ''}
-      <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
+      ${fare.html || guardia ? '<p class="m-lbl m-fare-t">A portata di mano</p>' : ''}
+      <div class="m-elenco${fare.html || guardia ? ' m-dopo-fare' : ''}">${elenco}</div>
       <div class="m-home-info"><p><b>EO Pocket</b> — applicazione clinica ad uso professionale per la gestione di reparto, sviluppata da un medico per uso personale/reparto. Non raccoglie né vende dati a terzi: le informazioni inserite restano sul dispositivo (localStorage) e, solo se l'utente attiva volontariamente il login, vengono sincronizzate in modo cifrato sul proprio account cloud personale (Supabase) al solo scopo di condividerle tra i propri dispositivi. Nessun dato finanziario viene richiesto o trattato.</p><p class="m-firma">CREATED BY AUREX</p></div>
     </div>`;
   animaNumeroHome(sett || '');
