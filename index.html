@@ -25202,9 +25202,13 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .m-set:not(.m-diari) .m-set-fondo{ border:0; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); }
   .m-rep-home{ border-radius:20px !important; }
   html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-rep-home{ box-shadow:0 6px 18px rgba(14,90,100,.16); }
-  :is(.m-fare, .m-elenco, .m-righe){ background:var(--m-riq); border:0 !important; border-radius:18px !important; overflow:hidden; box-shadow:var(--m-riq-ombra); }
-  :is(.m-fare, .m-elenco, .m-righe) :is(.m-voce, .m-fare-r, .m-rigalink){ background:transparent !important; }
-  :is(.m-elenco .m-voce + .m-voce, .m-fare-r + .m-fare-r){ border-top-color:var(--m-riq-linea) !important; }
+  :is(.m-fare, .m-elenco, .m-righe, .m-gu-lista){ background:var(--m-riq); border:0 !important; border-radius:18px !important; overflow:hidden; box-shadow:var(--m-riq-ombra); }
+  :is(.m-fare, .m-elenco, .m-righe) :is(.m-voce, .m-fare-r, .m-rigalink), .m-gu-lista > :is(.m-gu-r, .m-gu-ar, .m-gu-form){ background:transparent !important; }
+  :is(.m-elenco .m-voce + .m-voce, .m-fare-r + .m-fare-r, .m-gu-lista > * + *){ border-top-color:var(--m-riq-linea) !important; }
+  /* la card dei letti liberi: come il pulsante del giro */
+  .m-gu-card{ border-radius:20px !important; }
+  html[data-ui="minimal"]:not([data-m-tema="scuro"]) .m-gu-card{ box-shadow:0 6px 18px rgba(14,90,100,.16); }
+  .m-gu-vuoto{ border-radius:18px; }
   .m-zona{ background:var(--m-riq); border:0 !important; border-radius:18px !important; box-shadow:var(--m-riq-ombra); }
   .m-zona.m-ultimo{ box-shadow:0 0 0 1.5px color-mix(in srgb, var(--m-teal) 40%, transparent), var(--m-riq-ombra) !important; }
   html[data-ui="minimal"] #dimissioni-lista .ric-lista-riga{ background:var(--m-riq); border:0; box-shadow:var(--m-riq-ombra); }
