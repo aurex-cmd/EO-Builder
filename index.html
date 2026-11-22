@@ -24268,7 +24268,7 @@ function editorLettereSvuota(){
   .m-gu-card .m-gu-passo button{ background:rgba(255,255,255,.14) !important; border-color:rgba(255,255,255,.35); color:#fff; }
   .m-gu-card .m-gu-nota{ color:rgba(255,255,255,.8); margin:6px 0 0; }
   /* il giro (di giorno), dentro la card sotto i letti */
-  .m-gu-card .m-gu-giro{ display:block; width:100%; min-height:0; margin-top:12px; padding:12px 0 0; border:0; border-top:1px solid rgba(255,255,255,.22); border-radius:0; background:none; color:#fff; text-align:left; }
+  .m-gu-card .m-gu-giro{ display:block; width:100%; min-height:0; margin-top:12px; padding:12px 0 0; border:0; border-top:1px solid rgba(255,255,255,.22); border-radius:0; background:none !important; box-shadow:none; color:#fff; text-align:left; }
   .m-gu-card .m-gu-giro :is(.m-sh, .m-rh-tondo){ display:none; }
   .m-gu-card .m-gu-giro .m-sn{ padding-top:0; font-size:22px; font-weight:700; }
   .m-gu-card .m-gu-giro .m-sn small{ font-size:13px; }
@@ -25121,6 +25121,10 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-m-tema="scuro"] .m-copia{ background:color-mix(in srgb, var(--m-notte) 85%, #000); }
   html[data-m-tema="scuro"] .m-copia::before{ background:color-mix(in srgb, var(--m-teal) 78%, #000); }
   html[data-m-tema="scuro"] .m-ingr.m-pri{ background:linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); border-color:color-mix(in srgb, var(--m-notte) 72%, #000); }
+  /* il pulsante grande della home e la card dei letti liberi in guardia: una
+     sfumatura leggera e un'onda chiara che sale sul fondo */
+  html[data-ui] :is(.m-ingr.m-pri.m-rep-home, .m-gu-card){ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M0 200 V175 C 140 175 210 70 400 45 V200Z' fill='white' fill-opacity='.11'/%3E%3Cpath d='M0 200 C 170 196 250 120 400 105 V200Z' fill='white' fill-opacity='.07'/%3E%3C/svg%3E") right bottom/100% 75% no-repeat, linear-gradient(135deg, color-mix(in srgb, var(--m-notte) 88%, #fff), color-mix(in srgb, var(--m-notte) 80%, #000)); }
+  html[data-ui][data-m-tema="scuro"] :is(.m-ingr.m-pri.m-rep-home, .m-gu-card){ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M0 200 V175 C 140 175 210 70 400 45 V200Z' fill='white' fill-opacity='.08'/%3E%3Cpath d='M0 200 C 170 196 250 120 400 105 V200Z' fill='white' fill-opacity='.05'/%3E%3C/svg%3E") right bottom/100% 75% no-repeat, linear-gradient(140deg, color-mix(in srgb, var(--m-notte) 72%, #000), color-mix(in srgb, var(--m-notte) 56%, #000)); }
   html[data-m-tema="scuro"] :is(.m-piede a, .m-bar .m-azione), html[data-m-tema="scuro"] .m-voce .m-vc, html[data-m-tema="scuro"] .m-rigalink .m-conta{ color:var(--m-link); }
   html[data-m-tema="scuro"] :is(.m-ingr:not(.m-pri) .m-sh, .m-home-info b){ color:var(--m-muted); }
   html[data-m-tema="scuro"] .m-voce:active, html[data-m-tema="scuro"] .m-righe .m-rigalink:active{ background:var(--m-box); }
