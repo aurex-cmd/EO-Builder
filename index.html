@@ -24171,8 +24171,26 @@ function editorLettereSvuota(){
   .m-gu-ok{ flex:none; display:grid; place-items:center; width:30px; height:30px; padding:0; border:1.5px solid var(--m-line-forte); border-radius:50%; background:none; color:transparent; cursor:pointer; }
   .m-gu-ok svg{ width:15px; height:15px; }
   .m-gu-ok[aria-pressed="true"]{ background:var(--m-teal); border-color:var(--m-teal); color:#fff; }
-  .m-gu-via{ flex:none; width:26px; height:30px; margin-left:-4px; border:0; background:none; color:var(--m-faint); display:grid; place-items:center; cursor:pointer; padding:0; }
+  .m-gu-via{ flex:none; width:26px; height:30px; margin-right:6px; border:0; background:none; color:var(--m-faint); display:grid; place-items:center; cursor:pointer; padding:0; }
   .m-gu-via svg{ width:15px; height:15px; }
+  /* togliere: sul telefono con la pressione lunga (compare "Togli" al posto
+     del cerchio); al PC la × compare solo passando col mouse, prima del cerchio */
+  .m-gu-via{ display:none; }
+  @media (hover:hover) and (pointer:fine){
+    .m-gu-via{ display:grid; opacity:0; transition:opacity .15s; }
+    :is(.m-gu-r, .m-gu-ar):hover .m-gu-via, .m-gu-via:focus-visible{ opacity:1; }
+  }
+  :is(.m-gu-r, .m-gu-ar){ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .m-gu-togli{ display:none; flex:none; height:32px; padding:0 14px; border:0; border-radius:999px; background:#c8442e; color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; animation:m-compare .2s ease-out both; }
+  .m-gu-chiedi .m-gu-togli{ display:block; }
+  .m-gu-aiuto{ display:none; margin:6px 2px 0; font-size:12px; color:var(--m-muted); }
+  @media (pointer:coarse){ .m-gu-aiuto{ display:block; } }
+  .m-gu-chiedi :is(.m-gu-ok, .m-gu-via){ display:none !important; }
+  .m-gu-chiedi{ background:color-mix(in srgb, #c8442e 7%, var(--m-carta)) !important; }
+  #m-gu-annulla{ position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom, 0px)); z-index:9999; display:flex; align-items:center; gap:14px; max-width:calc(100vw - 32px); padding:10px 10px 10px 16px; border-radius:12px; background:#16243a; color:#fff; font-size:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); transform:translate(-50%, 140%); opacity:0; transition:transform .25s ease, opacity .2s; pointer-events:none; }
+  #m-gu-annulla.m-su{ transform:translate(-50%, 0); opacity:1; pointer-events:auto; }
+  #m-gu-annulla span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #m-gu-annulla button{ flex:none; height:32px; padding:0 12px; border:0; border-radius:8px; background:rgba(255,255,255,.14); color:#8fe3d6; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
   .m-gu-fatta .m-gu-t{ color:var(--m-muted); }
   .m-gu-fatta .m-gu-t > :not(small){ text-decoration:line-through; }
   .m-gu-fatta .m-gu-ic{ opacity:.55; }
@@ -26658,9 +26676,42 @@ function aggiungiArrivo(){
 function togliArrivo(id){
   const a = leggiGu(GU_ARRIVI_KEY); const v = a[id]; if(!v) return;
   delete a[id]; scriviGu(GU_ARRIVI_KEY, a);
-  if(v.ricId) showToast('Tolto dai ricoveri dal PS; la scheda resta in Ricoveri');
+  avvisoAnnulla(`Tolto ${(v.cognome || '').toUpperCase()}${v.ricId ? ' (la scheda resta in Ricoveri)' : ''}`, () => { const b = leggiGu(GU_ARRIVI_KEY); b[id] = Object.assign(v, { savedAt:Date.now() }); scriviGu(GU_ARRIVI_KEY, b); });
 }
-function togliVoceGuardia(id){ const f = leggiGu(GU_FARE_KEY); if(!f[id]) return; delete f[id]; scriviGu(GU_FARE_KEY, f); }
+// tolto qualcosa: per qualche secondo un avviso con "Annulla" (un tocco
+// sbagliato in corsia non deve perdere niente)
+let guAnnullaT = null;
+function avvisoAnnulla(testo, rimetti){
+  let box = document.getElementById('m-gu-annulla');
+  if(!box){ box = document.createElement('div'); box.id = 'm-gu-annulla'; box.setAttribute('role', 'status'); document.body.appendChild(box); }
+  box.innerHTML = `<span>${esc(testo)}</span><button type="button">Annulla</button>`;
+  box.querySelector('button').onclick = () => { clearTimeout(guAnnullaT); box.classList.remove('m-su'); rimetti(); ridisegnaGuardia(); };
+  void box.offsetWidth; box.classList.add('m-su');
+  clearTimeout(guAnnullaT); guAnnullaT = setTimeout(() => box.classList.remove('m-su'), 5000);
+}
+function togliVoceGuardia(id){
+  const f = leggiGu(GU_FARE_KEY), v = f[id]; if(!v) return;
+  delete f[id]; scriviGu(GU_FARE_KEY, f);
+  avvisoAnnulla(`Tolto «${[v.letto, v.t].filter(Boolean).join(' ')}»`, () => { const g = leggiGu(GU_FARE_KEY); g[id] = Object.assign(v, { savedAt:Date.now() }); scriviGu(GU_FARE_KEY, g); });
+}
+// pressione lunga su una riga (cosa da fare o ricovero dal PS): al posto del
+// cerchio compare "Togli"; un tocco altrove lo richiude
+(() => {
+  let t = null, riga = null, x0 = 0, y0 = 0;
+  const ferma = () => { clearTimeout(t); t = null; riga = null; };
+  const chiudi = eccetto => document.querySelectorAll('.m-gu-chiedi').forEach(r => { if(r !== eccetto) r.classList.remove('m-gu-chiedi'); });
+  document.addEventListener('pointerdown', e => {
+    if(e.button > 0) return;
+    const r = e.target.closest('[data-gu]');
+    if(!e.target.closest('.m-gu-chiedi .m-gu-togli')) chiudi(r);
+    if(!r || e.target.closest('button')) return;
+    riga = r; x0 = e.clientX; y0 = e.clientY;
+    t = setTimeout(() => { const x = riga; ferma(); if(!x) return; try{ navigator.vibrate && navigator.vibrate(18); } catch(err){} x.classList.add('m-gu-chiedi'); }, 550);
+  });
+  document.addEventListener('pointermove', e => { if(riga && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) ferma(); });
+  ['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, ferma));
+  document.addEventListener('contextmenu', e => { if(e.target.closest('[data-gu]')) e.preventDefault(); });
+})();
 
 // letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
 // soli (nel reparto scritto nel ricovero: se lo si cambia, la X si sposta)
@@ -26731,11 +26782,12 @@ function htmlGuardia(parte){
   const riga = v => {
     const tp = GU_TIPI[v.tipo] || GU_TIPI.altro;
     const prima = turnoGu(v.creato) !== ora;
-    return `<div class="m-gu-r${v.fatto ? ' m-gu-fatta' : ''}" data-tipo="${v.tipo}">
+    return `<div class="m-gu-r${v.fatto ? ' m-gu-fatta' : ''}" data-tipo="${v.tipo}" data-id="${esc(v.id)}" data-gu="voce">
       <span class="m-gu-ic">${tp.ic}</span>
       <span class="m-gu-t">${v.letto ? `<b>${esc(v.letto)}</b> ` : ''}${esc(v.t).replace(/\//g, '/<wbr>')}<small>${v.fatto ? `${tp.fatto.replace(/^./, c => c.toUpperCase())} alle ${quando(v.fatto)}` : `${v.tipo === 'altro' ? '' : tp.da.replace(/^./, c => c.toUpperCase()) + ' · '}${prima ? 'dal turno prima · ' : ''}${quando(v.creato)}`}</small></span>
-      <button class="m-gu-ok" data-m="gu-ok" data-id="${esc(v.id)}" aria-pressed="${!!v.fatto}" aria-label="${tp.ok}${v.fatto ? ': tocca per togliere' : '?'}" title="${tp.ok}">${ICON.ok}</button>
-      <button class="m-gu-via" data-m="gu-via" data-id="${esc(v.id)}" aria-label="Togli">${ICON.x}</button>
+      <button class="m-gu-via" data-m="gu-via" data-id="${esc(v.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
+      <button class="m-gu-ok" data-m="gu-ok" data-id="${esc(v.id)}" aria-pressed="${!!v.fatto}" aria-label="${tp.ok}${v.fatto ? ': tocca per togliere il segno' : '?'}" title="${tp.ok}">${ICON.ok}</button>
+      <button class="m-gu-togli" data-m="gu-via" data-id="${esc(v.id)}">Togli</button>
     </div>`;
   };
   const st = lettiLiberi();
@@ -26761,7 +26813,7 @@ function htmlGuardia(parte){
   const dx = `
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
-    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}`;
+    ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div><p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}`;
   if(parte === 'sx') return `<div class="m-gu m-gu-sx" id="m-gu-sx">${sx}</div>`;
   if(parte === 'dx') return `<div class="m-gu" id="m-gu">${dx}</div>`;
   return `<div class="m-gu" id="m-gu">${sx}${dx}
@@ -26772,10 +26824,11 @@ function htmlArrivi(arrivi, st){
   const TIPI = { l:'libero', b:'bis', m:'monitorato' };
   const chip = (attr, testo, on, cl) => `<button class="m-gu-chip${on ? ' m-on' : ''}${cl ? ' ' + cl : ''}" ${attr} aria-pressed="${on}">${testo}</button>`;
   const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
-  const righe = arrivi.map(a => `<div class="m-gu-ar">
+  const righe = arrivi.map(a => `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
       <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
       <span class="m-gu-t"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small></span>
-      <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli">${ICON.x}</button>
+      <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
+      <button class="m-gu-togli" data-m="gu-a-via" data-id="${esc(a.id)}">Togli</button>
     </div>`).join('');
   const b = guArrivoBozza, chi = b.chi || io;
   const form = !guArrivoAperto ? '' : `<div class="m-gu-form">
@@ -26786,7 +26839,7 @@ function htmlArrivi(arrivi, st){
       <div class="m-gu-form-az"><button class="m-gu-annulla" data-m="gu-a-chiudi">Annulla</button><button class="m-gu-ok-big" data-m="gu-a-ok">Aggiungi ricovero</button></div>
     </div>`;
   return `<p class="m-lbl m-gu-tit">Ricoveri dal PS${arrivi.length ? `<span class="m-gu-n">${arrivi.length}</span>` : ''}${guArrivoAperto ? '' : `<button class="m-gu-imp" data-m="gu-a-apri">+ Nuovo</button>`}</p>
-    ${form}${righe ? `<div class="m-gu-lista">${righe}</div>` : guArrivoAperto ? '' : '<p class="m-gu-vuoto">Quando il PS chiama: «+ Nuovo», nome, età, dove va e chi lo vede.</p>'}`;
+    ${form}${righe ? `<div class="m-gu-lista">${righe}</div><p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>` : guArrivoAperto ? '' : '<p class="m-gu-vuoto">Quando il PS chiama: «+ Nuovo», nome, età, dove va e chi lo vede.</p>'}`;
 }
 // ridisegna solo il blocco (senza perdere il cursore nel campo)
 function ridisegnaGuardia(fuoco){
