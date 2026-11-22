@@ -24246,6 +24246,17 @@ function editorLettereSvuota(){
   .m-gu-nota{ margin:6px 2px 18px; font-size:12px; color:var(--m-muted); }
   .m-h1 .m-gu-esci{ margin-left:12px; vertical-align:middle; height:30px; padding:0 13px; border:1px solid var(--m-line-forte); border-radius:999px; background:none; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0; color:var(--m-muted); cursor:pointer; }
   .m-in-guardia > .m-schede{ margin-top:4px; }
+  /* telefono in guardia: i letti liberi in una fascia compatta, fissa in cima
+     mentre si scorre */
+  .m-gu-fissa{ position:sticky; top:0; z-index:6; margin:0 0 10px; padding:2px 0 10px; background:var(--m-fondo, var(--m-bg)); }
+  .m-gu-fissa .m-gu-tit{ margin:6px 0 6px; }
+  .m-gu-fissa:not(.m-gu-aperta) .m-gu-lr{ min-height:40px; padding:6px 12px; gap:8px; }
+  .m-gu-fissa:not(.m-gu-aperta) .m-gu-q{ width:22px; height:22px; border-radius:5px; }
+  .m-gu-fissa:not(.m-gu-aperta) .m-gu-q.m-gu-x::before, .m-gu-fissa:not(.m-gu-aperta) .m-gu-q.m-gu-x::after{ width:13px; }
+  .m-gu-fissa:not(.m-gu-aperta) .m-gu-qq i{ font-size:17px; }
+  .m-gu-fissa:not(.m-gu-aperta) .m-gu-nota{ display:none; }
+  .m-gu-fissa .m-gu-nota{ margin-bottom:0; }
+  .m-gu-fissa + .m-gu > .m-gu-tit:first-child, .m-gu-fissa + .m-schede{ margin-top:6px; }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
   /* al PC: letti liberi e ricoveri dal PS nella colonna di sinistra, sotto le tessere */
   .pkd .pkd-gu-sx{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding:4px 14px 14px; }
@@ -26805,17 +26816,22 @@ function htmlGuardia(parte){
   }).join('');
   // al PC la guardia si divide: letti liberi e ricoveri dal PS nella colonna
   // di sinistra (sx), le cose da fare nel riquadro grande (dx)
-  const sx = `
+  const letti = `
     <p class="m-lbl m-gu-tit">Letti liberi<button class="m-gu-imp" data-m="gu-letti">${modifica ? 'Fatto' : 'Modifica'}</button></p>
     <div class="m-gu-letti${modifica ? ' m-gu-in-mod' : ''}">${righeLetti}</div>
     <p class="m-gu-nota">${modifica ? 'Quanti letti liberi per reparto: bis in C1 e Geriatria, monitorati solo in C1. Poi «Fatto».' : 'Tocca un quadratino per la X. Pieni: i ricoveri del turno (verde il 5914, arancione il 5899), messi da soli.'}</p>
-    ${htmlArrivi(arrivi, st)}`;
+  `;
+  const arr = htmlArrivi(arrivi, st);
+  const sx = letti + arr;
   const dx = `
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-add"><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Es. 13.1 trittico per agitazione" aria-label="Nuova cosa da fare"><button data-m="gu-add" aria-label="Aggiungi">${ICON.piu}</button></div>
     ${voci.length ? `<div class="m-gu-lista">${voci.map(riga).join('')}</div><p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>` : '<p class="m-gu-vuoto">Niente da fare. Scrivi il letto e cosa: «12.1 vedi emocromo».</p>'}`;
   if(parte === 'sx') return `<div class="m-gu m-gu-sx" id="m-gu-sx">${sx}</div>`;
   if(parte === 'dx') return `<div class="m-gu" id="m-gu">${dx}</div>`;
+  // sul telefono in guardia: i letti liberi in una fascia fissa in cima, il resto sotto
+  if(parte === 'letti') return `<div class="m-gu m-gu-fissa${modifica ? ' m-gu-aperta' : ''}" id="m-gu-letti">${letti}</div>`;
+  if(parte === 'resto') return `<div class="m-gu" id="m-gu">${arr}${dx}</div>`;
   return `<div class="m-gu" id="m-gu">${sx}${dx}
   </div>`;
 }
@@ -26859,7 +26875,9 @@ function ridisegnaGuardia(fuoco){
     return;
   }
   const box = $m('#m-gu'); if(!box){ vHome(); return; }
-  box.outerHTML = htmlGuardia();
+  const fissa = $m('#m-gu-letti');
+  if(fissa){ fissa.outerHTML = htmlGuardia('letti'); box.outerHTML = htmlGuardia('resto'); }
+  else box.outerHTML = htmlGuardia();
   if(fuoco) $m('#m-gu-in')?.focus();
 }
 function aggiungiDaCampo(){
@@ -26945,7 +26963,11 @@ function vHome(){
   const guardia = guardiaAttiva();
   if(MP_PC.matches) return pkScrivania(reparto, festivo, guardia);
   const fare = bloccoFare(copiatiCons);
-  const elenco = (festivo && !fare.chiavi.has('cons') ? consegne : '')
+  // di notte niente giro: al posto del pulsante grande una riga "Reparto",
+  // per aprire un letto quando serve
+  const notteGu = guardia && inOrarioGuardia();
+  const elenco = (notteGu ? voce(festivo ? 'data-m="reparto-guardia"' : 'data-m="reparto"', ICON.steto, 'Reparto', 'settori e letti') : '')
+    + (festivo && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni', dimTesto)
     + (festivo || fare.chiavi.has('cons') ? '' : consegne)
@@ -26960,8 +26982,9 @@ function vHome(){
       <p class="m-sub">${guardia ? dataOggi.replace(/^./, c => c.toUpperCase()) : `Il giro di oggi · ${dataOggi}`}</p>
     </div>
     <div class="m-home-giu${guardia ? ' m-in-guardia' : ''}" id="m-home-giu">
-      ${guardia ? htmlGuardia() : ''}
-      <div class="m-schede m-schede-una">${reparto}</div>
+      ${guardia ? htmlGuardia('letti') : ''}
+      ${notteGu ? htmlGuardia('resto') : `<div class="m-schede m-schede-una">${reparto}</div>`}
+      ${guardia && !notteGu ? htmlGuardia('resto') : ''}
       ${fare.html}
       ${fare.html ? '<p class="m-lbl m-fare-t">A portata di mano</p>' : ''}
       <div class="m-elenco${fare.html ? ' m-dopo-fare' : ''}">${elenco}</div>
