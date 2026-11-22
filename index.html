@@ -26451,7 +26451,7 @@ function nuovaPratica(t, nomeAltro){
 }
 // soloSettore: per la scheda del settore, senza le post-degenze (che non sono
 // di un settore)
-function bloccoFare(copiati, soloSettore){
+function bloccoFare(copiati, soloSettore, senzaConsegne){
   const f = leggiFare(), oggi = chiaveGiorno(Date.now()), domani = chiaveGiorno(Date.now() + 864e5);
   // consegne, lettere e pratiche sono del settore (quello aperto, o in home
   // l'ultimo scelto): segnare le consegne del A non le dà fatte anche nel B
@@ -26482,8 +26482,8 @@ function bloccoFare(copiati, soloSettore){
   // lettere si segnano a mano, perché si copiano a pezzi (etichette, richieste)
   const lettere = f.lettere || {};
   const kCons = sett ? `cons|${sett}|${oggi}` : `cons|${oggi}`;
-  if(sett === RIC){
-    // i ricoveri non passano dalle consegne
+  if(sett === RIC || senzaConsegne){
+    // i ricoveri non passano dalle consegne; di notte in guardia non servono
   } else if(eFestivo(new Date())){
     // nel weekend e nei festivi: le consegne del giorno, da incollare e poi da fare
     const cw = loadConsegne(); let n = 0, tot = 0;
@@ -27012,15 +27012,16 @@ function vHome(){
   // diario o la cosa scelta
   const guardia = guardiaAttiva();
   if(MP_PC.matches) return pkScrivania(reparto, festivo, guardia);
-  const fare = bloccoFare(copiatiCons);
   // di notte niente giro: al posto del pulsante grande una riga "Reparto",
-  // per aprire un letto quando serve
+  // per aprire un letto quando serve; e niente consegne (il giro dei
+  // consegnati si fa di giorno, nei weekend e nei festivi)
   const notteGu = guardia && inOrarioGuardia();
+  const fare = bloccoFare(copiatiCons, false, notteGu);
   const elenco = (notteGu ? voce(festivo ? 'data-m="reparto-guardia"' : 'data-m="reparto"', ICON.steto, 'Reparto', 'settori e letti') : '')
-    + (festivo && !fare.chiavi.has('cons') ? consegne : '')
+    + (festivo && !notteGu && !fare.chiavi.has('cons') ? consegne : '')
     + voce('data-m="pagina" data-p="ricoveri"', ICON.ricoveri, 'Ricoveri', ricTesto)
     + voce('data-m="pagina" data-p="dimissioni"', ICON.calendario, 'Dimissioni', dimTesto)
-    + (festivo || fare.chiavi.has('cons') ? '' : consegne)
+    + (festivo || notteGu || fare.chiavi.has('cons') ? '' : consegne)
     + (fare.chiavi.has('pd') ? '' : voce('data-m="pagina" data-p="postdegenze"', ICON.postdegenze, 'Post-degenze', pd.length ? `${pd.length} in sospeso` : '', pdScadute ? `${pdScadute} da controllare` : ''))
     + voce('data-m="rubrica"', ICON.rubrica, 'Rubrica', '')
     + voce('data-m="strumenti-home"', ICON.strumenti, 'Strumenti', 'EGA, ECG, farmaci…')
