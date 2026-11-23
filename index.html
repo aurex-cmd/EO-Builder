@@ -7543,6 +7543,7 @@ let esameObiettivoInlineAperto = false;
 let ricoveroIdEsameObiettivoInline = null;
 let patientIdPrimaInline; // undefined = non salvato; null = nessun paziente attivo prima di aprire
 
+let eoTestoApertura = null;
 function apriEsameObiettivoInline(ricoveroId){
   collegaEsameObiettivo(ricoveroId); // crea/aggancia il paziente "appoggio", come già faceva il pulsante
   const rec = loadRicoveri().find(r => r.id === ricoveroId);
@@ -7574,6 +7575,9 @@ function apriEsameObiettivoInline(ricoveroId){
   // lettura/modifica non deve contare come un salvataggio finché non si
   // tocca davvero qualcosa — stessa ragione di selezionaPaziente()
   refreshUI(false);
+  // il testo com'era all'apertura: se con Fatto è diverso, l'esame è stato
+  // cambiato coi tag e il ricovero prende quello (vedi chiudiEsameObiettivoInline)
+  eoTestoApertura = getRefertoFor(state);
 
   renderRicoveroSingoloBox();
   const contenitore = document.getElementById('ricovero-eo-inline');
@@ -7655,10 +7659,32 @@ function chiudiEsameObiettivoInline(){
       if(r && r.campi && r.campi.sesso !== sessoEsame){ r.campi.sesso = sessoEsame; saveRicoveri(list); }
     }
   }
+  // il testo che si vede (e si è copiato) nell'esame, prima di ogni altra cosa
+  const idRicEo = ricoveroIdEsameObiettivoInline;
+  const testoVivo = getRefertoFor(state);
+  const cambiatoCoiTag = eoTestoApertura !== null && testoVivo !== eoTestoApertura;
+  eoTestoApertura = null;
+  // e la scheda dell'esame tiene i tag di adesso (non solo quelli salvati prima)
+  if(cambiatoCoiTag && currentPatientId){
+    const ps = loadPatients();
+    if(ps[currentPatientId]){ ps[currentPatientId].state = serializeState(); ps[currentPatientId].savedAt = Date.now(); savePatients(ps); }
+  }
   // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
   // già il pulsante "Aggiorna esame obiettivo") con le modifiche appena fatte
   if(ricoveroIdEsameObiettivoInline){
     collegaEsameObiettivo(ricoveroIdEsameObiettivoInline);
+    // esame cambiato coi tag: il ricovero prende proprio quel testo, sempre.
+    // Prima poteva restare l'esame di partenza (il box del ricovero creduto
+    // "scritto a mano", o un salvataggio arrivato da un'altra parte)
+    if(cambiatoCoiTag){
+      const list = loadRicoveri(), r = list.find(x => x.id === idRicEo);
+      if(r && (r.esameObiettivo || '').trim() !== testoVivo.trim()){
+        r.esameObiettivo = testoVivo; r.esameObiettivoDaiTag = testoVivo;
+        const c = eoCopiatoNelRicovero[idRicEo];
+        r.copiati = r.copiati || {}; r.copiati.esameObiettivo = c !== undefined && c === testoVivo.trim();
+        saveRicoveri(list);
+      }
+    }
     // la voce "Esame obiettivo" del ricovero mostra subito il testo appena scritto
     if(ricoveroIdEsameObiettivoInline === currentRicoveroId) renderRicoveroSingoloBox();
   }
