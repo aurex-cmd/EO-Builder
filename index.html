@@ -26695,6 +26695,13 @@ function suggerisci(inp){
   box.innerHTML = trovati.map(f => `<button type="button" class="m-gu-sugg-b" data-sugg-per="${inp.id}" data-farmaco="${esc(f)}">${esc(f)}</button>`).join('');
 }
 function completaSugg(inp, nome){
+  // iPhone: la parola che si sta scrivendo è «in corso» (sottolineata dal
+  // correttore) e resterebbe agganciata al testo nuovo («Inh» evidenziato
+  // dentro «Inhixa»): si chiude togliendo e ridando il fuoco al campo
+  if(document.activeElement === inp){
+    const a = inp.selectionStart, b = inp.selectionEnd;
+    inp.blur(); try{ inp.setSelectionRange(a, b); }catch(e){}
+  }
   const c = codaSugg(inp); if(!c) return;
   const fine = inp.selectionEnd ?? inp.value.length;
   const prima = inp.value.slice(0, c.da), dopo = inp.value.slice(fine);
