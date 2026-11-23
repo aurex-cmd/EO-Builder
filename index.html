@@ -7641,6 +7641,20 @@ function chiudiEsameObiettivoInline(){
   if(ricoveriDaRidisegnare) setTimeout(ridisegnaRicoveriDopoSync, 300);
   applicaSezioniNascoste(true);
 
+  // il sesso scelto nell'esame (Maschio/Femmina) vale anche per il ricovero:
+  // prima, con Fatto, vinceva quello del ricovero (Femmina di partenza, per
+  // esempio nei ricoveri nati dalla guardia) e l'esame appena copiato
+  // tornava al femminile ("vigile, orientata…")
+  const sessoEsame = state && state.sesso;
+  if(ricoveroIdEsameObiettivoInline && (sessoEsame === 'M' || sessoEsame === 'F')){
+    if(ricoveroIdEsameObiettivoInline === currentRicoveroId){
+      const ch = document.querySelector(`#admit-sesso-chips .chip[data-val="${sessoEsame}"]`);
+      if(ch && !ch.classList.contains('active')){ ch.click(); if(typeof eseguiSalvataggioRicoveroForm === 'function') eseguiSalvataggioRicoveroForm(); }
+    } else {
+      const list = loadRicoveri(), r = list.find(x => x.id === ricoveroIdEsameObiettivoInline);
+      if(r && r.campi && r.campi.sesso !== sessoEsame){ r.campi.sesso = sessoEsame; saveRicoveri(list); }
+    }
+  }
   // aggiorna anche lo snapshot mostrato nel box del ricovero (come faceva
   // già il pulsante "Aggiorna esame obiettivo") con le modifiche appena fatte
   if(ricoveroIdEsameObiettivoInline){
