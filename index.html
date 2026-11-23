@@ -24287,6 +24287,11 @@ function editorLettereSvuota(){
   .m-gu-agg-ok{ display:none; flex:none; height:32px; padding:0 12px; border:0; border-radius:999px; background:var(--m-teal); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
   .m-gu-agg input:not(:placeholder-shown) + .m-gu-agg-ok{ display:block; }
   .m-gu-lista > .m-gu-form{ border:0; border-radius:0; margin:0; }
+  /* suggerimenti dei farmaci sotto il campo, in rame come le voci farmaco */
+  .m-gu-sugg{ display:flex; gap:6px; padding:0 12px 10px 52px; overflow-x:auto; scrollbar-width:none; background:var(--m-carta); }
+  .m-gu-sugg[hidden]{ display:none; }
+  .m-gu-sugg + .m-gu-r{ border-top:1px solid var(--m-line); }
+  .m-gu-sugg-b{ flex:none; height:32px; padding:0 13px; border:0; border-radius:999px; background:var(--m-rame-box); color:var(--m-rame); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
   .m-gu-lista > :is(.m-gu-form, .m-gu-agg) + .m-gu-ar{ border-top:1px solid var(--m-line); }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
   /* al PC: letti liberi e ricoveri dal PS nella colonna di sinistra, sotto le tessere */
@@ -26650,6 +26655,45 @@ const scriviGu = (k, v) => setLocalAndCloud(k, JSON.stringify(v));
 // il letto può stare all'inizio o alla fine ("trittico 19.2", "chiamare
 // Cittadella per 16.2"); va in grassetto davanti. Un letto ha il punto o la P
 // (13.1, 15 P), così "lasix 20" non diventa il letto 20
+// guardia: i farmaci per i suggerimenti mentre si scrive (si tocca e si
+// completa la parola); i più scelti salgono in cima, solo su questo dispositivo
+const GU_FARMACI = ['Trittico', 'Talofen', 'Perfalgan', 'Artrosilene', 'Aloperidolo', 'Plasil', 'Morfina', 'Zofran', 'Lasix', 'Urbason', 'Tachipirina', 'Paracetamolo', 'Toradol', 'Ketorolac', 'Contramal', 'Tramadolo', 'Oki', 'Buscopan', 'Oxynorm', 'Targin', 'Fentanyl', 'Tavor', 'Lorazepam', 'En', 'Delorazepam', 'Valium', 'Diazepam', 'Midazolam', 'Ipnovel', 'Xanax', 'Alprazolam', 'Minias', 'Lormetazepam', 'Serenase', 'Haldol', 'Entumin', 'Promazina', 'Quetiapina', 'Seroquel', 'Risperdal', 'Risperidone', 'Largactil', 'Clorpromazina', 'Dintoina', 'Furosemide', 'Bentelan', 'Betametasone', 'Solumedrol', 'Metilprednisolone', 'Deltacortene', 'Prednisone', 'Idrocortisone', 'Flebocortid', 'Ondansetron', 'Metoclopramide', 'Pantoprazolo', 'Pantorc', 'Omeprazolo', 'Lansoprazolo', 'Lansox', 'Ranitidina', 'Clexane', 'Enoxaparina', 'Eparina', 'Fondaparinux', 'Arixtra', 'Coumadin', 'Vitamina K', 'Konakion', 'Insulina', 'Humalog', 'Novorapid', 'Lantus', 'Glucosata', 'Fisiologica', 'Ringer', 'Potassio cloruro', 'KCl', 'Magnesio solfato', 'Calcio gluconato', 'Bicarbonato', 'Albumina', 'Ceftriaxone', 'Rocefin', 'Augmentin', 'Amoxicillina', 'Tazocin', 'Piperacillina', 'Meropenem', 'Levofloxacina', 'Tavanic', 'Ciprofloxacina', 'Ciproxin', 'Vancomicina', 'Teicoplanina', 'Targosid', 'Metronidazolo', 'Flagyl', 'Fluconazolo', 'Bactrim', 'Claritromicina', 'Klacid', 'Azitromicina', 'Cardioaspirina', 'Clopidogrel', 'Plavix', 'Lanoxin', 'Digossina', 'Cordarone', 'Amiodarone', 'Nitroglicerina', 'Trinitrina', 'Catapresan', 'Clonidina', 'Lopresor', 'Metoprololo', 'Bisoprololo', 'Congescor', 'Ramipril', 'Amlodipina', 'Norvasc', 'Adalat', 'Nifedipina', 'Isoptin', 'Verapamil', 'Adenosina', 'Atropina', 'Adrenalina', 'Noradrenalina', 'Naloxone', 'Narcan', 'Flumazenil', 'Anexate', 'Ventolin', 'Salbutamolo', 'Atem', 'Ipratropio', 'Broncovaleas', 'Clenil', 'Beclometasone', 'Aerosol', 'Lattulosio', 'Duphalac', 'Movicol', 'Microclisma', 'Pursennid', 'Laevolac', 'Levetiracetam', 'Keppra', 'Depakin', 'Valproato', 'Ossigeno'];
+const GU_FARM_USO_KEY = 'eo_minimal_guardia_farmaci_uso_v1';
+const senzaAccenti = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function suggerisciFarmaci(){
+  const inp = $m('#m-gu-in'), box = $m('#m-gu-sugg'); if(!inp || !box) return;
+  const prima = inp.value.slice(0, inp.selectionEnd ?? inp.value.length);
+  const m = prima.match(/(^|[\s,;:(])([A-Za-zÀ-ÿ]{2,})$/);
+  let trovati = [];
+  if(m){
+    const p = senzaAccenti(m[2]);
+    let uso = {}; try{ uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; }catch(e){}
+    trovati = GU_FARMACI.filter(f => senzaAccenti(f).startsWith(p) && senzaAccenti(f) !== p)
+      .sort((a, b) => (uso[b] || 0) - (uso[a] || 0) || a.length - b.length).slice(0, 4);
+  }
+  box.hidden = !trovati.length;
+  box.innerHTML = trovati.map(f => `<button type="button" class="m-gu-sugg-b" data-farmaco="${f}">${f}</button>`).join('');
+}
+function completaFarmaco(nome){
+  const inp = $m('#m-gu-in'); if(!inp) return;
+  const fine = inp.selectionEnd ?? inp.value.length;
+  const prima = inp.value.slice(0, fine).replace(/[A-Za-zÀ-ÿ]+$/, ''), dopo = inp.value.slice(fine);
+  const nuovo = prima + nome + (dopo.startsWith(' ') ? '' : ' ');
+  inp.value = nuovo + dopo; inp.focus(); inp.setSelectionRange(nuovo.length, nuovo.length);
+  try{ const uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; uso[nome] = (uso[nome] || 0) + 1; localStorage.setItem(GU_FARM_USO_KEY, JSON.stringify(uso)); }catch(e){}
+  suggerisciFarmaci();
+}
+document.addEventListener('input', e => { if(e.target && e.target.id === 'm-gu-in') suggerisciFarmaci(); });
+// il tocco sul suggerimento non deve chiudere la tastiera
+document.addEventListener('pointerdown', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b) e.preventDefault(); }, true);
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b){ e.preventDefault(); e.stopPropagation(); completaFarmaco(b.dataset.farmaco); } }, true);
+document.addEventListener('keydown', e => {
+  if(e.target && e.target.id === 'm-gu-in' && (e.key === 'Tab' || e.key === 'ArrowRight') && !e.shiftKey){
+    const b = $m('#m-gu-sugg:not([hidden]) .m-gu-sugg-b'); if(!b) return;
+    if(e.key === 'ArrowRight' && e.target.selectionEnd !== e.target.value.length) return;
+    e.preventDefault(); completaFarmaco(b.dataset.farmaco);
+  }
+}, true);
 function leggiVoceGuardia(testo){
   let t = testo.trim().replace(/\s+/g, ' '), letto = '';
   const L = '((?:C[12]|GER)\\s*[:·]?\\s*)?(\\d{1,2}(?:[.,]\\d|\\s?P\\b))';
@@ -26663,6 +26707,7 @@ function leggiVoceGuardia(testo){
     : /\b(visit\w*|consulenz\w*|vedi(?:\s+(?:il|la|lo)?\s*paziente)?|valut\w*|rivalut\w*)\b/.test(s) && !/\b(emocrom\w*|ega|tc|tac|rx|ecg|troponin\w*|esami)\b/.test(s) ? 'visita'
     : /\b(emocrom\w*|ega|emogas\w*|tc|tac|rx|rmn?|eco\w*|ecg|esam\w*|emocoltur\w*|urinocoltur\w*|coltur\w*|pcr|troponin\w*|hb|potassi\w*|sodi\w*|kaliemi\w*|inr|glicemi\w*|lab\w*|refert\w*|stick|dtx|ammoni\w*|lattat\w*|bnp|d-?dimero|procalciton\w*|pct)\b/.test(s) ? 'esame'
     : /\b(da(?:i|re|gli)|fa(?:i|gli)|somministr\w*|trittico|talofen|promazina|entumin|tavor|lorazepam|en|delorazepam|aloperidolo|serenase|haldol|lasix|furosemide|paracetamolo|tachipirina|perfalgan|morfina|eparina|clexane|insulina|bolo|flebo\w*|fisiologica|kcl|toradol|ketorolac|quetiapina|seroquel|diazepam|valium|midazolam|ipnovel|pantoprazolo|ondansetron|plasil|metoclopramide|bentelan|solumedrol|antibiotic\w*|ossigeno|o2|terapia|mg)\b/.test(s) ? 'farmaco'
+    : GU_FARMACI.some(f => new RegExp('\\b' + senzaAccenti(f) + '\\b').test(senzaAccenti(s))) ? 'farmaco'
     : /\b(vedere|controll\w*)\b/.test(s) ? 'visita' : 'altro';
   return { letto, t: t.replace(/^./, c => c.toUpperCase()), tipo };
 }
@@ -26884,6 +26929,7 @@ function htmlGuardia(parte, giro){
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-lista">
       <div class="m-gu-r m-gu-agg"><span class="m-gu-ic">${ICON.piu}</span><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aggiungi… «13.1 trittico»" aria-label="Nuova cosa da fare"><button class="m-gu-agg-ok" data-m="gu-add">Aggiungi</button></div>
+      <div class="m-gu-sugg" id="m-gu-sugg" hidden></div>
       ${voci.map(riga).join('')}
     </div>${voci.length ? '<p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>' : ''}`;
   if(parte === 'sx') return `<div class="m-gu m-gu-sx" id="m-gu-sx">${sx}</div>`;
