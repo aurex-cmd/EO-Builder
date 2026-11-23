@@ -26961,9 +26961,16 @@ function aggiungiArrivo(){
   const id = 'a' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
   const voce = { cognome, nome, eta, note, rep:b.rep, tipo:tipiDi(b.rep).includes(b.tipo) ? b.tipo : 'l', chi, creato:ora, savedAt:ora };
   // lo vedo io: la scheda del ricovero nasce subito, coi dati già scritti
-  if(chi === guIo()){
+  if(chi === guIo()) creaSchedaArrivo(id, voce);
+  const a = leggiGu(GU_ARRIVI_KEY); a[id] = voce; scriviGu(GU_ARRIVI_KEY, a);
+  guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' };
+  showToast(chi === guIo() ? 'Ricovero aggiunto: la scheda è già in Ricoveri' : `Ricovero aggiunto: lo vede il ${chi}`);
+}
+const repoNomeGu = rep => (GU_REPARTI.find(r => r[0] === rep) || [])[1] || 'GERIATRIA';
+function creaSchedaArrivo(id, voce){
+  const { cognome, nome, eta, note } = voce, ora = Date.now();
     try{
-      const campi = { sesso:'F', cognome, nome, letto:'', reparto:(GU_REPARTI.find(r => r[0] === b.rep) || [])[1] || 'GERIATRIA', eta, diagnosi:'', allergie:'', prossima:notaInProssima(note), provvedimenti:'',
+      const campi = { sesso:'F', cognome, nome, letto:'', reparto:repoNomeGu(voce.rep), eta, diagnosi:'', allergie:'', prossima:notaInProssima(note), provvedimenti:'',
         ematochimici:'', rxtorace:'', rxaddome:'', tcaddome:'', tctorace:'', tccerebrale:'', altriEsami:[], remota:'', farmacologica:'', familiare:'' };
       const list = loadRicoveri();
       const rec = { id:'ric_' + ora + '_' + Math.random().toString(36).slice(2, 7), seq:nextRicoveroSeq(), creatoIl:ora, selezionato:true,
@@ -26973,10 +26980,35 @@ function aggiungiArrivo(){
       list.push(rec); saveRicoveri(list);
       voce.ricId = rec.id;
     } catch(e){ console.warn('Ricovero non creato:', e); }
+}
+// correggere un ricovero dal PS già segnato: nome, età, reparto, letto, chi lo vede.
+// Se c'è la scheda in Ricoveri, prende anche lei i dati nuovi
+function modificaArrivo(id){
+  const a = leggiGu(GU_ARRIVI_KEY), voce = a[id]; if(!voce) return false;
+  const val = k => ($m('#' + k)?.value || '').trim();
+  const cognome = val('m-gu-a-cog'), nome = val('m-gu-a-nome'), eta = val('m-gu-a-eta').replace(/\D/g, '');
+  if(!cognome && !nome){ showToast('Scrivi almeno il cognome'); $m('#m-gu-a-cog')?.focus(); return false; }
+  const b = guArrivoBozza, rep = b.rep || voce.rep, chi = b.chi || voce.chi;
+  Object.assign(voce, { cognome, nome, eta, rep, tipo:tipiDi(rep).includes(b.tipo) ? b.tipo : 'l', chi, savedAt:Date.now() });
+  if(voce.ricId){
+    try{
+      const list = loadRicoveri(), rec = list.find(r => r.id === voce.ricId);
+      if(rec){
+        rec.campi = Object.assign(rec.campi || {}, { cognome, nome, eta, reparto:repoNomeGu(rep) });
+        rec.label = `${cognome.toUpperCase()} ${nome.toUpperCase()}`.trim();
+        rec.savedAt = Date.now();
+        saveRicoveri(list);
+        // la scheda aperta nel modulo dei ricoveri non deve riscriverci sopra i dati vecchi
+        if(typeof currentRicoveroId !== 'undefined' && currentRicoveroId === rec.id){
+          const metti = (k, x) => { const el = document.getElementById(k); if(el) el.value = x; };
+          metti('admit-cognome', cognome); metti('admit-nome', nome); metti('admit-eta', eta);
+        }
+      } else delete voce.ricId;
+    } catch(e){ console.warn('Scheda non aggiornata:', e); }
   }
-  const a = leggiGu(GU_ARRIVI_KEY); a[id] = voce; scriviGu(GU_ARRIVI_KEY, a);
-  guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' };
-  showToast(chi === guIo() ? 'Ricovero aggiunto: la scheda è già in Ricoveri' : `Ricovero aggiunto: lo vede il ${chi}`);
+  if(chi === guIo() && !voce.ricId) creaSchedaArrivo(id, voce);
+  a[id] = voce; scriviGu(GU_ARRIVI_KEY, a);
+  return true;
 }
 // gli appunti presi al telefono col PS: nella scheda del ricovero diventano
 // l'inizio dell'anamnesi prossima (finché non la si riscrive nella scheda)
@@ -27169,29 +27201,37 @@ function htmlArrivi(arrivi, st){
   const TIPI = { l:'libero', b:'bis', m:'monitorato' };
   const chip = (attr, testo, on, cl) => `<button class="m-gu-chip${on ? ' m-on' : ''}${cl ? ' ' + cl : ''}" ${attr} aria-pressed="${on}">${testo}</button>`;
   const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
-  const righe = arrivi.map(a => `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
+  const righe = arrivi.map(a => guArrivoNota === a.id ? formArrivo({ rep:guArrivoBozza.rep || a.rep, tipo:guArrivoBozza.tipo || a.tipo || 'l', chi:guArrivoBozza.chi || a.chi }, a) : `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
       <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
-      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
+      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
       <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
       <button class="m-gu-togli" data-m="gu-a-via" data-id="${esc(a.id)}">Togli</button>
-    </div>${guArrivoNota === a.id ? `<div class="m-gu-nota-ed"><textarea class="m-gu-note" id="m-gu-n-${esc(a.id)}" data-arrivo="${esc(a.id)}" data-sugg="ps" data-sugg-box="m-gu-n-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS…">${esc(a.note || '')}</textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-n-sugg" hidden></div><div class="m-gu-form-az"><button class="m-gu-ok-big" data-m="gu-a-nota-ok">Fatto</button></div></div>` : ''}`).join('');
-  const b = guArrivoBozza, chi = b.chi || io;
-  const form = !guArrivoAperto ? '' : `<div class="m-gu-form">
-      <div class="m-gu-campi"><input id="m-gu-a-cog" placeholder="Cognome" autocomplete="off" autocapitalize="characters"><input id="m-gu-a-nome" placeholder="Nome" autocomplete="off" autocapitalize="words"><input id="m-gu-a-eta" placeholder="Età" inputmode="numeric" autocomplete="off"></div>
-      <textarea class="m-gu-note" id="m-gu-a-note" data-sugg="ps" data-sugg-box="m-gu-a-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS… «insufficienza respiratoria, caduto a casa»"></textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-a-sugg" hidden></div>
+    </div>`).join('');
+  // lo stesso modulo per un ricovero nuovo e per correggerne uno già segnato
+  // (tocco sulla riga): in quel caso è già compilato e gli appunti si salvano mentre si scrive
+  function formArrivo(b, a){
+    const chi = b.chi || io, v = x => a ? ` value="${esc(x || '')}"` : '';
+    return `<div class="m-gu-form"${a ? ` data-id="${esc(a.id)}"` : ''}>
+      <div class="m-gu-campi"><input id="m-gu-a-cog" placeholder="Cognome" autocomplete="off" autocapitalize="characters"${v(a && a.cognome)}><input id="m-gu-a-nome" placeholder="Nome" autocomplete="off" autocapitalize="words"${v(a && a.nome)}><input id="m-gu-a-eta" placeholder="Età" inputmode="numeric" autocomplete="off"${v(a && a.eta)}></div>
+      ${a ? `<textarea class="m-gu-note" id="m-gu-n-${esc(a.id)}" data-arrivo="${esc(a.id)}" data-sugg="ps" data-sugg-box="m-gu-n-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS…">${esc(a.note || '')}</textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-n-sugg" hidden></div>`
+        : `<textarea class="m-gu-note" id="m-gu-a-note" data-sugg="ps" data-sugg-box="m-gu-a-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS… «insufficienza respiratoria, caduto a casa»"></textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-a-sugg" hidden></div>`}
       <div class="m-gu-scelta"><small>Reparto</small>${GU_REPARTI.map(([r]) => chip(`data-m="gu-a-rep" data-v="${r}"`, `${r}${st.impostato ? ` <i>${liberi(r, 'l') + liberi(r, 'b') + liberi(r, 'm')}</i>` : ''}`, b.rep === r)).join('')}</div>
       ${b.rep && tipiDi(b.rep).length > 1 ? `<div class="m-gu-scelta"><small>Letto</small>${tipiDi(b.rep).map(t => chip(`data-m="gu-a-tipo" data-v="${t}"`, `${t === 'l' ? 'libero' : t === 'b' ? '(bis)' : '[mon]'}${st.impostato ? ` <i>${liberi(b.rep, t)}</i>` : ''}`, (b.tipo || 'l') === t)).join('')}</div>` : ''}
       <div class="m-gu-scelta"><small>Lo vede</small>${[io, altro].map(g => chip(`data-m="gu-a-chi" data-v="${g}"`, `${g}${g === io ? ' · io' : ''}`, chi === g, 'm-gu-' + GU_GUARDIE[g])).join('')}<button class="m-gu-iosono" data-m="gu-io" title="Cambia chi sei">Sono il ${altro}?</button></div>
-      <div class="m-gu-form-az"><button class="m-gu-annulla" data-m="gu-a-chiudi">Annulla</button><button class="m-gu-ok-big" data-m="gu-a-ok">Aggiungi ricovero</button></div>
+      <div class="m-gu-form-az"><button class="m-gu-annulla" data-m="gu-a-chiudi">Annulla</button><button class="m-gu-ok-big" data-m="${a ? 'gu-a-mod-ok' : 'gu-a-ok'}">${a ? 'Fatto' : 'Aggiungi ricovero'}</button></div>
     </div>`;
+  }
+  const form = guArrivoAperto ? formArrivo(guArrivoBozza) : '';
   return `<p class="m-lbl m-gu-tit">Ricoveri dal PS${arrivi.length ? `<span class="m-gu-n">${arrivi.length}</span>` : ''}</p>
     <div class="m-gu-lista">${guArrivoAperto ? form : `<button class="m-gu-r m-gu-agg" data-m="gu-a-apri"><span class="m-gu-ic">${ICON.piu}</span><span class="m-gu-t">Nuovo ricovero</span></button>`}${righe}</div>${righe ? '<p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>' : ''}`;
 }
 // ridisegna solo il blocco (senza perdere il cursore nel campo)
+// aprendo un altro modulo, quello che c'era scritto non deve passarci dentro
+function svuotaCampiArrivo(){ ['m-gu-a-cog', 'm-gu-a-nome', 'm-gu-a-eta', 'm-gu-a-note'].forEach(id => { const el = $m('#' + id); if(el) el.remove(); }); }
 function ridisegnaGuardia(fuoco){
   // i campi del ricovero dal PS già scritti restano (scegliere un reparto ridisegna)
   const tieni = ['m-gu-a-cog', 'm-gu-a-nome', 'm-gu-a-eta', 'm-gu-a-note'].map(id => [id, $m('#' + id)?.value]);
-  const rimetti = () => tieni.forEach(([id, v]) => { const el = $m('#' + id); if(el && v){ el.value = v; if(el.classList.contains('m-gu-note')){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } } });
+  const rimetti = () => tieni.forEach(([id, v]) => { const el = $m('#' + id); if(el && v !== undefined){ el.value = v; if(el.classList.contains('m-gu-note')){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } } });
   setTimeout(rimetti, 0);
   if(MP_PC.matches){
     // al PC anche la tessera G (i conti) e, se i dati non cambiano (es. Fatto
@@ -28588,19 +28628,24 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'gu-x'){ toccaLetto(el.dataset.q); ridisegnaGuardia(); }
   else if(a === 'gu-app'){ guAppAperti.add(el.dataset.r + '|' + el.dataset.t); ridisegnaGuardia(); }
   else if(a === 'gu-pm'){ guLettiModifica = true; cambiaNumeroLetti(el.dataset.r, el.dataset.t, +el.dataset.d); ridisegnaGuardia(); }
-  else if(a === 'gu-a-apri'){ guArrivoAperto = true; ridisegnaGuardia(); setTimeout(() => $m('#m-gu-a-cog')?.focus(), 30); }
-  else if(a === 'gu-a-chiudi'){ guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); }
+  else if(a === 'gu-a-apri'){ svuotaCampiArrivo(); guArrivoNota = null; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; guArrivoAperto = true; ridisegnaGuardia(); setTimeout(() => $m('#m-gu-a-cog')?.focus(), 30); }
+  else if(a === 'gu-a-chiudi'){ guArrivoAperto = false; guArrivoNota = null; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); }
   else if(a === 'gu-a-rep' || a === 'gu-a-tipo' || a === 'gu-a-chi'){ guArrivoBozza[a.slice(5)] = el.dataset.v; if(!tipiDi(guArrivoBozza.rep).includes(guArrivoBozza.tipo)) guArrivoBozza.tipo = 'l'; ridisegnaGuardia(); }
   else if(a === 'gu-io'){ setLocalAndCloud(GU_IO_KEY, guIo() === '5914' ? '5899' : '5914'); guArrivoBozza.chi = ''; ridisegnaGuardia(); showToast(`Sei il ${guIo()} (${GU_GUARDIE[guIo()]})`); }
   else if(a === 'gu-a-ok'){ aggiungiArrivo(); ridisegnaGuardia(); }
   else if(a === 'gu-a-nota'){
     // una pressione lunga (per togliere) non apre gli appunti
     if(el.closest('.m-gu-chiedi')) return;
-    guArrivoNota = guArrivoNota === el.dataset.id ? null : el.dataset.id; ridisegnaGuardia();
+    // la riga si apre nel modulo, già compilato, per correggere i dati
+    const v = leggiGu(GU_ARRIVI_KEY)[el.dataset.id];
+    svuotaCampiArrivo(); guArrivoAperto = false;
+    guArrivoNota = guArrivoNota === el.dataset.id || !v ? null : el.dataset.id;
+    guArrivoBozza = v && guArrivoNota ? { rep:v.rep, tipo:v.tipo || 'l', chi:v.chi } : { rep:'', tipo:'l', chi:'' };
+    ridisegnaGuardia();
     const t = guArrivoNota && document.getElementById('m-gu-n-' + guArrivoNota);
     if(t){ t.style.height = t.scrollHeight + 'px'; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
   }
-  else if(a === 'gu-a-nota-ok'){ guArrivoNota = null; ridisegnaGuardia(); }
+  else if(a === 'gu-a-mod-ok'){ if(modificaArrivo(guArrivoNota)){ guArrivoNota = null; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); } }
   else if(a === 'gu-a-via'){ togliArrivo(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-letti'){ guAppAperti.clear(); const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
