@@ -24301,6 +24301,23 @@ function editorLettereSvuota(){
   .m-gu-nota-ed{ display:flex; flex-direction:column; gap:8px; padding:0 12px 12px; background:var(--m-carta); }
   .m-gu-sugg + .m-gu-r{ border-top:1px solid var(--m-line); }
   .m-gu-sugg-b{ flex:none; height:32px; padding:0 13px; border:0; border-radius:999px; background:var(--m-rame-box); color:var(--m-rame); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  /* Da fare in fondo all'esame obiettivo (EO Pocket): una riga, chiusa di default */
+  .m-df{ display:none; margin:2px 0 12px; }
+  #output-card:has(> .row[data-m-eo]) > .m-df{ display:block; }
+  .m-df-apri{ border:0; background:none; padding:6px 0; font:inherit; font-size:14.5px; font-weight:600; color:var(--signal); cursor:pointer; }
+  .m-df-campo{ display:none; gap:8px; align-items:center; }
+  .m-df.m-df-on .m-df-apri{ display:none; } .m-df.m-df-on .m-df-campo{ display:flex; }
+  .m-df-campo input{ flex:1; min-width:0; height:42px; box-sizing:border-box; padding:0 12px; border-radius:12px; font-size:16px; }
+  .m-df-ok{ flex:none; width:42px; height:42px; border:0; border-radius:12px; background:var(--m-acc-d); color:#fff; font-size:22px; line-height:1; cursor:pointer; }
+  html[data-m-tema="chiaro"] .m-df-ok{ background:var(--m-notte); }
+  .m-df-lista{ display:flex; flex-wrap:wrap; gap:6px; }
+  .m-df-lista:not(:empty){ margin-bottom:8px; }
+  .m-df-v{ display:inline-flex; align-items:center; gap:2px; max-width:100%; padding:5px 4px 5px 12px; border-radius:999px; background:var(--signal-soft); color:var(--ink); font-size:14px; overflow-wrap:anywhere; }
+  .m-df-v button{ flex:none; width:24px; height:24px; border:0; background:none; color:var(--ink-dim); font-size:18px; line-height:1; cursor:pointer; }
+  #clinical-view .m-df-sugg{ padding:8px 0 0; background:none; }
+  html[data-m-tema="chiaro"] .m-df-apri{ color:#0b5f5b; }
+  html[data-m-tema="chiaro"] .m-df-v{ background:#e3f4f3; color:#1b2633; }
+  html[data-m-tema="chiaro"] .m-df-v button{ color:#6b7c90; }
   .m-gu-lista > :is(.m-gu-form, .m-gu-agg) + .m-gu-ar{ border-top:1px solid var(--m-line); }
   .pkd .mpd-dett .m-gu{ margin-top:14px; }
   /* al PC: letti liberi e ricoveri dal PS nella colonna di sinistra, sotto le tessere */
@@ -26679,7 +26696,9 @@ const GU_FARMACI = ['Trittico', 'Talofen', 'Perfalgan', 'Artrosilene', 'Aloperid
 const GU_NOTE_PS = ['insufficienza respiratoria', 'insufficienza respiratoria acuta', 'insufficienza respiratoria ipossiemica', 'insufficienza respiratoria ipercapnica', 'edema polmonare acuto', 'scompenso cardiaco', 'scompenso cardiaco acuto', 'polmonite', 'polmonite ab ingestis', 'broncopolmonite', 'BPCO riacutizzata', 'versamento pleurico', 'embolia polmonare', 'dispnea', 'desaturazione', 'tosse', 'febbre', 'iperpiressia', 'caduto a casa', 'caduta a casa', 'caduta accidentale', 'trovato a terra', 'rimasto a terra per ore', 'crush syndrome', 'rabdomiolisi', 'trauma cranico', 'frattura di femore', 'frattura di bacino', 'frattura vertebrale', 'ematoma', 'ferita lacero-contusa', 'sincope', 'lipotimia', 'stato confusionale', 'delirium', 'agitazione psicomotoria', 'soporoso', 'sopore', 'disorientato', 'vigile', 'collaborante', 'non collaborante', 'decadimento cognitivo', 'demenza', 'ictus ischemico', 'TIA', 'emiparesi', 'afasia', 'disartria', 'crisi epilettica', 'cefalea', 'disidratazione', 'insufficienza renale acuta', 'insufficienza renale cronica', 'iperkaliemia', 'ipokaliemia', 'iponatriemia', 'ipernatriemia', 'ipoglicemia', 'iperglicemia', 'scompenso glicemico', 'chetoacidosi', 'sepsi', 'shock settico', 'infezione delle vie urinarie', 'urosepsi', 'ritenzione urinaria', 'macroematuria', 'anemia', 'anemizzazione', 'emorragia digestiva', 'melena', 'ematemesi', 'rettorragia', 'dolore toracico', 'dolore addominale', 'vomito', 'diarrea', 'alvo chiuso', 'subocclusione intestinale', 'occlusione intestinale', 'colecistite', 'colangite', 'pancreatite', 'fibrillazione atriale', 'fibrillazione atriale ad alta risposta', 'bradicardia', 'tachicardia', 'ipotensione', 'crisi ipertensiva', 'NSTEMI', 'sindrome coronarica acuta', 'trombosi venosa profonda', 'piaga da decubito', 'lesione da pressione', 'edemi declivi', 'astenia', 'inappetenza', 'calo ponderale', 'allettato', 'non deambulante', 'deambulante con ausilio', 'vive solo', 'vive con la moglie', 'vive con il marito', 'vive con la figlia', 'vive con il figlio', 'badante', 'RSA', 'casa di riposo', 'in ossigeno', 'ossigenoterapia', 'occhialini', 'ventimask', 'reservoir', 'alti flussi', 'NIV', 'CPAP', 'saturazione', 'EGA', 'lattati', 'emocolture', 'urinocoltura', 'PCR elevata', 'procalcitonina', 'troponina', 'troponina negativa', 'BNP', 'D-dimero', 'creatinina', 'emoglobina', 'Rx torace', 'TC encefalo', 'TC encefalo negativa', 'TC torace', 'TC addome', 'angio-TC', 'ecografia', 'ECG', 'catetere vescicale', 'SNG', 'accesso venoso', 'terapia anticoagulante', 'anticoagulato', 'TAO', 'DOAC', 'antiaggregato', 'allergie', 'nessuna allergia nota', 'già somministrato', 'ha eseguito', 'in attesa di', 'DNR', 'cure palliative', 'familiari informati'];
 const GU_FARM_USO_KEY = 'eo_minimal_guardia_farmaci_uso_v1';
 const senzaAccenti = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const listaSugg = tipo => tipo === 'ps' ? GU_NOTE_PS.concat(GU_FARMACI) : GU_FARMACI;
+// le cose da fare scritte a fine esame obiettivo (EO Pocket): esami, azioni, consulenze
+const DF_SUGG = ['richiedere', 'Rx torace', 'Rx bacino', 'TC encefalo', 'TC torace', 'TC addome', 'TC total body', 'angio-TC', 'ecografia addome', 'ecografia renale', 'ecocardiogramma', 'ecocolordoppler', 'ECG', 'EGA', 'esami di controllo', 'esami di controllo domani', 'esami ematochimici', 'emocromo', 'elettroliti', 'funzionalità renale', 'PCR', 'procalcitonina', 'troponina', 'BNP', 'emocolture', 'urinocoltura', 'coprocoltura', 'tampone', 'stick glicemici', 'bilancio idrico', 'monitorare la diuresi', 'peso', 'controllo PA', 'sentire i familiari', 'informare i familiari', 'colloquio con i familiari', 'sentire il curante', 'consulenza cardiologica', 'consulenza chirurgica', 'consulenza neurologica', 'consulenza ortopedica', 'consulenza infettivologica', 'consulenza nefrologica', 'consulenza fisiatrica', 'consulenza nutrizionale', 'consulenza psichiatrica', 'valutazione logopedica', 'fisioterapia', 'mobilizzare', 'rimuovere catetere vescicale', 'posizionare catetere vescicale', 'rimuovere accesso venoso', 'emotrasfondere', 'idratazione', 'dieta', 'dieta semiliquida', 'digiuno', 'ossigenoterapia', 'ridurre O2', 'sospendere', 'iniziare', 'aumentare', 'ridurre', 'scalare', 'proseguire terapia', 'rivalutare', 'dimissione', 'dimissione domani', 'assistente sociale', 'RSA'];
+const listaSugg = tipo => tipo === 'ps' ? GU_NOTE_PS.concat(GU_FARMACI) : tipo === 'dafare' ? DF_SUGG.concat(GU_FARMACI) : GU_FARMACI;
 // le ultime parole prima del cursore che un suggerimento può completare
 function codaSugg(inp){
   const prima = inp.value.slice(0, inp.selectionEnd ?? inp.value.length);
@@ -27689,8 +27708,51 @@ function vAggCons(){
   });
 }
 
+/* ---------- visita: Da fare in fondo all'esame obiettivo ---------- */
+// le cose che vengono in mente al letto ("Rx torace", "sentire la figlia"):
+// una riga sola, chiusa di default, nella card dell'esame obiettivo. Ogni
+// cosa va subito nei provvedimenti del diario (e si vede nel testo sopra);
+// quelle scritte in questa visita restano qui sotto con la ✕ per toglierle
+let dfAggiunte = [], dfAperto = false;
+function dfId(){ const e = M.letto && voce(M.letto); return e ? e[0] : null; }
+function dfScrivi(cambia){
+  const id = dfId(); if(!id) return false;
+  const d = leggiDiario(id); if(!d) return false;
+  const righe = (d.provv || '').split('\n');
+  if(cambia(righe) === false) return false;
+  d.provv = righe.join('\n').replace(/^\n+|\n+$/g, '');
+  aggiornaDiarioTesto(id, componi(d));
+  const ps = loadPatients();
+  if(ps[id] && ps[id].refertoCopiato){ ps[id].refertoCopiato = false; savePatients(ps); }
+  return true;
+}
+function dfAggiungi(){
+  const inp = document.getElementById('m-df-in'); if(!inp) return;
+  const t = inp.value.trim().replace(/^[-–•*]\s*/, '').replace(/[\s,;]+$/, '');
+  if(!t){ inp.focus(); return; }
+  if(dfScrivi(r => { while(r.length && !r[r.length - 1].trim()) r.pop(); r.push('- ' + t); })) dfAggiunte.push(t);
+  inp.value = ''; suggerisci(inp);
+  dfDisegna(); inp.focus();
+}
+function dfTogli(k){
+  const t = dfAggiunte[k]; if(t == null) return;
+  dfScrivi(r => { const i = r.map(x => x.trim()).lastIndexOf('- ' + t); if(i === -1) return; r.splice(i, 1); });
+  dfAggiunte.splice(k, 1); dfDisegna();
+}
+function dfDisegna(){
+  const box = document.getElementById('m-df'); if(!box) return;
+  box.classList.toggle('m-df-on', dfAperto);
+  box.querySelector('.m-df-lista').innerHTML = dfAggiunte.map((t, k) => `<span class="m-df-v">${esc(t)}<button type="button" data-df="togli" data-k="${k}" aria-label="Togli">×</button></span>`).join('');
+}
+function dfAzzera(){
+  dfAggiunte = []; dfAperto = false;
+  const inp = document.getElementById('m-df-in'); if(inp){ inp.value = ''; suggerisci(inp); }
+  dfDisegna();
+}
+
 /* ---------- visita: la schermata dei tag dell'app ---------- */
 function apriVisita(nome, daScheda){
+  if(!UI_MP) dfAzzera();
   modoEo(daScheda ? 'scheda' : 'visita');
   vai('eo', { letto:nome, daScheda:!!daScheda });
   apriLetto(nome);
@@ -28470,6 +28532,28 @@ if(resetEo){
   resetEo.parentElement.prepend(diarioEo);
 }
 const rigaEo = resetEo && resetEo.parentElement;
+// Da fare (solo EO Pocket: in Minimal Pocket c'è la sua card nel percorso)
+if(rigaEo && !UI_MP){
+  rigaEo.insertAdjacentHTML('beforebegin', `<div class="m-df" id="m-df">
+    <div class="m-df-lista"></div>
+    <button type="button" class="m-df-apri" data-df="apri">+ Da fare</button>
+    <div class="m-df-campo"><input id="m-df-in" type="text" data-sugg="dafare" data-sugg-box="m-df-sugg" placeholder="es. Rx torace, sentire i familiari" aria-label="Da fare" autocapitalize="sentences" autocomplete="off" enterkeyhint="done"><button type="button" class="m-df-ok" data-df="aggiungi" aria-label="Aggiungi">+</button></div>
+    <div class="m-gu-sugg m-df-sugg" id="m-df-sugg" hidden></div>
+  </div>`);
+  const df = document.getElementById('m-df');
+  df.addEventListener('pointerdown', e => { if(e.target.closest('[data-df="aggiungi"], [data-df="togli"]')) e.preventDefault(); });
+  df.addEventListener('click', e => {
+    const b = e.target.closest('[data-df]'); if(!b) return;
+    if(b.dataset.df === 'apri'){ dfAperto = true; dfDisegna(); document.getElementById('m-df-in').focus(); }
+    else if(b.dataset.df === 'aggiungi') dfAggiungi();
+    else if(b.dataset.df === 'togli') dfTogli(+b.dataset.k);
+  });
+  document.getElementById('m-df-in').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); dfAggiungi(); } });
+  // uscendo dal campo vuoto (e senza cose scritte) torna la riga chiusa
+  document.getElementById('m-df-in').addEventListener('blur', e => setTimeout(() => {
+    if(!e.target.value.trim() && !dfAggiunte.length && document.activeElement !== e.target){ dfAperto = false; dfDisegna(); }
+  }, 150));
+}
 const modoEo = m => { if(rigaEo){ if(m) rigaEo.dataset.mEo = m; else delete rigaEo.dataset.mEo; } };
 const apriEoInlineApp = apriEsameObiettivoInline;
 window.apriEsameObiettivoInline = function(){ modoEo(null); return apriEoInlineApp.apply(this, arguments); };
