@@ -26984,7 +26984,7 @@ function togliVoceGuardia(id){
 // letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
 // soli (nel reparto scritto nel ricovero: se lo si cambia, la X si sposta)
 let guLettiModifica = false;
-// gli appoggi, che non sempre ci sono: in Modifica una pillola «APP», che toccata apre il contatore
+// bis, monitorati e appoggi, che non sempre ci sono: in Modifica una pillola (BIS, MON, APP), che toccata apre il contatore
 const guAppAperti = new Set();
 let guGiroUltimo = ''; // la card del giro (di giorno) dentro quella dei letti, per ridisegnarla
 function lettiLiberi(){
@@ -27066,10 +27066,13 @@ function htmlGuardia(parte, giro){
   const quadri = (rep, tipo, n) => Array.from({ length:n }, (_, i) => { const q = `${rep}|${tipo}|${i}`, v = st.x[q], a = v && perId.get(v);
     return `<button class="m-gu-q${v ? ' m-gu-x' : ''}${v && v !== 1 ? ' m-gu-ric' : ''}${a ? ' m-gu-' + GU_GUARDIE[a.chi] : ''}"${a ? ` title="${esc((a.cognome + ' ' + a.nome).trim())} · ${a.chi}"` : ''} data-m="gu-x" data-q="${q}" aria-pressed="${!!v}" aria-label="${rep} ${tipo === 'l' ? 'letto' : tipo === 'b' ? 'bis' : 'monitorato'} ${i + 1}${v ? ': occupato' : ': libero'}"></button>`; }).join('');
   const passo = (rep, tipo, n, nome) => `<span class="m-gu-passo"><small>${nome}</small><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="-1" aria-label="Meno">−</button><b>${n}</b><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="1" aria-label="Più">+</button></span>`;
+  // bis, monitorati e appoggi non sempre ci sono: una pillola, che toccata apre il contatore
+  const passoOPill = (rep, tipo, n, nome, pill, per) => n || guAppAperti.has(rep + '|' + tipo) ? passo(rep, tipo, n, nome)
+    : `<button class="m-gu-app-pill" data-m="gu-app" data-r="${rep}" data-t="${tipo}" aria-label="Aggiungi ${per} ${rep}">${pill}</button>`;
   const modifica = guLettiModifica || !st.impostato;
   const righeLetti = GU_REPARTI.map(([rep]) => {
     const n = Object.assign({ l:0, b:0, m:0, a:0 }, st.rep[rep]);
-    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passo(rep, 'b', n.b, '(bis)') : ''}${tipiDi(rep).includes('m') ? passo(rep, 'm', n.m, '[mon]') : ''}${GU_APPOGGI_REP.includes(rep) ? (n.a || guAppAperti.has(rep) ? passo(rep, 'a', n.a, 'appoggi') : `<button class="m-gu-app-pill" data-m="gu-app" data-r="${rep}" aria-label="Aggiungi appoggi ${rep}">APP</button>`) : ''}</span></div>`;
+    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passoOPill(rep, 'b', n.b, '(bis)', 'BIS', 'bis') : ''}${tipiDi(rep).includes('m') ? passoOPill(rep, 'm', n.m, '[mon]', 'MON', 'monitorati') : ''}${GU_APPOGGI_REP.includes(rep) ? passoOPill(rep, 'a', n.a, 'appoggi', 'APP', 'appoggi') : ''}</span></div>`;
     const tot = n.l + n.b + n.m;
     const occ = Object.keys(st.x).filter(q => q.startsWith(rep + '|')).length;
     return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}${n.a ? `<span class="m-gu-app${tot + (n.b ? 1 : 0) + (n.m ? 1 : 0) <= 3 ? ' m-gu-app-c' : ''}">– ${n.a} APP</span>` : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
@@ -28528,7 +28531,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'gu-ok'){ segnaVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-via'){ togliVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-x'){ toccaLetto(el.dataset.q); ridisegnaGuardia(); }
-  else if(a === 'gu-app'){ guAppAperti.add(el.dataset.r); ridisegnaGuardia(); }
+  else if(a === 'gu-app'){ guAppAperti.add(el.dataset.r + '|' + el.dataset.t); ridisegnaGuardia(); }
   else if(a === 'gu-pm'){ guLettiModifica = true; cambiaNumeroLetti(el.dataset.r, el.dataset.t, +el.dataset.d); ridisegnaGuardia(); }
   else if(a === 'gu-a-apri'){ guArrivoAperto = true; ridisegnaGuardia(); setTimeout(() => $m('#m-gu-a-cog')?.focus(), 30); }
   else if(a === 'gu-a-chiudi'){ guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); }
