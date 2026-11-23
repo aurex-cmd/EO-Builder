@@ -24071,17 +24071,17 @@ function editorLettereSvuota(){
   /* il nome del reparto alla stessa altezza dei titoli delle altre viste (Settori, …) */
   .m-h1.m-h1-home{ text-transform:none; font-size:30px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
   .m-home-su .m-sub{ margin-top:-10px; font-size:15px; }
-  /* omino (o iniziali) dell'account, in alto a destra sulla riga del marchio */
-  .m-connessione{ position:relative; justify-self:end; width:34px; height:34px; padding:0; border:0; border-radius:50%; display:grid; place-items:center; background:transparent; box-shadow:inset 0 0 0 1.5px var(--m-line-forte); color:var(--m-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--m-molla); }
+  /* l'account in alto a destra: un tondo bianco come le card della home,
+     con un'ombra leggera; dentro le iniziali (o l'omino, senza accesso) e il
+     pallino dello stato, verde da connesso */
+  .m-connessione{ position:relative; justify-self:end; width:38px; height:38px; padding:0; border:0; border-radius:50%; display:grid; place-items:center; background:var(--m-riq, #fff); box-shadow:0 1px 2px rgba(20,40,70,.08), 0 4px 12px rgba(20,40,70,.10); color:var(--m-muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .12s var(--m-molla); }
   .m-connessione::after{ content:""; position:absolute; inset:-5px; }
   .m-connessione:active{ transform:scale(.92); }
   .m-connessione svg{ width:18px; height:18px; }
   .m-connessione span{ font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--m-ink); }
-  .m-connessione i{ position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:var(--m-faint); box-shadow:0 0 0 2px var(--m-fondo, var(--m-bg)); }
+  .m-connessione i{ position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%; background:var(--m-faint); box-shadow:0 0 0 2px var(--m-riq, #fff); }
   .m-connessione.m-connesso i{ background:#3fae6a; }
-  .m-connessione.m-connesso{ background:color-mix(in srgb, var(--m-notte) 16%, var(--m-fondo, var(--m-bg))); box-shadow:none; color:var(--m-link); }
-  .m-connessione.m-connesso span{ color:var(--m-link); }
-  html[data-m-tema="scuro"] .m-connessione.m-connesso{ background:color-mix(in srgb, var(--m-notte) 28%, var(--m-bg)); }
+  html[data-m-tema="scuro"] .m-connessione{ box-shadow:inset 0 0 0 1px var(--m-line); }
   .m-schede{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
   .m-ingr{ display:flex; flex-direction:column; min-height:140px; padding:14px; border:1px solid var(--m-line); border-radius:10px; background:#fff; color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; transition:transform .2s var(--m-molla), background .2s; }
   .m-ingr .m-sh{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:var(--m-ink-2); }
