@@ -5825,6 +5825,7 @@ async function cloudPullAll(){
             const respiroIeri = manuale ? composeRespiroConNota() : '';
             Object.assign(state.respiro, respiroVuotoDiOggi());
             if(manuale && respiroIeri && manuale.includes(respiroIeri)) state.outputEsameManuale = manuale.replace(respiroIeri, composeRespiroConNota());
+            state.outputExtra = extraDelGiornoNuovo(state.outputExtra, pAggiornato);
           }
         }
         if(typeof populateInputsFromState === 'function') populateInputsFromState();
@@ -7565,6 +7566,7 @@ function apriEsameObiettivoInline(ricoveroId){
     } else {
       Object.assign(state.respiro, respiroVuotoDiOggi());
       state.outputEsameManuale = '';
+      state.outputExtra = extraDelGiornoNuovo(state.outputExtra, p);
     }
   }
   populateInputsFromState();
@@ -11470,6 +11472,7 @@ function aggiornaVitaleLetto(nome, campo, valore){
       // "in NC 2L/min" tornava "in AA" alla prima SpO2 scritta da qui
       entry[1].state.respiro = Object.assign(entry[1].state.respiro || {}, respiroVuotoDiOggi());
       entry[1].state.outputEsameManuale = '';
+      entry[1].state.outputExtra = extraDelGiornoNuovo(entry[1].state.outputExtra, entry[1]);
     }
   }
   entry[1].state.respiro = entry[1].state.respiro || {};
@@ -11527,6 +11530,31 @@ function applicaRegolaTemperatura(r){
 function respiroVuotoDiOggi(){
   return { sat:'', pas:'', pad:'', fc:'', temp:'apiretico', tempValore:'' };
 }
+// come i parametri, anche i PROVVEDIMENTI valgono un giorno: aprendo un
+// diario scritto in un giorno precedente le aggiunte ripartono senza quelli
+// di allora (restano nello scatto del giorno, p.storico). Restano invece
+// "Agli EE" e i referti (righe "Rx torace: …", con le loro regole) e le
+// righe che fissano una dimissione o degli esami per un giorno che deve
+// ancora venire ("dimissione prevista lunedì", "esami giovedì"): servono
+// al Calendario dimissioni e ai pallini. "Dimesso domani" scritto ieri è
+// già oggi e se ne va con gli altri
+function extraDelGiornoNuovo(extra, p){
+  if(!extra || !extra.trim()) return extra || '';
+  const oggi = new Date(); oggi.setHours(0, 0, 0, 0);
+  const rif = giornoDiarioScritto(p);
+  const futura = d => d && d.getTime() > oggi.getTime();
+  const tieni = r => {
+    if(!r.trim()) return true;
+    if(/^\s*-?\s*agli\s+ee\b/i.test(r)) return true;
+    if(/^\s*-?\s*(Rx torace|Rx addome|TC torace|TC addome|TC cerebrale|TC encefalo|TC total body con mdc|TC total body|Ecografia addome|Eco addome|EGDS|ECG|EGA)\s*:/i.test(r)) return true;
+    if(/^\s*([^\s\-"][^:"\n]{0,40}?)\s*:\s*(".+")\.?\s*$/.test(r)) return true;
+    try{
+      return conDataRiferimento(rif, () => estraiDimissioniProgrammate(r).some(futura)
+        || futura(aggConsDataEsami(r)) || aggConsEsamiProgrammati(r, null).some(v => futura(v.data)));
+    }catch(e){ return false; }
+  };
+  return extra.split('\n').filter(tieni).join('\n').replace(/\n{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '');
+}
 
 function selezionaPaziente(id){
   const patients = loadPatients();
@@ -11558,6 +11586,7 @@ function selezionaPaziente(id){
       const respiroIeri = manuale ? composeRespiroConNota() : '';
       Object.assign(state.respiro, respiroVuotoDiOggi());
       if(manuale && respiroIeri && manuale.includes(respiroIeri)) state.outputEsameManuale = manuale.replace(respiroIeri, composeRespiroConNota());
+      state.outputExtra = extraDelGiornoNuovo(state.outputExtra, p);
     }
   }
   populateInputsFromState();
@@ -19177,6 +19206,7 @@ try{
       } else {
         Object.assign(state.respiro, respiroVuotoDiOggi());
         state.outputEsameManuale = '';
+        state.outputExtra = extraDelGiornoNuovo(state.outputExtra, p);
       }
     }
     populateInputsFromState();
@@ -27804,7 +27834,9 @@ function leggiDiario(id){
   const testo = getRefertoFor(statoScheda(id, p));
   const k = testo.indexOf('\n\n');
   const eo = k === -1 ? testo : testo.slice(0, k);
-  const extra = k === -1 ? '' : testo.slice(k + 2).replace(/^\s+/, '');
+  let extra = k === -1 ? '' : testo.slice(k + 2).replace(/^\s+/, '');
+  // diario di un giorno precedente: i suoi provvedimenti non valgono più (vedi extraDelGiornoNuovo)
+  if(!p.savedAt || !isOggi(p.savedAt)) extra = extraDelGiornoNuovo(extra, p);
   const d = { eo, ee:'', strum:{}, ordine:[], provv:[] };
   extra.split('\n').forEach(r => {
     let m;
