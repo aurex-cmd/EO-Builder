@@ -24315,6 +24315,11 @@ function editorLettereSvuota(){
   .m-df-v{ display:inline-flex; align-items:center; gap:2px; max-width:100%; padding:5px 4px 5px 12px; border-radius:999px; background:var(--signal-soft); color:var(--ink); font-size:14px; overflow-wrap:anywhere; }
   .m-df-v button{ flex:none; width:24px; height:24px; border:0; background:none; color:var(--ink-dim); font-size:18px; line-height:1; cursor:pointer; }
   #clinical-view .m-df-sugg{ padding:8px 0 0; background:none; }
+  /* chiuso e senza pillole: "+ Da fare" sta dentro la casella dell'esame,
+     in basso a destra, e non aggiunge spazio prima dei pulsanti */
+  #output-card:has(> .row[data-m-eo]) > .m-df:not(.m-df-on):not(:has(.m-df-v)){ position:relative; display:flex; justify-content:flex-end; height:36px; margin:-38px 0 2px; pointer-events:none; }
+  #output-card:has(> .row[data-m-eo]) > .m-df:not(.m-df-on):not(:has(.m-df-v)) .m-df-apri{ pointer-events:auto; padding:6px 12px; }
+  #output-card:has(> .row[data-m-eo]):has(> .m-df:not(.m-df-on):not(:has(.m-df-v))) > #output{ padding-bottom:34px; }
   html[data-m-tema="chiaro"] .m-df-apri{ color:#0b5f5b; }
   html[data-m-tema="chiaro"] .m-df-v{ background:#e3f4f3; color:#1b2633; }
   html[data-m-tema="chiaro"] .m-df-v button{ color:#6b7c90; }
