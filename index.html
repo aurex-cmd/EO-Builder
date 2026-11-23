@@ -24239,6 +24239,14 @@ function editorLettereSvuota(){
   .m-gu-qq{ flex:1; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
   .m-gu-qq i{ font-style:normal; font-size:20px; line-height:1; color:var(--m-muted); margin:0 -1px; }
   .m-gu-qq em{ font-style:normal; font-size:13px; color:var(--m-faint); }
+  /* gli appoggi: "– 4 APP", al centro dello spazio che resta nella riga */
+  .m-gu-app{ flex:1 0 auto; text-align:center; font-size:14px; font-weight:700; letter-spacing:.03em; color:var(--m-ink); white-space:nowrap; }
+  .m-gu-card .m-gu-app{ color:#fff; }
+  /* coi letti pochi, al centro esatto della riga: quelli di C2 e GER in colonna */
+  .m-gu-lr:has(.m-gu-app-c){ position:relative; }
+  .m-gu-app.m-gu-app-c{ position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); }
+  /* nella colonna stretta del PC: a destra, prima del numero dei liberi */
+  .pkd .m-gu-app, .pkd .m-gu-app.m-gu-app-c{ position:static; transform:none; flex:none; margin-left:auto; padding-left:8px; }
   .m-gu-q{ position:relative; width:26px; height:26px; padding:0; border:2px solid color-mix(in srgb, var(--m-ink) 45%, transparent); border-radius:6px; background:var(--m-carta); cursor:pointer; }
   .m-gu-q.m-gu-x{ border-color:var(--m-notte); background:var(--m-notte-box); }
   .m-gu-q.m-gu-x::before, .m-gu-q.m-gu-x::after{ content:""; position:absolute; left:50%; top:50%; width:15px; height:2px; border-radius:1px; background:var(--m-notte); transform:translate(-50%, -50%) rotate(45deg); }
@@ -24315,6 +24323,9 @@ function editorLettereSvuota(){
   /* le righe per aggiungere: prima riga dell'elenco, in teal */
   .m-gu-agg{ width:100%; border:0; font:inherit; text-align:left; cursor:pointer; color:var(--m-teal); }
   .m-gu-agg .m-gu-ic{ background:var(--m-teal-box); color:var(--m-teal); }
+  /* il + a destra, sotto il pollice; il testo resta a sinistra come nelle altre righe */
+  .m-gu-agg .m-gu-ic{ order:2; margin-left:auto; }
+  .m-gu-agg .m-gu-agg-ok{ order:3; }
   .m-gu-agg .m-gu-ic svg{ width:18px; height:18px; }
   .m-gu-agg .m-gu-t{ color:var(--m-teal); font-weight:600; }
   .m-gu-agg input{ flex:1; min-width:0; height:36px; border:0; outline:none; background:none; color:var(--m-ink); font:inherit; font-size:16px; padding:0; }
@@ -26691,6 +26702,9 @@ const GU_REPARTI = [['C1', 'MED C1'], ['C2', 'MED C2'], ['GER', 'GERIATRIA']];
 // che letti ha ogni reparto: i monitorati solo in C1, i bis in C1 e in Geriatria
 const GU_TIPI_REP = { C1:['l', 'b', 'm'], C2:['l'], GER:['l', 'b'] };
 const tipiDi = rep => GU_TIPI_REP[rep] || ['l'];
+// gli appoggi del turno (non sono letti da segnare): quelli della medicina
+// accanto al C2, quelli della geriatria accanto alla GER
+const GU_APPOGGI_REP = ['C2', 'GER'];
 // la notte di guardia va dalle 19:45 alle 8:15 (i passaggi delle consegne)
 const GU_INIZIO = 19 * 60 + 45, GU_FINE = 8 * 60 + 15;
 const inOrarioGuardia = (d = new Date()) => { const m = d.getHours() * 60 + d.getMinutes(); return m >= GU_INIZIO || m < GU_FINE; };
@@ -26974,7 +26988,7 @@ function lettiLiberi(){
   const nuovo = s.turno !== ora;
   const st = { turno:ora, rep:s.rep || {}, x:nuovo ? {} : (s.x || {}), ric:nuovo ? [] : (s.ric || []), impostato:!nuovo };
   // i tipi di letto che un reparto non ha non contano (C2 senza bis né monitorati…)
-  st.rep = Object.fromEntries(Object.entries(st.rep).map(([r, n]) => [r, Object.fromEntries(['l', 'b', 'm'].map(t => [t, tipiDi(r).includes(t) ? (n || {})[t] || 0 : 0]))]));
+  st.rep = Object.fromEntries(Object.entries(st.rep).map(([r, n]) => [r, Object.assign(Object.fromEntries(['l', 'b', 'm'].map(t => [t, tipiDi(r).includes(t) ? (n || {})[t] || 0 : 0])), { a:GU_APPOGGI_REP.includes(r) ? (n || {}).a || 0 : 0 })]));
   if(!st.impostato) return st;
   // riconcilia coi ricoveri del turno
   let ric = []; try{ ric = loadRicoveri(); } catch(e){}
@@ -27012,9 +27026,9 @@ function lettiLiberi(){
 }
 function salvaLetti(st){ scriviGu(GU_LETTI_KEY, { turno:st.turno, rep:st.rep, x:st.x, ric:st.ric }); }
 function cambiaNumeroLetti(rep, tipo, d){
-  if(!tipiDi(rep).includes(tipo)) return;
+  if(!tipiDi(rep).includes(tipo) && !(tipo === 'a' && GU_APPOGGI_REP.includes(rep))) return;
   const st = lettiLiberi();
-  const n = Object.assign({ l:0, b:0, m:0 }, st.rep[rep]);
+  const n = Object.assign({ l:0, b:0, m:0, a:0 }, st.rep[rep]);
   n[tipo] = Math.max(0, Math.min(20, (n[tipo] || 0) + d));
   st.rep = Object.assign({}, st.rep, { [rep]:n });
   // i quadratini che non ci sono più perdono la X
@@ -27050,11 +27064,11 @@ function htmlGuardia(parte, giro){
   const passo = (rep, tipo, n, nome) => `<span class="m-gu-passo"><small>${nome}</small><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="-1" aria-label="Meno">−</button><b>${n}</b><button data-m="gu-pm" data-r="${rep}" data-t="${tipo}" data-d="1" aria-label="Più">+</button></span>`;
   const modifica = guLettiModifica || !st.impostato;
   const righeLetti = GU_REPARTI.map(([rep]) => {
-    const n = Object.assign({ l:0, b:0, m:0 }, st.rep[rep]);
-    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passo(rep, 'b', n.b, '(bis)') : ''}${tipiDi(rep).includes('m') ? passo(rep, 'm', n.m, '[mon]') : ''}</span></div>`;
+    const n = Object.assign({ l:0, b:0, m:0, a:0 }, st.rep[rep]);
+    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passo(rep, 'b', n.b, '(bis)') : ''}${tipiDi(rep).includes('m') ? passo(rep, 'm', n.m, '[mon]') : ''}${GU_APPOGGI_REP.includes(rep) ? passo(rep, 'a', n.a, 'appoggi') : ''}</span></div>`;
     const tot = n.l + n.b + n.m;
     const occ = Object.keys(st.x).filter(q => q.startsWith(rep + '|')).length;
-    return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
+    return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}${n.a ? `<span class="m-gu-app${tot + (n.b ? 1 : 0) + (n.m ? 1 : 0) <= 3 ? ' m-gu-app-c' : ''}">– ${n.a} APP</span>` : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
   }).join('');
   // al PC la guardia si divide: letti liberi e ricoveri dal PS nella colonna
   // di sinistra (sx), le cose da fare nel riquadro grande (dx)
