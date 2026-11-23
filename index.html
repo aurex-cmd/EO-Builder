@@ -24196,6 +24196,8 @@ function editorLettereSvuota(){
   .m-gu-ic{ flex:none; width:30px; height:30px; border-radius:8px; display:grid; place-items:center; background:var(--m-box); color:var(--m-muted); }
   .m-gu-ic svg{ width:17px; height:17px; }
   .m-gu-r[data-tipo="farmaco"] .m-gu-ic{ background:var(--m-rame-box); color:var(--m-rame); }
+  .m-gu-r[data-tipo="lettera"] .m-gu-ic{ background:color-mix(in srgb, #b8860b 15%, transparent); color:#a8790a; }
+  html[data-m-tema="scuro"] .m-gu-r[data-tipo="lettera"] .m-gu-ic{ color:#e2b84a; }
   .m-gu-r[data-tipo="esame"] .m-gu-ic{ background:var(--m-notte-box); color:var(--m-notte); }
   .m-gu-r[data-tipo="visita"] .m-gu-ic{ background:var(--m-teal-box); color:var(--m-teal); }
   .m-gu-r[data-tipo="telefono"] .m-gu-ic{ background:color-mix(in srgb, #7a5bd0 14%, transparent); color:#7a5bd0; }
@@ -26842,7 +26844,8 @@ function leggiVoceGuardia(testo){
   else if((m = t.match(new RegExp('[\\s,;:–-]+(?:(?:per|al|alla|allo|del|della|dello|nel|nella|in|a)\\s+)?(?:(?:il|la|letto)\\s+)*' + L + '[\\s.]*$', 'i')))){ letto = fmt(m); t = t.slice(0, m.index); }
   t = t.replace(/[\s,;:–-]+$/, '');
   const s = t.toLowerCase();
-  const tipo = /\b(chiam\w*|richiam\w*|telefon\w*|sentire|avvis\w*)\b/.test(s) ? 'telefono'
+  const tipo = /\b(letter[ae])\b/.test(s) ? 'lettera'
+    : /\b(chiam\w*|richiam\w*|telefon\w*|sentire|avvis\w*)\b/.test(s) ? 'telefono'
     : /\b(visit\w*|consulenz\w*|vedi(?:\s+(?:il|la|lo)?\s*paziente)?|valut\w*|rivalut\w*)\b/.test(s) && !/\b(emocrom\w*|ega|tc|tac|rx|ecg|troponin\w*|esami)\b/.test(s) ? 'visita'
     : /\b(emocrom\w*|ega|emogas\w*|tc|tac|rx|rmn?|eco\w*|ecg|esam\w*|emocoltur\w*|urinocoltur\w*|coltur\w*|pcr|troponin\w*|hb|potassi\w*|sodi\w*|kaliemi\w*|inr|glicemi\w*|lab\w*|refert\w*|stick|dtx|ammoni\w*|lattat\w*|bnp|d-?dimero|procalciton\w*|pct)\b/.test(s) ? 'esame'
     : /\b(da(?:i|re|gli)|fa(?:i|gli)|somministr\w*|trittico|talofen|promazina|entumin|tavor|lorazepam|en|delorazepam|aloperidolo|serenase|haldol|lasix|furosemide|paracetamolo|tachipirina|perfalgan|morfina|eparina|clexane|insulina|bolo|flebo\w*|fisiologica|kcl|toradol|ketorolac|quetiapina|seroquel|diazepam|valium|midazolam|ipnovel|pantoprazolo|ondansetron|plasil|metoclopramide|bentelan|solumedrol|antibiotic\w*|ossigeno|o2|terapia|mg)\b/.test(s) ? 'farmaco'
@@ -26858,6 +26861,9 @@ const GU_TIPI = {
     ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L5 18a2 2 0 001.8 3h10.4a2 2 0 001.8-3L14 9.5V3"/><path d="M7.5 15h9"/></svg>' },
   telefono:{ nome:'Telefonata', ok:'Chiamato', fatto:'chiamato', da:'da chiamare',
     ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 005.1 5.1l1.4-2.3L19 14.5V18a2 2 0 01-2 2A14 14 0 013 6a2 2 0 012-2z"/></svg>' },
+  // lettere da scrivere ("1.1 lettera", "lettera di dimissione 13.2"): il foglio con la firma
+  lettera:{ nome:'Lettera', ok:'Scritta', fatto:'scritta', da:'da scrivere',
+    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4"/><path d="M9 11h6M9 14h4"/><path d="M9 18c1-1.2 1.8-1.2 2.4 0s1.4 1.2 2.6-.4"/></svg>' },
   altro:{ nome:'Da fare', ok:'Fatto', fatto:'fatto', da:'da fare', ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/></svg>' }
 };
 // le voci: le fatte in un turno passato non servono più; le non fatte restano
