@@ -25299,7 +25299,11 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
       radial-gradient(70% 40% at 0% 100%, var(--m-atm-1), transparent 70%),
       radial-gradient(60% 42% at 100% 85%, var(--m-atm-2), transparent 70%),
       radial-gradient(55% 34% at 95% 35%, var(--m-atm-3), transparent 72%),
-      radial-gradient(45% 24% at 8% 72%, var(--m-atm-4), transparent 70%); background-origin:content-box; background-clip:content-box; padding:30vh 0; }
+      radial-gradient(45% 24% at 8% 72%, var(--m-atm-4), transparent 70%),
+      linear-gradient(var(--m-fondo), var(--m-fondo)); background-origin:content-box, content-box, content-box, content-box, border-box; background-clip:content-box, content-box, content-box, content-box, border-box; padding:30vh 0; }
+  /* lo strato è pieno (il grigio, o il blu notte in scuro, sotto le macchie):
+     Safari su iPhone colora la barra di stato in alto con quello che trova
+     fisso in cima alla pagina, e con lo strato trasparente la lasciava bianca */
   html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)):has(.m-bar.m-home){ scrollbar-gutter:auto; }
   /* la barra in alto lascia trasparire le macchie, sfocando quel che scorre sotto */
   html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)) .m-bar:not(.m-home){ background:color-mix(in srgb, var(--m-fondo) 78%, transparent); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
