@@ -15190,6 +15190,7 @@ function aggiornaDiarioSoloExtra(patientId, nuovoExtra){
   const patients = loadPatients();
   const p = patients[patientId];
   if(!p) return;
+  archiviaGiornoSeNecessario(patientId, p);
   p.state.outputExtra = nuovoExtra;
   p.savedAt = Date.now();
   // scrivere qui è un vero aggiornamento del diario (non un tocco ai soli
@@ -15359,6 +15360,9 @@ function aggiornaDiarioTesto(patientId, nuovoValore){
   const patients = loadPatients();
   const p = patients[patientId];
   if(!p) return;
+  // il diario di un giorno precedente si archivia prima di essere
+  // sovrascritto (i suoi provvedimenti servono a "Ieri" e agli antibiotici)
+  archiviaGiornoSeNecessario(patientId, p);
 
   const autoText = composeAutoTextFor(p.state);
   const sepIdx = nuovoValore.indexOf('\n\n');
@@ -24331,6 +24335,18 @@ function editorLettereSvuota(){
   .m-gu-nota-ed{ display:flex; flex-direction:column; gap:8px; padding:0 12px 12px; background:var(--m-carta); }
   .m-gu-sugg + .m-gu-r{ border-top:1px solid var(--m-line); }
   .m-gu-sugg-b{ flex:none; height:32px; padding:0 13px; border:0; border-radius:999px; background:var(--m-rame-box); color:var(--m-rame); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  /* "Ieri" sotto i provvedimenti del diario: grigio, chiuso è una parola */
+  .m-ieri{ margin:2px 0 6px; color:var(--m-faint); }
+  .m-ieri-b{ display:inline-flex; align-items:center; gap:3px; border:0; background:none; padding:4px 0; font:inherit; font-size:13.5px; font-weight:600; color:var(--m-faint); cursor:pointer; }
+  .m-ieri-b svg{ width:14px; height:14px; transition:transform .2s; }
+  .m-ieri-on .m-ieri-b svg{ transform:rotate(90deg); }
+  .m-ieri-l{ display:none; padding:2px 0 4px; }
+  .m-ieri-on .m-ieri-l{ display:block; }
+  .m-ieri-r{ display:flex; align-items:flex-start; gap:8px; font-family:var(--m-scheda); font-size:14px; line-height:1.5; }
+  .m-ieri-r span{ flex:1; min-width:0; padding:3px 0; overflow-wrap:anywhere; }
+  .m-ieri-r button, .m-ieri-r i{ flex:none; width:28px; height:28px; display:grid; place-items:center; border:0; border-radius:8px; background:none; color:var(--m-faint); font-size:19px; font-style:normal; line-height:1; cursor:pointer; }
+  .m-ieri-r i{ font-size:14px; cursor:default; }
+  @media (hover:hover){ .m-ieri-r button:hover{ background:var(--m-sec); color:var(--m-ink); } }
   /* Da fare in fondo all'esame obiettivo (EO Pocket): una riga, chiusa di default */
   .m-df{ display:none; margin:2px 0 12px; }
   #output-card:has(> .row[data-m-eo]) > .m-df{ display:block; }
@@ -27975,6 +27991,37 @@ function rigaStrum(n){
   return riga('s:' + n, n, formattaStrumentale(D.strum[n] || ''), 'Incolla o scrivi il referto',
     SENZA_VIRGOLETTE.test(n) ? 'Si riporta così come lo scrivi.' : 'Un referto su più righe va su una riga sola.');
 }
+// "Ieri": i provvedimenti dell'ultimo diario di un giorno precedente, in
+// grigio sotto quelli di oggi (che ripartono vuoti, vedi extraDelGiornoNuovo).
+// Chiuso è una parola sola; toccato si apre l'elenco, e il + di una riga la
+// riporta tra i provvedimenti di oggi
+function provvPrecedenti(id){
+  const p = loadPatients()[id]; if(!p) return null;
+  const oggi = chiaveGiorno(Date.now());
+  let testo = '', giorno = '';
+  if(p.savedAt && !isOggi(p.savedAt)){ testo = getRefertoFor(p.state); giorno = giornoDiarioScritto(p); }
+  else { const k = Object.keys(p.storico || {}).filter(x => x < oggi).sort().pop(); if(!k) return null; testo = p.storico[k] || ''; giorno = k; }
+  const i = testo.indexOf('\n\n'); if(i === -1) return null;
+  const righe = testo.slice(i + 2).split('\n').filter(r => r.trim() && !RE_EE.test(r) && !RE_STRUM.test(r) && !RE_ALTRO.test(r))
+    .map(r => r.replace(/^\s*[-–•*]\s*/, '').trim()).filter(Boolean);
+  if(!righe.length) return null;
+  const n = giorniTra(giorno, oggi);
+  const d = new Date(giorno + 'T12:00:00');
+  const nome = n === 1 ? 'Ieri' : n < 7 ? NOMI_GIORNI_SETTIMANA[d.getDay()].replace(/^./, c => c.toUpperCase()) : `${d.getDate()}/${d.getMonth() + 1}`;
+  return { nome, righe };
+}
+const normaProvv = r => r.replace(/^\s*[-–•*]\s*/, '').replace(/[.;\s]+$/, '').replace(/\s+/g, ' ').toLowerCase();
+function htmlIeri(aperto){
+  const pr = M.id && provvPrecedenti(M.id); if(!pr) return '';
+  const oggi = new Set((D && D.provv || '').split('\n').map(normaProvv).filter(Boolean));
+  return `<div class="m-ieri${aperto ? ' m-ieri-on' : ''}" id="m-ieri"><button type="button" class="m-ieri-b" data-m="ieri" aria-expanded="${aperto ? 'true' : 'false'}">${esc(pr.nome)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="m-ieri-l">${pr.righe.map((r, k) => { const gia = oggi.has(normaProvv(r)); return `<div class="m-ieri-r"><span>- ${esc(r)}</span>${gia ? '<i aria-label="Già riportato">✓</i>' : `<button type="button" data-m="ieri-riporta" data-k="${k}" aria-label="Riporta a oggi">+</button>`}</div>`; }).join('')}</div></div>`;
+}
+function disegnaIeri(){
+  const box = $m('#m-ieri'); if(!box) return;
+  const tmp = document.createElement('div'); tmp.innerHTML = htmlIeri(box.classList.contains('m-ieri-on'));
+  if(tmp.firstElementChild) box.replaceWith(tmp.firstElementChild); else box.remove();
+}
 function disegnaScheda(){
   const i = infoLetto(M.letto);
   $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span></div>
@@ -27994,7 +28041,8 @@ function disegnaScheda(){
     ${presenti.map(rigaStrum).join('')}
     <div class="m-aggiungi m-chiuso">${htmlAggiungi(altri)}</div>
     <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
-    <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>`;
+    <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>
+    ${htmlIeri(false)}`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
   const provv = $m('#m-provv');
   provv.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, provv.value).length);
@@ -28536,6 +28584,18 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'esame-chiudi'){
     const box = el.closest('.m-aggiungi');
     clearTimeout(box._t); box.classList.remove('m-apre'); box.classList.add('m-chiuso');
+  }
+  else if(a === 'ieri'){
+    const box = el.closest('.m-ieri'), on = !box.classList.contains('m-ieri-on');
+    box.classList.toggle('m-ieri-on', on); el.setAttribute('aria-expanded', on ? 'true' : 'false');
+    if(on) setTimeout(() => box.scrollIntoView({ block:'nearest', behavior:'smooth' }), 60);
+  }
+  else if(a === 'ieri-riporta'){
+    const pr = provvPrecedenti(M.id), r = pr && pr.righe[+el.dataset.k], t = $m('#m-provv'); if(!r || !t) return;
+    const v = t.value.replace(/\n?-?\s*$/, '');
+    t.value = (v.trim() ? v + '\n' : '') + '- ' + r;
+    t.dispatchEvent(new Event('input', { bubbles:true }));
+    disegnaIeri();
   }
   else if(a === 'chiudi-ric'){
     const box = $m('#m-aiuti'), r = (box._ric || [])[+el.dataset.r], c = el.closest('.m-aiuto');
