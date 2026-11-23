@@ -24317,9 +24317,9 @@ function editorLettereSvuota(){
   #clinical-view .m-df-sugg{ padding:8px 0 0; background:none; }
   /* chiuso e senza pillole: "+ Da fare" sta dentro la casella dell'esame,
      in basso a destra, e non aggiunge spazio prima dei pulsanti */
-  #output-card:has(> .row[data-m-eo]) > .m-df:not(.m-df-on):not(:has(.m-df-v)){ position:relative; display:flex; justify-content:flex-end; height:36px; margin:-38px 0 2px; pointer-events:none; }
-  #output-card:has(> .row[data-m-eo]) > .m-df:not(.m-df-on):not(:has(.m-df-v)) .m-df-apri{ pointer-events:auto; padding:6px 12px; }
-  #output-card:has(> .row[data-m-eo]):has(> .m-df:not(.m-df-on):not(:has(.m-df-v))) > #output{ padding-bottom:34px; }
+  #output-card.m-df-chiuso:has(> .row[data-m-eo]) > .m-df{ position:relative; display:flex; justify-content:flex-end; height:36px; margin:-38px 0 2px; pointer-events:none; }
+  #output-card.m-df-chiuso:has(> .row[data-m-eo]) > .m-df .m-df-apri{ pointer-events:auto; padding:6px 12px; }
+  #output-card.m-df-chiuso:has(> .row[data-m-eo]) > #output{ padding-bottom:34px; }
   html[data-m-tema="chiaro"] .m-df-apri{ color:#0b5f5b; }
   html[data-m-tema="chiaro"] .m-df-v{ background:#e3f4f3; color:#1b2633; }
   html[data-m-tema="chiaro"] .m-df-v button{ color:#6b7c90; }
@@ -27747,6 +27747,7 @@ function dfTogli(k){
 function dfDisegna(){
   const box = document.getElementById('m-df'); if(!box) return;
   box.classList.toggle('m-df-on', dfAperto);
+  box.parentElement.classList.toggle('m-df-chiuso', !dfAperto && !dfAggiunte.length);
   box.querySelector('.m-df-lista').innerHTML = dfAggiunte.map((t, k) => `<span class="m-df-v">${esc(t)}<button type="button" data-df="togli" data-k="${k}" aria-label="Togli">×</button></span>`).join('');
 }
 function dfAzzera(){
@@ -28546,6 +28547,7 @@ if(rigaEo && !UI_MP){
     <div class="m-gu-sugg m-df-sugg" id="m-df-sugg" hidden></div>
   </div>`);
   const df = document.getElementById('m-df');
+  dfDisegna();
   df.addEventListener('pointerdown', e => { if(e.target.closest('[data-df="aggiungi"], [data-df="togli"]')) e.preventDefault(); });
   df.addEventListener('click', e => {
     const b = e.target.closest('[data-df]'); if(!b) return;
