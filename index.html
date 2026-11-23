@@ -25014,6 +25014,8 @@ function editorLettereSvuota(){
      tondi si schiacciavano e all'inizio sporgevano oltre il bordo del letto */
   :is(.m-tl, .m-bt)::before{ content:""; position:absolute; inset:0; border-radius:inherit; background:rgba(217,83,79,.32); clip-path:inset(0 100% 0 0); pointer-events:none; }
   :is(.m-tl, .m-bt).m-premuto::before{ clip-path:inset(0 0 0 0); transition:clip-path .55s linear .1s; }
+  /* un letto segnato vuoto: la pressione lunga lo fa contare di nuovo, quindi niente rosso: verde acqua */
+  .m-tl.m-vuoto::before{ background:color-mix(in srgb, var(--m-teal) 30%, transparent); }
   :is(.m-tl, .m-bt).m-elimina{ background:var(--m-rosso) !important; color:#fff !important; animation:m-scelto .35s var(--m-molla); }
   :is(.m-tl, .m-bt).m-elimina *{ color:#fff !important; }
   :is(.m-tl, .m-bt).m-elimina::before, :is(.m-tl, .m-bt).m-elimina :is(.m-pal, .m-lr-ok, .m-togli, .m-bt-pp){ display:none; }
