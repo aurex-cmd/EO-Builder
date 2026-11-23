@@ -24213,7 +24213,7 @@ function editorLettereSvuota(){
   .m-gu-q.m-gu-verde{ border-color:#2e9d57; background:#2e9d57; }
   .m-gu-q.m-gu-arancione{ border-color:#e0832b; background:#e0832b; }
   .m-gu-ar{ display:flex; align-items:center; gap:10px; padding:10px 6px 10px 12px; background:var(--m-carta); }
-  .m-gu-ar + .m-gu-ar{ border-top:1px solid var(--m-line); }
+  .m-gu-ar + .m-gu-ar, .m-gu-nota-ed + .m-gu-ar{ border-top:1px solid var(--m-line); }
   .m-gu-chi{ flex:none; display:grid; place-items:center; width:46px; height:26px; border-radius:7px; font-size:12px; font-weight:700; color:#fff; }
   .m-gu-chi.m-gu-verde{ background:#2e9d57; } .m-gu-chi.m-gu-arancione{ background:#e0832b; }
   .m-gu-form{ border:1px solid var(--m-line-forte); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--m-carta); display:flex; flex-direction:column; gap:10px; }
@@ -24290,6 +24290,14 @@ function editorLettereSvuota(){
   /* suggerimenti dei farmaci sotto il campo, in rame come le voci farmaco */
   .m-gu-sugg{ display:flex; gap:6px; padding:0 12px 10px 52px; overflow-x:auto; scrollbar-width:none; background:var(--m-carta); }
   .m-gu-sugg[hidden]{ display:none; }
+  .m-gu-sugg-f{ padding:0; background:none; flex-wrap:wrap; }
+  /* appunti dal PS: nel modulo e sotto il ricovero (toccato) */
+  .m-gu-note{ display:block; width:100%; box-sizing:border-box; min-height:76px; resize:none; overflow:hidden; padding:10px 12px; border:1px solid var(--m-line); border-radius:12px; background:var(--m-box); color:var(--m-ink); font:inherit; font-size:16px; line-height:1.4; outline:none; }
+  .m-gu-note:focus{ border-color:var(--m-teal); background:var(--m-carta); }
+  .m-gu-ar-note{ display:block; margin-top:4px; font-size:14px; line-height:1.35; color:var(--m-ink-2); white-space:pre-wrap; overflow-wrap:anywhere; }
+  .m-gu-ar-vuota{ color:var(--m-teal); font-weight:600; font-size:13px; }
+  .m-gu-ar .m-gu-t{ cursor:pointer; }
+  .m-gu-nota-ed{ display:flex; flex-direction:column; gap:8px; padding:0 12px 12px; background:var(--m-carta); }
   .m-gu-sugg + .m-gu-r{ border-top:1px solid var(--m-line); }
   .m-gu-sugg-b{ flex:none; height:32px; padding:0 13px; border:0; border-radius:999px; background:var(--m-rame-box); color:var(--m-rame); font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
   .m-gu-lista > :is(.m-gu-form, .m-gu-agg) + .m-gu-ar{ border-top:1px solid var(--m-line); }
@@ -26652,48 +26660,73 @@ const leggiGu = k => { try{ const v = JSON.parse(localStorage.getItem(k)); retur
 const scriviGu = (k, v) => setLocalAndCloud(k, JSON.stringify(v));
 
 // "13.1 trittico per agitazione" → letto 13.1 e il resto; il tipo dalle parole
+// guardia: suggerimenti mentre si scrive (si tocca e si completa).
+// Nel campo delle cose da fare i farmaci; negli appunti del PS le diagnosi e
+// le frasi tipiche, più i farmaci. Si completa anche più di una parola
+// («edema pol» → «edema polmonare acuto»); i più scelti salgono in cima, solo
+// su questo dispositivo. Ogni campo dice la sua lista (data-sugg) e dove
+// mostrare i suggerimenti (data-sugg-box)
+const GU_FARMACI = ['Trittico', 'Talofen', 'Perfalgan', 'Artrosilene', 'Aloperidolo', 'Plasil', 'Morfina', 'Zofran', 'Lasix', 'Urbason', 'Tachipirina', 'Paracetamolo', 'Toradol', 'Ketorolac', 'Contramal', 'Tramadolo', 'Oki', 'Buscopan', 'Oxynorm', 'Targin', 'Fentanyl', 'Tavor', 'Lorazepam', 'En', 'Delorazepam', 'Valium', 'Diazepam', 'Midazolam', 'Ipnovel', 'Xanax', 'Alprazolam', 'Minias', 'Lormetazepam', 'Serenase', 'Haldol', 'Entumin', 'Promazina', 'Quetiapina', 'Seroquel', 'Risperdal', 'Risperidone', 'Largactil', 'Clorpromazina', 'Dintoina', 'Furosemide', 'Bentelan', 'Betametasone', 'Solumedrol', 'Metilprednisolone', 'Deltacortene', 'Prednisone', 'Idrocortisone', 'Flebocortid', 'Ondansetron', 'Metoclopramide', 'Pantoprazolo', 'Pantorc', 'Omeprazolo', 'Lansoprazolo', 'Lansox', 'Ranitidina', 'Clexane', 'Enoxaparina', 'Eparina', 'Fondaparinux', 'Arixtra', 'Coumadin', 'Vitamina K', 'Konakion', 'Insulina', 'Humalog', 'Novorapid', 'Lantus', 'Glucosata', 'Fisiologica', 'Ringer', 'Potassio cloruro', 'KCl', 'Magnesio solfato', 'Calcio gluconato', 'Bicarbonato', 'Albumina', 'Ceftriaxone', 'Rocefin', 'Augmentin', 'Amoxicillina', 'Tazocin', 'Piperacillina', 'Meropenem', 'Levofloxacina', 'Tavanic', 'Ciprofloxacina', 'Ciproxin', 'Vancomicina', 'Teicoplanina', 'Targosid', 'Metronidazolo', 'Flagyl', 'Fluconazolo', 'Bactrim', 'Claritromicina', 'Klacid', 'Azitromicina', 'Cardioaspirina', 'Clopidogrel', 'Plavix', 'Lanoxin', 'Digossina', 'Cordarone', 'Amiodarone', 'Nitroglicerina', 'Trinitrina', 'Catapresan', 'Clonidina', 'Lopresor', 'Metoprololo', 'Bisoprololo', 'Congescor', 'Ramipril', 'Amlodipina', 'Norvasc', 'Adalat', 'Nifedipina', 'Isoptin', 'Verapamil', 'Adenosina', 'Atropina', 'Adrenalina', 'Noradrenalina', 'Naloxone', 'Narcan', 'Flumazenil', 'Anexate', 'Ventolin', 'Salbutamolo', 'Atem', 'Ipratropio', 'Broncovaleas', 'Clenil', 'Beclometasone', 'Aerosol', 'Lattulosio', 'Duphalac', 'Movicol', 'Microclisma', 'Pursennid', 'Laevolac', 'Levetiracetam', 'Keppra', 'Depakin', 'Valproato', 'Ossigeno'];
+const GU_NOTE_PS = ['insufficienza respiratoria', 'insufficienza respiratoria acuta', 'insufficienza respiratoria ipossiemica', 'insufficienza respiratoria ipercapnica', 'edema polmonare acuto', 'scompenso cardiaco', 'scompenso cardiaco acuto', 'polmonite', 'polmonite ab ingestis', 'broncopolmonite', 'BPCO riacutizzata', 'versamento pleurico', 'embolia polmonare', 'dispnea', 'desaturazione', 'tosse', 'febbre', 'iperpiressia', 'caduto a casa', 'caduta a casa', 'caduta accidentale', 'trovato a terra', 'rimasto a terra per ore', 'crush syndrome', 'rabdomiolisi', 'trauma cranico', 'frattura di femore', 'frattura di bacino', 'frattura vertebrale', 'ematoma', 'ferita lacero-contusa', 'sincope', 'lipotimia', 'stato confusionale', 'delirium', 'agitazione psicomotoria', 'soporoso', 'sopore', 'disorientato', 'vigile', 'collaborante', 'non collaborante', 'decadimento cognitivo', 'demenza', 'ictus ischemico', 'TIA', 'emiparesi', 'afasia', 'disartria', 'crisi epilettica', 'cefalea', 'disidratazione', 'insufficienza renale acuta', 'insufficienza renale cronica', 'iperkaliemia', 'ipokaliemia', 'iponatriemia', 'ipernatriemia', 'ipoglicemia', 'iperglicemia', 'scompenso glicemico', 'chetoacidosi', 'sepsi', 'shock settico', 'infezione delle vie urinarie', 'urosepsi', 'ritenzione urinaria', 'macroematuria', 'anemia', 'anemizzazione', 'emorragia digestiva', 'melena', 'ematemesi', 'rettorragia', 'dolore toracico', 'dolore addominale', 'vomito', 'diarrea', 'alvo chiuso', 'subocclusione intestinale', 'occlusione intestinale', 'colecistite', 'colangite', 'pancreatite', 'fibrillazione atriale', 'fibrillazione atriale ad alta risposta', 'bradicardia', 'tachicardia', 'ipotensione', 'crisi ipertensiva', 'NSTEMI', 'sindrome coronarica acuta', 'trombosi venosa profonda', 'piaga da decubito', 'lesione da pressione', 'edemi declivi', 'astenia', 'inappetenza', 'calo ponderale', 'allettato', 'non deambulante', 'deambulante con ausilio', 'vive solo', 'vive con la moglie', 'vive con il marito', 'vive con la figlia', 'vive con il figlio', 'badante', 'RSA', 'casa di riposo', 'in ossigeno', 'ossigenoterapia', 'occhialini', 'ventimask', 'reservoir', 'alti flussi', 'NIV', 'CPAP', 'saturazione', 'EGA', 'lattati', 'emocolture', 'urinocoltura', 'PCR elevata', 'procalcitonina', 'troponina', 'troponina negativa', 'BNP', 'D-dimero', 'creatinina', 'emoglobina', 'Rx torace', 'TC encefalo', 'TC encefalo negativa', 'TC torace', 'TC addome', 'angio-TC', 'ecografia', 'ECG', 'catetere vescicale', 'SNG', 'accesso venoso', 'terapia anticoagulante', 'anticoagulato', 'TAO', 'DOAC', 'antiaggregato', 'allergie', 'nessuna allergia nota', 'già somministrato', 'ha eseguito', 'in attesa di', 'DNR', 'cure palliative', 'familiari informati'];
+const GU_FARM_USO_KEY = 'eo_minimal_guardia_farmaci_uso_v1';
+const senzaAccenti = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const listaSugg = tipo => tipo === 'ps' ? GU_NOTE_PS.concat(GU_FARMACI) : GU_FARMACI;
+// le ultime parole prima del cursore che un suggerimento può completare
+function codaSugg(inp){
+  const prima = inp.value.slice(0, inp.selectionEnd ?? inp.value.length);
+  const m = prima.match(/(^|[\s,;:(/])([A-Za-zÀ-ÿ'-]{2,})$/); if(!m) return null;
+  const lista = listaSugg(inp.dataset.sugg);
+  // dalla coda più lunga (fino a 4 parole) alla sola ultima parola
+  const parole = [...prima.matchAll(/[A-Za-zÀ-ÿ0-9'-]+/g)];
+  for(let k = Math.min(4, parole.length); k >= 1; k--){
+    const da = parole[parole.length - k].index, coda = senzaAccenti(prima.slice(da));
+    if(k > 1 && /[,;:.()\n]/.test(coda)) continue;
+    const trovati = lista.filter(f => { const n = senzaAccenti(f); return n.startsWith(coda) && n !== coda; });
+    if(trovati.length) return { da, trovati };
+  }
+  return null;
+}
+function suggerisci(inp){
+  const box = inp && document.getElementById(inp.dataset.suggBox); if(!box) return;
+  const c = codaSugg(inp);
+  let uso = {}; try{ uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; }catch(e){}
+  const trovati = c ? c.trovati.sort((a, b) => (uso[b] || 0) - (uso[a] || 0) || a.length - b.length).slice(0, 4) : [];
+  box.hidden = !trovati.length;
+  box.innerHTML = trovati.map(f => `<button type="button" class="m-gu-sugg-b" data-sugg-per="${inp.id}" data-farmaco="${esc(f)}">${esc(f)}</button>`).join('');
+}
+function completaSugg(inp, nome){
+  const c = codaSugg(inp); if(!c) return;
+  const fine = inp.selectionEnd ?? inp.value.length;
+  const prima = inp.value.slice(0, c.da), dopo = inp.value.slice(fine);
+  const nuovo = prima + nome + (dopo.startsWith(' ') ? '' : ' ');
+  inp.value = nuovo + dopo; inp.focus(); inp.setSelectionRange(nuovo.length, nuovo.length);
+  inp._spazioAuto = nuovo.endsWith(' ') && !dopo.startsWith(' ') ? nuovo.length : -1;
+  try{ const uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; uso[nome] = (uso[nome] || 0) + 1; localStorage.setItem(GU_FARM_USO_KEY, JSON.stringify(uso)); }catch(e){}
+  inp.dispatchEvent(new Event('input', { bubbles:true }));
+}
+document.addEventListener('input', e => { if(e.target && e.target.dataset && e.target.dataset.suggBox) suggerisci(e.target); });
+// come le tastiere del telefono: la punteggiatura subito dopo un suggerimento
+// toglie lo spazio messo da questo («respiratoria, edema», non «respiratoria , edema»)
+document.addEventListener('beforeinput', e => {
+  const t = e.target; if(!t || !t.dataset || !t.dataset.suggBox) return;
+  const pos = t.selectionStart, auto = t._spazioAuto; t._spazioAuto = -1;
+  if(auto !== pos || t.selectionEnd !== pos || !/^[,.;:!?)]$/.test(e.data || '') || t.value[pos - 1] !== ' ') return;
+  e.preventDefault();
+  t.value = t.value.slice(0, pos - 1) + e.data + t.value.slice(pos); t.setSelectionRange(pos, pos);
+  t.dispatchEvent(new Event('input', { bubbles:true }));
+});
+// il tocco sul suggerimento non deve chiudere la tastiera
+document.addEventListener('pointerdown', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b) e.preventDefault(); }, true);
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b){ e.preventDefault(); e.stopPropagation(); const inp = document.getElementById(b.dataset.suggPer); if(inp) completaSugg(inp, b.dataset.farmaco); } }, true);
+document.addEventListener('keydown', e => {
+  const inp = e.target; if(!inp || !inp.dataset || !inp.dataset.suggBox || e.shiftKey || (e.key !== 'Tab' && e.key !== 'ArrowRight')) return;
+  const b = document.querySelector(`#${inp.dataset.suggBox}:not([hidden]) .m-gu-sugg-b`); if(!b) return;
+  if(e.key === 'ArrowRight' && inp.selectionEnd !== inp.value.length) return;
+  e.preventDefault(); completaSugg(inp, b.dataset.farmaco);
+}, true);
 // il letto può stare all'inizio o alla fine ("trittico 19.2", "chiamare
 // Cittadella per 16.2"); va in grassetto davanti. Un letto ha il punto o la P
 // (13.1, 15 P), così "lasix 20" non diventa il letto 20
-// guardia: i farmaci per i suggerimenti mentre si scrive (si tocca e si
-// completa la parola); i più scelti salgono in cima, solo su questo dispositivo
-const GU_FARMACI = ['Trittico', 'Talofen', 'Perfalgan', 'Artrosilene', 'Aloperidolo', 'Plasil', 'Morfina', 'Zofran', 'Lasix', 'Urbason', 'Tachipirina', 'Paracetamolo', 'Toradol', 'Ketorolac', 'Contramal', 'Tramadolo', 'Oki', 'Buscopan', 'Oxynorm', 'Targin', 'Fentanyl', 'Tavor', 'Lorazepam', 'En', 'Delorazepam', 'Valium', 'Diazepam', 'Midazolam', 'Ipnovel', 'Xanax', 'Alprazolam', 'Minias', 'Lormetazepam', 'Serenase', 'Haldol', 'Entumin', 'Promazina', 'Quetiapina', 'Seroquel', 'Risperdal', 'Risperidone', 'Largactil', 'Clorpromazina', 'Dintoina', 'Furosemide', 'Bentelan', 'Betametasone', 'Solumedrol', 'Metilprednisolone', 'Deltacortene', 'Prednisone', 'Idrocortisone', 'Flebocortid', 'Ondansetron', 'Metoclopramide', 'Pantoprazolo', 'Pantorc', 'Omeprazolo', 'Lansoprazolo', 'Lansox', 'Ranitidina', 'Clexane', 'Enoxaparina', 'Eparina', 'Fondaparinux', 'Arixtra', 'Coumadin', 'Vitamina K', 'Konakion', 'Insulina', 'Humalog', 'Novorapid', 'Lantus', 'Glucosata', 'Fisiologica', 'Ringer', 'Potassio cloruro', 'KCl', 'Magnesio solfato', 'Calcio gluconato', 'Bicarbonato', 'Albumina', 'Ceftriaxone', 'Rocefin', 'Augmentin', 'Amoxicillina', 'Tazocin', 'Piperacillina', 'Meropenem', 'Levofloxacina', 'Tavanic', 'Ciprofloxacina', 'Ciproxin', 'Vancomicina', 'Teicoplanina', 'Targosid', 'Metronidazolo', 'Flagyl', 'Fluconazolo', 'Bactrim', 'Claritromicina', 'Klacid', 'Azitromicina', 'Cardioaspirina', 'Clopidogrel', 'Plavix', 'Lanoxin', 'Digossina', 'Cordarone', 'Amiodarone', 'Nitroglicerina', 'Trinitrina', 'Catapresan', 'Clonidina', 'Lopresor', 'Metoprololo', 'Bisoprololo', 'Congescor', 'Ramipril', 'Amlodipina', 'Norvasc', 'Adalat', 'Nifedipina', 'Isoptin', 'Verapamil', 'Adenosina', 'Atropina', 'Adrenalina', 'Noradrenalina', 'Naloxone', 'Narcan', 'Flumazenil', 'Anexate', 'Ventolin', 'Salbutamolo', 'Atem', 'Ipratropio', 'Broncovaleas', 'Clenil', 'Beclometasone', 'Aerosol', 'Lattulosio', 'Duphalac', 'Movicol', 'Microclisma', 'Pursennid', 'Laevolac', 'Levetiracetam', 'Keppra', 'Depakin', 'Valproato', 'Ossigeno'];
-const GU_FARM_USO_KEY = 'eo_minimal_guardia_farmaci_uso_v1';
-const senzaAccenti = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-function suggerisciFarmaci(){
-  const inp = $m('#m-gu-in'), box = $m('#m-gu-sugg'); if(!inp || !box) return;
-  const prima = inp.value.slice(0, inp.selectionEnd ?? inp.value.length);
-  const m = prima.match(/(^|[\s,;:(])([A-Za-zÀ-ÿ]{2,})$/);
-  let trovati = [];
-  if(m){
-    const p = senzaAccenti(m[2]);
-    let uso = {}; try{ uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; }catch(e){}
-    trovati = GU_FARMACI.filter(f => senzaAccenti(f).startsWith(p) && senzaAccenti(f) !== p)
-      .sort((a, b) => (uso[b] || 0) - (uso[a] || 0) || a.length - b.length).slice(0, 4);
-  }
-  box.hidden = !trovati.length;
-  box.innerHTML = trovati.map(f => `<button type="button" class="m-gu-sugg-b" data-farmaco="${f}">${f}</button>`).join('');
-}
-function completaFarmaco(nome){
-  const inp = $m('#m-gu-in'); if(!inp) return;
-  const fine = inp.selectionEnd ?? inp.value.length;
-  const prima = inp.value.slice(0, fine).replace(/[A-Za-zÀ-ÿ]+$/, ''), dopo = inp.value.slice(fine);
-  const nuovo = prima + nome + (dopo.startsWith(' ') ? '' : ' ');
-  inp.value = nuovo + dopo; inp.focus(); inp.setSelectionRange(nuovo.length, nuovo.length);
-  try{ const uso = JSON.parse(localStorage.getItem(GU_FARM_USO_KEY) || '{}') || {}; uso[nome] = (uso[nome] || 0) + 1; localStorage.setItem(GU_FARM_USO_KEY, JSON.stringify(uso)); }catch(e){}
-  suggerisciFarmaci();
-}
-document.addEventListener('input', e => { if(e.target && e.target.id === 'm-gu-in') suggerisciFarmaci(); });
-// il tocco sul suggerimento non deve chiudere la tastiera
-document.addEventListener('pointerdown', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b) e.preventDefault(); }, true);
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.m-gu-sugg-b'); if(b){ e.preventDefault(); e.stopPropagation(); completaFarmaco(b.dataset.farmaco); } }, true);
-document.addEventListener('keydown', e => {
-  if(e.target && e.target.id === 'm-gu-in' && (e.key === 'Tab' || e.key === 'ArrowRight') && !e.shiftKey){
-    const b = $m('#m-gu-sugg:not([hidden]) .m-gu-sugg-b'); if(!b) return;
-    if(e.key === 'ArrowRight' && e.target.selectionEnd !== e.target.value.length) return;
-    e.preventDefault(); completaFarmaco(b.dataset.farmaco);
-  }
-}, true);
 function leggiVoceGuardia(testo){
   let t = testo.trim().replace(/\s+/g, ' '), letto = '';
   const L = '((?:C[12]|GER)\\s*[:·]?\\s*)?(\\d{1,2}(?:[.,]\\d|\\s?P\\b))';
@@ -26752,23 +26785,24 @@ const GU_IO_KEY = 'eo_minimal_guardia_io_v1';         // '5914' o '5899'
 const GU_GUARDIE = { '5914':'verde', '5899':'arancione' };
 const guIo = () => { try{ const v = localStorage.getItem(GU_IO_KEY); return GU_GUARDIE[v] ? v : '5914'; } catch(e){ return '5914'; } };
 let guArrivoAperto = false, guArrivoBozza = { rep:'', tipo:'l', chi:'' };
+let guArrivoNota = null; // il ricovero dal PS di cui si stanno riscrivendo gli appunti
 function arriviGuardia(){
   const a = leggiGu(GU_ARRIVI_KEY), ora = turnoOra();
   return Object.entries(a).filter(([, v]) => v && turnoGu(v.creato) === ora).map(([id, v]) => Object.assign({ id }, v)).sort((x, y) => x.creato - y.creato);
 }
 function aggiungiArrivo(){
   const val = id => ($m('#' + id)?.value || '').trim();
-  const cognome = val('m-gu-a-cog'), nome = val('m-gu-a-nome'), eta = val('m-gu-a-eta').replace(/\D/g, '');
+  const cognome = val('m-gu-a-cog'), nome = val('m-gu-a-nome'), eta = val('m-gu-a-eta').replace(/\D/g, ''), note = val('m-gu-a-note');
   const b = guArrivoBozza;
   if(!cognome && !nome){ showToast('Scrivi almeno il cognome'); $m('#m-gu-a-cog')?.focus(); return; }
   if(!b.rep){ showToast('Scegli il reparto'); return; }
   const chi = b.chi || guIo(), ora = Date.now();
   const id = 'a' + ora.toString(36) + Math.random().toString(36).slice(2, 6);
-  const voce = { cognome, nome, eta, rep:b.rep, tipo:tipiDi(b.rep).includes(b.tipo) ? b.tipo : 'l', chi, creato:ora, savedAt:ora };
+  const voce = { cognome, nome, eta, note, rep:b.rep, tipo:tipiDi(b.rep).includes(b.tipo) ? b.tipo : 'l', chi, creato:ora, savedAt:ora };
   // lo vedo io: la scheda del ricovero nasce subito, coi dati già scritti
   if(chi === guIo()){
     try{
-      const campi = { sesso:'F', cognome, nome, letto:'', reparto:(GU_REPARTI.find(r => r[0] === b.rep) || [])[1] || 'GERIATRIA', eta, diagnosi:'', allergie:'', prossima:'', provvedimenti:'',
+      const campi = { sesso:'F', cognome, nome, letto:'', reparto:(GU_REPARTI.find(r => r[0] === b.rep) || [])[1] || 'GERIATRIA', eta, diagnosi:'', allergie:'', prossima:notaInProssima(note), provvedimenti:'',
         ematochimici:'', rxtorace:'', rxaddome:'', tcaddome:'', tctorace:'', tccerebrale:'', altriEsami:[], remota:'', farmacologica:'', familiare:'' };
       const list = loadRicoveri();
       const rec = { id:'ric_' + ora + '_' + Math.random().toString(36).slice(2, 7), seq:nextRicoveroSeq(), creatoIl:ora, selezionato:true,
@@ -26783,6 +26817,24 @@ function aggiungiArrivo(){
   guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' };
   showToast(chi === guIo() ? 'Ricovero aggiunto: la scheda è già in Ricoveri' : `Ricovero aggiunto: lo vede il ${chi}`);
 }
+// gli appunti presi al telefono col PS: nella scheda del ricovero diventano
+// l'inizio dell'anamnesi prossima (finché non la si riscrive nella scheda)
+const notaInProssima = t => (t || '').trim().replace(/^./, c => c.toUpperCase());
+function salvaNotaArrivo(id, testo){
+  const a = leggiGu(GU_ARRIVI_KEY), v = a[id]; if(!v) return;
+  const prima = v.note || ''; if(prima === testo) return;
+  v.note = testo; v.savedAt = Date.now(); scriviGu(GU_ARRIVI_KEY, a);
+  if(!v.ricId) return;
+  try{
+    const list = loadRicoveri(), rec = list.find(r => r.id === v.ricId);
+    if(!rec || !rec.campi || (rec.campi.prossima || '').trim() !== notaInProssima(prima)) return;
+    rec.campi.prossima = notaInProssima(testo); rec.prossima = costruisciProssima(rec.campi);
+    saveRicoveri(list);
+  } catch(e){ console.warn('Appunti non copiati nella scheda:', e); }
+}
+document.addEventListener('input', e => { const t = e.target; if(t && t.dataset && t.dataset.arrivo) salvaNotaArrivo(t.dataset.arrivo, t.value.trim()); });
+// i campi degli appunti crescono con il testo
+document.addEventListener('input', e => { const t = e.target; if(t && t.classList && t.classList.contains('m-gu-note')){ t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; } });
 function togliArrivo(id){
   const a = leggiGu(GU_ARRIVI_KEY); const v = a[id]; if(!v) return;
   delete a[id]; scriviGu(GU_ARRIVI_KEY, a);
@@ -26928,7 +26980,7 @@ function htmlGuardia(parte, giro){
   const dx = `
     <p class="m-lbl m-gu-tit">Da fare in guardia${daFare ? `<span class="m-gu-n">${daFare}</span>` : ''}</p>
     <div class="m-gu-lista">
-      <div class="m-gu-r m-gu-agg"><span class="m-gu-ic">${ICON.piu}</span><input id="m-gu-in" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aggiungi… «13.1 trittico»" aria-label="Nuova cosa da fare"><button class="m-gu-agg-ok" data-m="gu-add">Aggiungi</button></div>
+      <div class="m-gu-r m-gu-agg"><span class="m-gu-ic">${ICON.piu}</span><input id="m-gu-in" data-sugg="farmaci" data-sugg-box="m-gu-sugg" type="text" enterkeyhint="done" autocomplete="off" placeholder="Aggiungi… «13.1 trittico»" aria-label="Nuova cosa da fare"><button class="m-gu-agg-ok" data-m="gu-add">Aggiungi</button></div>
       <div class="m-gu-sugg" id="m-gu-sugg" hidden></div>
       ${voci.map(riga).join('')}
     </div>${voci.length ? '<p class="m-gu-aiuto">Tieni premuta una riga per toglierla.</p>' : ''}`;
@@ -26953,13 +27005,14 @@ function htmlArrivi(arrivi, st){
   const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
   const righe = arrivi.map(a => `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
       <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
-      <span class="m-gu-t"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small></span>
+      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
       <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
       <button class="m-gu-togli" data-m="gu-a-via" data-id="${esc(a.id)}">Togli</button>
-    </div>`).join('');
+    </div>${guArrivoNota === a.id ? `<div class="m-gu-nota-ed"><textarea class="m-gu-note" id="m-gu-n-${esc(a.id)}" data-arrivo="${esc(a.id)}" data-sugg="ps" data-sugg-box="m-gu-n-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS…">${esc(a.note || '')}</textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-n-sugg" hidden></div><div class="m-gu-form-az"><button class="m-gu-ok-big" data-m="gu-a-nota-ok">Fatto</button></div></div>` : ''}`).join('');
   const b = guArrivoBozza, chi = b.chi || io;
   const form = !guArrivoAperto ? '' : `<div class="m-gu-form">
       <div class="m-gu-campi"><input id="m-gu-a-cog" placeholder="Cognome" autocomplete="off" autocapitalize="characters"><input id="m-gu-a-nome" placeholder="Nome" autocomplete="off" autocapitalize="words"><input id="m-gu-a-eta" placeholder="Età" inputmode="numeric" autocomplete="off"></div>
+      <textarea class="m-gu-note" id="m-gu-a-note" data-sugg="ps" data-sugg-box="m-gu-a-sugg" rows="3" autocapitalize="sentences" placeholder="Cosa dice il PS… «insufficienza respiratoria, caduto a casa»"></textarea><div class="m-gu-sugg m-gu-sugg-f" id="m-gu-a-sugg" hidden></div>
       <div class="m-gu-scelta"><small>Reparto</small>${GU_REPARTI.map(([r]) => chip(`data-m="gu-a-rep" data-v="${r}"`, `${r}${st.impostato ? ` <i>${liberi(r, 'l') + liberi(r, 'b') + liberi(r, 'm')}</i>` : ''}`, b.rep === r)).join('')}</div>
       ${b.rep && tipiDi(b.rep).length > 1 ? `<div class="m-gu-scelta"><small>Letto</small>${tipiDi(b.rep).map(t => chip(`data-m="gu-a-tipo" data-v="${t}"`, `${t === 'l' ? 'libero' : t === 'b' ? '(bis)' : '[mon]'}${st.impostato ? ` <i>${liberi(b.rep, t)}</i>` : ''}`, (b.tipo || 'l') === t)).join('')}</div>` : ''}
       <div class="m-gu-scelta"><small>Lo vede</small>${[io, altro].map(g => chip(`data-m="gu-a-chi" data-v="${g}"`, `${g}${g === io ? ' · io' : ''}`, chi === g, 'm-gu-' + GU_GUARDIE[g])).join('')}<button class="m-gu-iosono" data-m="gu-io" title="Cambia chi sei">Sono il ${altro}?</button></div>
@@ -26971,8 +27024,8 @@ function htmlArrivi(arrivi, st){
 // ridisegna solo il blocco (senza perdere il cursore nel campo)
 function ridisegnaGuardia(fuoco){
   // i campi del ricovero dal PS già scritti restano (scegliere un reparto ridisegna)
-  const tieni = ['m-gu-a-cog', 'm-gu-a-nome', 'm-gu-a-eta'].map(id => [id, $m('#' + id)?.value]);
-  const rimetti = () => tieni.forEach(([id, v]) => { const el = $m('#' + id); if(el && v) el.value = v; });
+  const tieni = ['m-gu-a-cog', 'm-gu-a-nome', 'm-gu-a-eta', 'm-gu-a-note'].map(id => [id, $m('#' + id)?.value]);
+  const rimetti = () => tieni.forEach(([id, v]) => { const el = $m('#' + id); if(el && v){ el.value = v; if(el.classList.contains('m-gu-note')){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } } });
   setTimeout(rimetti, 0);
   if(MP_PC.matches){
     // al PC anche la tessera G (i conti) e, se i dati non cambiano (es. Fatto
@@ -28295,6 +28348,14 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'gu-a-rep' || a === 'gu-a-tipo' || a === 'gu-a-chi'){ guArrivoBozza[a.slice(5)] = el.dataset.v; if(!tipiDi(guArrivoBozza.rep).includes(guArrivoBozza.tipo)) guArrivoBozza.tipo = 'l'; ridisegnaGuardia(); }
   else if(a === 'gu-io'){ setLocalAndCloud(GU_IO_KEY, guIo() === '5914' ? '5899' : '5914'); guArrivoBozza.chi = ''; ridisegnaGuardia(); showToast(`Sei il ${guIo()} (${GU_GUARDIE[guIo()]})`); }
   else if(a === 'gu-a-ok'){ aggiungiArrivo(); ridisegnaGuardia(); }
+  else if(a === 'gu-a-nota'){
+    // una pressione lunga (per togliere) non apre gli appunti
+    if(el.closest('.m-gu-chiedi')) return;
+    guArrivoNota = guArrivoNota === el.dataset.id ? null : el.dataset.id; ridisegnaGuardia();
+    const t = guArrivoNota && document.getElementById('m-gu-n-' + guArrivoNota);
+    if(t){ t.style.height = t.scrollHeight + 'px'; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+  }
+  else if(a === 'gu-a-nota-ok'){ guArrivoNota = null; ridisegnaGuardia(); }
   else if(a === 'gu-a-via'){ togliArrivo(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-letti'){ const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
