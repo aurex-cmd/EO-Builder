@@ -23935,6 +23935,7 @@ function editorLettereSvuota(){
   html[data-ui="minimal"] #svuota-settore-modal .btn{ border-radius:10px; box-shadow:none; font-family:var(--m-sans); font-weight:600; padding:10px 16px; border:1px solid var(--m-sec); background:var(--m-sec); color:var(--m-ink); }
   html[data-ui="minimal"] #svuota-settore-modal #svuota-settore-conferma{ background:var(--m-rosso); border-color:var(--m-rosso); color:#fff; }
   /* letti "material": riquadri pieni con ombra, che si abbassano al tocco */
+  .m-onda-box{ position:absolute; inset:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
   .m-onda{ position:absolute; border-radius:50%; background:currentColor; opacity:.16; transform:scale(0); animation:m-onda .55s ease-out forwards; pointer-events:none; }
   @keyframes m-onda{ to{ transform:scale(1); opacity:0; } }
   .m-rigalink.m-vitali{ margin-top:4px; padding:12px 14px; border:1px solid var(--m-line); border-radius:16px; background:#fff; animation:none; }
@@ -25009,8 +25010,10 @@ function editorLettereSvuota(){
 
   /* pressione lunga su un letto (righe e riquadri): si riempie di rosso */
   :is(.m-tl, .m-bt), .m-settori button{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
-  :is(.m-tl, .m-bt)::before{ content:""; position:absolute; inset:0; background:rgba(217,83,79,.32); transform:scaleX(0); transform-origin:left; pointer-events:none; }
-  :is(.m-tl, .m-bt).m-premuto::before{ transform:scaleX(1); transition:transform .55s linear .1s; }
+  /* il rosso avanza tagliato (clip-path), non stirato: con scaleX gli angoli
+     tondi si schiacciavano e all'inizio sporgevano oltre il bordo del letto */
+  :is(.m-tl, .m-bt)::before{ content:""; position:absolute; inset:0; border-radius:inherit; background:rgba(217,83,79,.32); clip-path:inset(0 100% 0 0); pointer-events:none; }
+  :is(.m-tl, .m-bt).m-premuto::before{ clip-path:inset(0 0 0 0); transition:clip-path .55s linear .1s; }
   :is(.m-tl, .m-bt).m-elimina{ background:var(--m-rosso) !important; color:#fff !important; animation:m-scelto .35s var(--m-molla); }
   :is(.m-tl, .m-bt).m-elimina *{ color:#fff !important; }
   :is(.m-tl, .m-bt).m-elimina::before, :is(.m-tl, .m-bt).m-elimina :is(.m-pal, .m-lr-ok, .m-togli, .m-bt-pp){ display:none; }
@@ -28911,11 +28914,13 @@ document.getElementById('m-app').addEventListener('pointerdown', e => {
   const t = e.target.closest('.m-bt, .m-tl:not(.m-tl-nuovo)');
   if(!t || e.target.closest('.m-togli')) return;
   const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2;
-  const o = document.createElement('span');
-  o.className = 'm-onda';
+  // l'onda sta in una scatola ritagliata sulla forma del letto: il letto
+  // lascia uscire i suoi segni (overflow visibile), l'onda no
+  const box = document.createElement('span'), o = document.createElement('span');
+  box.className = 'm-onda-box'; o.className = 'm-onda';
   o.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
-  t.appendChild(o);
-  setTimeout(() => o.remove(), 650);
+  box.appendChild(o); t.appendChild(box);
+  setTimeout(() => box.remove(), 650);
 });
 // GESTO INDIETRO: dal bordo sinistro verso destra la pagina segue il dito e,
 // lasciata oltre un terzo dello schermo (o con uno scatto), si torna indietro.
