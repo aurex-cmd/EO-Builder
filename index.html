@@ -24240,7 +24240,7 @@ function editorLettereSvuota(){
   .m-gu-qq i{ font-style:normal; font-size:20px; line-height:1; color:var(--m-muted); margin:0 -1px; }
   .m-gu-qq em{ font-style:normal; font-size:13px; color:var(--m-faint); }
   /* gli appoggi: "– 4 APP", al centro dello spazio che resta nella riga */
-  .m-gu-app{ flex:1 0 auto; text-align:center; font-size:14px; font-weight:700; letter-spacing:.03em; color:var(--m-ink); white-space:nowrap; }
+  .m-gu-app{ flex:1 0 auto; text-align:center; font-size:14px; font-weight:400; letter-spacing:.03em; color:var(--m-ink); white-space:nowrap; }
   .m-gu-card .m-gu-app{ color:#fff; }
   /* coi letti pochi, al centro esatto della riga: quelli di C2 e GER in colonna */
   .m-gu-lr:has(.m-gu-app-c){ position:relative; }
@@ -24309,6 +24309,8 @@ function editorLettereSvuota(){
   .m-gu-card .m-gu-qq i, .m-gu-card .m-gu-qq em{ color:rgba(255,255,255,.7); }
   .m-gu-card .m-gu-passo small{ color:rgba(255,255,255,.8); }
   .m-gu-card .m-gu-passo b{ color:#fff; }
+  .m-gu-app-pill{ align-self:center; height:28px; padding:0 12px; border:1px solid var(--m-line-forte); border-radius:999px; background:var(--m-carta); color:var(--m-muted); font:inherit; font-size:12px; font-weight:600; letter-spacing:.06em; cursor:pointer; }
+  .m-gu-card .m-gu-app-pill{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.35); color:#fff; }
   .m-gu-card .m-gu-passo button{ background:rgba(255,255,255,.14) !important; border-color:rgba(255,255,255,.35); color:#fff; }
   .m-gu-card .m-gu-nota{ color:rgba(255,255,255,.8); margin:6px 0 0; }
   /* il giro (di giorno), dentro la card sotto i letti */
@@ -26982,6 +26984,8 @@ function togliVoceGuardia(id){
 // letti liberi del turno: i ricoveri fatti in questo turno mettono la X da
 // soli (nel reparto scritto nel ricovero: se lo si cambia, la X si sposta)
 let guLettiModifica = false;
+// gli appoggi, che non sempre ci sono: in Modifica una pillola «APP», che toccata apre il contatore
+const guAppAperti = new Set();
 let guGiroUltimo = ''; // la card del giro (di giorno) dentro quella dei letti, per ridisegnarla
 function lettiLiberi(){
   const s = leggiGu(GU_LETTI_KEY), ora = turnoOra();
@@ -27065,7 +27069,7 @@ function htmlGuardia(parte, giro){
   const modifica = guLettiModifica || !st.impostato;
   const righeLetti = GU_REPARTI.map(([rep]) => {
     const n = Object.assign({ l:0, b:0, m:0, a:0 }, st.rep[rep]);
-    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passo(rep, 'b', n.b, '(bis)') : ''}${tipiDi(rep).includes('m') ? passo(rep, 'm', n.m, '[mon]') : ''}${GU_APPOGGI_REP.includes(rep) ? passo(rep, 'a', n.a, 'appoggi') : ''}</span></div>`;
+    if(modifica) return `<div class="m-gu-lr m-gu-mod"><span class="m-gu-rep">${rep}</span><span class="m-gu-passi">${passo(rep, 'l', n.l, 'liberi')}${tipiDi(rep).includes('b') ? passo(rep, 'b', n.b, '(bis)') : ''}${tipiDi(rep).includes('m') ? passo(rep, 'm', n.m, '[mon]') : ''}${GU_APPOGGI_REP.includes(rep) ? (n.a || guAppAperti.has(rep) ? passo(rep, 'a', n.a, 'appoggi') : `<button class="m-gu-app-pill" data-m="gu-app" data-r="${rep}" aria-label="Aggiungi appoggi ${rep}">APP</button>`) : ''}</span></div>`;
     const tot = n.l + n.b + n.m;
     const occ = Object.keys(st.x).filter(q => q.startsWith(rep + '|')).length;
     return `<div class="m-gu-lr"><span class="m-gu-rep">${rep}</span><span class="m-gu-qq">${quadri(rep, 'l', n.l)}${n.b ? `<i>(</i>${quadri(rep, 'b', n.b)}<i>)</i>` : ''}${n.m ? `<i>[</i>${quadri(rep, 'm', n.m)}<i>]</i>` : ''}${!tot ? '<em>nessuno</em>' : ''}${n.a ? `<span class="m-gu-app${tot + (n.b ? 1 : 0) + (n.m ? 1 : 0) <= 3 ? ' m-gu-app-c' : ''}">– ${n.a} APP</span>` : ''}</span><span class="m-gu-lib">${tot ? tot - occ : ''}</span></div>`;
@@ -28524,6 +28528,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'gu-ok'){ segnaVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-via'){ togliVoceGuardia(el.dataset.id); ridisegnaGuardia(); }
   else if(a === 'gu-x'){ toccaLetto(el.dataset.q); ridisegnaGuardia(); }
+  else if(a === 'gu-app'){ guAppAperti.add(el.dataset.r); ridisegnaGuardia(); }
   else if(a === 'gu-pm'){ guLettiModifica = true; cambiaNumeroLetti(el.dataset.r, el.dataset.t, +el.dataset.d); ridisegnaGuardia(); }
   else if(a === 'gu-a-apri'){ guArrivoAperto = true; ridisegnaGuardia(); setTimeout(() => $m('#m-gu-a-cog')?.focus(), 30); }
   else if(a === 'gu-a-chiudi'){ guArrivoAperto = false; guArrivoBozza = { rep:'', tipo:'l', chi:'' }; ridisegnaGuardia(); }
@@ -28539,7 +28544,7 @@ document.getElementById('m-app').addEventListener('click', e => {
   }
   else if(a === 'gu-a-nota-ok'){ guArrivoNota = null; ridisegnaGuardia(); }
   else if(a === 'gu-a-via'){ togliArrivo(el.dataset.id); ridisegnaGuardia(); }
-  else if(a === 'gu-letti'){ const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
+  else if(a === 'gu-letti'){ guAppAperti.clear(); const st = lettiLiberi(); if(!st.impostato) salvaLetti(st); guLettiModifica = st.impostato ? !guLettiModifica : false; ridisegnaGuardia(); }
   else if(a === 'reparto'){ const s = settoreDiOggi(); vai('visita', s ? { zoom:true, settore:s } : { zoom:false }); }
   else if(a === 'modo-rep'){
     const v = el.dataset.v; if(v === M.vista) return;
