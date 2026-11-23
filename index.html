@@ -25217,20 +25217,24 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-ui="minimal"]:not(:has(.m-set.m-diari)) .m-bar{ background:var(--m-fondo); }
   html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set.m-diari)) body{ background:transparent; }
   html[data-ui="minimal"]:not([data-m-orig]):not(:has(.m-set.m-diari)){ background:var(--m-fondo); }
-  /* ATMOSFERA della home (ripresa da Minimal Pocket, più tenue): macchie
-     sfumate ai bordi, sopra il grigio, nel colore del pulsante (puro in due,
-     mescolato con azzurro e con un giallo caldo nelle altre); gli
-     elenchi al centro restano puliti. Solo in home, le pagine di lavoro
-     restano sul grigio semplice */
+  /* ATMOSFERA (ripresa da Minimal Pocket, più tenue): macchie sfumate ai
+     bordi, sopra il grigio, nel colore del pulsante (puro in due,
+     mescolato con azzurro e con un giallo caldo nelle altre). Su tutte le
+     pagine tranne i Diari e la visita classica. Sta su uno strato FISSO
+     dietro a tutto (body::before) e non sullo sfondo di html: su iPhone
+     background-attachment:fixed non funziona e, tirando giù la pagina,
+     l'elastico mostrava le macchie ripetute; così l'elastico scopre solo
+     il grigio uniforme di html e le macchie restano ferme sullo schermo */
   html[data-ui="minimal"]:not([data-mp]){ --m-atm-c:var(--m-acc-l); --m-atm-1:color-mix(in srgb, var(--m-atm-c) 6%, transparent); --m-atm-2:color-mix(in srgb, color-mix(in srgb, var(--m-atm-c) 55%, #6f8fd0) 6%, transparent); --m-atm-3:color-mix(in srgb, var(--m-atm-c) 8%, transparent); --m-atm-4:color-mix(in srgb, color-mix(in srgb, var(--m-atm-c) 40%, #f0c070) 5%, transparent); }
   html[data-ui="minimal"]:not([data-mp])[data-m-tema="scuro"]{ --m-atm-c:var(--m-acc-d); --m-atm-1:color-mix(in srgb, var(--m-atm-c) 6%, transparent); --m-atm-2:color-mix(in srgb, color-mix(in srgb, var(--m-atm-c) 55%, #4668b0) 7%, transparent); --m-atm-3:color-mix(in srgb, var(--m-atm-c) 7%, transparent); --m-atm-4:color-mix(in srgb, color-mix(in srgb, var(--m-atm-c) 40%, #b4963c) 3%, transparent); }
-  html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)):has(.m-bar.m-home){ background:
+  html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)) body::before{ content:""; position:fixed; inset:-30vh 0; z-index:-1; pointer-events:none; background:
       radial-gradient(70% 40% at 0% 100%, var(--m-atm-1), transparent 70%),
       radial-gradient(60% 42% at 100% 85%, var(--m-atm-2), transparent 70%),
       radial-gradient(55% 34% at 95% 35%, var(--m-atm-3), transparent 72%),
-      radial-gradient(45% 24% at 8% 72%, var(--m-atm-4), transparent 70%),
-      var(--m-fondo);
-    background-attachment:fixed; scrollbar-gutter:auto; }
+      radial-gradient(45% 24% at 8% 72%, var(--m-atm-4), transparent 70%); background-origin:content-box; background-clip:content-box; padding:30vh 0; }
+  html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)):has(.m-bar.m-home){ scrollbar-gutter:auto; }
+  /* la barra in alto lascia trasparire le macchie, sfocando quel che scorre sotto */
+  html[data-ui="minimal"]:not([data-mp], [data-m-orig]):not(:has(.m-set.m-diari)) .m-bar:not(.m-home){ background:color-mix(in srgb, var(--m-fondo) 78%, transparent); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
   html[data-ui="minimal"]:not([data-mp]) .m-bar.m-home{ background:transparent; }
   .m-set:not(.m-diari) .m-set-fondo{ border:0; border-radius:18px; background:var(--m-riq); box-shadow:var(--m-riq-ombra); }
   .m-rep-home{ border-radius:20px !important; }
