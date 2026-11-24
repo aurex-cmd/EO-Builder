@@ -24452,6 +24452,8 @@ function editorLettereSvuota(){
   .pkd .mpd-dett .mpd-dtesta{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .pkd .mpd-dett .mpd-dtesta > div{ flex:1; min-width:0; }
   .pkd .mpd-dett .mpd-dtesta > .mp-btn{ flex:none; width:auto; padding:0 18px; }
+  /* «Esci dalla guardia»: un pulsante discreto, non un'azione principale */
+  .pkd .mpd-dett .mpd-dtesta > .mp-btn[data-m="gu-off"]{ height:34px; padding:0 14px; border-radius:10px; font-size:14px; margin-top:4px; }
   html[data-m-tema="scuro"] :is(.m-gu-r, .m-gu-lr, .m-gu-q, .m-gu-passo button, .m-gu-add input){ background:var(--m-carta, #132133); }
   html[data-m-tema="scuro"] .m-gu-q.m-gu-x{ background:color-mix(in srgb, var(--m-notte) 22%, transparent); }
   html[data-m-tema="scuro"] .m-gu-q.m-gu-ric{ background:var(--m-teal); }
