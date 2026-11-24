@@ -24448,6 +24448,22 @@ function editorLettereSvuota(){
   .pkd .pkd-gu-sx .m-gu-scelta > small{ width:100%; margin-bottom:-1px; }
   .pkd .pkd-gu-sx :is(.m-gu-ok-big, .m-gu-annulla){ white-space:nowrap; height:36px; padding:0 12px; font-size:13.5px; }
   .pkd .pkd-gu-sx .m-gu-chip{ height:30px; padding:0 10px; font-size:13px; }
+  /* al PC, nella colonna stretta, il ricovero dal PS: l'etichetta di chi lo
+     vede in alto a destra, sotto il nome il reparto e la scheda, gli appunti
+     in un riquadro; la × (passando col mouse) in basso a destra */
+  .m-gu-eta{ white-space:nowrap; }
+  .m-gu-ar-sch, .m-gu-ar-eta{ display:none; }
+  .pkd .pkd-gu-sx .m-gu-ar{ position:relative; display:block; padding:12px 12px 12px 14px; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-chi{ float:right; width:auto; height:22px; padding:0 7px; margin:0 0 4px 8px; border-radius:6px; font-size:11.5px; letter-spacing:.01em; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-t{ display:block; font-size:15px; line-height:1.3; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-eta{ display:none; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-ar-eta{ display:inline; color:var(--m-ink-2); }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-t small{ clear:both; margin-top:3px; font-size:12.5px; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-ar-chi{ display:none; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-ar-sch{ display:block; margin-top:2px; color:var(--m-teal); font-weight:600; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-ar-note{ clear:both; margin-top:8px; padding:7px 10px; border-radius:8px; background:color-mix(in srgb, var(--m-ink) 4.5%, transparent); font-size:13.5px; line-height:1.4; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-ar-vuota{ background:none; padding:0; margin-top:6px; font-size:12.5px; }
+  .pkd .pkd-gu-sx .m-gu-ar .m-gu-via{ position:absolute; right:4px; bottom:4px; margin:0; }
 
   .pkd .mpd-dett .mpd-dtesta{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
   .pkd .mpd-dett .mpd-dtesta > div{ flex:1; min-width:0; }
@@ -27210,7 +27226,7 @@ function htmlArrivi(arrivi, st){
   const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
   const righe = arrivi.map(a => guArrivoNota === a.id ? formArrivo({ rep:guArrivoBozza.rep || a.rep, tipo:guArrivoBozza.tipo || a.tipo || 'l', chi:guArrivoBozza.chi || a.chi }, a) : `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
       <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
-      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `, ${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'}` : ''}<small>${a.rep} · ${TIPI[a.tipo] || 'libero'} · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
+      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `<span class="m-gu-eta">, ${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'}</span>` : ''}<small>${a.eta ? `<span class="m-gu-ar-eta">${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'} · </span>` : ''}${a.rep} · ${TIPI[a.tipo] || 'libero'}<span class="m-gu-ar-chi"> · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</span>${a.chi === io && a.ricId ? '<span class="m-gu-ar-sch">Scheda in Ricoveri</span>' : ''}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
       <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
       <button class="m-gu-togli" data-m="gu-a-via" data-id="${esc(a.id)}">Togli</button>
     </div>`).join('');
