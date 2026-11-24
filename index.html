@@ -26783,8 +26783,8 @@ const GU_FARE_KEY = 'eo_minimal_guardia_fare_v1';   // { id: { t, letto, tipo, c
 const GU_LETTI_KEY = 'eo_minimal_letti_liberi_v1';  // { turno, rep:{C1:{l,b,m}}, x:{'C1|l|0': 1 | idRicovero}, ric:[id] }
 const GU_MODO_KEY = 'eo_minimal_guardia_modo_v1';   // solo qui: { turno, on } scelto a mano
 const GU_REPARTI = [['C1', 'MED C1'], ['C2', 'MED C2'], ['GER', 'GERIATRIA']];
-// che letti ha ogni reparto: i monitorati solo in C1, i bis in C1 e in Geriatria
-const GU_TIPI_REP = { C1:['l', 'b', 'm'], C2:['l'], GER:['l', 'b'] };
+// che letti ha ogni reparto: i monitorati solo in C1, i bis in tutti
+const GU_TIPI_REP = { C1:['l', 'b', 'm'], C2:['l', 'b'], GER:['l', 'b'] };
 const tipiDi = rep => GU_TIPI_REP[rep] || ['l'];
 // gli appoggi del turno (non sono letti da segnare): quelli della medicina
 // accanto al C2, quelli della geriatria accanto alla GER
@@ -27114,7 +27114,7 @@ function lettiLiberi(){
   const s = leggiGu(GU_LETTI_KEY), ora = turnoOra();
   const nuovo = s.turno !== ora;
   const st = { turno:ora, rep:s.rep || {}, x:nuovo ? {} : (s.x || {}), ric:nuovo ? [] : (s.ric || []), impostato:!nuovo };
-  // i tipi di letto che un reparto non ha non contano (C2 senza bis né monitorati…)
+  // i tipi di letto che un reparto non ha non contano (C2 e GER senza monitorati…)
   st.rep = Object.fromEntries(Object.entries(st.rep).map(([r, n]) => [r, Object.assign(Object.fromEntries(['l', 'b', 'm'].map(t => [t, tipiDi(r).includes(t) ? (n || {})[t] || 0 : 0])), { a:GU_APPOGGI_REP.includes(r) ? (n || {}).a || 0 : 0 })]));
   if(!st.impostato) return st;
   // riconcilia coi ricoveri del turno
