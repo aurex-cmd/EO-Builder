@@ -24453,6 +24453,7 @@ function editorLettereSvuota(){
      in un riquadro; la × (passando col mouse) in basso a destra */
   .m-gu-eta{ white-space:nowrap; }
   .m-gu-ar-sch, .m-gu-ar-eta{ display:none; }
+  .m-gu-ar-letto{ margin-right:2px; }
   .pkd .pkd-gu-sx .m-gu-ar{ position:relative; display:block; padding:12px 12px 12px 14px; }
   .pkd .pkd-gu-sx .m-gu-ar .m-gu-chi{ float:right; width:auto; height:22px; padding:0 7px; margin:0 0 4px 8px; border-radius:6px; font-size:11.5px; letter-spacing:.01em; }
   .pkd .pkd-gu-sx .m-gu-ar .m-gu-t{ display:block; font-size:15px; line-height:1.3; }
@@ -27224,9 +27225,12 @@ function htmlArrivi(arrivi, st){
   const TIPI = { l:'libero', b:'bis', m:'monitorato' };
   const chip = (attr, testo, on, cl) => `<button class="m-gu-chip${on ? ' m-on' : ''}${cl ? ' ' + cl : ''}" ${attr} aria-pressed="${on}">${testo}</button>`;
   const liberi = (rep, tipo) => { const n = (st.rep[rep] || {})[tipo] || 0; let x = 0; for(let i = 0; i < n; i++) if(st.x[`${rep}|${tipo}|${i}`]) x++; return n - x; };
+  // il letto scritto nella scheda in Ricoveri compare, in grassetto, prima del nome
+  let lettoDi = () => '';
+  try{ const ric = new Map(loadRicoveri().map(r => [r.id, r])); lettoDi = a => ((ric.get(a.ricId) || {}).campi || {}).letto?.trim() || ''; } catch(e){}
   const righe = arrivi.map(a => guArrivoNota === a.id ? formArrivo({ rep:guArrivoBozza.rep || a.rep, tipo:guArrivoBozza.tipo || a.tipo || 'l', chi:guArrivoBozza.chi || a.chi }, a) : `<div class="m-gu-ar" data-id="${esc(a.id)}" data-gu="arrivo">
       <span class="m-gu-chi m-gu-${GU_GUARDIE[a.chi]}">${a.chi}</span>
-      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}"><b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `<span class="m-gu-eta">, ${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'}</span>` : ''}<small>${a.eta ? `<span class="m-gu-ar-eta">${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'} · </span>` : ''}${a.rep} · ${TIPI[a.tipo] || 'libero'}<span class="m-gu-ar-chi"> · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</span>${a.chi === io && a.ricId ? '<span class="m-gu-ar-sch">Scheda in Ricoveri</span>' : ''}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
+      <span class="m-gu-t" data-m="gu-a-nota" data-id="${esc(a.id)}">${lettoDi(a) ? `<b class="m-gu-ar-letto">${esc(lettoDi(a))}</b> ` : ''}<b>${esc(a.cognome.toUpperCase())}</b> ${esc(a.nome)}${a.eta ? `<span class="m-gu-eta">, ${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'}</span>` : ''}<small>${a.eta ? `<span class="m-gu-ar-eta">${esc(a.eta)} ann${+a.eta === 1 ? 'o' : 'i'} · </span>` : ''}${a.rep} · ${TIPI[a.tipo] || 'libero'}<span class="m-gu-ar-chi"> · ${a.chi === io ? (a.ricId ? 'lo vedo io · scheda in Ricoveri' : 'lo vedo io') : `lo vede il ${a.chi}`}</span>${a.chi === io && a.ricId ? '<span class="m-gu-ar-sch">Scheda in Ricoveri</span>' : ''}</small>${guArrivoNota === a.id ? '' : a.note ? `<span class="m-gu-ar-note">${esc(a.note)}</span>` : '<span class="m-gu-ar-note m-gu-ar-vuota">+ appunti dal PS</span>'}</span>
       <button class="m-gu-via" data-m="gu-a-via" data-id="${esc(a.id)}" aria-label="Togli" title="Togli">${ICON.x}</button>
       <button class="m-gu-togli" data-m="gu-a-via" data-id="${esc(a.id)}">Togli</button>
     </div>`).join('');
