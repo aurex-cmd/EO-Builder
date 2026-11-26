@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
 <style id="tema-scuro">
   :root{
     /* colore dei letti consegnati (bordo, velo, pulsante Consegne WE) */
@@ -5388,6 +5388,26 @@ function segnaEsitoPush(key, riuscito){
 // ignorato in silenzio — ricaricare la pagina più volte non serviva a
 // niente perché l'errore si ripeteva sempre senza nessun avviso
 let ultimoPullFallito = false;
+// ACCOUNT DA APPROVARE: chiunque può registrarsi, ma i dati sul cloud si
+// leggono e scrivono solo se l'account è nella tabella utenti_approvati
+// (ce lo mette a mano l'amministratore; lo impone anche la Row Level
+// Security del database). Qui l'app lo sa, per non segnalare errori e dire
+// "in attesa di approvazione". null = non ancora controllato
+let accountApprovato = null;
+async function controllaApprovazione(user){
+  if(!supabaseClient || !user) return true;
+  try{
+    const { data, error } = await supabaseClient.from('utenti_approvati').select('user_id').eq('user_id', user.id).limit(1);
+    if(error){
+      // tabella non ancora creata: nessun controllo (come prima)
+      if(/PGRST205|42P01/.test(error.code || '') || /does not exist|schema cache/i.test(error.message || '')) accountApprovato = true;
+      // senza rete: resta l'ultimo esito noto
+      return accountApprovato !== false;
+    }
+    accountApprovato = !!(data && data.length);
+  } catch(e){ return accountApprovato !== false; }
+  return accountApprovato;
+}
 // momento dell'ultimo scaricamento andato a buon fine (usato dal pull
 // automatico per non ripeterlo a raffica)
 let ultimoPullRiuscito = 0;
@@ -5428,6 +5448,8 @@ function cloudPush(key, rawValue){
       if(erroreUtente) throw erroreUtente;
       const user = data && data.user;
       if(!user) return;
+      // account non ancora approvato: niente invii (resta tutto in locale)
+      if(accountApprovato === false) return;
       // schede pazienti: prima di scrivere si guarda cosa c'è ORA sul
       // cloud. Se nel frattempo un altro dispositivo l'ha cambiato, invece
       // di sovrascriverlo alla cieca (perdendo le sue modifiche) si fonde
@@ -5706,6 +5728,11 @@ async function cloudPullAll(){
       // solo per intuito, senza che l'app gliel'abbia mai detto
       throw new Error('sessione non valida');
     }
+    if(!(await controllaApprovazione(user))){
+      if(ultimoPullFallito){ ultimoPullFallito = false; }
+      if(typeof aggiornaStatoSync === 'function') aggiornaStatoSync();
+      return;
+    }
     const { data, error } = await supabaseClient.from('eo_data').select('key,value,updated_at').eq('user_id', user.id);
     if(error) throw error;
     const chiaviNelCloud = new Set();
@@ -5853,8 +5880,8 @@ async function syncSignup(){
   if(!supabaseClient){ showToast('Sincronizzazione non disponibile'); return; }
   const { error } = await supabaseClient.auth.signUp({ email, password });
   if(error){ showToast('Errore: ' + error.message); return; }
-  document.getElementById('sync-status').textContent = 'Account creato. Controlla la mail se serve confermarlo, poi accedi.';
-  showToast('Account creato');
+  document.getElementById('sync-status').textContent = 'Account creato. Sarà attivo quando l\'amministratore lo approva: fino ad allora i dati restano solo su questo dispositivo.';
+  showToast('Account creato: in attesa di approvazione');
 }
 
 async function syncLogin(){
@@ -5878,6 +5905,7 @@ async function syncLogin(){
 async function syncLogout(){
   if(!supabaseClient) return;
   await supabaseClient.auth.signOut();
+  accountApprovato = null;
   aggiornaStatoSync();
   showToast('Disconnesso: i dati restano su questo dispositivo');
 }
@@ -5904,16 +5932,18 @@ async function aggiornaStatoSync(){
     // condivisi con gli altri, o non vedere ancora le loro modifiche — ci
     // riprova da solo, ma intanto è giusto saperlo
     const problemaSync = ultimoPushFallito || ultimoPullFallito;
-    testoLogin.textContent = problemaSync
+    testoLogin.textContent = accountApprovato === false
+      ? '⏳ Connesso come ' + user.email + ' — account in attesa di approvazione: i dati restano su questo dispositivo'
+      : problemaSync
       ? '⚠️ Connesso come ' + user.email + ' — ' + (ultimoPullFallito ? 'ultimo scaricamento dal cloud non riuscito' : 'ultimo salvataggio sul cloud non riuscito') + ', riprovo automaticamente'
       : 'Connesso come ' + user.email;
-    testoLogin.style.color = problemaSync ? '#d9695f' : '';
+    testoLogin.style.color = accountApprovato === false ? '#c9892b' : problemaSync ? '#d9695f' : '';
     // stesso segnale, ma come pallino sempre visibile in alto (non solo
     // dentro la scheda "App"): verde tutto ok, rosso ultimo invio/scarico
     // non riuscito (si rimette verde da solo appena il ritentativo va a buon fine)
     if(dot){
       dot.style.display = '';
-      dot.classList.toggle('non-sincronizzato', problemaSync);
+      dot.classList.toggle('non-sincronizzato', problemaSync || accountApprovato === false);
       dot.title = problemaSync
         ? (ultimoPullFallito ? 'Ultimo scaricamento dal cloud non riuscito' : 'Ultimo salvataggio sul cloud non riuscito') + ' — riprovo automaticamente'
         : 'Sincronizzato';
@@ -29749,8 +29779,8 @@ function aggiornaAccount(){
   if(document.activeElement !== campoNome) campoNome.value = nomeAccount();
   righeAcc.querySelector('.m-acc-email').textContent = (testo.match(/Connesso come (\S+)/) || [])[1] || '';
   const sync = righeAcc.querySelector('.m-acc-sync');
-  sync.textContent = problema ? 'non riuscito, riprovo' : (typeof ultimoPullRiuscito !== 'undefined' && ultimoPullRiuscito ? fa(ultimoPullRiuscito) : 'in corso…');
-  sync.classList.toggle('m-acc-errore', problema);
+  sync.textContent = testo.startsWith('⏳') ? 'in attesa di approvazione' : problema ? 'non riuscito, riprovo' : (typeof ultimoPullRiuscito !== 'undefined' && ultimoPullRiuscito ? fa(ultimoPullRiuscito) : 'in corso…');
+  sync.classList.toggle('m-acc-errore', problema || testo.startsWith('⏳'));
 }
 aggiornaAccount();
 const testoSync = document.getElementById('sync-logged-in-text');
