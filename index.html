@@ -5878,10 +5878,16 @@ async function syncSignup(){
   const password = document.getElementById('sync-password').value || '';
   if(!email || !password){ showToast('Inserisci email e password'); return; }
   if(!supabaseClient){ showToast('Sincronizzazione non disponibile'); return; }
-  const { error } = await supabaseClient.auth.signUp({ email, password });
+  // il link nella mail di conferma riporta qui, nell'app (non alla pagina
+  // predefinita di Supabase)
+  const { data, error } = await supabaseClient.auth.signUp({ email, password, options:{ emailRedirectTo:location.origin + location.pathname } });
   if(error){ showToast('Errore: ' + error.message); return; }
-  document.getElementById('sync-status').textContent = 'Account creato. Sarà attivo quando l\'amministratore lo approva: fino ad allora i dati restano solo su questo dispositivo.';
-  showToast('Account creato: in attesa di approvazione');
+  // con la conferma e-mail attiva la sessione arriva solo dopo il link
+  const daConfermare = !(data && data.session);
+  document.getElementById('sync-status').textContent = daConfermare
+    ? 'Account creato. Ti abbiamo mandato una mail: tocca il link per confermare l\'indirizzo, poi accedi. L\'account sarà attivo quando l\'amministratore lo approva.'
+    : 'Account creato. Sarà attivo quando l\'amministratore lo approva: fino ad allora i dati restano solo su questo dispositivo.';
+  showToast(daConfermare ? 'Controlla la mail per confermare' : 'Account creato: in attesa di approvazione');
 }
 
 async function syncLogin(){
@@ -5890,7 +5896,13 @@ async function syncLogin(){
   if(!email || !password){ showToast('Inserisci email e password'); return; }
   if(!supabaseClient){ showToast('Sincronizzazione non disponibile'); return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error){ showToast('Errore: ' + error.message); return; }
+  if(error){
+    if(/not confirmed/i.test(error.message || '') || error.code === 'email_not_confirmed'){
+      document.getElementById('sync-status').textContent = 'Email non ancora confermata: tocca il link nella mail che ti abbiamo mandato, poi accedi.';
+      showToast('Email non ancora confermata'); return;
+    }
+    showToast('Errore: ' + error.message); return;
+  }
   showToast('Accesso eseguito, sincronizzo…');
   await cloudPullAll();
   currentPatientId = null;
