@@ -1,0 +1,14 @@
+{
+  "name": "Pocket Evolution",
+  "short_name": "Pocket Evo",
+  "description": "EO Pocket nella sua nuova veste: stessi dati, scrivania con barra laterale e diario a tutto schermo.",
+  "start_url": "../?ui=pocket-evolution",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#EEF1F4",
+  "theme_color": "#EEF1F4",
+  "icons": [
+    { "src": "../minimal/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../minimal/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
