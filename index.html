@@ -26395,6 +26395,56 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   html[data-pe] .pkd .mpd-info{ border:1px solid var(--m-line); border-radius:var(--pe-r); box-shadow:var(--pe-ombra); }
   html[data-pe] .m-scheda.mp-dock{ border-radius:var(--pe-r) !important; box-shadow:var(--pe-ombra) !important; }
 
+
+  /* LA RICERCA */
+  .pe-cerca-wrap{ position:relative; margin:16px 0 4px; }
+  .pe-cerca{ display:flex; align-items:center; gap:9px; height:44px; padding:0 7px 0 13px; border:1px solid var(--m-line); border-radius:14px; background:color-mix(in srgb, var(--m-box) 70%, var(--m-carta)); color:var(--m-faint); cursor:text; transition:border-color .15s, box-shadow .15s; }
+  .pe-cerca:focus-within{ border-color:color-mix(in srgb, var(--m-notte) 45%, var(--m-line)); box-shadow:0 0 0 3px color-mix(in srgb, var(--m-notte) 14%, transparent); background:var(--m-carta); }
+  .pe-cerca svg{ width:18px; height:18px; flex:none; }
+  .pe-cerca input{ flex:1; min-width:0; height:100%; padding:0; border:0; outline:0; background:none; color:var(--m-ink); font:400 14.5px var(--m-sans); -webkit-appearance:none; appearance:none; }
+  .pe-cerca input::placeholder{ color:var(--m-faint); }
+  .pe-cerca input::-webkit-search-cancel-button{ display:none; }
+  .pe-cerca kbd{ flex:none; padding:4px 7px; border:1px solid var(--m-line); border-radius:8px; background:var(--m-carta); color:var(--m-muted); font:500 11.5px var(--m-sans); }
+  .pe-ris{ display:flex; flex-direction:column; color:var(--m-ink); font-family:var(--m-sans); }
+  .pe-ris[hidden]{ display:none; }
+  .pe-ris-side{ position:absolute; z-index:60; top:calc(100% + 8px); left:0; width:380px; max-height:min(62vh, 520px); overflow-y:auto; padding:6px; border:1px solid var(--m-line); border-radius:20px; background:var(--m-carta); box-shadow:0 24px 60px -24px rgba(10,20,30,.45), 0 2px 6px rgba(10,20,30,.06); }
+  .pe-ris-gr{ margin:10px 10px 4px; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--m-faint); }
+  .pe-ris-gr:first-child{ margin-top:6px; }
+  .pe-ris-r{ display:flex; align-items:center; gap:12px; width:100%; padding:8px 10px; border:0; border-radius:13px; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+  .pe-ris-r:hover{ background:var(--m-hover); }
+  .pe-ris-r[aria-selected="true"]{ background:var(--m-notte-box); }
+  .pe-ris-r kbd{ margin-left:auto; padding:3px 6px; border-radius:6px; background:color-mix(in srgb, var(--m-ink) 8%, transparent); color:var(--m-muted); font:600 11px var(--m-sans); visibility:hidden; }
+  .pe-ris-r[aria-selected="true"] kbd{ visibility:visible; }
+  .pe-ris-t{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .pe-ris-t b{ font-size:14.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pe-ris-t small{ font-size:12.5px; color:var(--m-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pe-ris-tl{ width:36px; height:36px; flex:none; display:grid; place-items:center; border-radius:10px; background:var(--m-l-base); color:var(--m-ink); font-size:12px; font-weight:800; letter-spacing:-.02em; }
+  .pe-ris-tl.pe-tl-cop{ background:var(--m-l-cop); box-shadow:inset 0 0 0 1.5px var(--m-teal); }
+  .pe-ris-tl.pe-tl-dacop{ background:var(--m-l-dacop); }
+  .pe-ris-tl.pe-tl-crit{ background:var(--m-l-critico); color:var(--m-critico); box-shadow:inset 0 0 0 1.5px var(--m-critico); }
+  .pe-ris-ic{ --k:var(--m-notte); width:36px; height:36px; flex:none; display:grid; place-items:center; border-radius:10px; background:color-mix(in srgb, var(--k) 12%, var(--m-carta)); color:var(--k); }
+  .pe-ris-ic svg{ width:18px; height:18px; }
+  .pe-ris-ic.pe-k-teal{ --k:var(--m-teal); } .pe-ris-ic.pe-k-rame{ --k:var(--m-diari); } .pe-ris-ic.pe-k-blu{ --k:var(--m-blu); } .pe-ris-ic.pe-k-viola{ --k:var(--m-viola); } .pe-ris-ic.pe-k-ink{ --k:var(--m-ink-2); }
+  html[data-m-tema="scuro"] .pe-ris-ic.pe-k-viola{ --k:#b6a3f0; }
+  .pe-ris-vuoto{ margin:14px 12px; font-size:14px; color:var(--m-muted); }
+  /* la barra laterale ha ora una parte fissa (titolo, ricerca) e una che si aggiorna */
+  .pe-s-corpo{ flex:1; min-height:0; display:flex; flex-direction:column; }
+  /* la lente sul telefono, accanto all'account */
+  .pe-lente{ display:none; }
+  html[data-pe] .m-bar.m-home .m-bar-in{ grid-template-columns:1fr auto auto; column-gap:10px; }
+  html[data-pe] .m-bar.m-home .pe-lente{ display:grid; place-items:center; width:38px; height:38px; padding:0; border:1px solid var(--m-line); border-radius:12px; background:var(--m-carta); color:var(--m-muted); cursor:pointer; }
+  html[data-pe] .pe-lente svg{ width:19px; height:19px; }
+  .pe-cerca-tel{ position:fixed; z-index:120; inset:0; display:flex; flex-direction:column; padding:calc(10px + env(safe-area-inset-top,0px)) 16px 16px; background:color-mix(in srgb, var(--pe-fondo) 94%, transparent); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); animation:pe-cerca-su .22s var(--m-molla) both; }
+  .pe-cerca-tel[hidden]{ display:none; }
+  @keyframes pe-cerca-su{ from{ opacity:0; transform:translateY(-8px); } }
+  .pe-ct-in{ display:flex; align-items:center; gap:10px; width:100%; max-width:560px; margin:0 auto; }
+  .pe-ct-in .pe-cerca{ flex:1; height:48px; background:var(--m-carta); box-shadow:var(--pe-ombra); }
+  .pe-ct-in .pe-cerca input{ font-size:16px; }
+  .pe-ct-annulla{ flex:none; padding:8px 2px; border:0; background:none; color:var(--m-link); font:600 15px var(--m-sans); cursor:pointer; }
+  .pe-ris-tel{ width:100%; max-width:560px; margin:12px auto 0; overflow-y:auto; padding:6px; border:1px solid var(--m-line); border-radius:22px; background:var(--m-carta); box-shadow:var(--pe-ombra); max-height:calc(100% - 70px); align-self:center; }
+  .pe-ris-tel:empty{ display:none; }
+  .pe-ris-tel .pe-ris-r{ padding:10px; }
+  html.pe-cerca-su body{ overflow:hidden; }
   /* IL DIARIO A TUTTO SCHERMO, a destra della barra */
   html[data-pe] .mpd-dett{ position:relative; }
   .pe-pieno-btn{ display:none; position:absolute; z-index:3; top:18px; right:62px; width:36px; height:36px; place-items:center; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-ink-2); cursor:pointer; }
@@ -26442,6 +26492,7 @@ const vistaPagina = v => document.getElementById(v === 'vitali' ? 'vitali-settor
 const titoloPagina = v => PAGINE[v] || '';
 const $m = s => document.querySelector(s);
 const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const PE_LENTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>';
 const ICON = {
   indietro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
   chev:'<svg class="m-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
@@ -26619,7 +26670,7 @@ function barra(titolo, azione){
   const bar = $m('#m-bar'); bar.classList.toggle('m-home', casa);
   bar.classList.remove('m-scorsa'); requestAnimationFrame(barraScorsa);
   $m('#m-bar-in').innerHTML = casa
-    ? `${UI_MP ? '<span class="mp-marchio"><b>EO Pocket</b> · minimal</span>' : (UI_PE ? '<span class="m-marchio"><i>EO</i>EO Pocket<em>evolution</em></span>' : '<span class="m-marchio"><i>EO</i>EO Pocket</span>')}${htmlConnessione()}`
+    ? `${UI_MP ? '<span class="mp-marchio"><b>EO Pocket</b> · minimal</span>' : (UI_PE ? `<span class="m-marchio"><i>EO</i>EO Pocket<em>evolution</em></span><button class="pe-lente" data-m="pe-cerca-apri" aria-label="Cerca">${PE_LENTE}</button>` : '<span class="m-marchio"><i>EO</i>EO Pocket</span>')}${htmlConnessione()}`
     : `<button class="m-indietro" data-m="indietro" aria-label="Indietro">${ICON.indietro}</button><span class="m-bar-t" id="m-bar-t">${esc(titolo)}</span>${azione ? `<button class="m-azione" data-m="${azione[0]}">${azione[1]}</button>` : '<span></span>'}`;
 }
 
@@ -28945,6 +28996,9 @@ document.getElementById('m-app').addEventListener('click', e => {
   else if(a === 'pe-vai') peVai(el.dataset.v, el.dataset.p);
   else if(a === 'pe-sett') peVai('settore', el.dataset.s);
   else if(a === 'pe-tema') impostaTemaMinimal(temaMinimal() === 'scuro' ? 'chiaro' : 'scuro');
+  else if(a === 'pe-cerca-apri') peCercaApri();
+  else if(a === 'pe-cerca-chiudi') peCercaChiudi();
+  else if(a === 'pe-cerca-vai') peCercaVai(+el.dataset.i);
   else if(a === 'strumenti-home') vai('strumenti');
   else if(a === 'rubrica') apriRubrica();
   else if(a === 'letto'){
@@ -31177,6 +31231,7 @@ const PE_ICO = {
   sole:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
   stella:'<svg viewBox="0 0 24 24"><path d="M12 3.5c.6 4.6 3.9 7.9 8.5 8.5-4.6.6-7.9 3.9-8.5 8.5-.6-4.6-3.9-7.9-8.5-8.5 4.6-.6 7.9-3.9 8.5-8.5z" fill="currentColor"/></svg>',
   amb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16V8a1 1 0 011-1h10v9"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M8.5 9.5v3M7 11h3"/></svg>',
+  lente:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>',
   espandi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
   riduci:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>'
 };
@@ -31251,7 +31306,7 @@ function peSide(){
   const box = $m('#pe-side'); if(!box) return;
   const on = UI_PE && PE_SIDE.matches;
   document.documentElement.classList.toggle('pe-side-on', on);
-  if(!on){ if(box.innerHTML) box.innerHTML = ''; return; }
+  if(!on) return;
   const festivo = eFestivo(new Date()), guardia = guardiaAttiva();
   const ss = ricoveratiEO().length ? [...settori(), RIC] : settori();
   const inSett = (M.vista === 'visita' || M.vista === 'diari');
@@ -31270,9 +31325,10 @@ function peSide(){
   const nome = nomeAccount(), dentro = statoAccount() === 'Connesso';
   const ini = (inizialiAccount && inizialiAccount()) || (nome ? nome.slice(0, 2).toUpperCase() : '');
   const scuro = temaMinimal() === 'scuro';
-  box.innerHTML = `
+  $m('#pe-s-testa').innerHTML = `
     <div class="pe-brand"><span class="pe-logo">EO</span><span class="pe-brand-t"><b>Pocket Evolution</b><small>${esc(NOMI_REPARTO[getReparto()] || 'Reparto')}</small></span>
-      <button class="pe-sq" data-m="pe-tema" aria-label="${scuro ? 'Tema chiaro' : 'Tema scuro'}" title="${scuro ? 'Tema chiaro' : 'Tema scuro'}">${scuro ? PE_ICO.sole : PE_ICO.luna}</button></div>
+      <button class="pe-sq" data-m="pe-tema" aria-label="${scuro ? 'Tema chiaro' : 'Tema scuro'}" title="${scuro ? 'Tema chiaro' : 'Tema scuro'}">${scuro ? PE_ICO.sole : PE_ICO.luna}</button></div>`;
+  $m('#pe-s-corpo').innerHTML = `
     <nav class="pe-scorre">
       <p class="pe-sec">Giro</p>
       ${voce('data-m="pe-vai" data-v="home"', PE_ICO.casa, 'Scrivania', '', M.vista === 'home')}
@@ -31290,6 +31346,115 @@ function peSide(){
       ${voce(guardia ? 'data-m="gu-off"' : 'data-m="gu-on"', PE_ICO.luna, guardia ? 'Esci dalla guardia' : 'Modalità guardia', '', false)}
     </nav>
     <button class="pe-me" data-m="pe-vai" data-v="app" data-p="account"><span class="pe-av">${ini ? esc(ini) : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0114 0"/></svg>'}</span><span class="pe-me-t"><b>${esc(nome || 'Account')}</b><small><i class="${dentro ? 'pe-ok' : ''}"></i>${dentro ? 'Sincronizzato' : 'Solo su questo dispositivo'}</small></span></button>`;
+}
+
+// LA RICERCA: letti (col loro stato di oggi), ricoveri (cognome e nome),
+// pagine dell'app e strumenti (gli stessi di Strumenti). Invio apre il
+// primo, ↑ ↓ scelgono, Esc svuota e chiude
+let peRis = [], peRisSel = 0;
+const peNorm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+function peCerca(q){
+  const n = peNorm(q); if(!n) return [];
+  const voto = t => { const x = peNorm(t); if(!x) return 0; if(x === n) return 4; if(x.startsWith(n)) return 3; if(x.split(/[\s·,.\-]+/).some(w => w.startsWith(n))) return 2; return x.includes(n) ? 1 : 0; };
+  const fuori = [];
+  // letti
+  const visti = new Set(), letti = [];
+  [...settori(), ...(ricoveratiEO().length ? [RIC] : [])].forEach(x => mpNomi(x).forEach(([nome, et, ap]) => {
+    if(visti.has(nome)) return; visti.add(nome);
+    const breve = String(nome).replace(/^(C[12]) · Letto /, '$1 ').replace(/^Letto\s+/i, '');
+    const v = Math.max(voto(breve), voto(nome) - 1); if(!v) return;
+    const i = infoLetto(nome);
+    const stato = i.critico ? ['crit', 'critico'] : i.copiato ? ['cop', 'diario copiato'] : i.vistoOggi ? ['dacop', 'diario da copiare'] : i.occupato ? ['', i.giorniVisita === 1 ? 'visto ieri' : 'da vedere'] : ['', ap ? 'appoggio' : 'letto libero'];
+    letti.push({ v, gr:'Letti', t:'Letto ' + breve, sub:`${x === RIC ? 'Ricoveri' : nomeSettore(x)} · ${stato[1]}`, tile:breve, cl:stato[0], vai:() => peApriLetto(nome) });
+  }));
+  fuori.push(...letti.sort((a, b) => b.v - a.v).slice(0, 6));
+  // ricoveri
+  let ric = []; try{ ric = loadRicoveri(); } catch(e){}
+  fuori.push(...ric.map(r => {
+    const c = r.campi || {}, nome = `${(c.cognome || '').trim().toUpperCase()} ${(c.nome || '').trim()}`.trim();
+    const v = Math.max(voto(nome), voto(c.cognome), voto(c.nome) , n.length >= 3 ? voto(c.diagnosi) - 1 : 0); if(!v || !nome) return null;
+    const quando = r.creatoIl ? new Date(r.creatoIl).toLocaleDateString('it-IT', { day:'numeric', month:'short' }) : '';
+    return { v, gr:'Ricoveri', t:nome, sub:['Ricovero', quando, c.eta ? c.eta + ' anni' : ''].filter(Boolean).join(' · '), ico:ICON.ricoveri, k:'rame', vai:() => { peVai('app', 'ricoveri'); setTimeout(() => apriRicoveroSingolo(r.id), 60); } };
+  }).filter(Boolean).sort((a, b) => b.v - a.v).slice(0, 4));
+  // pagine
+  const festivo = eFestivo(new Date()), gu = guardiaAttiva();
+  const pagine = [
+    ['Scrivania', 'Home, il lavoro di oggi', PE_ICO.casa, 'notte', () => peVai('home')],
+    ['Reparto', 'Tutti i settori e i letti', ICON.steto, 'teal', () => peVai('reparto')],
+    ['Ricoveri', 'Elenco, calendario e statistiche', ICON.ricoveri, 'rame', () => peVai('app', 'ricoveri')],
+    ['Dimissioni', 'Calendario dimissioni', ICON.calendario, 'blu', () => peVai('app', 'dimissioni')],
+    [festivo ? 'Consegne weekend' : 'Aggiorna consegne', festivo ? 'Le consegne del weekend' : 'La tabella di fine giro', ICON.consegne, 'rame', () => festivo ? peVai('app', 'consegne') : peVai('aggcons')],
+    ['Post-degenze', 'In sospeso e da controllare', ICON.postdegenze, 'teal', () => peVai('app', 'postdegenze')],
+    ['Rubrica', 'Numeri di telefono', ICON.rubrica, 'viola', () => apriRubrica()],
+    ['Strumenti', 'EGA, ECG, farmaci…', ICON.strumenti, 'ink', () => peVai('strumenti')],
+    [gu ? 'Esci dalla guardia' : 'Modalità guardia', 'Cose da fare, letti liberi', PE_ICO.luna, 'ink', () => impostaGuardia(!gu)],
+    ['Impostazioni', 'Tema, colori, reparto', ICON.strumenti, 'ink', () => peVai('app', 'impostazioni')],
+    ['Account', 'Accesso e sincronizzazione', ICON.strumenti, 'ink', () => peVai('app', 'account')],
+    ['Backup', 'Copie dei dati', ICON.diario, 'ink', () => peVai('app', 'backup')],
+    [temaMinimal() === 'scuro' ? 'Tema chiaro' : 'Tema scuro', 'Cambia il tema di Pocket Evolution', temaMinimal() === 'scuro' ? PE_ICO.sole : PE_ICO.luna, 'ink', () => impostaTemaMinimal(temaMinimal() === 'scuro' ? 'chiaro' : 'scuro')]
+  ];
+  const visteP = new Set();
+  fuori.push(...pagine.map(([t, sub, ico, k, vai]) => { const v = Math.max(voto(t), n.length >= 3 ? voto(sub) - 1 : 0); visteP.add(peNorm(t)); return v ? { v, gr:'Pagine', t, sub, ico, k, vai } : null; }).filter(Boolean).sort((a, b) => b.v - a.v).slice(0, 4));
+  // strumenti (le righe di Strumenti dell'app, come in Pocket)
+  const righe = [...document.querySelectorAll('#app-view .ric-lista-riga')].filter(el => !/consegne|dimissioni|apriRubrica|postdegenze/.test(el.getAttribute('onclick') || ''));
+  fuori.push(...righe.map(el => {
+    const nm = el.querySelector('.ric-lista-nome'); const t = nm ? nm.textContent.replace(/\s+/g, ' ').replace(/^[•·\s]+/, '').trim() : '';
+    if(!t || visteP.has(peNorm(t))) return null;
+    const v = voto(t); if(!v) return null;
+    return { v, gr:'Strumenti', t, sub:'Strumento', ico:ICON.strumenti, k:'ink', vai:() => el.click() };
+  }).filter(Boolean).sort((a, b) => b.v - a.v).slice(0, 4));
+  return fuori;
+}
+function peCercaMostra(k){
+  const inp = $m('#pe-cerca-' + k), box = $m('#pe-ris-' + k);
+  const q = inp.value;
+  peRis = peCerca(q); peRisSel = 0;
+  if(!q.trim()){
+    box.hidden = k === 's';
+    box.innerHTML = k === 't' ? '<p class="pe-ris-vuoto">Un letto (12.1), un cognome, una pagina o uno strumento.</p>' : '';
+    return;
+  }
+  box.hidden = false;
+  if(!peRis.length){ box.innerHTML = `<p class="pe-ris-vuoto">Niente per «${esc(q.trim())}».</p>`; return; }
+  let gr = '';
+  box.innerHTML = peRis.map((r, i) => {
+    const testa = r.gr !== gr ? `<p class="pe-ris-gr">${(gr = r.gr)}</p>` : '';
+    const segno = r.tile ? `<span class="pe-ris-tl${r.cl ? ' pe-tl-' + r.cl : ''}">${esc(r.tile)}</span>` : `<span class="pe-ris-ic pe-k-${r.k}">${r.ico}</span>`;
+    return `${testa}<button class="pe-ris-r" data-m="pe-cerca-vai" data-i="${i}" role="option" aria-selected="${i === peRisSel}">${segno}<span class="pe-ris-t"><b>${esc(r.t)}</b><small>${esc(r.sub)}</small></span><kbd>↵</kbd></button>`;
+  }).join('');
+}
+function peCercaSegna(k){
+  const box = $m('#pe-ris-' + k);
+  box.querySelectorAll('.pe-ris-r').forEach(b => b.setAttribute('aria-selected', String(+b.dataset.i === peRisSel)));
+  const b = box.querySelector(`[data-i="${peRisSel}"]`); if(b) b.scrollIntoView({ block:'nearest' });
+}
+function peCercaApri(){
+  if(PE_SIDE.matches && !document.documentElement.classList.contains('pe-eo')){ const i = $m('#pe-cerca-s'); i.focus(); i.select(); if(i.value.trim()) peCercaMostra('s'); return; }
+  const t = $m('#pe-cerca-tel'); t.hidden = false; document.documentElement.classList.add('pe-cerca-su');
+  const i = $m('#pe-cerca-t'); i.value = ''; peCercaMostra('t'); setTimeout(() => i.focus(), 30);
+}
+function peCercaChiudi(){
+  const t = $m('#pe-cerca-tel'); if(t){ t.hidden = true; document.documentElement.classList.remove('pe-cerca-su'); }
+  ['s', 't'].forEach(k => { const i = $m('#pe-cerca-' + k); if(i){ i.value = ''; i.blur(); } const b = $m('#pe-ris-' + k); if(b){ b.hidden = k === 's'; b.innerHTML = ''; } });
+  peRis = [];
+}
+function peCercaVai(i){
+  const r = peRis[i]; if(!r) return;
+  peCercaChiudi();
+  r.vai();
+}
+// un letto trovato: al PC il suo diario sulla scrivania (o la visita, se
+// non è ancora visto); sul telefono il Reparto col settore e il letto aperto
+function peApriLetto(nome){
+  if(document.getElementById('m-scheda').classList.contains('m-su') && !mpDocked()) chiudiScheda();
+  const i = infoLetto(nome);
+  if(MP_PC.matches){
+    if(M.vista !== 'home') peVai('home');
+    if(i.vistoOggi) return pkLettoSett(nome);
+    return apriVisita(nome);
+  }
+  M.pila = []; Object.assign(M, { vista:'home', letto:null, id:null, pag:null });
+  pkApriLetto(nome, mpSettoreDi(nome));
 }
 // dalla barra: si riparte dalla scrivania, così "indietro" torna lì
 function peVai(v, extra){
@@ -31323,7 +31488,30 @@ function pePieno(si){
   const b = $m('.pe-pieno-btn'); if(b) b.setAttribute('aria-label', si ? 'Riduci il diario' : 'Diario a tutto schermo');
 }
 if(UI_PE){
-  $m('#m-app').insertAdjacentHTML('afterbegin', '<aside class="pe-side" id="pe-side" aria-label="Sezioni"></aside>');
+  const tasto = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
+  const casella = (id, ph) => `<label class="pe-cerca">${PE_ICO.lente}<input id="${id}" type="search" placeholder="${ph}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Cerca" aria-controls="${id.replace('cerca', 'ris')}"></label>`;
+  $m('#m-app').insertAdjacentHTML('afterbegin', `<aside class="pe-side" id="pe-side" aria-label="Sezioni"><div id="pe-s-testa"></div>
+    <div class="pe-cerca-wrap">${casella('pe-cerca-s', 'Cerca letto, ricovero…').replace('</label>', `<kbd>${tasto}</kbd></label>`)}<div class="pe-ris pe-ris-side" id="pe-ris-s" role="listbox" hidden></div></div>
+    <div class="pe-s-corpo" id="pe-s-corpo"></div></aside>`);
+  // sul telefono (e al PC senza barra) la ricerca si apre dalla lente in alto, a tutto schermo
+  $m('#m-app').insertAdjacentHTML('beforeend', `<div class="pe-cerca-tel" id="pe-cerca-tel" hidden role="dialog" aria-label="Cerca"><div class="pe-ct-in">${casella('pe-cerca-t', 'Letto, cognome, pagina, strumento…')}<button class="pe-ct-annulla" data-m="pe-cerca-chiudi">Annulla</button></div><div class="pe-ris pe-ris-tel" id="pe-ris-t" role="listbox"></div></div>`);
+  ['s', 't'].forEach(k => {
+    const inp = $m('#pe-cerca-' + k), box = $m('#pe-ris-' + k);
+    inp.addEventListener('input', () => peCercaMostra(k));
+    inp.addEventListener('focus', () => { if(k === 's' && inp.value.trim()) peCercaMostra(k); });
+    inp.addEventListener('blur', () => { if(k === 's') setTimeout(() => { if(document.activeElement !== inp) box.hidden = true; }, 150); });
+    inp.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); if(!peRis.length) return; peRisSel = (peRisSel + (e.key === 'ArrowDown' ? 1 : -1) + peRis.length) % peRis.length; peCercaSegna(k); }
+      else if(e.key === 'Enter'){ e.preventDefault(); peCercaVai(peRisSel); }
+      else if(e.key === 'Escape'){ e.preventDefault(); if(inp.value){ inp.value = ''; peCercaMostra(k); } else peCercaChiudi(); }
+    });
+    // il tocco su un risultato non deve togliere il fuoco prima del clic
+    box.addEventListener('mousedown', e => e.preventDefault());
+  });
+  document.addEventListener('keydown', e => {
+    if((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K') && M.vista !== 'eo'){ e.preventDefault(); peCercaApri(); }
+  });
   PE_SIDE.addEventListener('change', () => { if(!PE_SIDE.matches) pePieno(false); peSide(); });
   // F (fuori dalle caselle) apre e chiude il tutto schermo, Esc lo chiude
   document.addEventListener('keydown', e => {

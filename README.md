@@ -48,6 +48,13 @@ Sul telefono la guardia ha una home sua, che scorre tutta insieme: in cima la ca
   - Dimissioni di oggi e domani (l'arco).
   
   Un clic su una tessera porta dove serve. In guardia le tessere diventano Da fare in guardia, Ricoveri dal PS, Critici e Dimissioni. Sugli schermi bassi (sotto i 940 pixel di altezza) le tessere restano senza disegnino. I link in fondo alla pagina spariscono, perché stanno nella barra.
+- **La ricerca**: al PC è nella barra laterale, sotto il nome; si raggiunge anche con ⌘K (Ctrl K su Windows). Sul telefono c'è la lente nella home, accanto all'account, che apre la ricerca a tutto schermo. Cerca quattro cose:
+  - i **letti** (per numero: «12» trova 12.1 e 12.2), col loro stato di oggi (critico, diario copiato, da copiare, da vedere);
+  - i **ricoveri** (per cognome o nome, dalla terza lettera anche per diagnosi);
+  - le **pagine** (Dimissioni, Consegne, Rubrica, Impostazioni, Account, Backup, guardia, tema…);
+  - gli **strumenti** (gli stessi di Strumenti: VFG, EGA, score…).
+  
+  ↑ ↓ scelgono, Invio apre, Esc svuota e chiude. Un letto già visto apre il suo diario sulla scrivania; uno ancora da vedere apre la visita; sul telefono il letto si apre nel suo settore.
 - **Il diario a tutto schermo**: nel diario agganciato, accanto al tasto delle pratiche, il tasto con le due frecce (o il tasto F) lo apre a tutto schermo, a destra della barra laterale. Tutto il resto si nasconde e il testo si legge più grande, in una colonna centrale. Lo stesso tasto, o Esc fuori dalle caselle, riporta alla scrivania. ↑ ↓ e C funzionano come prima.
 - **Tema**: chiaro o scuro, suo (Impostazioni → Tema, oppure il tasto nella barra). Senza una scelta segue il telefono o il computer. Non cambia il tema di Pocket. I colori d'accento di Pocket restano sceglibili.
 
