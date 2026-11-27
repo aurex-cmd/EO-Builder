@@ -26496,6 +26496,68 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
   .pe-ris-tel:empty{ display:none; }
   .pe-ris-tel .pe-ris-r{ padding:10px; }
   html.pe-cerca-su body{ overflow:hidden; }
+
+  /* LA SCRIVANIA NUOVA: il saluto con la pillola del giro, il tondo a destra;
+     sotto le tessere, a sinistra "Il prossimo" e a destra "Da fare oggi" */
+  .pe-ciao h1{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 22px; }
+  .pe-giro{ display:inline-flex; align-items:center; gap:4px; padding:9px 12px 9px 16px; border:0; border-radius:999px; background:var(--m-notte-box); color:var(--m-link); font:600 16px var(--m-sans); letter-spacing:0; cursor:pointer; transition:background .15s; }
+  .pe-giro:hover{ background:color-mix(in srgb, var(--m-notte) 16%, var(--m-carta)); }
+  .pe-giro svg{ width:17px; height:17px; }
+  .pe-anello{ flex:none; display:flex; align-items:center; gap:14px; padding:0; border:0; background:none; color:var(--m-muted); font:inherit; text-align:right; cursor:pointer; }
+  .pe-anello span{ display:flex; flex-direction:column; font-size:14px; }
+  .pe-anello b{ font-size:15px; color:var(--m-ink); }
+  .pe-tondo{ position:relative; width:68px; height:68px; display:grid; place-items:center; font-style:normal; }
+  .pe-tondo svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .pe-tondo .m-td-f{ fill:none; stroke:var(--m-l-base); stroke-width:10; }
+  .pe-tondo .m-td-b, .pe-tondo .m-td-a{ fill:none; stroke:var(--m-teal); stroke-width:10; stroke-linecap:round; }
+  .pe-tondo b{ position:relative; font-size:16px; font-weight:700; color:var(--m-ink); }
+  .pe-tondo b small{ font-size:10px; color:var(--m-muted); }
+  .pe-crit-da{ font-weight:600; color:var(--m-critico); }
+  html[data-pe] .pkd .mpd-corpo{ grid-template-columns:minmax(0, 1.55fr) minmax(280px, 1fr); }
+  html[data-pe] .pkd .mpd-lista{ order:2; }
+  html[data-pe] .pkd .mpd-dett{ order:1; }
+  html[data-pe].pe-side-on .pkd .pkd-sett{ display:none; }
+  .pe-fare-t{ flex:none; display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:18px 18px 8px; }
+  .pe-fare-t h3{ margin:0; font-size:19px; font-weight:700; letter-spacing:-.015em; color:var(--m-ink); }
+  .pe-fare-t span{ font-size:13.5px; color:var(--m-muted); }
+  html[data-pe] .pkd .mpd-gr{ padding:12px 18px 4px; font-size:11px; color:var(--m-faint); }
+  html[data-pe] .pkd .mpd-giu{ border-top:0; }
+  html[data-pe] .pkd .mpd-r{ width:calc(100% - 16px); margin:1px 8px; padding:9px 10px; }
+  html[data-pe] .pkd .mpd-r .mp-tessera{ width:38px; height:38px; border-radius:11px; }
+  html[data-pe] .pkd .mpd-fatto .mpd-rt b{ color:var(--m-teal); }
+  /* Il prossimo */
+  html[data-pe] .pkd .mpd-info{ padding:26px 28px 24px; background:linear-gradient(180deg, var(--m-carta), color-mix(in srgb, var(--m-box) 40%, var(--m-carta))); overflow-y:auto; }
+  .pe-pr{ display:flex; flex-direction:column; min-height:100%; }
+  .pe-pr-over{ display:flex; align-items:center; gap:8px; margin:0; font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--m-muted); }
+  .pe-pr-over svg{ width:14px; height:14px; color:var(--m-teal); }
+  .pe-pr h2{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; margin:14px 0 0; font-size:clamp(24px, 2.3vw, 32px); font-weight:700; letter-spacing:-.03em; line-height:1.12; color:var(--m-ink); }
+  .pe-pill-st{ display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; font-size:13px; font-weight:600; letter-spacing:0; }
+  .pe-pill-st::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .pe-ps-lilla{ background:color-mix(in srgb, var(--m-critico) 12%, var(--m-carta)); color:var(--m-critico); }
+  .pe-ps-rame{ background:color-mix(in srgb, var(--m-diari) 14%, var(--m-carta)); color:var(--m-diari); }
+  .pe-ps-teal{ background:color-mix(in srgb, var(--m-teal) 14%, var(--m-carta)); color:var(--m-teal); }
+  .pe-ps-grigio{ background:var(--m-sec); color:var(--m-muted); }
+  .pe-pr-meta{ margin:8px 0 0; font-size:16px; color:var(--m-muted); }
+  .pe-pr-hint{ font-size:13.5px; color:var(--m-faint); }
+  .pe-pr-boxes{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:22px; }
+  .pe-pr-box{ min-width:0; padding:15px 16px; border:1px solid var(--m-line); border-radius:18px; background:var(--m-carta); }
+  .pe-pr-box p{ display:flex; align-items:center; gap:8px; margin:0; font-size:14px; font-weight:500; color:var(--m-muted); }
+  .pe-pr-box p svg{ width:17px; height:17px; flex:none; }
+  .pe-pr-box b{ display:block; margin-top:8px; font-size:24px; font-weight:700; letter-spacing:-.02em; color:var(--m-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pe-pr-box small{ display:block; margin-top:3px; font-size:13.5px; color:var(--m-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pe-pr-dia{ margin-top:16px; padding:15px 18px; border:1px solid var(--m-line); border-radius:18px; background:var(--m-carta); }
+  .pe-pr-dia p{ margin:0; font-size:11.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--m-faint); }
+  .pe-pr-dia ul{ margin:8px 0 0; padding:0; list-style:none; }
+  .pe-pr-dia li{ font-size:15px; line-height:1.65; color:var(--m-ink-2); }
+  .pe-pr-dia li::before{ content:"– "; color:var(--m-faint); }
+  .pe-pr-dia li.pe-pr-altri{ color:var(--m-muted); font-size:13.5px; }
+  .pe-pr-dia li.pe-pr-altri::before{ content:""; }
+  .pe-pr-dia blockquote{ margin:8px 0 0; font-size:15px; line-height:1.55; color:var(--m-ink-2); }
+  .pe-pr-az{ display:flex; flex-wrap:wrap; gap:10px; margin-top:auto; padding-top:22px; }
+  .pe-pr-az .mp-btn{ width:auto; height:46px; padding:0 18px; display:inline-flex; align-items:center; gap:9px; border-radius:14px; font-size:15px; font-weight:600; }
+  .pe-pr-az .mp-btn svg{ width:18px; height:18px; }
+  .pe-pr-az kbd{ font:600 11.5px var(--m-sans); padding:3px 6px; border-radius:6px; background:rgba(255,255,255,.2); }
+  @media (max-width:1240px){ .pe-pr-boxes{ gap:10px; } .pe-pr-box b{ font-size:20px; } }
   /* IL DIARIO A TUTTO SCHERMO, a destra della barra */
   html[data-pe] .mpd-dett{ position:relative; }
   .pe-pieno-btn{ display:none; position:absolute; z-index:3; top:18px; right:62px; width:36px; height:36px; place-items:center; border:0; border-radius:50%; background:var(--m-sec); color:var(--m-ink-2); cursor:pointer; }
@@ -30620,6 +30682,7 @@ function mpOggiPC(dati, saluto, frase, pk){
     lista.innerHTML = `<div class="pkd-gu-sx">${htmlGuardia('sx')}</div>`;
     lista.querySelector('.pkd-gu-sx').scrollTop = y;
   }
+  if(UI_PE) lista.insertAdjacentHTML('afterbegin', peFareTesta(dati, pk && pk.guardia));
   if(pk) lista.insertAdjacentHTML('afterbegin', `<div class="pkd-sett" role="group" aria-label="Settori">${pk.settori.map(v => `<button data-mp="pc-sel" data-k="${esc(v.k)}" aria-current="${v.k === mpSel}" class="${v.oggi ? 'pkd-oggi' : ''}" style="--p:${v.n ? Math.round(v.visti / v.n * 100) : 0}%;--c:${v.n ? Math.round(v.cop / v.n * 100) : 0}%" aria-label="${esc(v.titolo)}, ${esc(v.sotto)}"><b>${esc(v.l)}</b><small>${v.visti}/${v.n}</small><i></i></button>`).join('')}</div>`);
   lista.querySelectorAll('.mpd-scorre').forEach((x, k) => { x.scrollTop = pos[k] || 0; });
   if(tieni) return;
@@ -30712,6 +30775,15 @@ function mpDett(){
   const chiave = !p ? '' : diario ? 'd|' + p.letto : p.k + '|' + p.sotto + (p.sett || p.gu ? '|' + p.firma : '');
   if(chiave === mpDettK && (!diario || mpDocked())) return;
   // un diario: l'editor intero, agganciato qui (esame obiettivo, Agli EE, referti, provvedimenti, Copia)
+  if(UI_PE){
+    // Pocket Evolution: il diario si apre a tutto schermo; sulla scrivania la
+    // card "Il prossimo" col paziente, i suoi numeri e le azioni
+    const pieno = document.documentElement.classList.contains('pe-pieno');
+    const agganciabile = p && p.letto && (diario || infoLetto(p.letto).occupato);
+    if(pieno && agganciabile){ mpDock(p); mpDettK = chiave; return; }
+    if(pieno) pePieno(false);
+    if(p && p.letto && !p.sett && !p.gu){ mpUndock(); mpDettK = chiave + '|pe'; return peProssimo(box, p); }
+  }
   if(diario){ mpDock(p); mpDettK = chiave; return; }
   mpUndock(); mpDettK = chiave;
   if(p && p.gu) return guDett(box);
@@ -30775,6 +30847,9 @@ function mpPcScegli(k, scorri){
 function mpPcApri(){
   const p = mpVoci.find(v => v.k === mpSel); if(!p) return;
   // un diario: si scrive subito nei provvedimenti
+  if(UI_PE && p.letto && !document.documentElement.classList.contains('pe-pieno')){
+    if(mpEDiario(p)) pePieno(true); else if(!infoLetto(p.letto).vistoOggi) return apriVisita(p.letto);
+  }
   if(mpEDiario(p)){ const t = $m('#m-provv'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } return; }
   mpPila = [p, ...mpPila.filter(x => x !== p)];
   mpPassoApri();
@@ -31263,7 +31338,8 @@ if(UI_MP){
 if(!UI_MP) document.addEventListener('click', e => {
   const el = e.target.closest('[data-mp]'); if(!el) return;
   const a = el.dataset.mp;
-  if(a === 'pc-sel') mpPcScegli(el.dataset.k);
+  if(a === 'pc-sel' && UI_PE && el.dataset.k === mpSel && mpEDiario(mpVoci.find(v => v.k === mpSel))) pePieno(true);
+  else if(a === 'pc-sel') mpPcScegli(el.dataset.k);
   else if(a === 'pc-apri') mpPcApri();
   else if(a === 'pc-copia') mpPcCopia();
   else if(a === 'pc-fatto') mpPcFatto();
@@ -31273,6 +31349,8 @@ if(!UI_MP) document.addEventListener('click', e => {
   else if(a === 'pk-letto') pkLettoSett(el.dataset.n);
   else if(a === 'pe-pieno') pePieno(!document.documentElement.classList.contains('pe-pieno'));
   else if(a === 'pe-diari') peDiari();
+  else if(a === 'pe-visita') apriVisita(el.dataset.n);
+  else if(a === 'pe-dopo') peDopo();
   else if(a === 'pk-apri-sett'){ const x = el.dataset.s; vai('visita', x === RIC ? { zoom:true, settore:RIC } : { zoom:true, settore:x }); }
 });
 
@@ -31341,6 +31419,7 @@ function peTesta(saluto, reparto, dati, guardia){
   const critici = Object.keys(loadCritici());
   const dim = peDimissioni(), lettere = (dati.passi || []).filter(p => p.stato === 'lettera').length;
   const daCop = st.visti - st.cop;
+  const critDa = critici.filter(n => !infoLetto(n).vistoOggi).length;
   const pill = (cl, t) => `<em class="pe-pill ${cl}">${t}</em>`;
   let tessere;
   if(guardia){
@@ -31352,13 +31431,14 @@ function peTesta(saluto, reparto, dati, guardia){
   } else {
     tessere = peTessera('pe-k-teal', 'data-m="reparto"', peFila(st.n, st.visti, st.cop), ICON.steto, sett ? `Visti · ${esc(sett === RIC ? 'Ricoveri' : 'Settore ' + letteraSettore(sett))}` : 'Visti oggi', `${st.visti}<small> / ${st.n}</small>`, st.n - st.visti ? pill('pe-p-ok', `${st.n - st.visti} da vedere`) : st.n ? pill('pe-p-ok', 'tutti visti') : 'Nessun letto')
       + peTessera('pe-k-rame', 'data-mp="pe-diari"', peFogli(), PE_ICO.penna, 'Diari da copiare', daCop, st.cop ? `${pill('pe-p-ok', `${st.cop} copiat${st.cop === 1 ? 'o' : 'i'}`)}su ${st.visti} vist${st.visti === 1 ? 'o' : 'i'}` : st.visti ? `su ${st.visti} vist${st.visti === 1 ? 'o' : 'i'}` : 'ancora nessun diario')
-      + peTessera('pe-k-lilla', 'data-m="reparto"', peRadar(critici.length), PE_ICO.stella, 'Critici', critici.length, critici.length ? critici.slice(0, 4).map(peLetto).join(' · ') : 'Nessuno segnalato')
+      + peTessera('pe-k-lilla', 'data-m="reparto"', peRadar(critici.length), PE_ICO.stella, 'Critici', critici.length, critici.length ? critici.slice(0, 3).map(peLetto).join(' · ') + (critDa ? ` · <b class="pe-crit-da">${critDa} da vedere</b>` : '') : 'Nessuno segnalato')
       + peTessera('pe-k-blu', 'data-m="pagina" data-p="dimissioni"', peArco((dim.oggi + dim.domani) / Math.max(4, dim.oggi + dim.domani + 1)), ICON.calendario, 'Dimissioni', dim.oggi + dim.domani, lettere ? `${pill('pe-p-rame', `${lettere} letter${lettere === 1 ? 'a' : 'e'}`)}oggi e domani` : 'oggi e domani');
   }
-  const over = `${data} · ${tutti.n} ${tutti.n === 1 ? 'paziente' : 'pazienti'}`;
-  return `<div class="pe-testa"><div class="pe-ciao"><p class="pe-over">${esc(over)}</p><h1>${esc(saluto)}</h1></div>`
-    + reparto.replace('m-ingr m-pri m-rep-home', 'm-ingr m-rep-home pkd-rep').replace(FESTA_HTML, '')
-    + `</div><div class="pe-kpis">${tessere}</div>`;
+  const over = `${data} · ${tutti.n} ${tutti.n === 1 ? 'paziente' : 'pazienti'} oggi`;
+  const nomeSett = sett ? (sett === RIC ? 'Ricoveri' : nomeSettore(sett)) : 'tutti i settori';
+  const giro = guardia ? `Guardia · ${nomeSett}` : !st.visti ? `Inizia il giro · ${nomeSett}` : st.visti < st.n ? `Continua il giro · ${nomeSett}` : `Giro finito · ${nomeSett}`;
+  return `<div class="pe-testa"><div class="pe-ciao"><p class="pe-over">${esc(over)}</p><h1>${esc(saluto)}<button class="pe-giro" data-m="reparto">${esc(giro)}${ICON.chev}</button></h1></div>
+    <button class="pe-anello" data-m="reparto" aria-label="Reparto: ${esc(nomeSett)}, ${st.visti} su ${st.n} visti"><span><b>${esc(nomeSett.replace(/^./, c => c.toUpperCase()))}</b><small>${st.visti} su ${st.n} vist${st.visti === 1 ? 'o' : 'i'}</small></span><i class="pe-tondo">${tondo(st.n ? st.visti / st.n * 100 : 0)}</i></button></div><div class="pe-kpis">${tessere}</div>`;
 }
 // la barra laterale
 function peSide(){
@@ -31611,7 +31691,7 @@ function peApriLetto(nome){
   const i = infoLetto(nome);
   if(MP_PC.matches){
     if(M.vista !== 'home') peVai('home');
-    if(i.vistoOggi) return pkLettoSett(nome);
+    if(i.vistoOggi){ pkLettoSett(nome); if(mpEDiario(mpVoci.find(v => v.k === mpSel))) pePieno(true); return; }
     return apriVisita(nome);
   }
   M.pila = []; Object.assign(M, { vista:'home', letto:null, id:null, pag:null });
@@ -31633,20 +31713,72 @@ function peDiari(){
   if(M.vista !== 'home') peVai('home');
   const v = mpVoci.find(x => x.k.startsWith('dia|'));
   if(!v){ showToast('Nessun diario da copiare'); return; }
-  mpSel = v.k; mpScelto = true; mpDett();
+  mpSel = v.k; mpScelto = true;
+  if(document.documentElement.classList.contains('pe-pieno')) mpDett(); else pePieno(true);
   const r = document.querySelector(`#mpd-lista [data-k="${CSS.escape(v.k)}"]`); if(r) r.scrollIntoView({ block:'nearest' });
+}
+// "Dopo": il prossimo da fare nell'elenco
+function peDopo(){
+  const k = mpVoci.findIndex(v => v.k === mpSel);
+  const dopo = mpVoci.slice(k + 1).concat(mpVoci.slice(0, Math.max(0, k))).find(v => !v.copiato && !v.fattoOk && !v.sett && !v.gu);
+  if(dopo) mpPcScegli(dopo.k, true);
+}
+// la testata della colonna di destra: "Da fare oggi" e quanti sono fatti
+function peFareTesta(dati, guardia){
+  if(guardia){ const a = arriviGuardia().length; return `<div class="pe-fare-t"><h3>Letti e ricoveri</h3>${a ? `<span>${a} dal PS nel turno</span>` : ''}</div>`; }
+  const fatti = (dati.fatti || []).length + (dati.fattiAltri || []).length, tot = fatti + (dati.passi || []).length;
+  return `<div class="pe-fare-t"><h3>Da fare oggi</h3>${tot ? `<span>${fatti} di ${tot} fatt${tot === 1 ? 'o' : 'i'}</span>` : ''}</div>`;
+}
+// IL PROSSIMO: il letto scelto (all'inizio il primo da fare) con lo stato,
+// i dati del paziente, tre riquadri (parametri, antibiotico, esami) e le
+// azioni: aprire il diario o iniziare la visita, oppure passare al prossimo
+function peProssimo(box, p){
+  const nome = p.letto, i = infoLetto(nome);
+  const a = pePaziente(nome) || {};
+  const breve = String(nome).replace(/^(C[12]) · Letto /, '$1 ').replace(/^Letto\s+/i, '');
+  const primo = mpVoci.find(v => !v.copiato && !v.fattoOk && !v.sett && !v.gu);
+  const stati = [i.critico && ['lilla', 'Critico'], i.copiato ? ['teal', 'Copiato'] : i.vistoOggi ? ['rame', 'Da copiare'] : ['grigio', 'Da vedere']].filter(Boolean);
+  const sett = mpSettoreDi(nome);
+  const meta = [sett ? (sett === RIC ? 'Ricoveri' : nomeSettore(sett)) : '', peSottotitolo(nome), i.iso ? 'in isolamento' : ''].filter(Boolean).join(' · ');
+  // i tre riquadri
+  const st = i.p ? statoScheda(i.id, i.p) : null, r = (st && st.respiro) || {};
+  const quando = i.vistoOggi ? 'di oggi' : i.giorniVisita === 1 ? 'di ieri' : 'ultimi';
+  let par = ['—', 'non scritti'];
+  if(r.sat) par = [`${esc(r.sat)}%`, r.o2 && r.o2 !== 'AA' ? `in O₂${r.litri ? ' ' + esc(r.litri) + ' L' : ''}${r.fio2 ? ' · FiO₂ ' + esc(r.fio2) + '%' : ''}` : 'in aria ambiente'];
+  else if(r.pas) par = [`${esc(r.pas)}/${esc(r.pad || '–')}`, `PA${r.fc ? ' · FC ' + esc(r.fc) : ''}`];
+  else if(r.fc) par = [esc(r.fc), 'FC'];
+  let atb = [];
+  try{ if(i.p) atb = (calcolaAiuti(i.p, i.id) || {}).atb || []; } catch(e){}
+  const ab = atb.length ? [esc(atb[0].nome), `${atb[0].giorni}ª giornata${atb.length > 1 ? ` · +${atb.length - 1}` : ''}`] : ['—', 'nessuno in corso'];
+  let ee = '', provv = [], eo = ''; try{ const d = i.id ? leggiDiario(i.id) : null; ee = d && d.ee ? d.ee : ''; provv = d && d.provv ? d.provv.split('\n').map(x => x.replace(/^\s*[-–•]\s*/, '').trim()).filter(x => x && !/^provvedimenti:?$/i.test(x)) : []; eo = d && d.eo || ''; } catch(e){}
+  const es = i.pall && i.pall.esamiDomani ? ['Domani', ee ? 'agli EE: ' + esc(ee) : 'di controllo'] : ee ? [esc(ee.split(/[,;]/)[0]), esc(ee.split(/[,;]/).slice(1).join(',').trim() || 'agli EE')] : ['—', 'nessun esame'];
+  const riq = (ic, t, [v, sm]) => `<div class="pe-pr-box"><p>${ic}${t}</p><b>${v}</b><small>${sm}</small></div>`;
+  const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const azioni = i.vistoOggi
+    ? `<button class="mp-btn pe-pr-pri" data-mp="pe-pieno">${PE_ICO.espandi}Apri il diario<kbd>↵</kbd></button>${i.copiato ? '' : `<button class="mp-btn mp-sec" data-m="pe-sett" data-s="${esc(sett || '')}">Il settore</button>`}`
+    : `<button class="mp-btn pe-pr-pri" data-mp="pe-visita" data-n="${esc(nome)}">${ICON.steto}Inizia la visita<kbd>↵</kbd></button>${i.occupato ? `<button class="mp-btn mp-sec" data-mp="pe-pieno">${ICON.diario}${i.giorniVisita === 1 ? 'Diario di ieri' : 'Ultimo diario'}</button>` : ''}`;
+  box.innerHTML = `<div class="pe-pr">
+    <p class="pe-pr-over">${PE_ICO.stella}${primo && primo.k === p.k ? 'Il prossimo da Pocket' : 'Scelto dall’elenco'}</p>
+    <h2>${esc(a.nome ? `Letto ${breve} · ${peNomeBello(a.nome)}` : nome)}${stati.map(([c, t]) => `<span class="pe-pill-st pe-ps-${c}">${t}</span>`).join('')}</h2>
+    <p class="pe-pr-meta">${esc(meta)}${a.nome || a.eta || a.patologia ? '' : ` <span class="pe-pr-hint">· nome, età e patologia si scrivono nel diario o nella visita</span>`}</p>
+    <div class="pe-pr-boxes">${riq(ico('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'), `Parametri ${quando}`, par)}${riq(ico('<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-40 12 12)"/><path d="m9.5 9.5 5 5"/>'), 'Antibiotico', ab)}${riq(ico('<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>'), 'Esami', es)}</div>
+    ${provv.length || eo ? `<div class="pe-pr-dia"><p>${provv.length ? `Provvedimenti ${i.vistoOggi ? 'di oggi' : quando === 'di ieri' ? 'di ieri' : 'dell\u2019ultimo diario'}` : `Esame obiettivo ${quando}`}</p>${provv.length ? `<ul>${provv.slice(0, 5).map(x => `<li>${esc(x)}</li>`).join('')}${provv.length > 5 ? `<li class="pe-pr-altri">e altri ${provv.length - 5}</li>` : ''}</ul>` : `<blockquote>${esc(eo.length > 260 ? eo.slice(0, 260).replace(/\s+\S*$/, '') + '…' : eo)}</blockquote>`}</div>` : ''}
+    <div class="pe-pr-az">${azioni}<button class="mp-btn mp-sec" data-mp="pe-dopo">Dopo</button></div>
+  </div>`;
+  box.classList.remove('mpd-cambia'); void box.offsetWidth; box.classList.add('mpd-cambia');
 }
 // il diario a tutto schermo, a destra della barra
 function pePieno(si){
   const html = document.documentElement;
   if(!UI_PE || si === html.classList.contains('pe-pieno')) return;
-  if(si && !mpDocked()){
-    const v = mpVoci.find(x => x.k === mpSel && mpEDiario(x)) || mpVoci.find(x => x.k.startsWith('dia|')) || mpVoci.find(x => mpEDiario(x));
-    if(!v){ showToast('Nessun diario da aprire'); return; }
-    mpSel = v.k; mpScelto = true; mpDett();
+  if(si){
+    // il letto scelto, se ha una scheda; altrimenti il primo diario da copiare
+    let v = mpVoci.find(x => x.k === mpSel && x.letto && (mpEDiario(x) || infoLetto(x.letto).occupato));
+    if(!v){ v = mpVoci.find(x => x.k.startsWith('dia|')) || mpVoci.find(x => mpEDiario(x)); if(!v){ showToast('Nessun diario da aprire'); return; } mpSel = v.k; mpScelto = true; }
   }
   html.classList.toggle('pe-pieno', si);
   const b = $m('.pe-pieno-btn'); if(b) b.setAttribute('aria-label', si ? 'Riduci il diario' : 'Diario a tutto schermo');
+  if(M.vista === 'home' && $m('#mpd-info')){ mpDettK = null; mpDett(); }
 }
 if(UI_PE){
   const tasto = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';

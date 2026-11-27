@@ -47,7 +47,11 @@ Sul telefono la guardia ha una home sua, che scorre tutta insieme: in cima la ca
   - Critici (il radar, coi letti);
   - Dimissioni di oggi e domani (l'arco).
   
-  Un clic su una tessera porta dove serve. In guardia le tessere diventano Da fare in guardia, Ricoveri dal PS, Critici e Dimissioni. Sugli schermi bassi (sotto i 940 pixel di altezza) le tessere restano senza disegnino. I link in fondo alla pagina spariscono, perché stanno nella barra.
+  Accanto al saluto c'è la pillola del giro ("Continua il giro · Settore B", "Inizia il giro…", in guardia "Guardia · …"); a destra il settore coi visti e il tondo. Sotto le tessere ci sono due card:
+  - a sinistra **Il prossimo**: il paziente da fare adesso (all'inizio il primo dell'elenco: un diario da copiare o un critico da vedere), col letto, il nome e la pillola dello stato (Critico, Da copiare, Da vedere, Copiato); sotto settore, età, patologia, giornata e isolamento. Poi tre riquadri (parametri dell'ultima visita, antibiotico in corso con la sua giornata, esami) e i provvedimenti dell'ultimo diario. In fondo le azioni: "Apri il diario" (a tutto schermo) se il paziente è già visto, altrimenti "Inizia la visita" e "Diario di ieri"; "Dopo" passa al prossimo;
+  - a destra **Da fare oggi**, l'elenco di sempre (diari da copiare, da vedere, lettere e consegne, fatto oggi), con quanti sono fatti. Un clic sceglie la riga e la mostra nella card; un secondo clic su un diario lo apre a tutto schermo. In guardia, al suo posto, ci sono letti liberi e ricoveri dal PS.
+
+  Invio apre il diario (o inizia la visita), ↑ ↓ scelgono. Un clic su una tessera porta dove serve. In guardia le tessere diventano Da fare in guardia, Ricoveri dal PS, Critici e Dimissioni. Sugli schermi bassi (sotto i 940 pixel di altezza) le tessere restano senza disegnino. I link in fondo alla pagina spariscono, perché stanno nella barra.
 - **Il diario** (sul telefono e al PC) ha in alto lo stato in una pillola ("Da copiare" o "Copiato") e l'ora della visita ("Visto alle 10:25"). Sotto c'è il letto col nome del paziente ("9.2 · Greco Lucia") e, più piccoli, età, patologia e giornata di degenza ("84 anni · scompenso cardiaco · 7ª giornata", contata dal giorno in cui è nata la scheda del letto). Esame obiettivo, Esami e Provvedimenti stanno ciascuno nel suo riquadro. Al PC, sul tasto Copia, c'è anche la "C".
 - **Il paziente del letto**: nome, età e patologia si scrivono a mano, in due posti:
   - nella visita, in cima al riquadro "Paziente" (sopra il sesso), già alla prima visita;
@@ -63,7 +67,7 @@ Sul telefono la guardia ha una home sua, che scorre tutta insieme: in cima la ca
   - gli **strumenti** (gli stessi di Strumenti: VFG, EGA, score…).
   
   ↑ ↓ scelgono, Invio apre, Esc svuota e chiude. Un letto già visto apre il suo diario sulla scrivania; uno ancora da vedere apre la visita; sul telefono il letto si apre nel suo settore.
-- **Il diario a tutto schermo**: nel diario agganciato, accanto al tasto delle pratiche, il tasto con le due frecce (o il tasto F) lo apre a tutto schermo, a destra della barra laterale. Tutto il resto si nasconde e il testo si legge più grande, in una colonna centrale. Lo stesso tasto, o Esc fuori dalle caselle, riporta alla scrivania. ↑ ↓ e C funzionano come prima.
+- **Il diario a tutto schermo**: si apre da "Apri il diario", da Invio, dal tasto F o con un secondo clic sulla riga, a destra della barra laterale, col testo più grande in una colonna centrale. Il tasto con le due frecce, o Esc fuori dalle caselle, riporta alla scrivania. Copiato un diario (C), dopo 3 secondi si passa da soli al prossimo da copiare, sempre a tutto schermo.
 - **Tema**: chiaro o scuro, suo (Impostazioni → Tema, oppure il tasto nella barra). Senza una scelta segue il telefono o il computer. Non cambia il tema di Pocket. I colori d'accento di Pocket restano sceglibili.
 
 ## Minimal Pocket
