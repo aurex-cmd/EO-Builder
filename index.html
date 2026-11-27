@@ -26397,34 +26397,56 @@ XX"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 
 
 
 
-  /* IL PAZIENTE: in cima al diario, sulle tessere e nelle righe */
-  .pe-paz{ margin:6px 0 16px; }
-  .pe-paz-vedi, .pe-paz-vuoto{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:4px 10px; max-width:100%; padding:7px 12px; border:1px solid var(--m-line); border-radius:14px; background:color-mix(in srgb, var(--m-box) 60%, var(--m-carta)); color:var(--m-ink); font:inherit; text-align:left; cursor:pointer; }
-  .pe-paz-vedi b{ font-size:15.5px; font-weight:700; letter-spacing:-.01em; }
-  .pe-paz-pat{ font-size:14px; color:var(--m-muted); }
-  .pe-paz-vedi svg{ width:15px; height:15px; color:var(--m-faint); flex:none; }
-  .pe-paz-vedi:hover svg{ color:var(--m-link); }
-  .pe-paz-vuoto{ gap:6px; border-style:dashed; background:none; color:var(--m-link); font-size:14px; font-weight:600; }
-  .pe-paz-vuoto svg{ width:16px; height:16px; }
-  .pe-paz-mod{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px; border:1px solid var(--m-line); border-radius:16px; background:color-mix(in srgb, var(--m-box) 55%, var(--m-carta)); }
+  /* IL DIARIO: in alto lo stato in pillola e l'ora della visita, il letto
+     col nome, sotto età, patologia e giornata; le parti nei loro riquadri */
+  html[data-pe] .m-s-testa .pe-st{ min-width:0; }
+  .pe-st-su{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; }
+  html[data-pe] .pe-stato{ display:inline-flex; align-items:center; gap:7px; padding:5px 12px 5px 11px; border-radius:999px; font-size:13px; font-weight:600; background:color-mix(in srgb, var(--m-diari) 15%, var(--m-carta)); color:var(--m-diari); }
+  html[data-pe] .pe-stato::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+  html[data-pe] .pe-stato.m-ok{ background:color-mix(in srgb, var(--m-teal) 14%, var(--m-carta)); color:var(--m-teal); }
+  .pe-visto{ font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--m-muted); }
+  html[data-pe] .pe-st .m-s-titolo{ margin-top:12px; }
+  html[data-pe] .pe-st h2{ margin:0; font-size:clamp(24px, 6.4vw, 30px); font-weight:700; letter-spacing:-.03em; line-height:1.12; }
+  html[data-pe] .pe-st .m-pallini{ margin-left:2px; }
+  .pe-st-sotto{ display:block; margin-top:6px; padding:2px 0; border:0; background:none; color:var(--m-muted); font:400 16px/1.4 var(--m-sans); text-align:left; cursor:pointer; }
+  .pe-st-sotto svg{ display:inline-block; width:14px; height:14px; margin-left:8px; vertical-align:-1px; color:var(--m-faint); opacity:0; transition:opacity .15s; }
+  .pe-st-sotto:hover svg, .pe-st-sotto:focus-visible svg{ opacity:1; }
+  @media (hover:none){ .pe-st-sotto svg{ opacity:.8; } }
+  .pe-st-sotto.pe-st-vuoto{ color:var(--m-link); font-size:14.5px; font-weight:600; }
+  .pe-st-sotto.pe-st-vuoto svg{ width:16px; height:16px; margin:0 6px 0 0; vertical-align:-3px; opacity:1; color:currentColor; }
+  .pe-st-sotto.pe-st-aperto{ color:var(--m-link); }
+  html[data-pe] .m-scheda .m-s-corpo{ padding-top:6px; }
+  .pe-sez{ margin:0 0 12px; padding:14px 16px 12px; border:1px solid var(--m-line); border-radius:18px; background:color-mix(in srgb, var(--m-box) 32%, var(--m-carta)); }
+  .pe-sez .m-lbl, .pe-sez .m-lbl-riga{ margin-top:0 !important; padding-top:0 !important; }
+  .pe-sez .m-lbl{ color:var(--m-faint); }
+  .pe-sez .m-blocco{ margin-bottom:0; }
+  .pe-sez .m-riga{ background:transparent; }
+  .pe-sez .m-aggiungi{ margin-bottom:0; }
+  .pe-sez > :last-child{ margin-bottom:0; }
+  /* "C" sul tasto Copia, al PC */
+  html[data-pe].pk-pc .m-scheda.mp-dock .m-copia .m-prima::after{ content:"C"; margin-left:12px; padding:3px 8px; border-radius:7px; background:rgba(255,255,255,.18); font-size:12px; font-weight:600; }
+  /* i campi del paziente, sotto la testa del diario */
+  .pe-paz[hidden]{ display:none; }
+  .pe-paz-mod{ display:grid; grid-template-columns:minmax(0, 1fr) 84px; gap:10px; margin:2px 0 14px; padding:12px; border:1px solid color-mix(in srgb, var(--m-notte) 30%, var(--m-line)); border-radius:18px; background:color-mix(in srgb, var(--m-notte) 4%, var(--m-carta)); }
+  .pe-paz-mod .pe-paz-p{ grid-column:1 / -1; }
   .pe-paz-mod label{ display:flex; flex-direction:column; gap:4px; min-width:0; }
   .pe-paz-mod label span{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--m-muted); }
-  .pe-paz-mod input{ height:40px; padding:0 12px; border:1px solid var(--m-line); border-radius:11px; background:var(--m-carta); color:var(--m-ink); font:400 16px var(--m-sans); outline:0; }
+  .pe-paz-mod input{ width:100%; height:40px; padding:0 12px; border:1px solid var(--m-line); border-radius:11px; background:var(--m-carta); color:var(--m-ink); font:400 16px var(--m-sans); outline:0; }
   .pe-paz-mod input:focus{ border-color:color-mix(in srgb, var(--m-notte) 50%, var(--m-line)); box-shadow:0 0 0 3px color-mix(in srgb, var(--m-notte) 14%, transparent); }
   .pe-paz-az{ grid-column:1 / -1; display:flex; justify-content:flex-end; gap:8px; }
   .pe-paz-az button{ height:36px; padding:0 14px; border:0; border-radius:10px; font:600 14px var(--m-sans); cursor:pointer; background:var(--m-sec); color:var(--m-ink); }
   .pe-paz-az .pe-paz-ok{ background:var(--m-notte); color:#fff; }
   .pe-paz-az .pe-paz-togli{ margin-right:auto; background:none; color:var(--m-rosso); padding:0 4px; }
-  @media (max-width:520px){ .pe-paz-mod{ grid-template-columns:1fr; } }
+  @media (min-width:700px){ .pe-paz-mod{ grid-template-columns:minmax(0, 1.4fr) 84px minmax(0, 1.4fr); } .pe-paz-mod .pe-paz-p{ grid-column:auto; } }
   html[data-pe] .m-tl .pe-tl-nome{ position:absolute; left:4px; right:4px; bottom:6px; font-size:10.5px; font-weight:600; letter-spacing:0; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.78; pointer-events:none; }
   html[data-pe] .m-tl:has(.pe-tl-nome){ padding-bottom:12px; }
   html[data-pe] .m-tl:has(.pe-tl-nome) .m-gg{ top:5px; bottom:auto; left:auto; right:7px; }
   .pe-r-nome{ font-style:normal; font-weight:500; color:var(--m-muted); }
   .pe-ev{ display:none; }
-  html[data-pe] #card-sesso .pe-ev{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  html[data-pe] #card-sesso .pe-ev{ display:grid; grid-template-columns:minmax(0, 1fr) 84px minmax(0, 1fr); gap:10px; }
   html[data-pe] #card-sesso .pe-ev label{ display:flex; flex-direction:column; min-width:0; }
   html[data-pe] #card-sesso .pe-ev input{ width:100%; font-size:16px; }
-  @media (max-width:520px){ html[data-pe] #card-sesso .pe-ev{ grid-template-columns:1fr; } }
+  @media (max-width:520px){ html[data-pe] #card-sesso .pe-ev{ grid-template-columns:minmax(0, 1fr) 84px; } html[data-pe] #card-sesso .pe-ev label:last-of-type{ grid-column:1 / -1; } }
   /* LA RICERCA */
   .pe-cerca-wrap{ position:relative; margin:16px 0 4px; }
   .pe-cerca{ display:flex; align-items:center; gap:9px; height:44px; padding:0 7px 0 13px; border:1px solid var(--m-line); border-radius:14px; background:color-mix(in srgb, var(--m-box) 70%, var(--m-carta)); color:var(--m-faint); cursor:text; transition:border-color .15s, box-shadow .15s; }
@@ -26667,7 +26689,7 @@ function disegna(verso){
   const v = $m('#m-vista');
   if(UI_PE){ document.documentElement.classList.toggle('pe-eo', M.vista === 'eo');
     // in visita: i campi del paziente col nome e la patologia del letto (Fatto/Indietro li salvano)
-    if(M.vista === 'eo'){ const a = pePaziente(M.letto) || {}, n = document.getElementById('pe-ev-nome'), pt = document.getElementById('pe-ev-pat'); if(n){ n.value = a.nome || ''; pt.value = a.patologia || ''; } }
+    if(M.vista === 'eo'){ const a = pePaziente(M.letto) || {}, n = document.getElementById('pe-ev-nome'), pt = document.getElementById('pe-ev-pat'); if(n){ n.value = a.nome || ''; pt.value = a.patologia || ''; document.getElementById('pe-ev-eta').value = a.eta || ''; } }
     else { const n = document.getElementById('pe-ev-nome'); if(n && document.activeElement && document.activeElement.closest && document.activeElement.closest('.pe-ev')) document.activeElement.blur(); } if(M.vista !== 'home') pePieno(false); setTimeout(peSide, 0); }
   document.documentElement.toggleAttribute('data-m-eo', M.vista === 'eo' || M.vista === 'app');
   // Minimal Pocket: l'esame obiettivo resta nello stile delle pagine (niente
@@ -28510,25 +28532,27 @@ function disegnaIeri(){
 }
 function disegnaScheda(){
   const i = infoLetto(M.letto);
-  $m('#m-s-testa').innerHTML = `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span></div>
+  $m('#m-s-testa').innerHTML = (UI_PE ? peSchedaTesta(i) : `<div><div class="m-s-titolo"><h2>${esc(M.letto)}</h2><span class="m-pallini" id="m-s-pallini"></span></div><span class="m-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span></div>`) + `
     <button class="m-s-pratica" data-m="pr-menu" aria-label="Pratiche: aggiungi o togli">${ICON.praticaPiu}</button>
     <button class="m-chiudi" data-m="chiudi" aria-label="Chiudi">${ICON.x}</button>`;
   const altri = STRUM_ALTRI.filter(n => !D.ordine.includes(n));
   const presenti = D.ordine;
   // le etichette della scheda di prima (spostate sotto il titolo, vedi più giù)
   $m('#m-scheda').querySelectorAll(':scope > #m-aiuti').forEach(x => x.remove());
+  // Pocket Evolution: le tre parti del diario, ciascuna nel suo riquadro
+  const [s1, s2, f] = UI_PE ? ['<section class="pe-sez">', '<section class="pe-sez pe-sez-ee">', '</section>'] : ['', '', ''];
   $m('#m-s-corpo').innerHTML = `${UI_PE ? pePazHtml(M.letto) : ''}
     <div class="m-aiuti" id="m-aiuti"></div>
     <div class="m-aiuti m-pr-scheda" id="m-pr-scheda" hidden></div>
-    <div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
-    <div class="m-blocco"><textarea class="m-testo" id="m-eo" rows="3" aria-label="Esame obiettivo">${esc(D.eo)}</textarea></div>
-    <div class="m-lbl">Esami</div>
+    ${s1}<div class="m-lbl-riga"><div class="m-lbl">Esame obiettivo</div><button class="m-modifica" data-m="modifica">Cambia i tag</button></div>
+    <div class="m-blocco"><textarea class="m-testo" id="m-eo" rows="3" aria-label="Esame obiettivo">${esc(D.eo)}</textarea></div>${f}
+    ${s2}<div class="m-lbl">Esami</div>
     ${riga('ee', 'Agli EE', D.ee, 'Hb 98, Na 131, creatinina 1,4…', 'Le unità di misura si aggiungono da sole.')}
     ${presenti.map(rigaStrum).join('')}
-    <div class="m-aggiungi m-chiuso">${htmlAggiungi(altri)}</div>
-    <div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
+    <div class="m-aggiungi m-chiuso">${htmlAggiungi(altri)}</div>${f}
+    ${s1}<div class="m-lbl-riga"><div class="m-lbl">Provvedimenti</div><button class="m-modifica" data-m="strumenti" aria-label="Strumenti: apre il menu /">Strumenti</button></div>
     <div class="m-blocco"><textarea class="m-testo" id="m-provv" rows="2" data-m-provv="1" placeholder="- un provvedimento per riga" aria-label="Provvedimenti" spellcheck="true" autocapitalize="sentences">${esc(D.provv)}</textarea></div>
-    ${htmlIeri(false)}`;
+    ${htmlIeri(false)}${f}`;
   [...$m('#m-s-corpo').children].forEach((el, k) => el.style.setProperty('--k', k));
   const provv = $m('#m-provv');
   provv.dataset.egaN = String(triggerOccorrenze(EGA_TRIGGER_RE, provv.value).length);
@@ -28727,7 +28751,7 @@ function copia(){
   segnaRefertoCopiato(M.id);
   $m('#m-copia').classList.add('m-fatto');
   segnaStato(true);
-  document.querySelectorAll('#m-s-corpo > .m-blocco, #m-s-corpo > .m-riga:not(.m-vuota)').forEach((el, k) => {
+  document.querySelectorAll('#m-s-corpo > .m-blocco, #m-s-corpo > .m-riga:not(.m-vuota), #m-s-corpo > .pe-sez > .m-blocco, #m-s-corpo > .pe-sez > .m-riga:not(.m-vuota)').forEach((el, k) => {
     el.classList.remove('m-lampo'); void el.offsetWidth; el.style.setProperty('--k', k); el.classList.add('m-lampo');
   });
   try{ navigator.vibrate && navigator.vibrate(12); } catch(e){}
@@ -31389,7 +31413,7 @@ function peSide(){
 // da giorni. Il cognome compare sulla tessera del letto e il nome
 // nell'elenco della scrivania, con la patologia sotto; la ricerca li trova
 const PE_PATOLOGIE = ['Polmonite', 'Polmonite ab ingestis', 'Scompenso cardiaco', 'BPCO riacutizzata', 'Insufficienza respiratoria', 'Infezione delle vie urinarie', 'Pielonefrite', 'Sepsi', 'Insufficienza renale acuta', 'Fibrillazione atriale', 'Ictus ischemico', 'Embolia polmonare', 'TVP', 'Anemia', 'Emorragia digestiva', 'Cirrosi scompensata', 'Delirium', 'Caduta a domicilio', 'Frattura di femore', 'Disidratazione', 'Iponatriemia', 'Iperkaliemia', 'Diabete scompensato', 'Cellulite', 'Colecistite', 'Pancreatite', 'Neoplasia', 'Sindrome ipocinetica', 'Lesione da pressione', 'Covid-19', 'Influenza', 'Febbre di ndd', 'Sincope', 'Encefalopatia epatica', 'Crisi epilettica'];
-function pePaziente(nome){ const e = voce(nome); const a = e && e[1].anagrafe; return a && (a.nome || a.patologia) ? a : null; }
+function pePaziente(nome){ const e = voce(nome); const a = e && e[1].anagrafe; return a && (a.nome || a.patologia || a.eta) ? a : null; }
 // il cognome è la prima parola, o le prime due/tre con De, Di, Del, Della,
 // La, Lo, D', Van, Von, San… ("De Luca", "Della Valle", "Lo Iacono")
 const PE_PARTICELLE = /^(de|di|da|del|dei|della|delle|dello|dal|dalla|dall'?|d'|la|lo|li|le|van|von|der|den|mac|mc|san|santa|santo|st\.?)$/i;
@@ -31402,55 +31426,84 @@ function peParti(t){
 const peCognome = t => peParti(t)[0].map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 function peTileNome(nome){ const a = pePaziente(nome); return a && a.nome ? `<span class="pe-tl-nome" aria-hidden="true">${esc(peCognome(a.nome))}</span>` : ''; }
 function peRigaNome(nome){ const a = nome && pePaziente(nome); return a && a.nome ? `<i class="pe-r-nome"> · ${esc(a.nome)}</i>` : ''; }
-function peRigaPat(nome){ const a = nome && pePaziente(nome); return a && a.patologia ? ` · ${esc(a.patologia)}` : ''; }
+function peRigaPat(nome){ const a = nome && pePaziente(nome); return a && (a.patologia || a.eta) ? ` · ${esc([a.eta ? a.eta + ' anni' : '', a.patologia].filter(Boolean).join(', '))}` : ''; }
+// "GRECO Lucia" → "Greco Lucia", per i titoli
+const peNomeBello = t => String(t || '').split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ').replace(/\b(D|Dall|Dell)'(\w)/g, (m, x, y) => x + "'" + y.toUpperCase());
+// la giornata di degenza: dal giorno in cui è nata la scheda del letto
+function peGiornata(id){
+  const ts = +(String(id || '').match(/^p_(\d{12,})/) || [])[1];
+  if(!ts) return 0;
+  return Math.round((new Date().setHours(0, 0, 0, 0) - new Date(ts).setHours(0, 0, 0, 0)) / 864e5) + 1;
+}
+// la riga sotto il titolo: età, patologia, giornata
+function peSottotitolo(nome){
+  const a = pePaziente(nome) || {}, e = voce(nome), g = e ? peGiornata(e[0]) : 0;
+  return [a.eta ? `${a.eta}\u00a0anni` : '', a.patologia ? a.patologia.charAt(0).toLowerCase() + a.patologia.slice(1) : '', g > 1 ? `${g}ª\u00a0giornata` : ''].filter(Boolean).join(' · ');
+}
+// LA TESTA DEL DIARIO: lo stato in una pillola e l'ora della visita, il
+// letto col nome del paziente, sotto età, patologia e giornata (un tocco
+// apre i campi per scriverli o correggerli)
+function peSchedaTesta(i){
+  const a = pePaziente(M.letto) || {};
+  const breve = String(M.letto).replace(/^(C[12]) · Letto /, '$1 ').replace(/^Letto\s+/i, '');
+  const p = i.p, quando = p && i.vistoOggi ? Math.max(isOggi(p.visitaIl) ? p.visitaIl : 0, isOggi(p.tagIl) ? p.tagIl : 0) : 0;
+  const ora = quando ? new Date(quando).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' }) : '';
+  const sotto = peSottotitolo(M.letto);
+  return `<div class="pe-st">
+    <div class="pe-st-su"><span class="m-stato pe-stato${i.copiato ? ' m-ok' : ''}" id="m-stato">${i.copiato ? 'Copiato' : 'Da copiare'}</span>${ora ? `<span class="pe-visto">Visto alle ${ora}</span>` : ''}<span class="m-pallini" id="m-s-pallini"></span></div>
+    <div class="m-s-titolo"><h2 id="pe-st-h2">${esc(a.nome ? `${breve} · ${peNomeBello(a.nome)}` : M.letto)}</h2></div>
+    <button class="pe-st-sotto${a.nome || a.patologia || a.eta ? '' : ' pe-st-vuoto'}" id="pe-st-sotto" data-m="pe-paz-apri" aria-label="Nome, età e patologia">${a.nome || a.patologia || a.eta ? `${esc(sotto || 'Aggiungi età e patologia')}${PE_ICO.penna}` : `${ICON.piu}Nome, età e patologia`}</button>
+  </div>`;
+}
 function pePazHtml(nome, modifica){
+  if(!modifica) return '<div class="pe-paz" id="pe-paz" hidden></div>';
   const a = pePaziente(nome) || {};
-  if(modifica){
-    const usate = new Set(PE_PATOLOGIE);
-    Object.values(loadPatients()).forEach(q => { const t = q.anagrafe && q.anagrafe.patologia; if(t) usate.add(t); });
-    return `<div class="pe-paz pe-paz-mod" id="pe-paz">
-      <label><span>Paziente</span><input id="pe-paz-nome" value="${esc(a.nome || '')}" placeholder="Cognome e nome" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"></label>
-      <label><span>Patologia</span><input id="pe-paz-pat" value="${esc(a.patologia || '')}" placeholder="es. polmonite, scompenso" list="pe-pat-lista" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></label>
-      <datalist id="pe-pat-lista">${[...usate].map(t => `<option value="${esc(t)}">`).join('')}</datalist>
-      <div class="pe-paz-az">${a.nome || a.patologia ? '<button class="pe-paz-togli" data-m="pe-paz-ok" data-togli="1">Togli</button>' : ''}<button class="pe-paz-no" data-m="pe-paz-no">Annulla</button><button class="pe-paz-ok" data-m="pe-paz-ok">Fatto</button></div>
-    </div>`;
-  }
-  if(!a.nome && !a.patologia) return `<div class="pe-paz" id="pe-paz"><button class="pe-paz-vuoto" data-m="pe-paz-apri">${ICON.piu}Nome e patologia</button></div>`;
-  return `<div class="pe-paz" id="pe-paz"><button class="pe-paz-vedi" data-m="pe-paz-apri" aria-label="Modifica nome e patologia">${a.nome ? `<b>${esc(a.nome)}</b>` : ''}${a.patologia ? `<span class="pe-paz-pat">${esc(a.patologia)}</span>` : ''}${PE_ICO.penna}</button></div>`;
+  const usate = new Set(PE_PATOLOGIE);
+  Object.values(loadPatients()).forEach(q => { const t = q.anagrafe && q.anagrafe.patologia; if(t) usate.add(t); });
+  return `<div class="pe-paz pe-paz-mod" id="pe-paz">
+    <label class="pe-paz-n"><span>Paziente</span><input id="pe-paz-nome" value="${esc(a.nome || '')}" placeholder="Cognome e nome" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"></label>
+    <label class="pe-paz-e"><span>Età</span><input id="pe-paz-eta" value="${esc(a.eta || '')}" placeholder="anni" inputmode="numeric" maxlength="3" oninput="this.value=this.value.replace(/\D/g,'')" autocomplete="off" enterkeyhint="next"></label>
+    <label class="pe-paz-p"><span>Patologia</span><input id="pe-paz-pat" value="${esc(a.patologia || '')}" placeholder="es. polmonite, scompenso" list="pe-pat-lista" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></label>
+    <datalist id="pe-pat-lista">${[...usate].map(t => `<option value="${esc(t)}">`).join('')}</datalist>
+    <div class="pe-paz-az">${a.nome || a.patologia || a.eta ? '<button class="pe-paz-togli" data-m="pe-paz-ok" data-togli="1">Togli</button>' : ''}<button class="pe-paz-no" data-m="pe-paz-no">Annulla</button><button class="pe-paz-ok" data-m="pe-paz-ok">Fatto</button></div>
+  </div>`;
 }
 function pePazModifica(si){
   const box = $m('#pe-paz'); if(!box || !M.letto) return;
   box.outerHTML = pePazHtml(M.letto, si);
+  $m('#pe-st-sotto')?.classList.toggle('pe-st-aperto', !!si);
   if(si) setTimeout(() => { const i = $m('#pe-paz-nome'); if(i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 20);
 }
-// scrive nome e patologia nella scheda del letto (la crea, se non c'è
+// scrive nome, età e patologia nella scheda del letto (la crea, se non c'è
 // ancora); il cognome in maiuscolo, come nei ricoveri ("ROSSI Maria").
 // Restituisce i valori scritti, o null se non è cambiato niente
-function peScriviPaziente(letto, nome, patologia){
+function peScriviPaziente(letto, nome, patologia, eta){
   const pul = t => String(t || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-  let n = pul(nome), pat = pul(patologia);
+  let n = pul(nome), pat = pul(patologia), et = String(eta || '').replace(/\D/g, '').slice(0, 3);
   if(n){ const [c, r] = peParti(n); n = [...c.map(x => x.toUpperCase()), ...r.map(x => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())].join(' '); }
   if(pat) pat = pat.charAt(0).toUpperCase() + pat.slice(1);
   const ps = loadPatients();
   let e = Object.entries(ps).find(([, q]) => q.name === letto);
   const prima = e && e[1].anagrafe || {};
-  if((prima.nome || '') === n && (prima.patologia || '') === pat) return null;
+  if((prima.nome || '') === n && (prima.patologia || '') === pat && (prima.eta || '') === et) return null;
   if(!e){
-    if(!n && !pat) return null;
+    if(!n && !pat && !et) return null;
     const id = 'p_' + Date.now(); ps[id] = { name:letto, savedAt:Date.now(), state:JSON.parse(DEFAULT_SNAPSHOT_JSON) }; e = [id, ps[id]];
   }
-  if(n || pat) e[1].anagrafe = { nome:n, patologia:pat, il:Date.now() }; else delete e[1].anagrafe;
+  if(n || pat || et) e[1].anagrafe = { nome:n, patologia:pat, eta:et, il:Date.now() }; else delete e[1].anagrafe;
   e[1].savedAt = Date.now();
   savePatients(ps);
-  return { n, pat };
+  return { n, pat, et };
 }
 function pePazSalva(togli){
   const nome = M.letto; if(!nome || !$m('#pe-paz')) return;
-  const fatto = peScriviPaziente(nome, togli ? '' : $m('#pe-paz-nome')?.value, togli ? '' : $m('#pe-paz-pat')?.value);
+  const v = id => togli ? '' : $m(id)?.value;
+  const fatto = peScriviPaziente(nome, v('#pe-paz-nome'), v('#pe-paz-pat'), v('#pe-paz-eta'));
   pePazModifica(false);
   if(!fatto) return;
-  const { n, pat } = fatto;
-  showToast(n || pat ? 'Paziente salvato' : 'Nome e patologia tolti');
+  // la testa del diario si riscrive (titolo e riga sotto)
+  const t = $m('.pe-st'); if(t){ const tmp = document.createElement('div'); tmp.innerHTML = peSchedaTesta(infoLetto(nome)); const pall = $m('#m-s-pallini'); t.replaceWith(tmp.firstElementChild); if(pall) $m('#m-s-pallini').replaceWith(pall); }
+  showToast(fatto.n || fatto.pat || fatto.et ? 'Paziente salvato' : 'Dati del paziente tolti');
   // tessere, righe della scrivania e ricerca si aggiornano
   if(M.vista === 'home' && MP_PC.matches) setTimeout(() => { if(M.vista === 'home') mpOggi(); }, 50);
   else if(M.vista === 'visita' || M.vista === 'diari') disegnaLetti();
@@ -31600,7 +31653,7 @@ if(UI_PE){
   // Invio nei campi del paziente salva (dal nome passa alla patologia), Esc lascia com'era
   document.addEventListener('keydown', e => {
     if(!e.target || !e.target.closest || !e.target.closest('#pe-paz')) return;
-    if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); e.stopPropagation(); if(e.target.id === 'pe-paz-nome') $m('#pe-paz-pat')?.focus(); else pePazSalva(); }
+    if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); e.stopPropagation(); if(e.target.id === 'pe-paz-nome') $m('#pe-paz-eta')?.focus(); else if(e.target.id === 'pe-paz-eta') $m('#pe-paz-pat')?.focus(); else pePazSalva(); }
     else if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); pePazModifica(false); }
   }, true);
   const casella = (id, ph) => `<label class="pe-cerca">${PE_ICO.lente}<input id="${id}" type="search" placeholder="${ph}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Cerca" aria-controls="${id.replace('cerca', 'ris')}"></label>`;
@@ -31639,12 +31692,12 @@ if(UI_PE){
   // nella visita, il riquadro Paziente ha in cima nome e patologia
   const cs = document.getElementById('card-sesso');
   if(cs){
-    cs.querySelector('h2').insertAdjacentHTML('afterend', `<div class="group pe-ev"><label><span class="group-label">Nome</span><input type="text" id="pe-ev-nome" placeholder="Cognome e nome" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"></label><label><span class="group-label">Patologia</span><input type="text" id="pe-ev-pat" placeholder="es. polmonite, scompenso" list="pe-pat-ev" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></label><datalist id="pe-pat-ev">${PE_PATOLOGIE.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>`);
-    const salva = () => { if(M.vista === 'eo' && M.letto) peScriviPaziente(M.letto, $m('#pe-ev-nome').value, $m('#pe-ev-pat').value); };
-    ['pe-ev-nome', 'pe-ev-pat'].forEach(id => {
+    cs.querySelector('h2').insertAdjacentHTML('afterend', `<div class="group pe-ev"><label><span class="group-label">Nome</span><input type="text" id="pe-ev-nome" placeholder="Cognome e nome" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"></label><label class="pe-ev-eta"><span class="group-label">Età</span><input type="text" id="pe-ev-eta" placeholder="anni" inputmode="numeric" maxlength="3" oninput="this.value=this.value.replace(/\D/g,'')" autocomplete="off" enterkeyhint="next"></label><label><span class="group-label">Patologia</span><input type="text" id="pe-ev-pat" placeholder="es. polmonite, scompenso" list="pe-pat-ev" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></label><datalist id="pe-pat-ev">${PE_PATOLOGIE.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>`);
+    const salva = () => { if(M.vista === 'eo' && M.letto) peScriviPaziente(M.letto, $m('#pe-ev-nome').value, $m('#pe-ev-pat').value, $m('#pe-ev-eta').value); };
+    ['pe-ev-nome', 'pe-ev-eta', 'pe-ev-pat'].forEach(id => {
       const i = document.getElementById(id);
       i.addEventListener('change', salva);
-      i.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); if(id === 'pe-ev-nome') $m('#pe-ev-pat').focus(); else i.blur(); } });
+      i.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); if(id === 'pe-ev-nome') $m('#pe-ev-eta').focus(); else if(id === 'pe-ev-eta') $m('#pe-ev-pat').focus(); else i.blur(); } });
     });
   }
   // la barra segue lo stato dell'account e i dati sincronizzati

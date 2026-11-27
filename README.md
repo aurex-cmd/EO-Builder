@@ -48,11 +48,12 @@ Sul telefono la guardia ha una home sua, che scorre tutta insieme: in cima la ca
   - Dimissioni di oggi e domani (l'arco).
   
   Un clic su una tessera porta dove serve. In guardia le tessere diventano Da fare in guardia, Ricoveri dal PS, Critici e Dimissioni. Sugli schermi bassi (sotto i 940 pixel di altezza) le tessere restano senza disegnino. I link in fondo alla pagina spariscono, perché stanno nella barra.
-- **Il paziente del letto**: nome e patologia si scrivono a mano, in due posti:
+- **Il diario** (sul telefono e al PC) ha in alto lo stato in una pillola ("Da copiare" o "Copiato") e l'ora della visita ("Visto alle 10:25"). Sotto c'è il letto col nome del paziente ("9.2 · Greco Lucia") e, più piccoli, età, patologia e giornata di degenza ("84 anni · scompenso cardiaco · 7ª giornata", contata dal giorno in cui è nata la scheda del letto). Esame obiettivo, Esami e Provvedimenti stanno ciascuno nel suo riquadro. Al PC, sul tasto Copia, c'è anche la "C".
+- **Il paziente del letto**: nome, età e patologia si scrivono a mano, in due posti:
   - nella visita, in cima al riquadro "Paziente" (sopra il sesso), già alla prima visita;
-  - nel diario, in cima: "+ Nome e patologia", oppure un tocco sul nome per cambiarlo. Invio passa dal nome alla patologia e salva; "Togli" li cancella.
+  - nel diario, toccando la riga sotto il titolo ("+ Nome, età e patologia", oppure i dati già scritti per correggerli). Invio passa da un campo all'altro e alla fine salva; "Togli" li cancella.
 
-  Per la patologia ci sono i suggerimenti: le più comuni e quelle già usate. Il cognome si scrive in maiuscolo da solo, anche se composto ("DE LUCA Franco", "DELLA VALLE Anna"). Il cognome compare sulla tessera del letto (sul telefono e al PC); il nome e la patologia compaiono nell'elenco della scrivania e nella ricerca, che li trova per cognome, per nome e, dalla terza lettera, per patologia.
+  Per la patologia ci sono i suggerimenti: le più comuni e quelle già usate. Il cognome si scrive in maiuscolo da solo, anche se composto ("DE LUCA Franco", "DELLA VALLE Anna"). Il cognome compare sulla tessera del letto (sul telefono e al PC); il nome, l'età e la patologia compaiono nell'elenco della scrivania e nella ricerca, che li trova per cognome, per nome e, dalla terza lettera, per patologia.
 
   Nome e patologia stanno nella scheda del letto, quindi si sincronizzano con lei e se ne vanno con lei: con la dimissione, svuotando il letto o il settore, e con la pulizia delle schede ferme. Non finiscono nel testo del diario copiato. Per ora si vedono solo in Pocket Evolution.
 - **La ricerca**: al PC è nella barra laterale, sotto il nome; si raggiunge anche con ⌘K (Ctrl K su Windows). Sul telefono c'è la lente nella home, accanto all'account, che apre la ricerca a tutto schermo. Cerca quattro cose:
