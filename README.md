@@ -48,8 +48,15 @@ Sul telefono la guardia ha una home sua, che scorre tutta insieme: in cima la ca
   - Dimissioni di oggi e domani (l'arco).
   
   Un clic su una tessera porta dove serve. In guardia le tessere diventano Da fare in guardia, Ricoveri dal PS, Critici e Dimissioni. Sugli schermi bassi (sotto i 940 pixel di altezza) le tessere restano senza disegnino. I link in fondo alla pagina spariscono, perché stanno nella barra.
+- **Il paziente del letto**: nome e patologia si scrivono a mano, in due posti:
+  - nella visita, in cima al riquadro "Paziente" (sopra il sesso), già alla prima visita;
+  - nel diario, in cima: "+ Nome e patologia", oppure un tocco sul nome per cambiarlo. Invio passa dal nome alla patologia e salva; "Togli" li cancella.
+
+  Per la patologia ci sono i suggerimenti: le più comuni e quelle già usate. Il cognome si scrive in maiuscolo da solo, anche se composto ("DE LUCA Franco", "DELLA VALLE Anna"). Il cognome compare sulla tessera del letto (sul telefono e al PC); il nome e la patologia compaiono nell'elenco della scrivania e nella ricerca, che li trova per cognome, per nome e, dalla terza lettera, per patologia.
+
+  Nome e patologia stanno nella scheda del letto, quindi si sincronizzano con lei e se ne vanno con lei: con la dimissione, svuotando il letto o il settore, e con la pulizia delle schede ferme. Non finiscono nel testo del diario copiato. Per ora si vedono solo in Pocket Evolution.
 - **La ricerca**: al PC è nella barra laterale, sotto il nome; si raggiunge anche con ⌘K (Ctrl K su Windows). Sul telefono c'è la lente nella home, accanto all'account, che apre la ricerca a tutto schermo. Cerca quattro cose:
-  - i **letti** (per numero: «12» trova 12.1 e 12.2), col loro stato di oggi (critico, diario copiato, da copiare, da vedere);
+  - i **letti** (per numero: «12» trova 12.1 e 12.2, oppure per cognome, nome o patologia del paziente), col loro stato di oggi (critico, diario copiato, da copiare, da vedere);
   - i **ricoveri** (per cognome o nome, dalla terza lettera anche per diagnosi);
   - le **pagine** (Dimissioni, Consegne, Rubrica, Impostazioni, Account, Backup, guardia, tema…);
   - gli **strumenti** (gli stessi di Strumenti: VFG, EGA, score…).
